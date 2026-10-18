@@ -7,14 +7,14 @@ Original own remote branches contain unsigned historical commits. Clean `-finish
 |---|---|---|---|
 | #20 | no product branch | PARKED access + pass-rule conflict evidence | Actions artifacts still proxy403 after resume; #6 record contains exact local parity reproduction; no tolerance/recording edits |
 | #6 | lane/W9-05 afbf4c5 | PARKED | Owner decision on unsupported nested/error-equivalence conflict; issue comment posted |
-| #9 | lane/W9-08-finish 5033951 | common gates | resume_metadata; independent review by resume_eventhouse |
-| #10 | lane/W9-09 | tests-first implementation | formats; Azure registry item approved by Owner comment |
-| #11 | lane/W9-10-finish 5be9f04 | common gates + review fixes | resume_dbt; resume_metadata found ratio metric/exposure dependency omissions |
-| #12 | lane/W9-11-finish | recovered implementation uncommitted | resume_eventhouse; tests46 pass, common gates queued |
-| #13 | lane/W9-12-finish | recovered implementation uncommitted | root; focused171 pass, sempy0.14.2 signatures verified, conformance added |
+| #9 | lane/W9-08-finish 5033951 | common gates | resume_metadata; review APPROVED, PR#32; makecheck at~23%, one likely inherited0077 permissions failure, narrow022 rerun passes |
+| #10 | lane/W9-09 | tests-first implementation | formats; Azure registry item approved; independent review found five binary/evolution boundary bugs being fixed |
+| #11 | lane/W9-10-finish 5be9f04 | common gates + review fixes | resume_dbt; ratio/exposure fixed+approved, PR#29; 142offline tests per mode,8dbt nightly pass |
+| #12 | lane/W9-11-finish | recovered implementation uncommitted | resume_eventhouse;46permode+strictdocs pass, review APPROVED, PR#30;common gates queued |
+| #13 | lane/W9-12-finish | recovered implementation uncommitted | root;171permode+docs/lint/mypy703/links/wording/DCO pass, review APPROVED, PR#33;prepared full collection19125 selected succeeds |
 | #14 | old lane/W9-13 1249af9 (journal only) | PARKED | missing merged W9-01; prior journal also documents invalid decimal specification boundaries |
-| #17 | lane/W9-16-finish | recovered implementation uncommitted | resume_iceberg; interface reconciliation, tests105 pending |
+| #17 | lane/W9-16-finish | recovered implementation uncommitted | resume_iceberg;112permode+docs/static pass, review APPROVED, PR#31;emulator image pull denied;common queued |
 
-No PRs/merges yet. Full suites serialize under /tmp/public-b-full-check.lock. All tests through $HOME/bin/reap.py. Last zombie observation19, below hard stop1000. Separate reviewer spawn blocked by platform thread cap; existing independent lane agents cross-review.
+Draft PRs now open: #29 dbt (63e4e55), #30 Eventhouse (5265080), #31 Iceberg (df426e9), #32 metadata (91ef620), #33 semantic models (3b3852a). All target main; no merges. All five have independent code approval; exact-head CI and common acceptance are pending. Full suites serialize under /tmp/public-b-full-check.lock. All tests through $HOME/bin/reap.py. Last zombie observation30, below hard stop1000. Separate reviewer spawn blocked by platform thread cap; existing independent lane agents cross-review.
 
 After context restart reread attachment and this state; inspect worktrees/ledgers before repeating work. Logs/status live per lane and /tmp. No passing CI or live result claimed.

@@ -55,3 +55,11 @@ Sub-agent command ledgers live in their lane records/worktrees; their commands a
 - `gh issue comment 20 --body-file docs/plans/lane_status/public-b2026-nonexistent.md` — exit 1.
 
 - `gh issue comment 20 --body-file /tmp/public-b-20-local.md` — exit 0.
+
+- `git add docs/plans/lane_status/public-b-2026-10-18 && git commit -s -m "Public B: preserve local parity failure evidence"` — exit 0.
+
+- `git push origin HEAD` — exit 0.
+
+- `gh pr list --state open --json number,headRefName,headRefOid,url,isDraft --jq ".[] | select(.headRefName|test(\"^lane/W9-(08|09|10|11|12|16)(-finish)?$\"))"` — exit 0.
+
+- `gh run list --limit 25 --json databaseId,headBranch,headSha,name,status,conclusion,url --jq ".[] | select(.headBranch|test(\"^lane/W9-(08|09|10|11|12|16)(-finish)?$\"))"` — exit 0.
