@@ -1831,7 +1831,9 @@ For Protobuf integer event timestamps encoded in microseconds, pass
 Nested records, lists and maps retain these Arrow types on read and write.
 Protobuf event schemas declare their types in one file; recursive messages,
 `oneof`, `Any` and extensions are unsupported. Avro unions allow `null` plus
-one value type. JSON Schema on Event Hubs is unsupported.
+one value type. Protobuf repeated/map containers and scalars without presence
+cannot represent null; such values are refused rather than changed to empty
+collections or scalar defaults. JSON Schema on Event Hubs is unsupported.
 
 For Azure Schema Registry, install `sqllocks-shape-eventhubs[schema-registry,entra]`.
 Writes use `event_format=avro`, `schema_file`,

@@ -44,13 +44,13 @@ def subject_name(strategy: str, topic: str, record: str) -> str:
 
 def check_url(url: str) -> str:
     parts = urlsplit(url)
-    if parts.scheme not in ("http", "https") or not parts.netloc:
-        raise ShapeError(f"kafka.schema_registry_url {url!r} is not an http(s) URL")
     if parts.username or parts.password:
         raise ShapeError(
             "kafka.schema_registry_url must not carry credentials: give "
             "kafka.schema_registry_username and kafka.schema_registry_password=env://NAME"
         )
+    if parts.scheme not in ("http", "https") or not parts.netloc:
+        raise ShapeError("kafka.schema_registry_url is not an http(s) URL")
     return url.rstrip("/")
 
 

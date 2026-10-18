@@ -637,7 +637,7 @@ def event_schema(fmt: str, table: str, schema: pa.Schema) -> str:
                 mapped = f"map<{key}, {value}>"
             else:
                 mapped = proto(t, name + "_" + f.name)
-                if f.nullable and not pa.types.is_struct(t):
+                if (f.nullable or pa.types.is_floating(t)) and not pa.types.is_struct(t):
                     mapped = "optional " + mapped
             lines.append(f"  {mapped} {f.name} = {i};")
         lines.append("}")

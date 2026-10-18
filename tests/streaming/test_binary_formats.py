@@ -543,3 +543,107 @@ def test_azure_reader_resolves_each_message_schema_once_and_retains_map_types():
     assert calls == ["a", "b"]
     assert batch.num_rows == 3
     assert pa.types.is_map(batch.schema.field("attrs").type)
+
+
+def test_local_protobuf_validates_documented_logical_wire_types_recursively():
+    from datetime import UTC, date, datetime, time
+    from decimal import Decimal
+
+    from shape.streaming.binary import BinaryCodec
+
+    text = """syntax = "proto3";
+    message E { int32 day = 1; int64 clock = 2; int64 ts = 3; string amount = 4;
+      repeated int32 days = 5; Child child = 6; }
+    message Child { string amount = 1; }
+    """
+    c = BinaryCodec("protobuf", text, message="E")
+    schema = pa.schema(
+        [
+            ("day", pa.date32()),
+            ("clock", pa.time64("us")),
+            ("ts", pa.timestamp("us", tz="UTC")),
+            ("amount", pa.decimal128(8, 2)),
+            ("days", pa.list_(pa.date32())),
+            ("child", pa.struct([("amount", pa.decimal128(8, 2))])),
+        ]
+    )
+    c.validate_schema(schema)
+    row = {
+        "day": date(1970, 1, 2),
+        "clock": time(0, 0, 2),
+        "ts": datetime(1970, 1, 1, 0, 0, 3, tzinfo=UTC),
+        "amount": Decimal("1.20"),
+        "days": [date(1970, 1, 3)],
+        "child": {"amount": Decimal("2.30")},
+    }
+    assert c.decode(c.encode(row)) == {
+        "day": 1,
+        "clock": 2_000_000,
+        "ts": 3_000_000,
+        "amount": "1.20",
+        "days": [2],
+        "child": {"amount": "2.30"},
+    }
+    for wrong in [pa.float64(), pa.bool_(), pa.binary()]:
+        with pytest.raises(ShapeError, match="day"):
+            c.validate_schema(schema.set(0, pa.field("day", wrong)))
+    incompatible = BinaryCodec(
+        "protobuf", 'syntax = "proto3"; message E { bool day = 1; }', message="E"
+    )
+    with pytest.raises(ShapeError, match="day"):
+        incompatible.validate_schema(pa.schema([("day", pa.date32())]))
+
+
+@pytest.mark.parametrize(
+    "fmt,text",
+    [
+        ("avro", '{"type":"record","name":"E","fields":[{"name":"x","type":"missing"}]}'),
+        ("avro", "{bad"),
+        ("protobuf", 'syntax = "proto3"; message E { missing x = 1; }'),
+    ],
+)
+def test_invalid_local_schema_files_fail_with_shape_error(tmp_path, fmt, text):
+    from shape.streaming.binary import BinaryCodec
+
+    path = tmp_path / "invalid.schema"
+    path.write_text(text)
+    with pytest.raises(ShapeError):
+        BinaryCodec.from_file(fmt, str(path), message="E")
+    with pytest.raises(ShapeError, match="cannot read"):
+        BinaryCodec.from_file(fmt, str(tmp_path / "missing"), message="E")
+
+
+def test_protobuf_map_logical_keys_match_validation_and_encoding():
+    from datetime import date
+
+    from shape.streaming.binary import BinaryCodec
+
+    c = BinaryCodec(
+        "protobuf", 'syntax = "proto3"; message E { map<int32,string> attrs = 1; }', message="E"
+    )
+    c.validate_schema(pa.schema([("attrs", pa.map_(pa.date32(), pa.string()))]))
+    assert c.decode(c.encode({"attrs": [(date(1970, 1, 2), "a")]})) == {"attrs": {1: "a"}}
+    with pytest.raises(ShapeError, match="attrs.key"):
+        c.validate_schema(pa.schema([("attrs", pa.map_(pa.timestamp("us"), pa.string()))]))
+
+
+@pytest.mark.parametrize("row", [{"id": None, "tags": []}, {"id": 1, "tags": None}])
+def test_protobuf_values_without_presence_cannot_silently_lose_nulls(row):
+    from shape.streaming.binary import BinaryCodec
+
+    c = BinaryCodec(
+        "protobuf",
+        'syntax = "proto3"; message E { int64 id = 1; repeated string tags = 2; }',
+        message="E",
+    )
+    with pytest.raises(ValueError):
+        c.encode(row)
+    assert c.decode(c.encode({"id": 0, "tags": []})) == {"id": 0, "tags": []}
+
+
+def test_registry_url_rejection_never_echoes_credentials_for_unknown_schemes():
+    from shape_kafka.registry import RegistryClient
+
+    with pytest.raises(ShapeError) as caught:
+        RegistryClient("ftp://user:private-password@registry.test")
+    assert "private-password" not in str(caught.value)

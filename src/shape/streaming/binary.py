@@ -63,7 +63,7 @@ class BinaryCodec:
         for f in self.schema:
             if f.name not in schema.names:
                 raise ShapeError(f"schema field {f.name!r} is missing from the table")
-            _compatible(schema.field(f.name).type, f.type, f.name)
+            _compatible(schema.field(f.name).type, f.type, f.name, protobuf=self.fmt == "protobuf")
         for f in schema:
             if f.name not in self.schema.names and not f.name.startswith("_shape_"):
                 raise ShapeError(f"table field {f.name!r} is missing from the schema")
@@ -120,7 +120,7 @@ def _normal(value: Any, typ: pa.DataType) -> Any:
     if pa.types.is_string(typ) and isinstance(value, Decimal | UUID):
         return str(value)
     if pa.types.is_map(typ):
-        return {k: _normal(v, typ.item_type) for k, v in dict(value).items()}
+        return {_normal(k, typ.key_type): _normal(v, typ.item_type) for k, v in dict(value).items()}
     if pa.types.is_struct(typ):
         return {f.name: _normal(value.get(f.name), f.type) for f in typ}
     if pa.types.is_list(typ):
@@ -128,23 +128,34 @@ def _normal(value: Any, typ: pa.DataType) -> Any:
     return value
 
 
-def _compatible(actual: pa.DataType, expected: pa.DataType, path: str) -> None:
+def _compatible(
+    actual: pa.DataType, expected: pa.DataType, path: str, *, protobuf: bool = False
+) -> None:
     if pa.types.is_dictionary(actual):
         actual = actual.value_type
+    if protobuf:
+        if pa.types.is_date(actual):
+            actual = pa.int32()
+        elif pa.types.is_time(actual) or pa.types.is_timestamp(actual):
+            actual = pa.int64()
+        elif pa.types.is_decimal(actual) or (
+            isinstance(actual, pa.BaseExtensionType) and actual.extension_name == "arrow.uuid"
+        ):
+            actual = pa.string()
     if pa.types.is_struct(expected) and pa.types.is_struct(actual):
         for f in expected:
             if f.name not in [a.name for a in actual]:
                 raise ShapeError(f"schema field {path}.{f.name} is missing")
-            _compatible(actual.field(f.name).type, f.type, f"{path}.{f.name}")
+            _compatible(actual.field(f.name).type, f.type, f"{path}.{f.name}", protobuf=protobuf)
         for f in actual:
             if f.name not in [e.name for e in expected]:
                 raise ShapeError(f"table field {path}.{f.name} is missing from the schema")
         return
     if pa.types.is_list(expected) and (pa.types.is_list(actual) or pa.types.is_large_list(actual)):
-        return _compatible(actual.value_type, expected.value_type, f"{path}[]")
+        return _compatible(actual.value_type, expected.value_type, f"{path}[]", protobuf=protobuf)
     if pa.types.is_map(expected) and pa.types.is_map(actual):
-        _compatible(actual.key_type, expected.key_type, f"{path}.key")
-        return _compatible(actual.item_type, expected.item_type, f"{path}.value")
+        _compatible(actual.key_type, expected.key_type, f"{path}.key", protobuf=protobuf)
+        return _compatible(actual.item_type, expected.item_type, f"{path}.value", protobuf=protobuf)
     if actual == expected or pa.types.is_null(actual):
         return
     if pa.types.is_integer(actual) and pa.types.is_integer(expected):
@@ -338,6 +349,12 @@ def _proto_class(text: str, message: str | None) -> Any:
         raise ShapeError("invalid Protobuf event schema") from exc
 
 
+def _repeated(field: Any) -> bool:
+    if hasattr(field, "is_repeated"):
+        return bool(field.is_repeated)
+    return bool(field.label == field.LABEL_REPEATED)
+
+
 def _proto_arrow(desc: Any, active: frozenset[str] = frozenset()) -> pa.Schema:
     if desc.full_name in active:
         raise ShapeError("recursive Protobuf messages cannot form an Arrow schema")
@@ -374,7 +391,7 @@ def _proto_arrow(desc: Any, active: frozenset[str] = frozenset()) -> pa.Schema:
             t = pa.map_(typ(f.message_type.fields[0]), typ(f.message_type.fields[1]))
         else:
             t = typ(f)
-            if f.is_repeated:
+            if _repeated(f):
                 t = pa.list_(t)
         fields.append(pa.field(f.name, t))
     return pa.schema(fields)
@@ -384,6 +401,8 @@ def _fill_proto(msg: Any, row: Mapping[str, Any]) -> None:
     for f in msg.DESCRIPTOR.fields:
         value = row.get(f.name)
         if value is None:
+            if _repeated(f) or not f.has_presence:
+                raise ValueError(f"Protobuf field {f.full_name} cannot represent null")
             continue
         target = getattr(msg, f.name)
         if f.type == 11 and f.message_type.GetOptions().map_entry:
@@ -393,7 +412,7 @@ def _fill_proto(msg: Any, row: Mapping[str, Any]) -> None:
                     _fill_proto(target[k], v)
                 else:
                     target[k] = v
-        elif f.is_repeated:
+        elif _repeated(f):
             if f.type == 11:
                 for v in value:
                     _fill_proto(target.add(), v)
@@ -422,7 +441,7 @@ def _read_proto(msg: Any) -> dict[str, Any]:
         if f.type == 11 and f.message_type.GetOptions().map_entry:
             member = f.message_type.fields[1]
             row[f.name] = {k: _proto_value(member, v) for k, v in value.items()}
-        elif f.is_repeated:
+        elif _repeated(f):
             row[f.name] = [_proto_value(f, v) for v in value]
         elif f.has_presence and not msg.HasField(f.name):
             row[f.name] = None
