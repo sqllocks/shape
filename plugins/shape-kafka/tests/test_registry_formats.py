@@ -729,3 +729,38 @@ def test_nested_protobuf_keeps_existing_logical_scalar_conversions():
     got = reader.decode(body)
     assert got["items"] == [1]
     assert (got["ts"], got["day"], got["clock"], got["amount"]) == (1_000_000, 1, 2_000_000, "1.20")
+
+
+def test_nested_protobuf_wire_index_selects_root_record_in_registered_schema():
+    from shape.importers.protobuf import parse_proto
+    from shape.streaming.binary import BinaryCodec
+
+    batch = with_event_fields(
+        pa.RecordBatch.from_pylist([{"child": {"n": 7}, "items": [{"n": 8}]}]), "orders", 0
+    )
+    registry = FakeRegistry()
+    harness = _wires(registry, "protobuf", batch)
+    ((_, _, value, _),) = harness.store.log
+    assert value[5] == 0  # Confluent's compact message-index list [0].
+    (schema_id,) = struct.unpack(">I", value[1:5])
+    schema_text, schema_type = registry.schemas[schema_id]
+    assert schema_type == "PROTOBUF"
+    registered = parse_proto(schema_text, "<registered schema>")
+    selected = registered.messages[value[5]].full
+    reader = BinaryCodec("protobuf", schema_text, message=selected)
+    row = reader.decode(value[6:])
+    assert row["child"] == {"n": 7}
+    assert row["items"] == [{"n": 8}]
+    assert row["_shape_table"] == "orders"
+    assert row["_shape_seq"] == 0
+
+
+@pytest.mark.parametrize("indexes", [b"\x01", b"\x02\x02", b"\x80", b""])
+def test_registry_test_reader_refuses_unsupported_or_truncated_message_indexes(indexes):
+    batch = with_event_fields(pa.RecordBatch.from_pylist([{"id": 7}]), "orders", 0)
+    registry = FakeRegistry()
+    harness = _wires(registry, "protobuf", batch)
+    ((_, _, value, _),) = harness.store.log
+    malformed = value[:5] + indexes
+    with pytest.raises(ValueError, match="message index list"):
+        decode_messages(registry, [malformed], batch.schema)

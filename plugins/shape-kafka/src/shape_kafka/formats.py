@@ -626,6 +626,9 @@ def event_schema(fmt: str, table: str, schema: pa.Schema) -> str:
         return _proto_kind(Col(name, kind, False, **extra))
 
     def message(name: str, fields: Any) -> None:
+        # Reserve the root before child declarations: wire() advertises message index [0].
+        index = len(declarations)
+        declarations.append("")
         lines = [f"message {name} {{"]
         for i, f in enumerate(fields, 1):
             t = f.type
@@ -641,7 +644,7 @@ def event_schema(fmt: str, table: str, schema: pa.Schema) -> str:
                     mapped = "optional " + mapped
             lines.append(f"  {mapped} {f.name} = {i};")
         lines.append("}")
-        declarations.append("\n".join(lines))
+        declarations[index] = "\n".join(lines)
 
     message(table, [f for f in schema if f.name != "_shape_poison"])
     return 'syntax = "proto3";\npackage shape.events;\n' + "\n".join(declarations)
