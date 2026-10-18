@@ -620,3 +620,26 @@ def test_wanted_3_decimal_scale_native_boundary_before_catalog(tmp_path, scale):
     with pytest.raises(ValueError, match="amount"):
         write(uri(tmp_path), table)
     assert not (tmp_path / "warehouse/catalog.db").exists()
+
+
+@pytest.mark.parametrize("version", [True, 1.0, "1", None, 0, 2])
+def test_persisted_schema_version_is_integer_and_supported(version):
+    import json
+
+    from shape.builtins._iceberg import decode_schema
+
+    with pytest.raises(ValueError, match="version"):
+        decode_schema(json.dumps({"format": "shape.iceberg.arrow-schema", "version": version}))
+
+
+def test_frozen_v1_schema_metadata_remains_readable():
+    from shape.builtins._iceberg import decode_schema
+
+    # Frozen v1 IPC schema from the first Iceberg writer; do not regenerate on upgrade.
+    frozen = (
+        '{"format":"shape.iceberg.arrow-schema","version":1,"ipc":"'
+        "/////4AAAAAQAAAAAAAKAAwABgAFAAgACgAAAAABBAAMAAAACAAIAAAABAAIAAAABAAAAAEAAAAU"
+        "AAAAEAAUAAgABgAHAAwAAAAQABAAAAAAAAECEAAAACAAAAAEAAAAAAAAAAUAAABzbWFsbAAAAAgA"
+        'DAAIAAcACAAAAAAAAAEIAAAAAAAAAA=="}'
+    )
+    assert decode_schema(frozen).equals(pa.schema([("small", pa.int8())]))

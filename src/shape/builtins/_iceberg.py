@@ -104,7 +104,11 @@ def encode_schema(schema: pa.Schema) -> str:
 
 def decode_schema(value: str) -> pa.Schema:
     record = json.loads(value)
-    if record.get("format") != "shape.iceberg.arrow-schema" or record.get("version") != 1:
+    if (
+        record.get("format") != "shape.iceberg.arrow-schema"
+        or type(record.get("version")) is not int
+        or record["version"] != 1
+    ):
         raise ValueError("unsupported shape.iceberg.arrow-schema format or version")
     return pa.ipc.read_schema(pa.BufferReader(base64.b64decode(record["ipc"])))
 
