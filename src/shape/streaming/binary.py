@@ -90,7 +90,7 @@ class BinaryCodec:
                 row = _need("fastavro").schemaless_reader(buf, self._doc)
                 if buf.read(1):
                     raise ValueError("trailing bytes")
-                return dict(row)
+                return dict(_normal(row, pa.struct(list(self.schema)), encoding=False))
             msg = self._cls()
             msg.ParseFromString(body)
             return _read_proto(msg)
@@ -98,10 +98,10 @@ class BinaryCodec:
             raise ValueError(f"invalid {self.fmt} payload") from exc
 
 
-def _normal(value: Any, typ: pa.DataType) -> Any:
+def _normal(value: Any, typ: pa.DataType, *, encoding: bool = True) -> Any:
     if value is None:
         return None
-    if isinstance(value, float) and not math.isfinite(value):
+    if encoding and isinstance(value, float) and not math.isfinite(value):
         return None
     if pa.types.is_integer(typ):
         if isinstance(value, datetime):
@@ -120,11 +120,16 @@ def _normal(value: Any, typ: pa.DataType) -> Any:
     if pa.types.is_string(typ) and isinstance(value, Decimal | UUID):
         return str(value)
     if pa.types.is_map(typ):
-        return {_normal(k, typ.key_type): _normal(v, typ.item_type) for k, v in dict(value).items()}
+        return {
+            _normal(k, typ.key_type, encoding=encoding): _normal(
+                v, typ.item_type, encoding=encoding
+            )
+            for k, v in dict(value).items()
+        }
     if pa.types.is_struct(typ):
-        return {f.name: _normal(value.get(f.name), f.type) for f in typ}
+        return {f.name: _normal(value.get(f.name), f.type, encoding=encoding) for f in typ}
     if pa.types.is_list(typ):
-        return [_normal(v, typ.value_type) for v in value]
+        return [_normal(v, typ.value_type, encoding=encoding) for v in value]
     return value
 
 
@@ -133,14 +138,14 @@ def _compatible(
 ) -> None:
     if pa.types.is_dictionary(actual):
         actual = actual.value_type
+    if isinstance(actual, pa.BaseExtensionType) and actual.extension_name == "arrow.uuid":
+        actual = pa.string()
     if protobuf:
         if pa.types.is_date(actual):
             actual = pa.int32()
         elif pa.types.is_time(actual) or pa.types.is_timestamp(actual):
             actual = pa.int64()
-        elif pa.types.is_decimal(actual) or (
-            isinstance(actual, pa.BaseExtensionType) and actual.extension_name == "arrow.uuid"
-        ):
+        elif pa.types.is_decimal(actual):
             actual = pa.string()
     if pa.types.is_struct(expected) and pa.types.is_struct(actual):
         for f in expected:
@@ -162,6 +167,12 @@ def _compatible(
         if (
             pa.types.is_signed_integer(actual) == pa.types.is_signed_integer(expected)
             and actual.bit_width <= expected.bit_width
+        ):
+            return
+        if (
+            pa.types.is_unsigned_integer(actual)
+            and pa.types.is_signed_integer(expected)
+            and actual.bit_width < expected.bit_width
         ):
             return
     raise ShapeError(f"schema mismatch at field {path!r}: {actual} cannot be encoded as {expected}")

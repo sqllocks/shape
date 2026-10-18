@@ -105,6 +105,11 @@ with no registry wire-format prefix**. Protobuf uses the built-in proto3 parser;
 no `protoc` executable is needed. A schema mismatch names the field and stops
 before any event from that batch is sent. Local schemas describe the data fields;
 Shape's `_shape_*` fields are included only when declared in the schema.
+Local schema matching allows same-sign integer widening and unsigned-to-signed
+widening only when the destination is wider. Narrowing, signed-to-unsigned
+conversion, and uint64-to-Avro-long are refused at preflight. Registry-derived
+Avro retains its per-value uint64 overflow check. UUID extension fields map to
+wire strings; Avro logical UUIDs read as strings, including in nested fields.
 
 For CLI writes, use `--event-format avro` with
 `--sink-config kafka.schema_file=events.avsc`, or the same key under `eventhubs`.

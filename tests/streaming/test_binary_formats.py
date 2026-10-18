@@ -647,3 +647,174 @@ def test_registry_url_rejection_never_echoes_credentials_for_unknown_schemes():
     with pytest.raises(ShapeError) as caught:
         RegistryClient("ftp://user:private-password@registry.test")
     assert "private-password" not in str(caught.value)
+
+
+@pytest.mark.parametrize(
+    "arrow,kind,maximum",
+    [(pa.uint8(), "int", 255), (pa.uint16(), "int", 65535), (pa.uint32(), "long", 2**32 - 1)],
+)
+def test_local_avro_safe_unsigned_mappings_include_nested_boundaries(arrow, kind, maximum):
+    from shape.streaming.binary import BinaryCodec
+
+    text = json.dumps(
+        {
+            "type": "record",
+            "name": "E",
+            "fields": [
+                {"name": "id", "type": kind},
+                {
+                    "name": "child",
+                    "type": {
+                        "type": "record",
+                        "name": "C",
+                        "fields": [{"name": "n", "type": kind}],
+                    },
+                },
+                {"name": "items", "type": {"type": "array", "items": kind}},
+                {"name": "attrs", "type": {"type": "map", "values": kind}},
+            ],
+        }
+    )
+    c = BinaryCodec("avro", text)
+    schema = pa.schema(
+        [
+            ("id", arrow),
+            ("child", pa.struct([("n", arrow)])),
+            ("items", pa.list_(arrow)),
+            ("attrs", pa.map_(pa.string(), arrow)),
+        ]
+    )
+    c.validate_schema(schema)
+    for value in [0, maximum]:
+        row = {"id": value, "child": {"n": value}, "items": [value], "attrs": {"x": value}}
+        assert c.decode(c.encode(row)) == row
+
+
+@pytest.mark.parametrize(
+    "actual,kind", [(pa.uint32(), "int"), (pa.uint64(), "long"), (pa.int64(), "int")]
+)
+def test_local_avro_refuses_unsafe_integer_widths(actual, kind):
+    from shape.streaming.binary import BinaryCodec
+
+    c = BinaryCodec(
+        "avro",
+        json.dumps({"type": "record", "name": "E", "fields": [{"name": "id", "type": kind}]}),
+    )
+    with pytest.raises(ShapeError, match="id"):
+        c.validate_schema(pa.schema([("id", actual)]))
+
+
+def test_avro_long_overflow_is_refused_at_wire_boundary():
+    from shape.streaming.binary import BinaryCodec
+
+    c = BinaryCodec("avro", '{"type":"record","name":"E","fields":[{"name":"id","type":"long"}]}')
+    assert c.decode(c.encode({"id": 2**63 - 1})) == {"id": 2**63 - 1}
+    assert c.decode(c.encode({"id": -(2**63)})) == {"id": -(2**63)}
+    with pytest.raises(ValueError):
+        c.encode({"id": 2**63})
+    with pytest.raises(ValueError):
+        c.encode({"id": -(2**63) - 1})
+
+
+@pytest.mark.parametrize("fmt", ["avro", "protobuf"])
+def test_local_uuid_wire_strings_keep_nested_types_on_read_and_write(fmt):
+    import uuid
+
+    from shape.streaming.binary import BinaryCodec
+
+    class UUIDType(pa.ExtensionType):
+        def __init__(self):
+            super().__init__(pa.binary(16), "arrow.uuid")
+
+        def __arrow_ext_serialize__(self):
+            return b""
+
+        @classmethod
+        def __arrow_ext_deserialize__(cls, storage_type, serialized):
+            return cls()
+
+    arrow = pa.uuid() if hasattr(pa, "uuid") else UUIDType()
+    item = {"type": "string", "logicalType": "uuid"}
+    text = (
+        json.dumps(
+            {
+                "type": "record",
+                "name": "E",
+                "fields": [
+                    {"name": "id", "type": item},
+                    {
+                        "name": "child",
+                        "type": {
+                            "type": "record",
+                            "name": "C",
+                            "fields": [{"name": "n", "type": item}],
+                        },
+                    },
+                    {"name": "items", "type": {"type": "array", "items": item}},
+                    {"name": "attrs", "type": {"type": "map", "values": item}},
+                ],
+            }
+        )
+        if fmt == "avro"
+        else """syntax = "proto3";
+    message E {
+      string id = 1; C child = 2; repeated string items = 3; map<string,string> attrs = 4;
+    }
+    message C { string n = 1; }
+    """
+    )
+    c = BinaryCodec(fmt, text, message="E")
+    schema = pa.schema(
+        [
+            ("id", arrow),
+            ("child", pa.struct([("n", arrow)])),
+            ("items", pa.list_(arrow)),
+            ("attrs", pa.map_(pa.string(), arrow)),
+        ]
+    )
+    c.validate_schema(schema)
+    with pytest.raises(ShapeError, match="id"):
+        c.validate_schema(schema.set(0, pa.field("id", pa.binary(16))))
+    value = uuid.UUID(int=7)
+    row = {"id": value, "child": {"n": value}, "items": [value], "attrs": {"x": value}}
+    body = c.encode(row)
+    expected = {
+        "id": str(value),
+        "child": {"n": str(value)},
+        "items": [str(value)],
+        "attrs": {"x": str(value)},
+    }
+    assert c.decode(body) == expected
+    batch = decode_messages([StreamMessage("0", 0, body)], decoder=c.decode)
+    assert batch.num_rows == 1
+    assert batch.schema.field("id").type == pa.string()
+    assert pa.types.is_struct(batch.schema.field("child").type)
+    assert pa.types.is_list(batch.schema.field("items").type)
+    assert pa.types.is_map(batch.schema.field("attrs").type)
+
+
+def test_protobuf_integer_mapping_keeps_unsafe_signedness_refusals():
+    from shape.streaming.binary import BinaryCodec
+
+    signed = BinaryCodec("protobuf", 'syntax = "proto3"; message E { int64 id = 1; }', message="E")
+    signed.validate_schema(pa.schema([("id", pa.uint32())]))
+    assert signed.decode(signed.encode({"id": 2**32 - 1})) == {"id": 2**32 - 1}
+    unsigned = BinaryCodec(
+        "protobuf", 'syntax = "proto3"; message E { uint32 id = 1; }', message="E"
+    )
+    with pytest.raises(ShapeError, match="id"):
+        unsigned.validate_schema(pa.schema([("id", pa.int32())]))
+    with pytest.raises(ValueError):
+        unsigned.encode({"id": -1})
+
+
+def test_avro_uuid_normalization_does_not_change_nonfinite_read_values():
+    import math
+
+    from shape.streaming.binary import BinaryCodec
+
+    text = '{"type":"record","name":"E","fields":[{"name":"value","type":"double"}]}'
+    buf = io.BytesIO()
+    fastavro.schemaless_writer(buf, json.loads(text), {"value": float("nan")})
+    c = BinaryCodec("avro", text)
+    assert math.isnan(c.decode(buf.getvalue())["value"])
