@@ -487,9 +487,10 @@ shape from-dbt my_dbt_project --profile day1.shape      # weight the enums by a 
 
       Output: dbt_import.gen.json
       Metadata: dbt_import.gen.dbt-meta.json
-      Tables: 5
+      Tables: 6
       Relationships: 1
       customers: 7 columns (PK: customer_id)
+      metricflow_time_spine: 1 columns
       orders: 5 columns (PK: order_id)
       stg_customers: 0 columns
       stg_orders: 0 columns
@@ -595,80 +596,85 @@ dbt build --project-dir my_dbt_project --profiles-dir my_dbt_project
       raw_orders: 2,000 rows -> seeds/raw_orders.csv
       raw_payments: 12,500 rows -> seeds/raw_payments.csv
     Seeds written to my_dbt_project/seeds; run `dbt seed` or `dbt build`
-    17:28:10  Running with dbt=1.12.5
-    17:28:11  Registered adapter: duckdb=1.11.0
-    17:28:11  Found 5 models, 23 data tests, 3 seeds, 3 sources, 883 macros
-    17:28:11  
-    17:28:11  Concurrency: 1 threads (target='dev')
-    17:28:11  
-    17:28:12  1 of 31 START seed file main.raw_customers ..................................... [RUN]
-    17:28:12  1 of 31 OK loaded seed file main.raw_customers ................................. [INSERT 1000 in 0.08s]
-    17:28:12  2 of 31 START seed file main.raw_orders ........................................ [RUN]
-    17:28:12  2 of 31 OK loaded seed file main.raw_orders .................................... [INSERT 2000 in 0.08s]
-    17:28:12  3 of 31 START seed file main.raw_payments ...................................... [RUN]
-    17:28:12  3 of 31 OK loaded seed file main.raw_payments .................................. [INSERT 12500 in 0.19s]
-    17:28:12  4 of 31 START test source_accepted_values_raw_raw_orders_status__placed__shipped__completed__return_pending__returned  [RUN]
-    17:28:12  4 of 31 PASS source_accepted_values_raw_raw_orders_status__placed__shipped__completed__return_pending__returned  [PASS in 0.07s]
-    17:28:12  5 of 31 START test source_accepted_values_raw_raw_payments_payment_method__credit_card__coupon__bank_transfer__gift_card  [RUN]
-    17:28:12  5 of 31 PASS source_accepted_values_raw_raw_payments_payment_method__credit_card__coupon__bank_transfer__gift_card  [PASS in 0.03s]
-    17:28:12  6 of 31 START test source_not_null_raw_raw_customers_customer_id ............... [RUN]
-    17:28:12  6 of 31 PASS source_not_null_raw_raw_customers_customer_id ..................... [PASS in 0.02s]
-    17:28:12  7 of 31 START test source_not_null_raw_raw_orders_customer_id .................. [RUN]
-    17:28:12  7 of 31 PASS source_not_null_raw_raw_orders_customer_id ........................ [PASS in 0.02s]
-    17:28:12  8 of 31 START test source_not_null_raw_raw_orders_order_date ................... [RUN]
-    17:28:12  8 of 31 PASS source_not_null_raw_raw_orders_order_date ......................... [PASS in 0.02s]
-    17:28:12  9 of 31 START test source_not_null_raw_raw_orders_order_id ..................... [RUN]
-    17:28:12  9 of 31 PASS source_not_null_raw_raw_orders_order_id ........................... [PASS in 0.02s]
-    17:28:12  10 of 31 START test source_not_null_raw_raw_orders_status ...................... [RUN]
-    17:28:12  10 of 31 PASS source_not_null_raw_raw_orders_status ............................ [PASS in 0.02s]
-    17:28:12  11 of 31 START test source_not_null_raw_raw_payments_amount .................... [RUN]
-    17:28:12  11 of 31 PASS source_not_null_raw_raw_payments_amount .......................... [PASS in 0.02s]
-    17:28:12  12 of 31 START test source_not_null_raw_raw_payments_order_id .................. [RUN]
-    17:28:12  12 of 31 PASS source_not_null_raw_raw_payments_order_id ........................ [PASS in 0.02s]
-    17:28:12  13 of 31 START test source_not_null_raw_raw_payments_payment_id ................ [RUN]
-    17:28:12  13 of 31 PASS source_not_null_raw_raw_payments_payment_id ...................... [PASS in 0.02s]
-    17:28:12  14 of 31 START test source_not_null_raw_raw_payments_payment_method ............ [RUN]
-    17:28:12  14 of 31 PASS source_not_null_raw_raw_payments_payment_method .................. [PASS in 0.02s]
-    17:28:12  15 of 31 START test source_relationships_raw_raw_orders_customer_id__customer_id__source_raw_raw_customers_  [RUN]
-    17:28:12  15 of 31 PASS source_relationships_raw_raw_orders_customer_id__customer_id__source_raw_raw_customers_  [PASS in 0.03s]
-    17:28:12  16 of 31 START test source_relationships_raw_raw_payments_order_id__order_id__source_raw_raw_orders_  [RUN]
-    17:28:12  16 of 31 PASS source_relationships_raw_raw_payments_order_id__order_id__source_raw_raw_orders_  [PASS in 0.03s]
-    17:28:12  17 of 31 START test source_unique_raw_raw_customers_customer_id ................ [RUN]
-    17:28:12  17 of 31 PASS source_unique_raw_raw_customers_customer_id ...................... [PASS in 0.02s]
-    17:28:12  18 of 31 START test source_unique_raw_raw_orders_order_id ...................... [RUN]
-    17:28:12  18 of 31 PASS source_unique_raw_raw_orders_order_id ............................ [PASS in 0.02s]
-    17:28:12  19 of 31 START test source_unique_raw_raw_payments_payment_id .................. [RUN]
-    17:28:12  19 of 31 PASS source_unique_raw_raw_payments_payment_id ........................ [PASS in 0.02s]
-    17:28:12  20 of 31 START sql view model main.stg_customers ............................... [RUN]
-    17:28:12  20 of 31 OK created sql view model main.stg_customers .......................... [OK in 0.05s]
-    17:28:12  21 of 31 START sql view model main.stg_orders .................................. [RUN]
-    17:28:12  21 of 31 OK created sql view model main.stg_orders ............................. [OK in 0.02s]
-    17:28:12  22 of 31 START sql view model main.stg_payments ................................ [RUN]
-    17:28:12  22 of 31 OK created sql view model main.stg_payments ........................... [OK in 0.02s]
-    17:28:12  23 of 31 START sql table model main.orders ..................................... [RUN]
-    17:28:13  23 of 31 OK created sql table model main.orders ................................ [OK in 0.12s]
-    17:28:13  24 of 31 START test accepted_values_orders_status__placed__shipped__completed__return_pending__returned  [RUN]
-    17:28:13  24 of 31 PASS accepted_values_orders_status__placed__shipped__completed__return_pending__returned  [PASS in 0.02s]
-    17:28:13  25 of 31 START test not_null_orders_customer_id ................................ [RUN]
-    17:28:13  25 of 31 PASS not_null_orders_customer_id ...................................... [PASS in 0.02s]
-    17:28:13  26 of 31 START test not_null_orders_order_id ................................... [RUN]
-    17:28:13  26 of 31 PASS not_null_orders_order_id ......................................... [PASS in 0.02s]
-    17:28:13  27 of 31 START test unique_orders_order_id ..................................... [RUN]
-    17:28:13  27 of 31 PASS unique_orders_order_id ........................................... [PASS in 0.02s]
-    17:28:13  28 of 31 START sql table model main.customers .................................. [RUN]
-    17:28:13  28 of 31 OK created sql table model main.customers ............................. [OK in 0.04s]
-    17:28:13  29 of 31 START test not_null_customers_customer_id ............................. [RUN]
-    17:28:13  29 of 31 PASS not_null_customers_customer_id ................................... [PASS in 0.02s]
-    17:28:13  30 of 31 START test relationships_orders_customer_id__customer_id__ref_customers_  [RUN]
-    17:28:13  30 of 31 PASS relationships_orders_customer_id__customer_id__ref_customers_ .... [PASS in 0.02s]
-    17:28:13  31 of 31 START test unique_customers_customer_id ............................... [RUN]
-    17:28:13  31 of 31 PASS unique_customers_customer_id ..................................... [PASS in 0.02s]
-    17:28:13  
-    17:28:13  Finished running 3 seeds, 2 table models, 23 data tests, 3 view models in 0 hours 0 minutes and 1.28 seconds (1.28s).
-    17:28:13  
-    17:28:13  Completed successfully
-    17:28:13  
-    17:28:13  Done. PASS=31 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=31
+    17:17:37  Running with dbt=1.12.5
+    17:17:37  Registered adapter: duckdb=1.11.0
+    17:17:38  Found 6 models, 24 data tests, 3 seeds, 3 sources, 1 exposure, 1 metric, 883 macros, 1 semantic model
+    17:17:38  
+    17:17:38  Concurrency: 1 threads (target='dev')
+    17:17:38  
+    17:17:38  1 of 34 START sql table model main.metricflow_time_spine ....................... [RUN]
+    17:17:38  1 of 34 OK created sql table model main.metricflow_time_spine .................. [OK in 0.07s]
+    17:17:38  2 of 34 START seed file main.raw_customers ..................................... [RUN]
+    17:17:38  2 of 34 OK loaded seed file main.raw_customers ................................. [INSERT 1000 in 0.04s]
+    17:17:38  3 of 34 START seed file main.raw_orders ........................................ [RUN]
+    17:17:38  3 of 34 OK loaded seed file main.raw_orders .................................... [INSERT 2000 in 0.05s]
+    17:17:38  4 of 34 START seed file main.raw_payments ...................................... [RUN]
+    17:17:38  4 of 34 OK loaded seed file main.raw_payments .................................. [INSERT 12500 in 0.16s]
+    17:17:38  5 of 34 START test source_accepted_values_raw_raw_orders_status__placed__shipped__completed__return_pending__returned  [RUN]
+    17:17:38  5 of 34 PASS source_accepted_values_raw_raw_orders_status__placed__shipped__completed__return_pending__returned  [PASS in 0.04s]
+    17:17:38  6 of 34 START test source_accepted_values_raw_raw_payments_payment_method__credit_card__coupon__bank_transfer__gift_card  [RUN]
+    17:17:38  6 of 34 PASS source_accepted_values_raw_raw_payments_payment_method__credit_card__coupon__bank_transfer__gift_card  [PASS in 0.02s]
+    17:17:38  7 of 34 START test source_not_null_raw_raw_customers_customer_id ............... [RUN]
+    17:17:38  7 of 34 PASS source_not_null_raw_raw_customers_customer_id ..................... [PASS in 0.02s]
+    17:17:38  8 of 34 START test source_not_null_raw_raw_orders_customer_id .................. [RUN]
+    17:17:38  8 of 34 PASS source_not_null_raw_raw_orders_customer_id ........................ [PASS in 0.01s]
+    17:17:39  9 of 34 START test source_not_null_raw_raw_orders_order_date ................... [RUN]
+    17:17:39  9 of 34 PASS source_not_null_raw_raw_orders_order_date ......................... [PASS in 0.01s]
+    17:17:39  10 of 34 START test source_not_null_raw_raw_orders_order_id .................... [RUN]
+    17:17:39  10 of 34 PASS source_not_null_raw_raw_orders_order_id .......................... [PASS in 0.01s]
+    17:17:39  11 of 34 START test source_not_null_raw_raw_orders_status ...................... [RUN]
+    17:17:39  11 of 34 PASS source_not_null_raw_raw_orders_status ............................ [PASS in 0.01s]
+    17:17:39  12 of 34 START test source_not_null_raw_raw_payments_amount .................... [RUN]
+    17:17:39  12 of 34 PASS source_not_null_raw_raw_payments_amount .......................... [PASS in 0.01s]
+    17:17:39  13 of 34 START test source_not_null_raw_raw_payments_order_id .................. [RUN]
+    17:17:39  13 of 34 PASS source_not_null_raw_raw_payments_order_id ........................ [PASS in 0.01s]
+    17:17:39  14 of 34 START test source_not_null_raw_raw_payments_payment_id ................ [RUN]
+    17:17:39  14 of 34 PASS source_not_null_raw_raw_payments_payment_id ...................... [PASS in 0.01s]
+    17:17:39  15 of 34 START test source_not_null_raw_raw_payments_payment_method ............ [RUN]
+    17:17:39  15 of 34 PASS source_not_null_raw_raw_payments_payment_method .................. [PASS in 0.01s]
+    17:17:39  16 of 34 START test source_relationships_raw_raw_orders_customer_id__customer_id__source_raw_raw_customers_  [RUN]
+    17:17:39  16 of 34 PASS source_relationships_raw_raw_orders_customer_id__customer_id__source_raw_raw_customers_  [PASS in 0.02s]
+    17:17:39  17 of 34 START test source_relationships_raw_raw_payments_order_id__order_id__source_raw_raw_orders_  [RUN]
+    17:17:39  17 of 34 PASS source_relationships_raw_raw_payments_order_id__order_id__source_raw_raw_orders_  [PASS in 0.02s]
+    17:17:39  18 of 34 START test source_unique_raw_raw_customers_customer_id ................ [RUN]
+    17:17:39  18 of 34 PASS source_unique_raw_raw_customers_customer_id ...................... [PASS in 0.02s]
+    17:17:39  19 of 34 START test source_unique_raw_raw_orders_order_id ...................... [RUN]
+    17:17:39  19 of 34 PASS source_unique_raw_raw_orders_order_id ............................ [PASS in 0.01s]
+    17:17:39  20 of 34 START test source_unique_raw_raw_payments_payment_id .................. [RUN]
+    17:17:39  20 of 34 PASS source_unique_raw_raw_payments_payment_id ........................ [PASS in 0.03s]
+    17:17:39  21 of 34 START sql view model main.stg_customers ............................... [RUN]
+    17:17:39  21 of 34 OK created sql view model main.stg_customers .......................... [OK in 0.03s]
+    17:17:39  22 of 34 START sql view model main.stg_orders .................................. [RUN]
+    17:17:39  22 of 34 OK created sql view model main.stg_orders ............................. [OK in 0.02s]
+    17:17:39  23 of 34 START sql view model main.stg_payments ................................ [RUN]
+    17:17:39  23 of 34 OK created sql view model main.stg_payments ........................... [OK in 0.02s]
+    17:17:39  24 of 34 START sql table model main.orders ..................................... [RUN]
+    17:17:39  24 of 34 OK created sql table model main.orders ................................ [OK in 0.07s]
+    17:17:39  25 of 34 NO-OP exposure orders_dashboard ....................................... [NO-OP in 0.00s]
+    17:17:39  26 of 34 START test accepted_values_orders_status__placed__shipped__completed__return_pending__returned  [RUN]
+    17:17:39  26 of 34 PASS accepted_values_orders_status__placed__shipped__completed__return_pending__returned  [PASS in 0.02s]
+    17:17:39  27 of 34 START test not_null_orders_customer_id ................................ [RUN]
+    17:17:39  27 of 34 PASS not_null_orders_customer_id ...................................... [PASS in 0.02s]
+    17:17:39  28 of 34 START test not_null_orders_order_id ................................... [RUN]
+    17:17:39  28 of 34 PASS not_null_orders_order_id ......................................... [PASS in 0.01s]
+    17:17:39  29 of 34 START test orders__amount__min ........................................ [RUN]
+    17:17:39  29 of 34 PASS orders__amount__min .............................................. [PASS in 0.01s]
+    17:17:39  30 of 34 START test unique_orders_order_id ..................................... [RUN]
+    17:17:39  30 of 34 PASS unique_orders_order_id ........................................... [PASS in 0.01s]
+    17:17:39  31 of 34 START sql table model main.customers .................................. [RUN]
+    17:17:39  31 of 34 OK created sql table model main.customers ............................. [OK in 0.03s]
+    17:17:39  32 of 34 START test not_null_customers_customer_id ............................. [RUN]
+    17:17:39  32 of 34 PASS not_null_customers_customer_id ................................... [PASS in 0.01s]
+    17:17:39  33 of 34 START test relationships_orders_customer_id__customer_id__ref_customers_  [RUN]
+    17:17:39  33 of 34 PASS relationships_orders_customer_id__customer_id__ref_customers_ .... [PASS in 0.02s]
+    17:17:39  34 of 34 START test unique_customers_customer_id ............................... [RUN]
+    17:17:39  34 of 34 PASS unique_customers_customer_id ..................................... [PASS in 0.01s]
+    17:17:39  
+    17:17:39  Finished running 1 exposure, 3 seeds, 3 table models, 24 data tests, 3 view models in 0 hours 0 minutes and 1.01 seconds (1.01s).
+    17:17:39  
+    17:17:39  Completed successfully
+    17:17:39  
+    17:17:39  Done. PASS=33 WARN=0 ERROR=0 SKIP=0 NO-OP=1 REUSED=0 TOTAL=34
     ```
 
 <a id="local-example-6"></a>
@@ -688,36 +694,36 @@ python -m pytest -q -m dbt plugins/shape-dbt/tests | sed -E 's/( in [0-9]+(\.[0-
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    ............................................................................................ [ 85%]
-    ................                                                                             [100%]
+    ............................................................................................ [ 64%]
+    ..................................................                                           [100%]
     ========================================= warnings summary =========================================
     plugins/shape-dbt/tests/test_report.py::test_the_cli_computes_the_check_and_the_drift_from_profiles
-      <checkout>/plugins/shape-dbt/src/shape_dbt/commands.py:353: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-14/test_the_cli_computes_the_chec0/now.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+      <checkout>/plugins/shape-dbt/src/shape_dbt/commands.py:379: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-14/test_the_cli_computes_the_chec0/now.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
         current = shape.load(args.profile)
 
     plugins/shape-dbt/tests/test_report.py::test_the_cli_computes_the_check_and_the_drift_from_profiles
-      <checkout>/plugins/shape-dbt/src/shape_dbt/commands.py:357: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-14/test_the_cli_computes_the_chec0/base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+      <checkout>/plugins/shape-dbt/src/shape_dbt/commands.py:383: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-14/test_the_cli_computes_the_chec0/base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
         drift = shape.diff(shape.load(args.baseline), current).to_dict()
 
     plugins/shape-dbt/tests/test_to_dbt_tests.py::test_the_cli_compiles_a_profile_with_distribution_bounds
-      <checkout>/plugins/shape-dbt/src/shape_dbt/commands.py:194: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-14/test_the_cli_compiles_a_profil0/orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+      <checkout>/plugins/shape-dbt/src/shape_dbt/commands.py:203: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-14/test_the_cli_compiles_a_profil0/orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
         profile = shape.load(src)
 
     -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    108 passed, 7 deselected, 3 warnings in 4.16s
+    142 passed, 8 deselected, 3 warnings in 4.16s
     dbt-duckdb is installed
-    .......                                                                                      [100%]
+    ........                                                                                     [100%]
     ========================================= warnings summary =========================================
     plugins/shape-dbt/tests/test_dbt_build.py::test_a_failed_dbt_test_and_a_shape_drift_finding_appear_in_one_report
-      <checkout>/plugins/shape-dbt/src/shape_dbt/commands.py:353: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-15/jaffle0/current.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+      <checkout>/plugins/shape-dbt/src/shape_dbt/commands.py:379: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-15/jaffle0/current.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
         current = shape.load(args.profile)
 
     plugins/shape-dbt/tests/test_dbt_build.py::test_a_failed_dbt_test_and_a_shape_drift_finding_appear_in_one_report
-      <checkout>/plugins/shape-dbt/src/shape_dbt/commands.py:357: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-15/jaffle0/baseline.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+      <checkout>/plugins/shape-dbt/src/shape_dbt/commands.py:383: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-15/jaffle0/baseline.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
         drift = shape.diff(shape.load(args.baseline), current).to_dict()
 
     -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    7 passed, 108 deselected, 2 warnings in 16.64s
+    8 passed, 142 deselected, 2 warnings in 16.64s
     ```
 
 ## Semantic models and singular tests
