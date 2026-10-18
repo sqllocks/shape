@@ -1,33 +1,39 @@
-# Owner questions
+# Parked Owner questions
 
-## #20: Actions artifact storage access
+## #20 FRZ-01: comparison contract for authenticated 0.9.1 recordings
 
-Git fetch/push and GitHub issue/job/artifact listing APIs work. `gh run download 39110102198 -n parity-profile -n parity-generate-1 -D /tmp/public-b-nightly` fails at the redirected Actions results Azure blob host with Forbidden. An independent urllib request through the inherited proxy reports `Tunnel connection failed: 403 Forbidden`. No artifact contents were obtained. The supported environment status reports no diagnostic reason and network readiness `unknown`. No network-policy bypass attempted.
+Both requested artifacts and original job logs are now retrieved through the GitHub connector. The initial artifact-access problem is resolved and is no longer a blocker. See [exact evidence](FRZ-01-evidence.md) for artifact hashes, all six failing workloads, all 14 generation flags and recorded/observed values.
 
-Options: restore access to the redirected Actions artifact storage host using the supported environment configuration; or provide the two artifact archives through an accessible approved location. Recommendation: restore normal Actions artifact download access, then inspect both archives before any fix or baseline decision. Exact failing workload/verifier/values and root cause remain unknown. No tolerance/pass-rule/recording changes are justified by current evidence.
+The four profile mismatches compare recorded nested-input TypeError failures against intentionally added nested support, or capture-Tuesday weekday statistics against Sunday for time-only values with no calendar date. Reconstructed input hashes match the authenticated recordings and the unchanged verifier reproduces all four. The two generation workloads compare approved synthetic reference labels against the older 0.9.1 labels; Owner commit904d5d2 deliberately replaced those labels and the domain documentation warns that fixtures change. No real product regression or fix preserving the current comparison rules was identified.
+
+Decision: how should equivalence handle newly supported baseline inputs, missing capture-clock context, and intentionally substituted reference labels? Options: keep the present strict contract and its red result; authorize explicit, tested noncomparability handling for these cases while retaining recorded values and numeric thresholds; or separately authorize and justify a new baseline policy. Recommendation: define explicit noncomparability handling with tests, preserving all recordings and numeric tolerances. That changes a current pass rule and is prohibited in this run, so no implementation, re-recording, tolerance change, product PR, merge or Nightly dispatch is made. Issue20 remains open and parked.
+
+Issue evidence comment: https://github.com/sqllocks/shape/issues/20#issuecomment-6252771902
+
+## #6 W9-05: unsupported nested-baseline clause
+
+Wanted5 explicitly asks to report nested baseline inputs as unsupported rather than differences. The existing recorded-error equivalence rule instead fails when current Shape succeeds on an input that the baseline rejected. The merged FIX-NESTED dependency intentionally supports those inputs. Current comparison reproductions and exact matching input hashes are in lane/W9-05 (updated journal3de70e3) and FRZ-01-evidence.md. Ten tests were recorded red against main, but no child-feature implementation is shipped.
+
+Options: defer Wanted5 and retain strict exception matching; or authorize explicit unsupported-baseline classification together with the #20 comparison-contract decision. Recommendation: explicit authorized classification, preserving recordings and numeric thresholds. Restoring obsolete nested TypeError failures would regress merged functionality. The lane's Owner action is explicit; no live execution is claimed.
+
+Issue comment: https://github.com/sqllocks/shape/issues/6#issuecomment-6252336978
+
+## #14 W9-13: merged source dependency
+
+The issue explicitly depends on W9-01 and requires reusing its source catalog/sampling model. Latest verified main d0e64d5 still has only database-plugin sink modules. No Lead A branch or issue was inspected or modified. The preserved own lane/W9-13 journal1249af9 contains no implementation.
+
+Options: wait for the dependency to merge and reuse its interface; or authorize an explicit scope/interface change. Recommendation: wait for the merged interface. This run does not design a parallel source model.
+
+Issue comment: https://github.com/sqllocks/shape/issues/14#issuecomment-6252276474
+
+## #14 W9-13: decimal native boundaries
+
+The prior own journal also documents decimal128(10,-1) and decimal128(2,3): they satisfy the literal Wanted NUMERIC inequalities, but BigQuery rejects negative scale or precision below scale.
+
+Options: authorize refusal outside native0<=s<=p; authorize a specified widening/rescaling policy; or retain the literal, unimplementable mapping. Recommendation: refuse invalid native boundaries while naming the column, and preserve precision/scale for accepted types. No implementation is shipped while the source dependency remains absent.
+
+## Pending service validation after offline acceptance
+
+These are future Owner actions, not unclaimed passing tests or blockers to the specified offline acceptance: Kafka/Event Hubs account round trips (#9/#10), Azure Schema Registry Avro round trip (#10), Eventhouse account read-back (#12), a semantic model containing a measure and role (#13), and nightly emulator services where images can be pulled (#9/#10/#12/#17). No live test has been run or claimed. dbt introduces no account-dependent live requirement.
 
 Generated by Codex
-
-## #14: W9-01 source dependency
-
-Current main's database plugin has sink modules only, with no W9-01 catalog/sampling source model. The issue explicitly depends on W9-01 and requires reusing that interface. Options: wait for Lead A's merge, or Owner-approved scope/interface change. Recommendation: wait and reuse the merged source model. No independent source design or Lead A branch/issue inspection performed.
-
-## #20: additional local parity evidence
-
-The #6 investigation reconstructed only the two original 60-row nested Parquet inputs from unchanged fixture definitions. Both SHA-256 values match the authenticated release recordings. The unchanged verifier fails both with `error category differs`: the Shape 0.9.1 recordings contain `TypeError`, while current main intentionally supports the inputs and succeeds with `dtype=nested`. Exact paths, hashes, command and exit1 are recorded on lane/W9-05 at afbf4c5 in docs/plans/lane_status/W9-05.md. This does not identify the complete failing workload set in run39110102198: both required artifact archives remain inaccessible, including a new attempt after environment revision5 reports credentials ready.
-
-Owner decision needed: retain strict recorded exception equivalence, or explicitly authorize unsupported-baseline handling for newly supported inputs? Recommendation: define/test explicit unsupported-baseline handling without touching recorded values or numeric tolerances. This would change a current pass rule, so no implementation is made under the present prohibition. Deliberately restoring nested TypeError failures would regress merged functionality and is not recommended.
-
-## #14: prior lane's decimal boundary question
-
-The preserved journal at origin/lane/W9-13 (1249af9) additionally documents decimal128(10,-1) and decimal128(2,3). These satisfy the issue's literal NUMERIC inequalities but BigQuery rejects negative scale and precision below scale. Options: authorize native 0<=s<=p refusal, authorize a specified widening/rescaling policy, or retain an unimplementable literal mapping. Recommendation: native-boundary refusal naming the column, with unchanged precision/scale for accepted types. No implementation is shipped while its W9-01 dependency remains unmerged.
-
-
-## #20 updated disposition: artifacts retrieved, comparison contract blocked
-
-Artifact access is resolved through the GitHub connector. FRZ-01-evidence.md names all six exact failing workloads, their verifiers and observed/recorded values. Four profile mismatches arise from newly supported nested inputs and capture-date-dependent weekday statistics; two generation workloads reject intentionally replaced synthetic reference labels mandated by Owner904d5d2. Neither a real Shape regression nor an authorized no-rule-change fix was found. Preserve recordings/gates and request an explicit comparison contract for these cases. Options and recommendation are in the evidence file. #20 remains parked and open; no dispatch or merge.
-
-
-## #6: nested unsupported-baseline clause
-
-Wanted5 explicitly asks to report nested baseline inputs as unsupported rather than differences, while the current recorded-error equivalence pass rule rejects candidate success. Main already intentionally supports those inputs via the merged dependency. Options: defer Wanted5 and retain strict exception matching, or explicitly authorize/test unsupported-baseline classification after the #20 comparison-contract decision. Recommendation: explicit authorized classification; preserve recordings and numeric thresholds. No child-feature implementation is shipped until this conflict is resolved. Evidence branch lane/W9-05 afbf4c5 and FRZ-01-evidence.md reproduce it with exact input hashes.
