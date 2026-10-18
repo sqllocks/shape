@@ -557,3 +557,22 @@ def _to_cols(kind: str, table: pa.Table) -> list[_Col]:
             c.type_source = "inferred"
             c.declared = None
     return cols
+
+
+def profile_or_load(path: str | Path) -> Any:
+    """A saved profile or a live catalog source profile for diff/bridge inputs."""
+    import shape
+
+    if isinstance(path, str) and "://" in path:
+        from shape.plugins.host import default_host
+
+        host = default_host()
+        for rec in host.records("shape.sources"):
+            source = host.try_get(rec.group, rec.name)
+            if (
+                source is not None
+                and callable(getattr(source, "profile_tables", None))
+                and source.can_open(path)
+            ):
+                return shape.profile(path)
+    return shape.load(path)
