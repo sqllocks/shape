@@ -12,6 +12,8 @@ from shape.builtins._iceberg import SCHEMA_KEY, catalog, convert_batch, decode_s
 
 
 class IcebergSource:
+    """Read native Iceberg snapshots and profile a table or namespace."""
+
     name = "iceberg"
     schemes = ("iceberg", "iceberg+file")
 

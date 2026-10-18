@@ -211,6 +211,8 @@ class IcebergTableWriter:
 
 
 class IcebergSink:
+    """Write Arrow batches to an optional local or named Iceberg catalog."""
+
     name = "iceberg"
     schemes = ("iceberg", "iceberg+file")
     extension = ""
