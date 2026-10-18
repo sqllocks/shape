@@ -165,3 +165,29 @@ Cycle updates: consolidated questions.md to resolved artifact access and current
 - `date -u && tail -c 500 /tmp/w9-11-detached-core-rust.log && df -h /workspace && ps -eo stat | rg -c '^Z'` — exit 0.
 
 Formats final cycle: sourcefix d6dc9f3 signed/pushed and independentAPPROVED (agentledger),214focused per mode. Own6branch Actionslisting plus currentPRheads each exit0; only obsoleteformats693daf7 docs39150888899 andCI39150888883 stillactive. Reconfirmed PR34finalheadd6dc9f3 beforeeachcancel; bothcancelAPI exit0. No currentheadrun cancelled. Subsequent resource/status reads exit0, Eventhouse native full at24% withnoF, disk15GBfree/zombies96. Iceberg formerdocs/shippedwheel jobs nowpassedcurrenta73b434; no all-CI green claim.
+
+- `python - <<'PY' from pathlib import Path p=Path('/workspace/shape/docs/plans/lane_status/public-b-2026-10-18/state.md');s=p.read_text().replace('further real Protobuf nested message-index regression is being fixed tests-first before common runs.','Protobuf nested message-index fix d6dc9f33b4593215f4eb561b7a95788fe67363f5 signed/pushed and independent APPROVED,214focused per mode, finalsource frozen.').replace('`693daf7603457e26e2be74e8b1f5958722fd3d59`','`d6dc9f33b4593215f4eb561b7a95788fe67363f5`');p.write_text(s) with (p.parent/'ledger.md').open('a') as f:f.write('\nFormats final cycle: sourcefix d6dc9f3 signed/pushed and independentAPPROVED (agentledger),214focused per mode. Own6branch Actionslisting plus currentPRheads each exit0; only obsoleteformats693daf7 docs39150888899 andCI39150888883 stillactive. Reconfirmed PR34finalheadd6dc9f3 beforeeachcancel; bothcancelAPI exit0. No currentheadrun cancelled. Subsequent resource/status reads exit0, Eventhouse native full at24% withnoF, disk15GBfree/zombies96. Iceberg formerdocs/shippedwheel jobs nowpassedcurrenta73b434; no all-CI green claim.\n') PY git add docs/plans/lane_status/public-b-2026-10-18 && git commit -s -m 'Public B: record final Protobuf fix and obsolete CI cleanup' && git push origin lead/public-b-2026-10-18` — exit 0.
+
+- `date -u && tail -c 450 /tmp/w9-11-detached-core-rust.log && df -h /workspace && git status --short` — exit 0.
+
+- `gh pr view 32 --json headRefOid,statusCheckRollup | python -c 'import sys,json,collections;d=json.load(sys.stdin);c=d["statusCheckRollup"];print({"head":d["headRefOid"][:8],"counts":dict(collections.Counter(x.get("conclusion") or x.get("status") for x in c)),"failures":[(x["name"],x["detailsUrl"]) for x in c if x.get("conclusion") in ("FAILURE","CANCELLED","TIMED_OUT")]})' git ls-remote origin refs/heads/main` — exit 0.
+
+- `rg -n 'importorskip|pytest.skip|skipif' /workspace/shape-w9-16/tests/builtins/test_iceberg* /workspace/shape-w9-16/tests/bridge/test_iceberg.py /workspace/shape-w9-16/tests/security/test_iceberg* && sed -n '1,40p' /workspace/shape-w9-16/tests/builtins/test_iceberg.py` — exit 1.
+
+- `date -u && tail -c 600 /tmp/w9-11-detached-core-rust.log && df -h /workspace && ps -eo stat | rg -c '^Z'` — exit 0.
+
+- `date -u && tail -c 500 /tmp/w9-11-detached-core-rust.log && df -h /workspace && gh pr view 32 --json headRefOid,statusCheckRollup | python -c 'import sys,json,collections;d=json.load(sys.stdin);c=d["statusCheckRollup"];print({"head":d["headRefOid"][:8],"counts":dict(collections.Counter(x.get("conclusion") or x.get("status") for x in c)),"failures":[(x["name"],x["detailsUrl"]) for x in c if x.get("conclusion") in ("FAILURE","CANCELLED","TIMED_OUT")]})'` — exit 0.
+
+- `date -u && tail -c 350 /tmp/w9-11-detached-core-rust.log && df -h /workspace && ps -eo pid,ppid,stat,etime,comm | rg 'pytest|cargo|rustc|docker' | tail -n 10` — exit 0.
+
+- `env -u DOCKER_CONTEXT -u DOCKER_HOST docker images --format '{{.Repository}}:{{.Tag}} {{.ID}} {{.Size}}' && df -h /workspace` — exit 0.
+
+- `DOCKER_CONFIG=/tmp/public-b-docker-clean env -u DOCKER_CONTEXT -u DOCKER_HOST docker image prune --force && df -h /workspace` — exit 0.
+
+- `date -u && tail -c 350 /tmp/w9-11-detached-core-rust.log && df -h /workspace && ps -eo pid,ppid,stat,etime,comm | rg 'pytest|cargo|rustc|docker|dbt' | tail -n 14` — exit 0.
+
+- `python - <<'PY' import json,subprocess pr=json.loads(subprocess.check_output(['gh','pr','view','31','--json','headRefOid'],text=True));run=json.loads(subprocess.check_output(['gh','api','repos/sqllocks/shape/actions/runs/39149555775'],text=True)) assert pr['headRefOid']=='632360ae51adc88fce42bdbefb44136a05986a6e' assert run['head_sha']=='a73b434b22368fe17f201270d9434420cefee1c0' and run['head_branch']=='lane/W9-16-finish' print('Cancelling obsolete CI only',run['id'],run['head_sha'],'current',pr['headRefOid']) p=subprocess.run(['gh','api','--method','POST','repos/sqllocks/shape/actions/runs/39149555775/cancel']);print('cancel exit',p.returncode);raise SystemExit(p.returncode) PY` — exit 0.
+
+- `date -u && tail -c 400 /tmp/w9-11-detached-core-rust.log && df -h /workspace && gh pr view 29 --json headRefOid,statusCheckRollup | python -c 'import sys,json,collections;d=json.load(sys.stdin);c=d["statusCheckRollup"];print({"head":d["headRefOid"][:8],"counts":dict(collections.Counter(x.get("conclusion") or x.get("status") for x in c)),"failures":[(x["name"],x["detailsUrl"]) for x in c if x.get("conclusion") in ("FAILURE","CANCELLED","TIMED_OUT")]})'` — exit 0.
+
+Cycle18:12UTC: connector fetched Icebergzero-network job117740425942 successfully, soleINSTALLinventory failure plus18686passes; exactred0.9issue identifiedtoagent. Iceberg signed632360ae correction andreview recorded. VerifiedowncurrentPR31head andoldrunhead/branch viaAPI exit0 each; cancel obsolete39149555775 APIexit0. Dockerimageinventory exit0; dangling-onlyimageprune exit0 removed2oldimages,reclaimed0bytes becausecache refs. ActiveEventhouseCONTAINERcompleted (savedprocesscwdnextEMIT), noENOSPC/F. Nativefullremainingdocs, currentdisk2.4GBfree, zombies98. Maincredentialread exit0 unchangedd0e64d5. Currentown6PRsnapshots exit0 each; savedallcounts/URLs.
