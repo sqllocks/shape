@@ -14,6 +14,9 @@ runtime passes back to the generator. A message the broker did not acknowledge w
 
 Options of :meth:`KafkaEmitter.emit`:
 
+``schema_file`` and ``message`` select plain local-schema Avro or Protobuf without a
+registry prefix; ``message`` names the Protobuf message.
+
 ``envelope``       ``"flat"`` (default) or ``"cloudevents"`` (JSON only).
 ``event_format``   ``"json"`` (default: the event's JSON, unchanged), ``"avro"``, ``"protobuf"`` or
                    ``"json-schema"``: the schema is derived from the table's Arrow schema,
@@ -130,6 +133,8 @@ class KafkaEmitter:
     schemes = ("kafka",)
     event_formats = EVENT_FORMATS  # `--event-format`
     sink_config_keys = (  # `--sink-config kafka.KEY=VALUE`
+        "schema_file",
+        "message",
         "schema_registry_url",
         "subject_strategy",
         "schema_registry_username",
@@ -247,6 +252,8 @@ class KafkaEmitter:
         flush_timeout: float = 60.0,
         synthetic: bool = False,
         event_format: str = "json",
+        schema_file: str | None = None,
+        message: str | None = None,
         schema_registry_url: str | None = None,
         subject_strategy: str = "topic",
         schema_registry_username: str | None = None,
@@ -263,6 +270,13 @@ class KafkaEmitter:
                 f"unknown event format {event_format!r}; choose from {', '.join(EVENT_FORMATS)}"
             )
         registry: RegistryClient | None = None
+        local_codec = None
+        if schema_file:
+            from shape.streaming.binary import BinaryCodec
+
+            if schema_registry_url:
+                raise ShapeError("choose schema_file or schema_registry_url")
+            local_codec = BinaryCodec.from_file(event_format, schema_file, message=message)
         if event_format != "json":
             if envelope != "flat":
                 raise ShapeError(
@@ -274,14 +288,15 @@ class KafkaEmitter:
                     f"unknown subject strategy {subject_strategy!r}; "
                     f"choose from {', '.join(SUBJECT_STRATEGIES)}"
                 )
-            if not schema_registry_url:
+            if not schema_registry_url and local_codec is None:
                 raise ShapeError(
                     f"--event-format {event_format} needs a schema registry: "
                     "--sink-config kafka.schema_registry_url=URL"
                 )
-            registry = self._registry(
-                schema_registry_url, schema_registry_username, schema_registry_password
-            )
+            if schema_registry_url:
+                registry = self._registry(
+                    schema_registry_url, schema_registry_username, schema_registry_password
+                )
         servers, topic = parse_uri(uri)
         producer = self._producer(servers, config)
         failures: list[Any] = []
@@ -304,7 +319,21 @@ class KafkaEmitter:
                 if FIELD_DEAD_REASON in batch.schema.names
                 else None
             )
-            if registry is None:
+            if local_codec is not None:
+                local_codec.validate_schema(batch.schema)
+                events = []
+                for row in batch.to_pylist():
+                    table, seq = row[FIELD_TABLE], row[FIELD_SEQ]
+                    key = f"{table}/{seq}"
+                    try:
+                        body = local_codec.encode(row)
+                    except ValueError:
+                        rejected.append(Rejection(key, f"cannot encode as {event_format}"))
+                        continue
+                    if row.get(FIELD_POISON):
+                        body = poison_body(body)
+                    events.append(EncodedEvent(key, table, seq, row.get("_shape_event_time"), body))
+            elif registry is None:
                 events = encode_events(batch, envelope)
             else:
                 events, refused = self._registry_events(

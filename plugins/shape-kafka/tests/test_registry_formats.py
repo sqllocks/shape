@@ -293,9 +293,15 @@ def test_uuid_extension_type_is_a_string_with_the_uuid_logical_type():
 def test_types_that_have_no_mapping_are_refused_naming_the_column():
     lst = pa.array([[1], [2]], pa.list_(pa.int64()))
     batch = with_event_fields(pa.RecordBatch.from_arrays([lst], names=["tags"]), "t", 0)
-    for fmt in ALL_FORMATS:
-        with pytest.raises(ShapeError, match="cannot map column 'tags'"):
-            make_codec(fmt, "t", batch.schema)
+    with pytest.raises(ShapeError, match="cannot map column 'tags'"):
+        make_codec("json-schema", "t", batch.schema)
+    from shape.streaming.binary import BinaryCodec
+
+    for fmt in BINARY_FORMATS:
+        codec = make_codec(fmt, "t", batch.schema)
+        reader = BinaryCodec(fmt, codec.schema_text, message="shape.events.t")
+        payloads = codec.encode_batch(batch)
+        assert [reader.decode(body)["tags"] for body in payloads] == [[1], [2]]
 
 
 @pytest.mark.parametrize("fmt", BINARY_FORMATS)
@@ -674,3 +680,52 @@ def test_a_table_whose_columns_change_during_the_run_registers_a_new_schema(fmt)
     e.emit(strict.uri, [first], **kw)
     with pytest.raises(ShapeError, match="refused the schema for subject"):
         e.emit(strict.uri, [second], **kw)
+
+
+def test_nested_avro_preserves_nullable_array_elements_and_map_values():
+    from shape.streaming.binary import BinaryCodec
+
+    schema = pa.schema(
+        [("items", pa.list_(pa.int64())), ("attrs", pa.map_(pa.string(), pa.int64()))]
+    )
+    batch = with_event_fields(
+        pa.RecordBatch.from_pylist([{"items": [1, None], "attrs": [("x", None)]}], schema=schema),
+        "t",
+        0,
+    )
+    codec = make_codec("avro", "t", batch.schema)
+    reader = BinaryCodec("avro", codec.schema_text)
+    (body,) = codec.encode_batch(batch)
+    assert reader.decode(body)["items"] == [1, None]
+    assert reader.decode(body)["attrs"] == {"x": None}
+
+
+def test_nested_protobuf_keeps_existing_logical_scalar_conversions():
+    from datetime import UTC, date, datetime, time
+    from decimal import Decimal
+
+    from shape.streaming.binary import BinaryCodec
+
+    schema = pa.schema(
+        [
+            ("items", pa.list_(pa.int64())),
+            ("ts", pa.timestamp("us", tz="UTC")),
+            ("day", pa.date32()),
+            ("clock", pa.time64("us")),
+            ("amount", pa.decimal128(8, 2)),
+        ]
+    )
+    row = {
+        "items": [1],
+        "ts": datetime(1970, 1, 1, 0, 0, 1, tzinfo=UTC),
+        "day": date(1970, 1, 2),
+        "clock": time(0, 0, 2),
+        "amount": Decimal("1.20"),
+    }
+    batch = with_event_fields(pa.RecordBatch.from_pylist([row], schema=schema), "t", 0)
+    codec = make_codec("protobuf", "t", batch.schema)
+    reader = BinaryCodec("protobuf", codec.schema_text, message="shape.events.t")
+    (body,) = codec.encode_batch(batch)
+    got = reader.decode(body)
+    assert got["items"] == [1]
+    assert (got["ts"], got["day"], got["clock"], got["amount"]) == (1_000_000, 1, 2_000_000, "1.20")

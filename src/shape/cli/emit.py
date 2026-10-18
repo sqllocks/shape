@@ -96,8 +96,8 @@ def add_options(em: Any, *, stream: bool = False) -> None:
         choices=("json", "avro", "protobuf", "json-schema"),
         default="json",
         help="the message format of a kafka:// target: json (default: the flat event's JSON), or "
-        "avro, protobuf or json-schema through a schema registry (--sink-config "
-        "kafka.schema_registry_url=URL; see docs/EMIT.md)",
+        "Avro or Protobuf from a schema file, or Kafka registry formats "
+        "(--sink-config NAME.schema_file=PATH; see docs/EMIT.md)",
     )
     rate = em.add_argument_group("rate")
     rate.add_argument(

@@ -20,8 +20,12 @@ Options of :meth:`KafkaStreamSource.read`:
                    partitions.
 ``config``         extra ``confluent-kafka`` consumer settings (security, SASL, ...); Shape
                    sets ``bootstrap.servers`` itself and keeps ``enable.auto.commit`` off.
-``schema``         the column types to read into; by default those of the first batch.
+``schema``         pins the reader types; JSON defaults to the first batch, binary to
+                   the writer schemas.
 ``on_error``       ``"skip"`` (default) counts undecodable messages, ``"raise"`` fails.
+
+``format`` selects JSON, Avro or Protobuf; ``schema_file`` and Protobuf ``message``
+load local schemas. Avro also reads registry headers with ``schema_registry_url``.
 
 The remaining options (``event_time_field``, ``event_time_unit``, ``with_offsets``) are those of
 ``shape.streaming.messages.decode_messages``.
@@ -131,6 +135,21 @@ class KafkaStreamSource:
             for k in ("event_time_field", "event_time_unit", "with_offsets", "on_error")
             if k in opts
         }
+        from shape.streaming.binary import source_decoder
+
+        registry_url = opts.pop("schema_registry_url", None)
+        resolver = None
+        if registry_url:
+            from .registry import RegistryClient
+
+            registry = RegistryClient(
+                registry_url,
+                username=opts.pop("schema_registry_username", None),
+                password=opts.pop("schema_registry_password", None),
+                transport=opts.pop("registry_transport", None),
+            )
+            resolver = registry.schema
+        decode["decoder"] = source_decoder(opts, registry_resolve=resolver)
         if opts:
             raise StreamSourceError(f"unknown kafka source options: {sorted(opts)}")
         if start_at not in ("earliest", "latest"):
@@ -244,16 +263,19 @@ class KafkaStreamSource:
                     continue
                 last = time.monotonic()
                 total += len(messages)
-                for part in group_by_partition(messages):
-                    key = part[0].partition
-                    positions[key] = max(positions[key], part[-1].offset + 1)
-                    batch = decode_messages(part, schema=schema, stats=self.stats, **decode)
-                    if batch is None:
-                        continue
-                    if schema is None:
-                        schema = freeze(batch)
-                        batch = conform(batch, schema)
-                    yield StreamOffset(partition_offsets(positions)), batch
+                from shape.streaming.binary import schema_groups
+
+                for partition in group_by_partition(messages):
+                    for part in schema_groups(partition, decode.get("decoder"), schema):
+                        key = part[0].partition
+                        positions[key] = max(positions[key], part[-1].offset + 1)
+                        batch = decode_messages(part, schema=schema, stats=self.stats, **decode)
+                        if batch is None:
+                            continue
+                        if schema is None and decode.get("decoder") is None:
+                            schema = freeze(batch)
+                            batch = conform(batch, schema)
+                        yield StreamOffset(partition_offsets(positions)), batch
 
     @staticmethod
     def _raise(err: Any) -> NoReturn:

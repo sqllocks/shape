@@ -18,6 +18,10 @@ that table as its *partition key*, so a table keeps its order on one partition; 
 
 Options of :meth:`EventHubsEmitter.emit`:
 
+``event_format`` selects JSON, Avro or Protobuf. Binary writes take ``schema_file``;
+Protobuf also takes ``message``. Avro optionally uses Azure Schema Registry with
+``schema_registry_url`` and ``schema_registry_group``.
+
 ``envelope``           ``"flat"`` (default) or ``"cloudevents"``.
 ``connection_string``  a connection string; otherwise ``SHAPE_EVENTHUBS_CONNECTION_STRING``;
                        otherwise Microsoft Entra sign-in (``azure-identity``) to the namespace in
@@ -122,6 +126,8 @@ class EventHubsEmitter:
 
     name = "eventhubs"
     accepts_poison = True  # one JSON text per message: a cut-off body is a poison message
+    event_formats = ("json", "avro", "protobuf")
+    sink_config_keys = ("schema_file", "message", "schema_registry_url", "schema_registry_group")
     supports_synthetic = True  # the `synthetic` option marks every message with a header
     schemes = ("eventhubs",)
     env_connection_string = ENV_CONNECTION_STRING
@@ -159,6 +165,12 @@ class EventHubsEmitter:
         partition_key: str = "table",
         busy_retries: int = 6,
         synthetic: bool = False,
+        event_format: str = "json",
+        schema_file: str | None = None,
+        message: str | None = None,
+        schema_registry_url: str | None = None,
+        schema_registry_group: str | None = None,
+        registry_encoder: Any = None,
         **options: Any,
     ) -> int:
         """Send every batch; return the number of events, after the service accepted them."""
@@ -169,14 +181,57 @@ class EventHubsEmitter:
             raise ShapeError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
         if partition_key not in ("table", "none"):
             raise ShapeError("partition_key must be 'table' or 'none'")
+        from shape.streaming.binary import BinaryCodec
+
+        codec = None
+        azure = None
+        if event_format not in self.event_formats:
+            raise ShapeError("event_format must be json, avro or protobuf")
+        if event_format != "json":
+            if envelope != "flat":
+                raise ShapeError("binary event formats require envelope=flat")
+            if not schema_file:
+                raise ShapeError("binary Event Hubs writes require schema_file")
+            codec = BinaryCodec.from_file(event_format, schema_file, message=message)
+        if schema_registry_url:
+            from .registry import azure_codec
+
+            if event_format != "avro" or codec is None:
+                raise ShapeError("Azure Schema Registry requires event_format=avro and schema_file")
+            azure = azure_codec(
+                schema_registry_url,
+                credential=connect.get("credential"),
+                group=schema_registry_group,
+                schema_text=codec.text,
+                encoder=registry_encoder,
+            )
         target = self.parse(uri)
         client = self._client(target, connect)
         content_type = "application/json" if envelope == "flat" else "application/cloudevents+json"
         sent = 0
         for batch in batches:
-            events = encode_events(batch, envelope)
+            types = {}
+            if codec is None:
+                events = encode_events(batch, envelope)
+            else:
+                codec.validate_schema(batch.schema)
+                events = []
+                for row in batch.to_pylist():
+                    table, seq = row["_shape_table"], row["_shape_seq"]
+                    key = f"{table}/{seq}"
+                    try:
+                        if azure is not None:
+                            encoded = azure.encode(row)
+                            body = encoded["content"]
+                            types[key] = encoded["content_type"]
+                        else:
+                            body = codec.encode(row)
+                    except ValueError as exc:
+                        raise ShapeError(f"cannot encode event {key}") from exc
+                    events.append(EncodedEvent(key, table, seq, row.get("_shape_event_time"), body))
+                content_type = f"application/{event_format}"
             for key, group in _groups(events, partition_key == "table"):
-                self._send_group(client, key, group, content_type, busy_retries, synthetic)
+                self._send_group(client, key, group, content_type, busy_retries, synthetic, types)
             sent += len(events)
         return sent
 
@@ -189,6 +244,7 @@ class EventHubsEmitter:
         content_type: str,
         busy: int,
         synthetic: bool = False,
+        content_types: dict[str, str] | None = None,
     ) -> None:
         from azure.eventhub import EventData
 
@@ -197,7 +253,7 @@ class EventHubsEmitter:
 
         def message(ev: EncodedEvent) -> Any:
             data = EventData(ev.body)
-            data.content_type = content_type
+            data.content_type = (content_types or {}).get(ev.key, content_type)
             data.properties = {PROP_KEY: ev.key, PROP_TABLE: ev.table, PROP_SEQ: ev.seq}
             if synthetic:
                 data.properties[PROP_SYNTHETIC] = True

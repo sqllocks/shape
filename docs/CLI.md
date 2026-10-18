@@ -768,3 +768,16 @@ shape doctor
 
     Result: OK
     ```
+
+## Binary broker formats
+
+`shape emit` and `shape stream` accept `--event-format avro` or
+`--event-format protobuf` for Kafka and Event Hubs. For plain binary writes, set
+`--sink-config kafka.schema_file=events.avsc` (Avro), or
+`--sink-config kafka.schema_file=events.proto --sink-config kafka.message=package.Message`
+(Protobuf). Replace `kafka` with `eventhubs` for Event Hubs. These modes add no
+registry prefix. Both require a flat envelope. The source APIs use `format="avro"`
+or `format="protobuf"` with the same `schema_file` and `message` options;
+`schema=pyarrow.schema(...)` pins the reader schema and counts rejected rows.
+See [the binary format guide](EMIT.md#local-binary-schemas-and-nested-events) for
+nested types, registry schema evolution and Azure Schema Registry options.

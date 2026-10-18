@@ -91,6 +91,23 @@ class RegistryClient:
             self._headers["Authorization"] = f"Basic {token}"
         self._transport = transport or _urllib_transport
 
+    def schema(self, schema_id: int) -> str:
+        """Resolve an Avro writer schema by its wire-format id."""
+        status, raw = self._transport(
+            "GET", f"{self.url}/schemas/ids/{schema_id}", self._headers, None
+        )
+        if status >= 500 or status == 429:
+            raise ConnectionError(f"schema registry error {status}")
+        if status != 200:
+            raise ValueError(f"schema registry has no schema id {schema_id}")
+        try:
+            doc = json.loads(raw)
+            if doc.get("schemaType", "AVRO") != "AVRO":
+                raise ValueError("schema is not Avro")
+            return str(doc["schema"])
+        except (KeyError, TypeError) as exc:
+            raise ValueError("schema registry returned an invalid schema") from exc
+
     def register(self, subject: str, schema_text: str, schema_type: str) -> int:
         """Register ``schema_text`` under ``subject``; return its id. A registry that refuses
         the schema is a :class:`ShapeError` (the run stops); an unreachable or failing registry

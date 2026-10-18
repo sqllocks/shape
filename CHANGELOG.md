@@ -6,6 +6,11 @@ Status: available.
 
 ## Unreleased
 
+- Kafka and Event Hubs read and write plain Avro and Protobuf with local schemas,
+  preserve nested Arrow fields, and count malformed or incompatible rows. Kafka
+  Avro reads resolve writer schema ids with a per-read cache; Event Hubs supports
+  Azure Schema Registry Avro through its optional schema-registry extra.
+
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 
 Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
