@@ -15,3 +15,35 @@ Sub-agent command ledgers live in their lane records/worktrees; their commands a
 - `rg --files plugins/shape-databases/src/shape_databases; rg -n "TOM|connect_semantic|roles|sempy" plugins/shape-fabric/src/shape_fabric/semantic_source.py plugins/shape-fabric/src/shape_fabric/semantic_model.py; gh api repos/sqllocks/shape/issues/13/comments --jq ".[].body"` — exit 0.
 
 - `gh issue comment 14 --body-file /tmp/public-b-14-comment.md` — exit 0.
+
+- `git add docs/plans/lane_status/public-b-2026-10-18 && git commit -s -m "Public B: park BigQuery on source dependency"` — exit 0.
+
+- `git push origin HEAD` — exit 0.
+
+- `git worktree add -b lane/W9-12 /workspace/shape-w9-12 origin/main` — exit 0.
+
+- `PATH=/tmp/w9-10-bin:$PATH uv run --no-project --with semantic-link-sempy python -c "import importlib.metadata; print(importlib.metadata.version(\"semantic-link-sempy\")); import sempy.fabric as f; import inspect; print([(n,str(inspect.signature(getattr(f,n)))) for n in dir(f) if \"tom\" in n.lower()])"` — exit 0.
+
+- `PATH=/tmp/w9-10-bin:$PATH uv run --no-project --with semantic-link-sempy python -c "import sempy.fabric as f,inspect; print(inspect.signature(f.connect_semantic_model)); print(inspect.signature(f.evaluate_dax)); print(inspect.signature(f.list_measures))"` — exit 0.
+
+- `git ls-remote --heads origin lane/W9-05 lane/W9-08 lane/W9-09 lane/W9-10 lane/W9-11 lane/W9-12 lane/W9-13 lane/W9-16 lane/FRZ-01-finish` — exit 0.
+
+- `gh pr list --state open --json number,headRefName,title,url --jq ".[] | select(.headRefName|test(\"^lane/(W9-(05|08|09|10|11|12|13|16)|FRZ-01-finish)$\"))"` — exit 0.
+
+- `git fetch origin refs/heads/lane/W9-12:refs/remotes/origin/lane/W9-12 refs/heads/lane/W9-13:refs/remotes/origin/lane/W9-13` — exit 0.
+
+- `git show origin/lane/W9-12:docs/plans/lane_status/W9-12.md` — exit 0.
+
+- `git show origin/lane/W9-13:docs/plans/lane_status/W9-13.md` — exit 0.
+
+- `git diff --check` — exit 0.
+
+- `git status --short` — exit 0.
+
+- `PATH=/tmp/w9-10-bin:$PATH make bootstrap` — exit 0.
+
+- `git ls-remote origin refs/heads/main` — exit 0.
+
+- `gh run download 39110102198 -n parity-profile -n parity-generate-1 -D /tmp/public-b-nightly` — exit 1.
+
+- `PATH=/tmp/w9-10-bin:$PATH make bootstrap` — exit 0.
