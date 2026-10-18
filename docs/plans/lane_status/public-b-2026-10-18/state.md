@@ -1,25 +1,24 @@
 # Public B state
 
-Main: d0e64d53eecfe03b29caa5dd111598f3b9a9ace2. Scratch: lead/public-b-2026-10-18.
-Original own remote branches contain unsigned historical commits. Clean `-finish` continuations preserve those branches without force pushes, and apply only the assigned lane changes with new DCO-certified commits.
+Scratch: `lead/public-b-2026-10-18`. No product merges yet. Latest main: `d0e64d53eecfe03b29caa5dd111598f3b9a9ace2`.
+Historical unsigned own branches are preserved; signed clean `-finish` continuations apply only assigned lane changes. W9-09 is a new branch.
 
 | Issue | Branch / head | Stage | Next action |
 |---|---|---|---|
-| #20 | no product branch | PARKED Owner comparison-contract decision | Connector retrieved both artifacts/logs; exact6failures and all values in FRZ-01-evidence.md; nested/date context/intentional reference substitutions require Owner contract decision; no changes |
-| #6 | lane/W9-05 afbf4c5 | PARKED | Owner decision on unsupported nested/error-equivalence conflict; issue comment posted |
-| #9 | lane/W9-08-finish 5033951 | common gates | resume_metadata; review APPROVED, PR#32; makecheck at~23%, one likely inherited0077 permissions failure, narrow022 rerun passes |
-| #10 | lane/W9-09 661cd61d | draft PR#34 | formats; six review findings fixed, independent APPROVED;194focused pass;common gates pending |
-| #11 | lane/W9-10-finish 5be9f04 | common gates + review fixes | resume_dbt; ratio/exposure fixed+approved, PR#29; 142offline tests per mode,8dbt nightly pass |
-| #12 | lane/W9-11-finish | recovered implementation uncommitted | resume_eventhouse;46permode+strictdocs pass, review APPROVED, PR#30;common gates queued |
-| #13 | lane/W9-12-finish | recovered implementation uncommitted | root;171permode+docs/lint/mypy703/links/wording/DCO pass, review APPROVED, PR#33;prepared full collection19125 selected succeeds |
-| #14 | old lane/W9-13 1249af9 (journal only) | PARKED | missing merged W9-01; prior journal also documents invalid decimal specification boundaries |
-| #17 | lane/W9-16-finish | recovered implementation uncommitted | resume_iceberg;112permode+docs/static pass, review APPROVED, PR#31;emulator image pull denied;common queued |
+| #20 | no product branch | PARKED Owner comparison contract | artifacts/logs retrieved; six exact failures and values in FRZ-01-evidence.md; no allowed gate-preserving fix |
+| #6 | lane/W9-05 `3de70e3` | PARKED Owner decision | Wanted5 conflicts with recorded-error equivalence; updated Owner action; no product implementation |
+| #9 | `lane/W9-08-finish` `91ef6200266bf962246d1553356b26a442be2303` | [PR#32](https://github.com/sqllocks/shape/pull/32); 21/34 CI complete; failures: none | resume_metadata; detached local acceptance queue; exact-head CI and review required |
+| #10 | `lane/W9-09` `693daf7603457e26e2be74e8b1f5958722fd3d59` | [PR#34](https://github.com/sqllocks/shape/pull/34); 3/32 CI complete; failures: none | formats; detached local acceptance queue; exact-head CI and review required |
+| #11 | `lane/W9-10-finish` `6438d907727e2b71c3993230615cc10a9376b2e7` | [PR#29](https://github.com/sqllocks/shape/pull/29); 9/31 CI complete; failures: none | resume_dbt; detached local acceptance queue; exact-head CI and review required |
+| #12 | `lane/W9-11-finish` `a7e450ad105a71c334d00eeed1c8b7291aac6153` | [PR#30](https://github.com/sqllocks/shape/pull/30); 14/34 CI complete; failures: none | resume_eventhouse; detached local acceptance queue; exact-head CI and review required |
+| #13 | `lane/W9-12-finish` `3b3852a97dc5994684380e0bf1e95db85cf1f3e8` | [PR#33](https://github.com/sqllocks/shape/pull/33); 16/34 CI complete; failures: verify, test (macos-latest, 3.14), min-versions, docs-test | root; detached local acceptance queue; exact-head CI and review required |
+| #17 | `lane/W9-16-finish` `a73b434b22368fe17f201270d9434420cefee1c0` | [PR#31](https://github.com/sqllocks/shape/pull/31); 26/44 CI complete; failures: none | resume_iceberg; detached local acceptance queue; exact-head CI and review required |
+| #14 | preserved lane/W9-13 `1249af9` journal only | PARKED dependency and decimal boundaries | W9-01 absent from main; await merged interface; questions.md has options |
 
-Draft PR#34 formats (661cd61d) also open. Draft PRs now open: #29 dbt (63e4e55), #30 Eventhouse (5265080), #31 Iceberg (df426e9), #32 metadata (91ef620), #33 semantic models (3b3852a). All target main; no merges. All five have independent code approval; exact-head CI and common acceptance are pending. Full suites serialize under /tmp/public-b-full-check.lock. All tests through $HOME/bin/reap.py. Last zombie observation30, below hard stop1000. Separate reviewer spawn blocked by platform thread cap; existing independent lane agents cross-review.
+All six draft PRs are attached. Independent feature reviews APPROVED. Formats safe unsigned/UUID fix APPROVED at693daf7. Semantic CI integration fix in progress: additive project schema kinds, nav and exact documented output, with independent delta review requested. No gate/test assertion changes.
 
-After context restart reread attachment and this state; inspect worktrees/ledgers before repeating work. Logs/status live per lane and /tmp. No passing CI or live result claimed.
+Executor restarted around17:36UTC, killing old live test sessions. Those results are INTERRUPTED and not passes. Durable detached workers now use one sequential queue each and shared `/tmp/public-b-full-check.lock`, saving per-job head/tree/exit/zombies/logs. DbT113311 `/tmp/w9-10-queue/state.json`; Eventhouse113611 `/tmp/w9-11-detached-status.json`; Iceberg113704 `/tmp/w9-16-queue/status.json`; metadata113789 `/tmp/w9-08-validation/status.json`; semantic113846 `/tmp/w9-12-queue/state.json`; formats123835 `/tmp/w9-09-check-worker-state.json`. Native dbt full run currently holds lock, others wait. No completed full common acceptance after recovery yet.
 
+Source `/tmp/public-b-test-env.sh` only after lock acquisition: pinneduv0.8.17, onboardingRust, process-localumask022, documented DockerproxyIP/CA, pinned DBT packages. Base core/content Arrow25 excluding onlyFabric, separate Fabric Arrow19 directory both modes; union includes all offline tests. Every test under `$HOME/bin/reap.py`. Zombies last85 below1000. No live passes claimed. Main has not changed since initial snapshot.
 
-Current environment preparation: source /tmp/public-b-test-env.sh INSIDE acquired /tmp/public-b-full-check.lock; pins uv0.8.17/onboardingRust, process-local umask022, documented DockerproxyIP/CA and /tmp/docs-dbt-packages. Full core/content use lockedArrow25; Fabric demos use separateArrow19 env. Original metadata make diagnostic stopped as invalid prep after4failed4738passed,18existing skips; it is INCOMPLETE, not a common gate pass. Corrected full/check commands remain queued/running.
-
-Required CI repairs underway: #29 exact DBT resource-count transcripts after new sample; #30 DBT/authoring plugin inventory179→180; #31 inventory179→181 plus pure URL-to-path conversion replacing unnecessary urllib.request (wheel scanner unchanged). #34 reviewed followup7c384775 fixes binary logical type/Protobuf5 compatibility. No gates/assertions loosened.
+Next: finish semantic CI integration fix, sign/push and review; monitor exact-head hosted CI and detached workers, diagnose actual own failures. Merge only all required gates green, review bound and currentmain contained; use API mergecommit, then merge main into other own lanes retaining both changelogs and refresh CI. No LeadA branches/issues, settings, release actions, tokens or names outside permitted scope.

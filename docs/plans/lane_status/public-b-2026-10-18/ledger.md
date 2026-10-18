@@ -83,3 +83,19 @@ Sub-agent command ledgers live in their lane records/worktrees; their commands a
 - `gh issue comment 20 --body-file /tmp/frz-owner-comment.md` — exit 0.
 
 - `gh api repos/sqllocks/shape/issues/20/comments --jq ".[-3:][] | {created_at,user:.user.login,body}"` — exit 0.
+
+- `git add docs/plans/lane_status/public-b-2026-10-18 && git commit -s -m "Public B: persist prepared acceptance queues and CI repair findings"` — exit 0.
+
+- `git push origin HEAD` — exit 0.
+
+- `gh run cancel 39149275125` — exit 0; obsolete own PR head 654f2ca8da276897feaa4291b30d998878caf43a, superseded by a new pushed correction. Current-head CI is retained.
+
+- `gh run cancel 39148470980` — exit 0; obsolete own PR head 661cd61d9a7e6006e69393e24170c2c9f34aeb1f, superseded by a new pushed correction. Current-head CI is retained.
+
+- `gh run cancel 39147855996` — exit 1; obsolete own PR head 63e4e555264ebf008677fb548d21d0681cd1289e, superseded by a new pushed correction. Current-head CI is retained.
+
+- `gh pr view 29 --json headRefOid,statusCheckRollup` — exit 0.
+
+## Recovery cycle 2026-10-18T17:48:54.156502+00:00
+
+Re-read attached prompt and scratchstate: exit0. Root queue/status/git reads: exit0. Parallel own PR snapshots29–34: exit0 each. GitHub connector fetched all4 semantic failedjoblogs: success; diagnosed only nav/schema/transcript omissions. Root two unchanged coverage tests: exit1 (expectedred); additive fix and87 focused tests: exit0. Two exact transcript pages running. W9-05 Owneractions correction, signedcommit3de70e3 and originpush: exit0 each. `git ls-remote origin refs/heads/main`: exit0, unchanged d0e64d5. Detached workers remain alive; no interrupted result counted passed. No gate/tolerance/assertion changes.
