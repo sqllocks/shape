@@ -21,12 +21,13 @@ from __future__ import annotations
 import math
 from collections.abc import Callable, Mapping, Sequence
 from functools import lru_cache
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import numpy.typing as npt
 
 from shape.generation import kernel_ops
+from shape.generation._numpy_typing import Float64Ratio
 from shape.generation.rng import RowStream
 from shape.kernel import pmath
 
@@ -134,7 +135,10 @@ class Uniform(Family):
         )
 
     def fit(self, x: Floats) -> dict[str, Any]:
-        lo, hi = float(x.min()), float(x.max())
+        lo, hi = (
+            float(cast(Callable[[], np.float64], x.min)()),
+            float(cast(Callable[[], np.float64], x.max)()),
+        )
         pad = (hi - lo) / max(len(x) - 1, 1)  # the extremes of n draws sit inside the support
         return {"low": lo - pad, "high": hi + pad}
 
@@ -204,7 +208,7 @@ class Pareto(Family):
         )
 
     def fit(self, x: Floats) -> dict[str, Any]:
-        xm = float(x.min())
+        xm = float(cast(Callable[[], np.float64], x.min)())
         if xm <= 0:
             raise FamilyError("pareto needs positive values")
         return {"alpha": float(len(x) / np.log(x / xm).sum()), "xm": xm}
@@ -247,7 +251,7 @@ class Zipf(Family):
 
     def fit(self, x: Floats) -> dict[str, Any]:
         """Maximum likelihood for the exponent, with the support cut at the largest value seen."""
-        top = int(x.max())
+        top = int(cast(Callable[[], np.float64], x.max)())
         if top < 1 or top > MAX_TABLE:
             raise FamilyError("zipf values must lie in 1 .. 2**24")
         ln_k = np.log(np.arange(1, top + 1, dtype=np.float64))
@@ -255,7 +259,7 @@ class Zipf(Family):
 
         def mean_log(a: float) -> float:
             w = np.exp(-a * ln_k)
-            return float((w * ln_k).sum() / w.sum())
+            return float(cast(Float64Ratio, (w * ln_k).sum()) / w.sum())
 
         lo, hi = 1e-3, 40.0  # mean_log decreases in a
         for _ in range(80):
@@ -291,7 +295,7 @@ def _discrete_cdf(logpmf: Callable[[Floats], Floats], lo: int, hi: int) -> Float
     if hi - lo > MAX_TABLE:
         raise FamilyError("the distribution is too wide for an exact table")
     lp = logpmf(np.arange(lo, hi + 1, dtype=np.float64))
-    cdf = np.cumsum(pmath.exp(lp - lp.max()))
+    cdf = np.cumsum(pmath.exp(lp - cast(Callable[[], np.float64], lp.max)()))
     cdf /= cdf[-1]
     cdf.flags.writeable = False
     return cdf
@@ -637,7 +641,7 @@ class PowerLawCutoff(Family):
         """Maximum likelihood for ``alpha`` and ``lam`` given ``xmin`` (the sample minimum). The
         log-likelihood is concave in ``(alpha, lam)`` (an exponential family), so Newton's method
         with backtracking converges; the model's moments come from a fine grid in ``ln x``."""
-        xmin = float(x.min())
+        xmin = float(cast(Callable[[], np.float64], x.min)())
         if xmin <= 0:
             raise FamilyError("power_law_cutoff needs positive values")
         m1, m2 = float(np.log(x).mean()), float(x.mean())
@@ -647,7 +651,7 @@ class PowerLawCutoff(Family):
             tm = 0.5 * (t[1:] + t[:-1])
             xm = np.exp(tm)
             logg = (1.0 - alpha) * tm - lam * xm
-            shift = float(logg.max())
+            shift = float(cast(Callable[[], np.float64], logg.max)())
             w = np.exp(logg - shift) * np.diff(t)
             total = float(w.sum())
             feats = np.vstack([tm, xm])  # ln x and x

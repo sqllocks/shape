@@ -1,5 +1,24 @@
 # Fabric commands
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](../contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" fabric-commands
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for fabric-commands
+    ```
+
+
 The `sqllocks-shape-fabric` plugin adds `shape fabric`, with eight commands, each also a top-level
 command of its own, and `shape profile-model`:
 
@@ -24,12 +43,151 @@ database login: it applies to `publish -t sql-database|warehouse` only.
 
 ## `publish`
 
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 0 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```
 shape publish retail -t lakehouse --base-path onelake://MyWorkspace/MyLakehouse/Files
 shape publish retail -t sql-database --connection-string env://SHAPE_SQL_CONNECTION
 shape publish retail -t warehouse --connection-string env://WH --staging-path onelake://W/L/Files
 shape publish retail -t eventhouse --connection-string https://<query-uri-host> --database mydb
 ```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape v0.9.1 — Publishing retail → lakehouse
+    Scale: small | Seed: 42 | Format: parquet
+    
+    Generating data...
+    table                                 rows  columns
+    ---------------------------------------------------
+    customer                             1,000        8
+    product_category                        50        4
+    promotion                              200        6
+    store                                  150        5
+    address                              1,500       10
+    product                                500        6
+    order                                5,000        8
+    order_line                          12,500        8
+    return                                 850        5
+    ---------------------------------------------------
+    TOTAL                               21,750
+    
+    Publishing to Lakehouse (parquet)...
+      customer: 1,000 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/customer/dt=latest/part-0001.parquet
+      product_category: 50 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/product_category/dt=latest/part-0001.parquet
+      promotion: 200 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/promotion/dt=latest/part-0001.parquet
+      store: 150 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/store/dt=latest/part-0001.parquet
+      address: 1,500 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/address/dt=latest/part-0001.parquet
+      product: 500 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/product/dt=latest/part-0001.parquet
+      order: 5,000 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/order/dt=latest/part-0001.parquet
+      order_line: 12,500 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/order_line/dt=latest/part-0001.parquet
+      return: 850 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/return/dt=latest/part-0001.parquet
+    
+    Published 9 tables to lakehouse.
+    Manifest: onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/manifest/_control/run_manifest.json
+    
+    Publish complete.
+    Shape v0.9.1 — Publishing retail → sql-database
+    Scale: small | Seed: 42 | Format: parquet
+    
+    Generating data...
+    table                                 rows  columns
+    ---------------------------------------------------
+    customer                             1,000        8
+    product_category                        50        4
+    promotion                              200        6
+    store                                  150        5
+    address                              1,500       10
+    product                                500        6
+    order                                5,000        8
+    order_line                          12,500        8
+    return                                 850        5
+    ---------------------------------------------------
+    TOTAL                               21,750
+    
+    Publishing to SQL Database (auth=cli)...
+      customer: 1,000 rows
+      product_category: 50 rows
+      promotion: 200 rows
+      store: 150 rows
+      address: 1,500 rows
+      product: 500 rows
+      order: 5,000 rows
+      order_line: 12,500 rows
+      return: 850 rows
+    
+    Publish complete.
+    Shape v0.9.1 — Publishing retail → warehouse
+    Scale: small | Seed: 42 | Format: parquet
+    
+    Generating data...
+    table                                 rows  columns
+    ---------------------------------------------------
+    customer                             1,000        8
+    product_category                        50        4
+    promotion                              200        6
+    store                                  150        5
+    address                              1,500       10
+    product                                500        6
+    order                                5,000        8
+    order_line                          12,500        8
+    return                                 850        5
+    ---------------------------------------------------
+    TOTAL                               21,750
+    
+    Publishing to Warehouse (auth=cli)...
+      customer: 1,000 rows
+      product_category: 50 rows
+      promotion: 200 rows
+      store: 150 rows
+      address: 1,500 rows
+      product: 500 rows
+      order: 5,000 rows
+      order_line: 12,500 rows
+      return: 850 rows
+    
+    Publish complete.
+    Shape v0.9.1 — Publishing retail → eventhouse
+    Scale: small | Seed: 42 | Format: parquet
+    
+    Generating data...
+    table                                 rows  columns
+    ---------------------------------------------------
+    customer                             1,000        8
+    product_category                        50        4
+    promotion                              200        6
+    store                                  150        5
+    address                              1,500       10
+    product                                500        6
+    order                                5,000        8
+    order_line                          12,500        8
+    return                                 850        5
+    ---------------------------------------------------
+    TOTAL                               21,750
+    
+    Publishing to Eventhouse (shape_eh)...
+      customer: 1,000 rows
+      product_category: 50 rows
+      promotion: 200 rows
+      store: 150 rows
+      address: 1,500 rows
+      product: 500 rows
+      order: 5,000 rows
+      order_line: 12,500 rows
+      return: 850 rows
+    
+    Publish complete.
+    ```
+
+Evidence: [run 38400931371, ubuntu-latest, `c37ff1b1dadb`](../evidence/transcripts/docs-transcripts-38400931371-c37ff1b1dadb-ubuntu-latest-publish-targets.json).
+
 
 `DOMAIN` is a domain or a generation schema file. `-s/--scale`, `--seed`, `-m/--mode 3nf|star` as in
 `shape generate`. `--dry-run` generates and prints the table summary and publishes nothing.
@@ -53,10 +211,41 @@ shape publish retail -t eventhouse --connection-string https://<query-uri-host> 
 
 ## `notebook` and `deploy-notebook`
 
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 1 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```
 shape notebook retail --target lakehouse -o retail.ipynb      # or print the JSON: no -o
 shape deploy-notebook retail --workspace "Demo" --auth cli
 ```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape v0.9.1 — Notebook Generated
+      Domain: retail
+      Scale:  small
+      Target: lakehouse
+      Cells:  5
+      Output: retail.ipynb
+    Shape v0.9.1 — Deploy Notebook
+      Domain:    retail
+      Workspace: Demo
+      Name:      Shape_retail_small
+    
+      Notebook created: Shape_retail_small
+      Item ID: <guid>
+    
+    Open the notebook in Fabric and click Run All to generate data.
+    ```
+
+Evidence: [run 38400931371, ubuntu-latest, `c37ff1b1dadb`](../evidence/transcripts/docs-transcripts-38400931371-c37ff1b1dadb-ubuntu-latest-notebook-deploy.json).
+
 
 The notebook installs Shape, generates the domain with `shape.generate`, checks foreign keys and
 writes Parquet files to the default Lakehouse (`--target lakehouse`), CSV files (`csv`) or shows a
@@ -66,20 +255,74 @@ of the listing. A creation that Fabric accepts to finish later is followed to it
 
 ## `setup-fabric`
 
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 2 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```
 shape setup-fabric --workspace "Demo" --create-lakehouse
 shape setup-fabric --snippet        # print the cell to paste into a notebook instead
 ```
 
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape v0.9.1 — Fabric Environment Setup
+      Workspace:   Demo
+      Environment: shape-env
+      Lakehouse:   yes
+    
+      Found existing Environment: shape-env
+      Created Lakehouse:   shape_lakehouse
+    
+    Setup complete:
+      Environment: shape-env
+      Lakehouse: shape_lakehouse
+    
+    Next steps:
+      1. Open the Environment in Fabric
+      2. Add these PyPI libraries:
+         - sqllocks-shape 0.9.1
+         - sqllocks-shape-domains 0.9.1
+         - deltalake >=0.17.0
+         - pyarrow >=14.0
+      3. Publish the environment
+      4. Attach to notebooks and run 'shape notebook' to generate data
+    # Shape environment setup: run this cell in any Fabric notebook.
+    %pip install sqllocks-shape==0.9.1 sqllocks-shape-domains==0.9.1 -q
+    
+    import shape
+    
+    result = shape.generate("retail", scale="small", seed=42)
+    problems = result.verify_integrity()
+    print(f"Shape v{shape.__version__} installed")
+    rows = sum(result.row_counts.values())
+    print(f"Generated {rows:,} rows in {len(result.tables)} tables")
+    print("Foreign-key integrity:", "PASS" if not problems else f"FAIL ({len(problems)})")
+    ```
+
+Evidence: [run 38337418136, ubuntu-latest, `de4c1fb12885`](../evidence/transcripts/docs-transcripts-38337418136-de4c1fb12885-ubuntu-latest-setup-fabric.json).
+
+
 Creates the Fabric Environment item (`--env-name`, default `shape-env`) and, with
-`--create-lakehouse`, a Lakehouse (`--lakehouse-name`). An item that already exists is reused. The
+`--create-lakehouse`, a Lakehouse (`--lakehouse-name`, default `shape_lakehouse`). A Lakehouse name
+must begin with a letter and use only letters, digits and underscores, at most 123 characters
+([Create a lakehouse in Microsoft Fabric](https://learn.microsoft.com/fabric/data-engineering/create-lakehouse));
+Fabric refuses anything else with HTTP 400 `InvalidInput` (`shape-lakehouse` is refused for its
+hyphen), so Shape checks `--lakehouse-name` first and stops before any request. An item that already
+exists is reused. The
 command prints the libraries to add to the Environment; adding them is done in Fabric.
 
 ## `export-model`
 
-```
-shape export-model retail --source-type warehouse --source-name Sales -o retail.bim
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-3).
+
 
 Writes a Tabular Object Model document (compatibility level 1604): typed columns, relationships,
 one Power Query partition per table for the source (`--source-type lakehouse|warehouse|sql_database`,
@@ -98,9 +341,26 @@ database's. For a Lakehouse the expression keeps the placeholders `{workspace_id
 
 ## `profile-model`
 
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 4 -->
+
+**Needs a Fabric notebook (sempy signs in as the notebook's user). Not run in CI.**
+
 ```
 shape profile-model Sales/Retail -o retail.shape [--tables Customer,Orders] [--max-rows 100000] [--json]
 ```
+
+Owner-run in a Fabric notebook on 2026-10-12 (as `python -m shape`; workspace `shape-test`, model `shape_sm`, one table and no relationships; without `--tables`), exit 0:
+
+```text
+!{sys.executable} -m shape profile-model shape-test/shape_sm -o retail.shape --max-rows 100000 --json; echo exit=$?
+{"written": "retail.shape", "shape_content_id": "0c2911b8b03d9b899654b1a1c8c42d3a8f21ce7807677b6809c5d8f0c14d2e66", "workspace": "shape-test", "model": "shape_sm", "tables": 1, "relationships": 0, "max_rows": 100000}
+exit=0
+```
+
+Evidence: [Owner-run notebook receipt, 2026-10-12, Shape 0.9.1](../evidence/semantic-model-notebook.md).
+
 
 Profiles every table of a Power BI / Fabric semantic model as one dataset profile and records the
 model's relationships, the way `shape profile-db` does for a SQL Server schema. It needs `sempy`
@@ -134,10 +394,10 @@ not in the model, a bad `--max-rows`, no `-o`, `sempy` missing).
 
 ## `known-answer`
 
-```
-shape known-answer retail --scale fabric_demo -o ka/
-shape known-answer schema.json --seed 7 --measures measures.json --plant order_line.line_total=250000 -o ka/
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-5).
+
 
 Generates a dataset whose measure results are known exactly, so a model author can tell whether
 the measures return the right numbers. `DOMAIN` is a domain or a generation schema file; `-s/--scale`
@@ -226,10 +486,10 @@ non-decimal plant column). The same inputs give byte-identical `answers.json`, `
 
 ## `check-answers`
 
-```
-shape check-answers ka/answers.json results/
-shape check-answers ka/answers.json results.json --places 4
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-7).
+
 
 `RESULTS` is a CSV or JSON export of the queries of `queries.dax`:
 
@@ -274,3 +534,107 @@ query the answers do not have.
 
 The answers do not depend on any engine: they are computed from the Parquet files that were
 written, so a mismatch is the measure or the model, never the answer key.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-3"></a>
+
+### Example 4
+
+<!-- example: 3 -->
+
+```bash {.runnable-reference}
+shape export-model retail --source-type warehouse --source-name Sales -o retail.bim
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape v0.9.3 — Semantic Model Export
+
+      Domain:        retail
+      Source type:   warehouse
+      Tables:        9
+      Relationships: 9
+      DAX measures:  33
+      Output:        retail.bim
+
+    Import this .bim file into Tabular Editor or deploy via XMLA endpoint.
+    ```
+
+<a id="local-example-5"></a>
+
+### Example 6
+
+<!-- example: 5 -->
+
+```bash {.runnable-reference}
+shape known-answer retail --scale fabric_demo -o ka/
+shape known-answer retail --seed 7 --measures measures.json --plant order_line.line_total=250000 -o ka/
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: 125 (measure, slice) pair(s) skipped; see `skipped` in answers.json
+    Shape v0.9.3 — Known-answer dataset
+
+      Domain:   retail
+      Scale:    fabric_demo  (seed 42)
+      Tables:   9 (4670 rows)
+      Measures: 33
+      Queries:  8
+      Output:   ka
+
+    Run queries.dax in a DAX client against the model, save the results, then:
+      shape check-answers ka/answers.json RESULTS
+    Shape v0.9.3 — Known-answer dataset
+
+      Domain:   retail
+      Scale:    small  (seed 7)
+      Tables:   9 (21750 rows)
+      Measures: 2
+      Queries:  1
+      Planted:  order_line.line_total = 250000
+      Output:   ka
+
+    Run queries.dax in a DAX client against the model, save the results, then:
+      shape check-answers ka/answers.json RESULTS
+    ```
+
+<a id="local-example-7"></a>
+
+### Example 8
+
+<!-- example: 7 -->
+
+```bash {.runnable-reference}
+python - <<'PYRESULTS'
+import json
+answers = json.load(open('ka/answers.json'))
+results = {}
+for query in answers['queries']:
+    columns = [query['slice']] if query['slice'] else []
+    rows = []
+    for row in query['rows']:
+        result = dict(zip(columns, row['key']))
+        result.update(row['values'])
+        rows.append(result)
+    results[query['id']] = rows
+json.dump(results, open('results.json', 'w'))
+print('Wrote a local result fixture from the known answers')
+PYRESULTS
+shape check-answers ka/answers.json results.json
+shape check-answers ka/answers.json results.json --places 4
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Wrote a local result fixture from the known answers
+    All 2 values match the known answers.
+    All 2 values match the known answers.
+    ```

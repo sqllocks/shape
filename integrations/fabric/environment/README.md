@@ -19,7 +19,7 @@ the Environment, which installs Shape on every node, is required for it.
    Runtime 1.3 also works; the notebook detects the Spark version and uses
    `toPandas()` there (`toArrow()` on 2.0).
 3. **Libraries > Custom libraries > Upload**, and choose
-   `sqllocks_shape-0.9.1-py3-none-any.whl` (built by DM-03, or downloaded from
+   `sqllocks_shape-0.9.3-py3-none-any.whl` (built by DM-03, or downloaded from
    the GitHub release / PyPI). A custom `.whl` has no platform-independence rule in
    Environments. To run on the Rust kernel, also upload the Linux x86_64 platform wheel
    (an `abi3` `manylinux` x86_64 `.whl`); the pure wheel is the

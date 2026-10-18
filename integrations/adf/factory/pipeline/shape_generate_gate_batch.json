@@ -193,7 +193,7 @@
       },
       "image": {
         "type": "string",
-        "defaultValue": "ghcr.io/sqllocks/shape:0.9.1"
+        "defaultValue": "ghcr.io/sqllocks/shape:0.9.3"
       },
       "scriptsFolder": {
         "type": "string",

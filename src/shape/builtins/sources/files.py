@@ -83,10 +83,14 @@ class _FileSource:
 
 
 class CsvSource(_FileSource):
+    """Read CSV files as Arrow batches."""
+
     name = "csv"
 
 
 class ParquetSource(_FileSource):
+    """Read Parquet files as Arrow batches."""
+
     name = "parquet"
 
 
@@ -156,4 +160,6 @@ class JsonlSource(_FileSource):
 
 
 class IpcSource(_FileSource):
+    """Read Arrow IPC files as Arrow batches."""
+
     name = "ipc"

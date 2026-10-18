@@ -3,10 +3,11 @@
 * a Shape generation schema (``schema_version``, ``model`` and ``tables``) goes through the schema
   validator: the JSON Schema, then ``GenSchema.validate`` (tables, keys, relationships, rules, scale
   presets and each strategy's required keys);
-* a contract (``name`` and ``fields``) goes through the contract validation;
+* a v1 profile contract goes through the same validation as ``shape check``;
+* a contract model (``name`` and ``fields``) goes through the contract model validation;
 * anything else is not something Shape reads: exit 2.
 
-Exit 0 valid, 1 invalid, 2 not a Shape document or unreadable.
+Exit 0 valid, 1 structurally invalid, 2 malformed v1 rule, unrecognised or unreadable input.
 """
 
 from __future__ import annotations
@@ -48,13 +49,31 @@ def read_text(path: Path) -> str:
 _load = load_document  # the name the bridge imports
 
 
-def kind_of(doc: Any) -> str | None:
-    """``generation-schema``, ``contract`` or None."""
+def kind_of(doc: Any, *, include_v1: bool = False) -> str | None:
+    """``generation-schema``, ``contract`` or None; opt in to v1 profile contracts.
+
+    The stored bridge API keeps its original document dispatch by default.
+    """
     if not isinstance(doc, dict):
         return None
     if {"schema_version", "model", "tables"} <= doc.keys():
         return "generation-schema"
     if "name" in doc and "fields" in doc and "tables" not in doc:
+        return "contract"
+    if not include_v1:
+        return None
+    if ("model" in doc and "tables" in doc) or doc.get(
+        "format", "shape-contract"
+    ) != "shape-contract":
+        return None
+    from shape import compat
+    from shape.contracts.v1 import _CONTRACT_KEYS
+
+    if (
+        doc.get("format") == "shape-contract"
+        or _CONTRACT_KEYS.intersection(doc)
+        or all(key in compat.BOOKKEEPING_KEYS or key.startswith("x_") for key in doc)
+    ):
         return "contract"
     return None
 
@@ -81,6 +100,8 @@ def _validate_schema(doc: dict[str, Any]) -> tuple[dict[str, Any], int]:
 
 
 def _validate_contract(doc: dict[str, Any]) -> tuple[dict[str, Any], int]:
+    if not ("name" in doc and "fields" in doc and "tables" not in doc):
+        return _validate_v1_contract(doc)
     from shape.spec.model import ShapeContract
 
     try:
@@ -96,14 +117,26 @@ def _validate_contract(doc: dict[str, Any]) -> tuple[dict[str, Any], int]:
     }, 0
 
 
+def _validate_v1_contract(doc: dict[str, Any]) -> tuple[dict[str, Any], int]:
+    from shape.contracts.v1 import ContractError, ContractRuleError, validate_contract
+
+    try:
+        validate_contract(doc)
+    except ContractRuleError:
+        raise  # malformed rules are input errors (exit 2), as in `shape check`
+    except ContractError as exc:
+        return {"valid": False, "kind": "contract", "errors": [str(exc)]}, 1
+    return {"valid": True, "kind": "contract"}, 0
+
+
 def cmd_validate(a: argparse.Namespace) -> int:
     path = Path(a.contract)
     doc = load_document(path)
-    kind = kind_of(doc)
+    kind = kind_of(doc, include_v1=True)
     if kind is None:
         raise ValueError(
             f"{path} is neither a Shape generation schema (schema_version, model, tables) "
-            "nor a contract (name, fields)"
+            "nor a v1 contract (columns, row_count, tables) or contract model (name, fields)"
         )
     result, code = (_validate_schema if kind == "generation-schema" else _validate_contract)(doc)
     print(json.dumps(result, sort_keys=True, default=str))

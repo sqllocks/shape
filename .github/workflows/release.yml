@@ -154,7 +154,6 @@ jobs:
       - env: {VERSION: '${{ needs.versions.outputs.version }}'}
         run: |
           for py in 3.11 3.14; do
-            docker run --rm --platform ${{ matrix.platform }} -e VERSION -v "$PWD:/src" -w /src "python:${py}-alpine" sh -c '
-              apk add --no-cache libstdc++ build-base unixodbc-dev librdkafka-dev >/dev/null &&
-              python scripts/release_smoke.py --version "$VERSION" --source dist --kernel rust --attempts 1'
+            docker run --rm --platform ${{ matrix.platform }} -e VERSION -v "$PWD:/src" -w /src "python:${py}-alpine" \
+              sh scripts/release_smoke_alpine.sh
           done

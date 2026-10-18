@@ -1,5 +1,8 @@
 # Plugin trust model
 
+Status: experimental.
+
+
 Plugins are **trusted, in-process Python code**. Installing a plugin is the same decision as
 installing any other Python package: it runs with the permissions of the process that loads
 it, it can read and write what that process can, and Shape does not sandbox, isolate or
@@ -36,7 +39,7 @@ What you should do:
 An organisation that runs Shape in a shared pipeline can control which plugin code can load at
 all. The check runs in `PluginHost` **before a plugin is imported**; a plugin it refuses has the
 status `blocked`, is never imported, and `get` raises `PluginLoadError` (the CLI prints
-`shape: error: plugin sources:kafka (sqllocks-shape-kafka 0.9.0) is not on the plugin allow-list
+`shape: error: plugin stream_sources:kafka (sqllocks-shape-kafka 0.9.1) is not on the plugin allow-list
 PATH` and exits 2). A blocked plugin does not stop commands that do not use it. Shape's own
 built-ins are always allowed.
 
@@ -66,7 +69,7 @@ message to upgrade). The JSON Schema is `src/shape/schemas/plugin-allowlist-v1.s
   "plugins": [
     {
       "distribution": "sqllocks-shape-kafka",
-      "version": "==0.9.0",
+      "version": "==0.9.3",
       "record_sha256": "<sha256 of the installed RECORD file>",
       "names": ["stream_sources:kafka", "emitters:kafka"]
     }
@@ -79,8 +82,8 @@ message to upgrade). The JSON Schema is `src/shape/schemas/plugin-allowlist-v1.s
 | Key | Meaning |
 |---|---|
 | `plugins[].distribution` | Required. The distribution name (`-`, `_` and `.` are equivalent). A plugin from a distribution that is not listed is blocked. Listed twice is an error. |
-| `plugins[].version` | Optional PEP 440 specifier (`==0.9.0`, `>=0.9,<1`). The installed version must satisfy it. Evaluating it needs the `packaging` package; without it the plugin is blocked. |
-| `plugins[].names` | Optional `group:name` list (`sources:kafka` or `shape.sources:kafka`). Only these plugins of the distribution may load. |
+| `plugins[].version` | Optional PEP 440 specifier (`==0.9.1`, `>=0.9,<1`). The installed version must satisfy it. Evaluating it needs the `packaging` package; without it the plugin is blocked. |
+| `plugins[].names` | Optional `group:name` list (`stream_sources:kafka` or `shape.stream_sources:kafka`). Only these plugins of the distribution may load. |
 | `plugins[].record_sha256` | Optional. The sha256 of the distribution's `RECORD`. When given, `RECORD` must match it and every file `RECORD` gives a hash for must match that hash; the first changed or missing file is named in the reason. |
 | `require_signature` | Default `false`. When `true`, every listed distribution must carry a valid signature (below). |
 | `trusted_keys` | `key_id` and `public_key`, a path (relative to the allow-list file) of a public key file as `shape keygen` writes it. The key id must match the file. |
@@ -145,7 +148,7 @@ a token cache or key file of its own. The table is checked against the source by
 | `shape-dbt` | None. | None. | Reads the dbt project files you name (`dbt_project.yml`, model and source YAML, `manifest.json`, `run_results.json`) and the schema, profile, contract and result files you give. Writes the files you name (`-o`, `--md`, `--packages-out`) and, as the `dbt-seeds` sink, CSV seeds and their properties YAML in the project's seeds folder (atomically). |
 | `shape-domains` | None. | None. | Reads its packaged data (`data/retail/*.json`, `*.arrow`). Writes nothing. |
 | `shape-eventhubs` | The Event Hubs namespace in the connection string or `eventhubs://` URI (AMQP over TLS, azure-eventhub). With no connection string, Microsoft Entra sign-in through `azure.identity` (its login endpoint, the managed-identity endpoint, or the `az` command). | `SHAPE_EVENTHUBS_CONNECTION_STRING` (secret). With Entra sign-in, azure-identity's own variables (`AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` and the like). | None. |
-| `shape-fabric` | `api.fabric.microsoft.com` (workspace and item management, HTTPS). `onelake.dfs.fabric.microsoft.com` (OneLake files). `<vault>.vault.azure.net` (Key Vault secrets for `kv://` references). Token audiences `storage.azure.com` and `database.windows.net`. The Eventhouse query URI, SQL endpoint, Eventstream or Event Hubs endpoint you give; `eventhouse://...?tls=false` uses plain HTTP without a token. Sign-in through azure-identity (`--auth cli`, `msi`, `spn`, `device-code`) or the notebook identity, which contact Entra, the managed-identity endpoint or the `az` command. | `SHAPE_WORKSPACE_ID`, `SHAPE_LAKEHOUSE_ID`, `SHAPE_LAKEHOUSE_PATH`, `SHAPE_SQL_CONNECTION` (secret if it holds a password), `SHAPE_EVENTHOUSE_TOKEN` (secret), `SHAPE_EVENTSTREAM_CONNECTION_STRING` (secret), any variable you name in an `env://NAME` reference, and azure-identity's variables when it signs in. | Writes lakehouse files (`landing/<domain>/<entity>/...`, `run_manifest.json`) to the local folder or OneLake path you give, atomically for local paths; writes warehouse staging files in OneLake and deletes them afterwards; writes the `export-model` `.bim` file and `notebook -o` file you name. Reads the schema file you give, `file://` credential files and, from the `onelake://` source, remote files. The developer tool `python -m shape_fabric.scenarios` writes recording files you name. |
+| `shape-fabric` | `api.fabric.microsoft.com` (workspace and item management, HTTPS). `onelake.dfs.fabric.microsoft.com` (OneLake files). `<vault>.vault.azure.net` (Key Vault secrets for `kv://` references). Token audiences `storage.azure.com` and `database.windows.net`. The Eventhouse query URI, SQL endpoint, Eventstream or Event Hubs endpoint you give; `eventhouse://...?tls=false` uses plain HTTP without a token. Sign-in through azure-identity (`--auth cli`, `msi`, `spn`, `device-code`) or the notebook identity, which contact Entra, the managed-identity endpoint or the `az` command. | `SHAPE_WORKSPACE_ID`, `SHAPE_LAKEHOUSE_ID`, `SHAPE_LAKEHOUSE_PATH`, `SHAPE_SQL_CONNECTION` (secret if it holds a password), `SHAPE_SQL_QUERY_TIMEOUT` (seconds one SQL statement may run, default 900), `SHAPE_WAREHOUSE_INSERT_SECONDS` (seconds the Warehouse INSERT fallback may run per table, default 600), `SHAPE_EVENTHOUSE_TOKEN` (secret), `SHAPE_EVENTSTREAM_CONNECTION_STRING` (secret), any variable you name in an `env://NAME` reference, and azure-identity's variables when it signs in. | Writes lakehouse files (`landing/<domain>/<entity>/...`, `run_manifest.json`) to the local folder or OneLake path you give, atomically for local paths; writes warehouse staging files in OneLake and deletes them afterwards; writes the `export-model` `.bim` file and `notebook -o` file you name. Reads the schema file you give, `file://` credential files and, from the `onelake://` source, remote files. The developer tool `python -m shape_fabric.scenarios` writes recording files you name. |
 | `shape-healthcare-codes` | Only `shape healthcare-codes fetch` uses the network: HTTPS downloads from the publishers' official files on `www.cms.gov`, `ftp.cdc.gov`, `hcup-us.ahrq.gov`, `download.nlm.nih.gov` and `www.accessdata.fda.gov`, checked against pinned checksums where the publisher allows. Lookups never do. The licence and source pages it records (`www.cdc.gov`, `www.fda.gov`, `www.nlm.nih.gov`, `www.nucc.org`, `x12.org`, `icd.who.int`, `www.bfarm.de`, `www.ihpa.gov.au`) are text in its catalog and manifests and are never contacted; `github.com` appears only in its HTTP User-Agent. | `SHAPE_HEALTHCARE_CODES_DIR` (its data folder), and `XDG_CACHE_HOME` when that is unset. | Reads its packaged data and the code-set files you supply (`byo`). Writes built assets (`*.arrow` and their manifests) and the download cache (`downloads/`) in its data folder (default `~/.cache/shape/healthcare-codes`). |
 | `shape-healthcare-standards` | None. The FHIR code-system and profile URIs it writes into resources (on `hl7.org`, `terminology.hl7.org`, `unitsofmeasure.org`, `www.nlm.nih.gov`, `www.cms.gov`, `www.ama-assn.org`, `www.nubc.org`, `nucc.org`, `x12.org`) and the bundle base URL `example.org` are identifiers, never contacted. | None. | Its sinks write X12, FHIR (ndjson or bundles), OMOP and NCPDP files under the output path you give, atomically; the `fhir` emitter appends to the file you give. Reads an NCPDP layout file you supply. |
 | `shape-integrations` | Only `shape lineage emit --to URL` uses the network of its own: one HTTPS POST per OpenLineage event to the URL you give (plain `http` only to a loopback host), with a bearer token only when `--token-env` names one. `shape mlflow log` talks to the MLflow tracking URI you give (`--tracking-uri`), through mlflow. The other adapters (Presidio, SDMetrics, Anonymeter, DuckDB, Ibis) contact nothing; Presidio never downloads a model. The `github.com`, `openlineage.io` and `json-schema.org` URIs it writes into OpenLineage events are identifiers, not contacted. | The variable `--token-env` names (its value is the bearer token). `SHAPE_PRESIDIO_SAMPLE` (sample size of the `presidio` detector), `SHAPE_PRESIDIO_MODEL` (an installed spaCy model). | Reads the run manifest, profile, verify report and table files you name (`duckdb://FILE` is opened read-only and never created). Writes the event file of `--to file://PATH` (appended) and the report you name (`-o`). |

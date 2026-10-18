@@ -156,6 +156,10 @@ def create_strict_table_command(table: str, schema: pa.Schema) -> str:
     return f".create table {q(table)} ({_column_list(schema)})"
 
 
+def alter_table_command(table: str, schema: pa.Schema) -> str:
+    return f".alter table {q(table)} ({_column_list(schema)})"
+
+
 def mapping_name(table: str) -> str:
     return MAPPING_NAME
 
@@ -175,6 +179,10 @@ def streaming_policy_command(table: str) -> str:
     return f".alter table {q(table)} policy streamingingestion enable"
 
 
+def clear_schema_cache_command(table: str) -> str:
+    return f".clear table {q(table)} cache streamingingestion schema"
+
+
 def drop_table_command(table: str) -> str:
     return f".drop table {q(table)} ifexists"
 
@@ -182,6 +190,10 @@ def drop_table_command(table: str) -> str:
 def show_table_command(table: str) -> str:
     # a literal, not an identifier: .show tables | where TableName == '<name>'
     return f".show tables | where TableName == {string_literal(check_name(table))} | count"
+
+
+def show_table_schema_command(table: str) -> str:
+    return f".show table {q(table)} schema as json"
 
 
 def dedupe_query(table: str) -> str:
@@ -216,6 +228,7 @@ class KustoClient:
         busy_retries: int = 6,
         timeout: float = 100.0,
         ready_timeout: float = 120.0,
+        management_timeout: float | None = None,
     ) -> None:
         self.target = target
         self._token = token
@@ -224,6 +237,7 @@ class KustoClient:
         self.busy_retries = busy_retries
         self.timeout = timeout
         self.ready_timeout = ready_timeout
+        self.management_timeout = management_timeout
         self._warm: set[str] = set()  # tables that have accepted a request
         self._prepared: set[tuple[str, str]] = set()
         self.accepted = 0  # ingestion requests the service has accepted, over the client's life
@@ -235,12 +249,18 @@ class KustoClient:
             headers["Authorization"] = f"Bearer {bearer}"
         return headers
 
-    def _call(self, method: str, url: str, content_type: str, body: bytes) -> bytes:
+    def _call(
+        self, method: str, url: str, content_type: str, body: bytes, *, timeout: float | None = None
+    ) -> bytes:
         pause = self._busy_pause
         attempt = 0
         while True:
             status, resp_headers, data = self._transport(
-                method, url, self._headers(content_type), body, self.timeout
+                method,
+                url,
+                self._headers(content_type),
+                body,
+                self.timeout if timeout is None else timeout,
             )
             if status < 300:
                 return data
@@ -259,17 +279,23 @@ class KustoClient:
             else:
                 raise ShapeError(f"eventhouse: request refused ({status}): {text}")
 
-    def _json_call(self, path: str, csl: str) -> Any:
+    def _json_call(self, path: str, csl: str, *, timeout: float | None = None) -> Any:
         body = json.dumps({"db": self.target.database, "csl": csl}).encode("utf-8")
-        data = self._call("POST", f"{self.target.base}{path}", "application/json", body)
+        data = self._call(
+            "POST", f"{self.target.base}{path}", "application/json", body, timeout=timeout
+        )
         try:
             return json.loads(data or b"{}")
         except ValueError:
             return {}
 
-    def mgmt(self, csl: str) -> Any:
-        """Run a management command (``.create table ...``)."""
-        return self._json_call("/v1/rest/mgmt", csl)
+    def mgmt(self, csl: str, *, timeout: float | None = None) -> Any:
+        """Run a management command, optionally allowing for a longer service operation."""
+        return self._json_call(
+            "/v1/rest/mgmt",
+            csl,
+            timeout=self.management_timeout if timeout is None else timeout,
+        )
 
     def query(self, csl: str) -> list[list[Any]]:
         """The rows of the first table of a query's answer."""
@@ -283,6 +309,33 @@ class KustoClient:
         rows = tables[0].get("Rows") if tables else None
         return bool(rows and rows[0] and int(rows[0][0]) > 0)
 
+    def table_column_names(self, table: str) -> list[str]:
+        """Read existing column names before preparing destructive schema changes."""
+        doc = self.mgmt(show_table_schema_command(table))
+        try:
+            result = doc["Tables"][0]
+            names = [column["ColumnName"] for column in result["Columns"]]
+            rows = result["Rows"]
+            if len(rows) != 1:
+                raise ValueError("expected one table schema")
+            value = rows[0][names.index("Schema")]
+            if not isinstance(value, str):
+                raise ValueError("expected a JSON table schema")
+            columns = json.loads(value)["OrderedColumns"]
+            if not isinstance(columns, list):
+                raise ValueError("expected an ordered column list")
+            existing = []
+            for column in columns:
+                name = column["Name"]
+                if not isinstance(name, str) or not name:
+                    raise ValueError("expected a nonempty column name")
+                existing.append(name)
+            if len(set(existing)) != len(existing):
+                raise ValueError("duplicate table columns")
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            raise ShapeError("eventhouse: invalid table-schema response") from exc
+        return existing
+
     def prepare(self, table: str, schema: pa.Schema, *, create: str = "merge") -> None:
         """Create (``create="merge"``: or extend) the table, its JSON mapping and its streaming
         policy; again only when another schema was prepared for the table since (its JSON mapping
@@ -290,6 +343,9 @@ class KustoClient:
         mark = (table, schema.to_string())
         if mark in self._prepared:
             return
+        # Management changes are not atomic: even if synchronization fails below, the new
+        # mapping may already have replaced the old one. Invalidate before changing it.
+        self.forget(table)
         first = (
             create_strict_table_command(table, schema)
             if create == "strict"
@@ -303,10 +359,34 @@ class KustoClient:
             self.mgmt(streaming_policy_command(table))
         except (ShapeError, AuthError):
             pass
-        # A table has one mapping by that name, and this one replaced it: another schema
-        # prepared for the same table must send its own mapping again.
-        self.forget(table)
+        # Streaming nodes cache schema independently of successful management commands.
+        # Synchronize the table and mapping before sending data; otherwise the first ingest
+        # can still report EntityNotFound for minutes after creation.
+        self._clear_schema_cache(table)
         self._prepared.add(mark)
+
+    def _clear_schema_cache(self, table: str) -> None:
+        deadline = time.monotonic() + self.ready_timeout
+        pause = self._busy_pause
+        while True:
+            doc = self.mgmt(clear_schema_cache_command(table), timeout=self.timeout)
+            try:
+                result = doc["Tables"][0]
+                names = [column["ColumnName"] for column in result["Columns"]]
+                status_column = names.index("Status")
+                statuses = [row[status_column] for row in result["Rows"]]
+            except (KeyError, IndexError, TypeError, ValueError) as exc:
+                raise ShapeError("eventhouse: invalid streaming schema-cache response") from exc
+            if not statuses or any(status not in ("Succeeded", "Failed") for status in statuses):
+                raise ShapeError("eventhouse: invalid streaming schema-cache node status")
+            if all(status == "Succeeded" for status in statuses):
+                return
+            # The command is safe to repeat when any node reports Failed. Keep the existing
+            # readiness bound and refuse to ingest until every node has synchronized.
+            if time.monotonic() + pause > deadline:
+                raise ShapeError("eventhouse: streaming schema-cache synchronization failed")
+            time.sleep(pause)
+            pause = min(pause * 2, 10.0)
 
     def forget(self, table: str) -> None:
         self._prepared = {m for m in self._prepared if m[0] != table}

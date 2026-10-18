@@ -15,6 +15,7 @@ Exit 0 when everything holds, 1 otherwise.
 from __future__ import annotations
 
 import argparse
+import ast
 import shutil
 import subprocess
 import sys
@@ -47,8 +48,26 @@ def core_version() -> str:
     return str(data["project"]["version"])
 
 
+def plugin_groups() -> dict[str, str]:
+    """Read the canonical API groups without importing Shape or its dependencies."""
+    source = ROOT / "src" / "shape" / "plugins" / "api" / "v1.py"
+    for node in ast.parse(source.read_text(encoding="utf-8"), filename=str(source)).body:
+        if (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "GROUPS"
+        ):
+            groups = ast.literal_eval(node.value)
+            if not isinstance(groups, dict) or not all(
+                isinstance(key, str) and isinstance(value, str) for key, value in groups.items()
+            ):
+                raise ValueError(f"{source}: GROUPS must be a literal string-to-string dictionary")
+            return groups
+    raise ValueError(f"{source}: GROUPS declaration not found")
+
+
 def check_tree() -> list[str]:
-    from shape.plugins.api.v1 import GROUPS
+    groups = plugin_groups()
 
     problems: list[str] = []
     version = core_version()
@@ -77,7 +96,7 @@ def check_tree() -> list[str]:
         if f"sqllocks-shape=={version}" not in proj.get("dependencies", []):
             problems.append(f"{where}: dependencies must contain 'sqllocks-shape=={version}'")
         for group in proj.get("entry-points", {}):
-            if group not in GROUPS:
+            if group not in groups:
                 problems.append(f"{where}: entry-point group {group!r} is not a plugin API group")
         if not (d / "LICENSE").is_file() or (d / "LICENSE").read_text(encoding="utf-8") != licence:
             problems.append(f"{where}: LICENSE must equal the repository LICENSE")

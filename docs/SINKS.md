@@ -1,5 +1,24 @@
 # Sinks: where generated data goes
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" SINKS
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for SINKS
+    ```
+
+
 Every output is a `shape.sinks` plugin: `Sink.write(uri, table, batches, **options) -> rows`. The
 file sinks are chosen by `--format`; a **URI** with a scheme is routed to the sink that registered
 it. `shape generate --to URI` writes the tables; `shape emit --to URI` and `shape stream --to URI`
@@ -29,6 +48,12 @@ An unknown scheme is an error that lists the schemes installed.
 
 ## OneLake and ADLS Gen2 (`abfss://`, `delta+abfss://`)
 
+<!-- example: 0 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers. A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable. The test tenant has no ADLS Gen2 account, so the recorded run wrote the first two commands to a OneLake Lakehouse instead (`ws` is the workspace, `lh` the Lakehouse, folders `Files/shape_docs/raw` and `Files/shape_docs/live`); the output below shows those OneLake paths. The third command, `delta+abfss://…/Tables`, ran as shown.
+
 ```bash
 shape generate retail --scale small --seed 7 \
   --to abfss://landing@myacct.dfs.core.windows.net/raw \
@@ -40,6 +65,17 @@ shape stream retail -t order --to abfss://landing@myacct.dfs.core.windows.net/li
 shape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables
 ```
 
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Wrote 21,750 rows in 9 tables to abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Files/shape_docs/raw (12.65s)
+    shape stream: 5,000 events delivered, offset 5,000 of 5,000, complete, 210 events/s
+    Wrote 21,750 rows in 9 tables to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables (32.39s)
+    ```
+
+Evidence: [run 38398883944, ubuntu-latest, `5fb3694b5da5`](evidence/transcripts/docs-transcripts-38398883944-5fb3694b5da5-ubuntu-latest-sinks-onelake.json).
+
+
 * **Layout.** `--path-template` (default `{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}`;
   with rolling `..._{part}.{ext}`): Hive-style date partitions. Tokens: `{table} {ext} {date}
   {yyyymmdd} {yyyy} {mm} {dd}`, and for rolling `{part}` and `{hhmmss}`. `{date}` is
@@ -50,10 +86,18 @@ shape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.
   never sees a partial file. On a hierarchical namespace the rename is atomic; on a flat blob
   namespace (Azurite) it is a server-side copy and delete, and the final blob still appears whole.
   `--manifest` writes `_SUCCESS` in each folder after its files.
+  On OneLake the sink checks that the Lakehouse exists by listing the workspace and looking the item
+  up by name, not by probing the item: OneLake refuses a HEAD request on the item folder and on its
+  `Files` and `Tables` folders (`OperationNotAllowedOnThePath`) and allows HEAD on the workspace
+  ([OneLake API parity](https://learn.microsoft.com/fabric/onelake/onelake-api-parity)). An item
+  given by GUID cannot be found in a listing, so it is not checked up front and a missing one is
+  reported by the first write.
 * **Rolling.** `--roll-rows N` and `--roll-seconds S` start a new numbered file; rows-based rolling
   is exact and deterministic. In a stream, every checkpoint also completes the file, so
   `--checkpoint-every` / `--checkpoint-seconds` set how often readers see new rows.
 * **Delta.** One commit at the end, or `--commit-rows N`; in a stream, one commit per checkpoint.
+  `--table-prefix` changes the physical Delta table names. Other supported database/Fabric
+  `--to` sinks receive the same prefix; outputs that cannot honour it refuse the option.
   The first commit applies `--write-mode overwrite|append`, later ones append. `overwrite` replaces
   the table including its schema (a regenerated model may have other columns); `append` keeps the
   table's schema and refuses data that does not fit.
@@ -112,11 +156,26 @@ query.
 
 ## Databases
 
-```bash
-shape generate retail --scale small --to mssql://myserver.database.windows.net/mydb \
-  --write-mode create
-shape stream retail -t order --to postgresql://me@dbhost/shape --commit-rows 500 --realtime --rate 100
+<!-- example: 2 -->
+
+This bounded example uses the workflow's disposable PostgreSQL service. The `stream_` prefix keeps its tables separate from the seed example. Passwords come from `SHAPE_POSTGRES_PASSWORD`; none belong in a URI. It stops after 20 events.
+
+<!-- owner-example: postgres-sink -->
+
+```bash {.runnable-owner}
+shape stream retail -t order --to postgresql://shape@localhost:5432/shape \
+  --commit-rows 500 --realtime --rate 100 --max-events 20 \
+  --sink-config postgres.table_prefix=stream_ --fresh
 ```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape stream: 20 events delivered, offset 20 of 5,000, max-events, 52 events/s
+    ```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-postgres-sink.json).
+
 
 `--write-mode` is `create` (the default: never touches an existing table), `append`, `truncate`
 or `replace` (`mssql://` and `duckdb://` also take `upsert`, below); `--commit-rows N` commits every N rows so readers see rows during the run (a stream
@@ -129,6 +188,13 @@ table's stage with one `COPY INTO`; Databricks writes Delta tables with bound mu
 Synapse dedicated SQL pool loads Parquet staged in ADLS Gen2 (`--sink-config synapse.staging_path=`);
 each checks the loaded row count against the rows sent. See `docs/plugins/fabric-writers.md` and the
 README of `sqllocks-shape-databases`.
+
+**NaN and infinity become NULL.** The `warehouse://`, SQL database and `synapse://` writers store a
+floating-point `NaN` or `±Infinity` as `NULL`: a T-SQL `float` holds only finite values
+([float and real](https://learn.microsoft.com/sql/t-sql/data-types/float-and-real-transact-sql)),
+and the writer makes the value `NULL` before staging or inserting it, so a pool, Warehouse or
+database never receives one. Reading the table back gives `NULL` where `NaN` was written, and the
+dataset id of the read-back differs from the NaN-bearing input for that reason alone.
 
 ## Confirming a non-local target
 
@@ -194,10 +260,8 @@ refusal unless it passes `True` or sets the variable. Plugin commands such as
 
 ### DuckDB (`duckdb://`)
 
-```bash
-shape generate retail --scale small --to duckdb:///out/retail.duckdb
-shape emit retail --to duckdb:///out/retail.duckdb?schema=raw --write-mode append --max-events 10000
-```
+[Run this example](#local-example-4).
+
 
 `pip install 'sqllocks-shape[duckdb]'` (the `sqllocks-shape-databases[duckdb]` extra; DuckDB is
 never a core dependency). `duckdb:///PATH.duckdb` is relative to the working directory and
@@ -294,3 +358,25 @@ resolved CREATE TABLE statements without generating rows, signing in, connecting
 writing. `--json` adds a `ddl` list to the generation plan, each with `target`, `table`
 and `sql`. SQL database sink adapters expose the optional offline
 `ddl(uri, table, arrow_schema, **options)` hook; values and credentials never enter DDL.
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-4"></a>
+
+### Example 5
+
+<!-- example: 4 -->
+
+```bash {.runnable-reference}
+shape generate retail --scale small --to duckdb:///out/retail.duckdb
+shape emit retail --to duckdb:///out/retail.duckdb?schema=raw --write-mode append --max-events 10000
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Wrote 21,750 rows in 9 tables to duckdb:///out/retail.duckdb (0.52s)
+    shape emit: 10,000 events delivered, offset 10,000 of 21,750, max-events, 40,123 events/s
+    ```

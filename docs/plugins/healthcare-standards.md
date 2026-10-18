@@ -1,5 +1,8 @@
 # `sqllocks-shape-healthcare-standards`
 
+Status: experimental.
+
+
 Writers for X12 005010 (837P, 837I, 835, 834), FHIR R4, OMOP CDM and an NCPDP mapping layer, and
 two readers that turn X12 and HL7 v2 files into Arrow tables. The writers are described in the
 plugin's [README](../../plugins/shape-healthcare-standards/README.md). This page lists the X12
@@ -168,7 +171,7 @@ One row per segment of every interchange, group and transaction set, envelope se
 | `position` | int64 | 1-based position of the segment in its interchange (ISA is 1) |
 | `segment_id` | string | `CLP`, `NM1`, ... |
 | `loop_id` | string, null | the 835 loop (below); null for envelope segments and other sets |
-| `elements` | list of string | every element after the segment id, as written; a composite keeps its component separators (`["HC:99213", "100"]`) |
+| `elements` | list of string | every element after the segment id, as written; a composite keeps its component separators (`["HC:SP-01", "100"]`) |
 
 Joined with the segment terminator and the element separator, the rows give back the file's
 segments exactly: a file written by the `x12-835` sink and read back has the same segments.

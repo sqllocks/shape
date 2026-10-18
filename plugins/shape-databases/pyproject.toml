@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sqllocks-shape-databases"
 # Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
-version = "0.9.1"
+version = "0.9.3"
 description = "Shape plugin: live PostgreSQL, MySQL, Snowflake and Databricks sinks, and a DuckDB file writer"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -24,7 +24,7 @@ classifiers = [
 # The client libraries are extras so that a host that writes to one database does not install
 # the other's driver, and so core never carries them (T-07). Without its driver a sink fails
 # with the pip command that installs it.
-dependencies = ["sqllocks-shape==0.9.1"]
+dependencies = ["sqllocks-shape==0.9.3"]
 
 [project.urls]
 Homepage = "https://github.com/sqllocks/shape"
@@ -49,3 +49,6 @@ duckdb = "shape_databases:DuckDbSink"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }

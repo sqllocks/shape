@@ -1,5 +1,8 @@
 # File sources
 
+Status: available.
+
+
 A source turns a file or URI into Arrow record batches. Every command that reads data (`profile`,
 `check`, `diff`, `generate --from`) goes through them. This page lists the file sources and gives
 the options of the two that read nested documents: `json` and `xml`. The plugin API for writing
@@ -9,13 +12,23 @@ your own source is [plugins/api-v1.md](plugins/api-v1.md); the built-in list is
 | Source | Files | Reads as |
 |---|---|---|
 | `csv` | `.csv`, `.tsv` (compression suffixes allowed) | one flat table |
-| `parquet` | `.parquet`, `.pq` | one flat table |
+| `parquet` | `.parquet`, `.pq` | one table; list, struct and map columns stay Arrow columns |
 | `jsonl` | `.jsonl`, `.ndjson` | one table; `flatten="tables"` gives related tables |
 | `json` | `.json` | one table, or related tables (below) |
 | `xml` | `.xml` | related tables (below) |
 | `ipc` | `.arrow`, `.ipc`, `.feather` | one flat table |
 | `abfss`, `delta` | OneLake / ADLS Gen2 and Delta tables | see [plugins/cloud-sources.md](plugins/cloud-sources.md) |
 | `x12`, `hl7v2` | `.x12`, `.edi`, `.hl7` | segment tables (healthcare plugin, see [plugins/healthcare-standards.md](plugins/healthcare-standards.md)) |
+
+### Nested columns in Parquet, Delta and JSON Lines
+
+A Parquet file, a Delta table or a JSON Lines file with a list, struct or map column (or one inside another) profiles
+like any other table: `shape profile` records the column's Arrow type, its null rate and, for a list or a map, the
+distribution of its lengths, and the other columns are profiled as before. The fields inside the values are not profiled.
+JSON Lines has no map type, so an object is a struct. `generate --from` writes the column back with the same Arrow type.
+[Profiling notes](PROFILING_NOTES.md#nested-columns) lists what is recorded and what each command does with it.
+
+A local Delta table is read through Arrow's own file system, so the process ends when the command does.
 
 Nested sources add three methods to the Source protocol. `schema(uri, **options)` and
 `read(uri, **options)` give ONE table: the root, or the one named by the `table` option.

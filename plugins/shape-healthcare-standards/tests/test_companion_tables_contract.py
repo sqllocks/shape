@@ -9,6 +9,7 @@ promise. Regenerate only for a deliberate, documented change:
 from __future__ import annotations
 
 import datetime as dt
+import re
 import shutil
 import sys
 from collections.abc import Callable, Mapping
@@ -71,6 +72,17 @@ WRITERS = [
     Writer("fhir", "medical_claim", FhirEmitter, emitter=True),
 ]
 IDS = [w.name for w in WRITERS]
+
+
+def test_rel092_bundled_samples_do_not_supply_cpt_procedures_or_modifiers():
+    rows = sample_tables()["medical_claim_line"].to_pylist()
+    procedures = [row["procedure_code"] for row in rows if row.get("procedure_code")]
+    assert procedures
+    assert all(re.fullmatch(r"SP-[0-9]{2}", code) for code in procedures)
+    for row in rows:
+        for index in range(1, 5):
+            modifier = row.get(f"modifier_{index}")
+            assert not modifier or not modifier.isdigit()
 
 
 def companions(w: Writer) -> dict[str, pa.Table]:

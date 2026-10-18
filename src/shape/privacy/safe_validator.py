@@ -29,6 +29,7 @@ import datetime
 import json
 import re
 from dataclasses import dataclass, field
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
@@ -251,7 +252,13 @@ class SafeProfileValidator:
                 rate = 0.0
                 if isinstance(null_rate, int | float) and not isinstance(null_rate, bool):
                     rate = float(null_rate)
-                non_null = rows - int(round(rate * rows))
+                try:
+                    nulls = round(rate * rows)
+                except OverflowError:
+                    # JSON integers need not fit in a float. Keep the same cohort threshold
+                    # and round the represented rate using integer arithmetic instead.
+                    nulls = round(Fraction(rate) * rows)
+                non_null = rows - nulls
                 if non_null >= k:
                     continue
                 for key in SMALL_COHORT_STATISTICS:

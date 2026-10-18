@@ -1,5 +1,7 @@
 # Cloud sources: OneLake, ADLS Gen2 and Delta
 
+Status: experimental.
+
 Two built-in sources (`shape.sources`, see [builtins.md](builtins.md)) read cloud storage. Install
 their packages with `pip install 'sqllocks-shape[azure]'` (`adlfs`, `azure-identity`,
 `deltalake`). Nothing from those packages is imported until a read needs it.
@@ -26,14 +28,54 @@ First match wins:
 
 1. **Explicit:** the `credential` option (any object with `get_token`), `token` (a bearer token
    string), or `account_key`, `sas_token`, `connection_string`.
-2. **Inside Fabric:** `notebookutils.credentials.getToken("storage")`. Synapse's `mssparkutils`
+2. **Storage environment:** `AZURE_STORAGE_ACCOUNT_KEY`, then `AZURE_STORAGE_SAS_TOKEN`, then
+   `AZURE_STORAGE_CONNECTION_STRING`. The first non-empty variable wins, as for sinks.
+   An explicit credential, token or storage key takes precedence over all these variables.
+3. **Inside Fabric:** `notebookutils.credentials.getToken("storage")`. Synapse's `mssparkutils`
    is used the same way.
-3. **`DefaultAzureCredential`:** managed identity, a service principal from the environment
+4. **`DefaultAzureCredential`:** managed identity, a service principal from the environment
    (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_CLIENT_SECRET`), or the Azure CLI.
 
 Delta tables take a bearer token (delta-rs has no credential object), so a connection string
 cannot open one; a key or SAS token can. `storage_options` overrides what authentication
 derived.
+
+Every CLI command that reads Azure storage accepts `--source-config KEY=REF`, before or after
+the command. `KEY` is `account_key`, `sas_token`, `connection_string` or `token`; `REF` must be
+an `env://`, `file://` or `kv://` reference. Literal secrets are refused. For example, append
+`--source-config account_key=env://AZURE_STORAGE_ACCOUNT_KEY` to `shape profile <uri>`.
+`file://` requires a private secret file; `kv://` needs the Fabric plugin or a registered
+resolver. An explicit `--auth` credential takes precedence over a storage key, as on writes.
+The resolved values last only for the command and are never stored in its profile.
+
+Permanent authentication failures, including a tenant mismatch (`AADSTS50020`), stop without
+repeating the sign-in. Sign in to the target tenant with an account or service principal that
+belongs to it. Network timeouts, throttling and service outages retain the client's retries.
+A missing Delta table reports `no Delta table at <path>`; permission and damaged-log errors
+remain separate failures.
+
+## Lakehouse table layouts
+
+Classic Lakehouses use `onelake://<workspace>/<lakehouse>/Tables/<table>`. Schema-enabled
+Lakehouses use `.../Tables/<schema>/<table>`, normally `dbo`. Both forms resolve to the same
+core Delta reader; include the actual schema in the read URI.
+
+For Delta writes, target `delta+abfss://<workspace>@onelake.dfs.fabric.microsoft.com/<lakehouse>.Lakehouse/Tables`
+(use the workspace and Lakehouse ids). Shape asks Fabric which kind of Lakehouse it is
+(`GET /v1/workspaces/<workspace>/lakehouses/<lakehouse>`; a schema-enabled Lakehouse reports a
+`defaultSchema`) and writes `Tables/<schema>/<table>` to a schema-enabled one, with schema `dbo`
+unless you give `--schema-name sales` (an existing schema), or `Tables/<table>` to a classic one.
+A schema given for a classic Lakehouse is an error. `--table-prefix shape_` names the physical
+tables `shape_<table>` in either layout. Tables outside a schema folder of a schema-enabled
+Lakehouse are invisible to its SQL analytics endpoint and to semantic models, so the kind is never
+guessed.
+
+The lookup needs the Lakehouse ids and a sign-in that can read the item (`--auth`, or the notebook
+identity inside Fabric). When it cannot run, the write stops with `cannot tell whether Lakehouse
+... is schema-enabled`; state the kind instead with `--sink-config delta.schema_enabled=true` or
+`=false`. A target that already ends in `Tables/dbo` is used as written, and so is a location given
+together with a raw storage token and no identity to ask with. See
+[Troubleshooting](../TROUBLESHOOTING.md#cannot-tell-whether-the-lakehouse-is-schema-enabled).
 
 ## What is tested
 
@@ -53,10 +95,27 @@ The `sqllocks-shape-fabric` plugin adds a source (`shape.sources: semantic-model
 table of a Power BI or Fabric semantic model through `sempy` (semantic link). It runs inside a
 Fabric notebook, where `sempy` signs in as the notebook's user.
 
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 0 -->
+
+**Needs a Fabric notebook (sempy signs in as the notebook's user). Not run in CI.**
+
 ```
 pip install 'sqllocks-shape-fabric[semantic-link]'
 shape profile semantic-model://Sales/Retail/Customer -o customer.shape
 ```
+
+Owner-run in a Fabric notebook on 2026-10-12 (the `shape` script is not on the notebook's `PATH`, so it ran as `python -m shape`; workspace `shape-test`, model `shape_sm`, whose only table is `publicholidays`), exit 0:
+
+```text
+!{sys.executable} -m shape profile "semantic-model://shape-test/shape_sm/publicholidays" -o customer.shape; echo exit=$?
+{"shape_content_id": "d79f97dbd9ef2c41b2340cf04e10742b2da15b14c11007b18356655b998c557a", "written": "customer.shape"}
+exit=0
+```
+
+Evidence: [Owner-run notebook receipt, 2026-10-12, Shape 0.9.1](../evidence/semantic-model-notebook.md).
+
 
 `semantic-model://<workspace>/<model>/<table>`: workspace and model are names or GUIDs, and a `/`
 inside any part is written `%2F`. `shape profile-model` profiles every table of a model with its
@@ -68,6 +127,15 @@ relationships (see [fabric-commands.md](fabric-commands.md)).
 | `batch_rows` | at most this many rows per batch (default 65,536) |
 | `max_rows` | read at most this many rows, as a DAX `TOPN` through `evaluate_dax`; `0` reads none |
 | `mode` | sempy's read mode (`xmla` or `onelake`), where this `sempy` has one; not with `max_rows` |
+
+Outside a Fabric notebook, `sempy` can sign in as a service principal with
+`sempy.fabric.set_service_principal` (semantic-link 0.12 or later; see
+[Service principal support for semantic link](https://learn.microsoft.com/fabric/data-science/semantic-link-service-principal-support)).
+The lookup lists the workspace's models; when the default listing does not hold the model, it tries
+the REST listing (`list_datasets(mode="rest")`), the one Microsoft documents for service
+principals, and when neither lists it the error is "workspace W has no semantic model M" and a log
+warning names what each listing returned. The model name is compared exactly: a trailing space in
+a configured name does not match.
 
 `schema(uri)` is built from the model's column metadata (`sempy.fabric.list_columns`) and reads no
 rows. Hidden columns are included. Measures are not columns and are not read.

@@ -1,10 +1,28 @@
 # Testing with Shape: the pytest plugin and `shape seed`
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" TESTING_WITH_SHAPE
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for TESTING_WITH_SHAPE
+    ```
+
+
 ## The pytest plugin
 
-```bash
-pip install 'sqllocks-shape[pytest,domains]'
-```
+[Run this example](#local-example-0).
+
 
 The `pytest` extra installs pytest. The plugin itself is registered by the package through the
 `pytest11` entry point (`shape = "shape.testdata.pytest_plugin"`), as pytest plugins are, so it loads
@@ -62,12 +80,41 @@ passes none) and of every scenario marker. Use it to rerun a suite on other data
 
 ## `shape seed`
 
-```bash
+<!-- example: 3 -->
+
+The workflow runs this command against a disposable PostgreSQL service, with `SHAPE_POSTGRES_PASSWORD` supplied by the runner.
+
+<!-- owner-example: postgres-seed -->
+
+```bash {.runnable-owner}
 shape seed retail --target postgresql://shape@localhost:5432/shape --scale small --seed 7
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+      customer: 1,000 rows
+      address: 1,500 rows
+      product_category: 50 rows
+      product: 500 rows
+      promotion: 200 rows
+      store: 150 rows
+      order: 5,000 rows
+      order_line: 12,500 rows
+      return: 850 rows
+    seeded 21,750 rows into 9 tables
+    ```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-postgres-seed.json).
+
+Other target forms (supply their connection and credentials):
+
+```bash
 shape seed schema.json --target mssql://localhost:1433/test --mode truncate
 shape seed retail --target mysql://shape@localhost/shape --dry-run
 shape seed retail --target sql://./seed-scripts --scale tiny
 ```
+
 
 `SPEC|DOMAIN` is an installed domain or a generation schema file (`shape from-ddl` writes one).
 `--target` is a database URI whose scheme picks the installed sink (`mssql` or `sqlserver`,
@@ -106,3 +153,24 @@ it; the error names them. Rerun with `--mode truncate` to replace them.
 The same call is available from Python: `shape.testdata.seed.seed_target(spec, target, scale=...,
 seed=..., mode=..., dry_run=..., sink_options=...)`, where `sink_options` carries what the command
 line cannot (`password`, `user`, `schema_name`, `credential`).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO" -e "$SHAPE_DOCS_REPO/plugins/shape-domains"
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    (no output)
+    ```

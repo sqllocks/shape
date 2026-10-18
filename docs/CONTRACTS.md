@@ -1,5 +1,8 @@
 # Contracts: `shape check`
 
+Status: available.
+
+
 A contract is a JSON object (format `shape.contracts.v1`) that `shape check PROFILE.shape
 CONTRACT.json` and `shape.check(profile, contract)` test a profile against. Every key is optional;
 an empty contract passes. A contract against a dataset profile (several tables) has a `tables`
@@ -8,13 +11,21 @@ object that maps each table name to a contract of its own.
 | Key | Meaning |
 |---|---|
 | `row_count` | `{"min": N, "max": N}` |
-| `columns` | per column: `dtype`, `nullable`, `unique`, `max_null_rate`, `pattern`, `allowed_values`, `min`, `max`, `distribution`, `min_true_rate`, `max_true_rate`, `no_placeholder` |
+| `columns` | per column: `dtype`, `nullable`, `unique`, `max_null_rate`, `pattern`, `allowed_values`, `min`, `max`, `distribution`, `min_true_rate`, `max_true_rate`, `no_placeholder`, `valid_as`, `strength` |
 | `required_columns`, `allow_extra_columns` | which columns must be there, and whether others may be |
 | `fd`, `implies`, `reference_pair`, `max_implausible_rate` | rules on the joint analysis (`docs/JOINT.md`) |
+| `tables` | maps each table name in a dataset profile to its own contract |
+| `timeseries`, `reconcile` | time-series and reconciliation rules; `shape check --data DATA` supplies the data ([Verification](VERIFY.md)) |
 | `drift` | the drift policy; `shape check` ignores it (`docs/DRIFT.md`) |
 
 Exit codes of `shape check`: **0** when no rule that counts as failing is broken, **1** when one is,
 **2** when the contract itself is malformed (an unknown key, rule or strength).
+
+The contract keys and column-rule list above are checked against the v1 registries in the contract tests.
+`valid_as` checks a code validator's measured valid rate; see [Reference packs](REFERENCE_PACKS.md#column-validators).
+`shape validate CONTRACT.json` validates v1 contracts without a profile: structural errors exit 1;
+unknown rules and malformed rule values exit 2, as in `shape check` and `shape check --dry-run`.
+The dry run validates the contract without evaluating its rules or writing reports.
 
 ## Rule strength
 

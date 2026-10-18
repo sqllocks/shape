@@ -1,0 +1,269 @@
+{
+  "columns": {
+    "amount": {
+      "adequacy": {
+        "min_detectable_share": 0.0721575245055146,
+        "non_null": 40,
+        "null_rate_se": 0.0
+      },
+      "cardinality": 5,
+      "cardinality_ratio": 0.125,
+      "distribution": "normal",
+      "distribution_params": {
+        "loc": 12.0,
+        "scale": 1.4142135623730951
+      },
+      "dow_histogram": null,
+      "dtype": "integer",
+      "enum_values": {
+        "10": 0.2,
+        "11": 0.2,
+        "12": 0.2,
+        "13": 0.2,
+        "14": 0.2
+      },
+      "fit_score": 0.8398,
+      "fk_ref_table": null,
+      "hour_histogram": null,
+      "is_enum": true,
+      "is_foreign_key": false,
+      "is_primary_key": false,
+      "is_unique": false,
+      "max_value": [
+        "int",
+        14
+      ],
+      "mean": 12.0,
+      "min_value": [
+        "int",
+        10
+      ],
+      "name": "amount",
+      "null_count": 0,
+      "null_rate": 0.0,
+      "outlier_rate": 0.0,
+      "pattern": null,
+      "pattern_contains_rates": null,
+      "pattern_rates": null,
+      "precision": null,
+      "quantiles": {
+        "p0_5": 10.0,
+        "p1": 10.0,
+        "p10": 10.0,
+        "p25": 11.0,
+        "p5": 10.0,
+        "p50": 12.0,
+        "p75": 13.0,
+        "p90": 14.0,
+        "p95": 14.0,
+        "p99": 14.0,
+        "p99_5": 14.0
+      },
+      "scale": null,
+      "std": 1.4322297480788657,
+      "string_length": null,
+      "temporal_histogram": null,
+      "type_inference": {
+        "confidence": 1.0,
+        "identifier": null,
+        "parse_shares": {
+          "boolean": 0.0,
+          "date": 0.0,
+          "datetime": 0.0,
+          "float": 1.0,
+          "integer": 1.0
+        },
+        "source": "inferred",
+        "type": "integer"
+      },
+      "value_counts_ext": {
+        "10": 0.2,
+        "11": 0.2,
+        "12": 0.2,
+        "13": 0.2,
+        "14": 0.2
+      },
+      "value_counts_ext_order": null
+    },
+    "id": {
+      "adequacy": {
+        "min_detectable_share": 0.0721575245055146,
+        "non_null": 40,
+        "null_rate_se": 0.0
+      },
+      "bounds": {
+        "hi": 39.61,
+        "lo": 1.39
+      },
+      "cardinality": 40,
+      "cardinality_ratio": 1.0,
+      "distribution": null,
+      "distribution_params": null,
+      "dow_histogram": null,
+      "dtype": "integer",
+      "enum_values": null,
+      "fit_score": null,
+      "fk_ref_table": null,
+      "hour_histogram": null,
+      "is_enum": false,
+      "is_foreign_key": false,
+      "is_primary_key": true,
+      "is_unique": true,
+      "max_value": null,
+      "mean": 20.5,
+      "min_value": null,
+      "name": "id",
+      "null_count": 0,
+      "null_rate": 0.0,
+      "outlier_rate": 0.0,
+      "pattern": null,
+      "pattern_contains_rates": null,
+      "pattern_rates": null,
+      "precision": null,
+      "quantiles": {
+        "p0_5": 1.195,
+        "p1": 1.39,
+        "p10": 4.9,
+        "p25": 10.75,
+        "p5": 2.95,
+        "p50": 20.5,
+        "p75": 30.25,
+        "p90": 36.1,
+        "p95": 38.05,
+        "p99": 39.61,
+        "p99_5": 39.805
+      },
+      "redacted": {
+        "distribution_params": "sensitive",
+        "max_value": "sensitive",
+        "min_value": "sensitive",
+        "value_counts_ext": "sensitive"
+      },
+      "scale": null,
+      "std": 11.69045194450012,
+      "string_length": null,
+      "temporal_histogram": null,
+      "type_inference": {
+        "confidence": 1.0,
+        "identifier": null,
+        "parse_shares": {
+          "boolean": 0.025,
+          "date": 0.0,
+          "datetime": 0.0,
+          "float": 1.0,
+          "integer": 1.0
+        },
+        "source": "inferred",
+        "type": "integer"
+      },
+      "value_counts_ext": null,
+      "value_counts_ext_order": null
+    },
+    "status": {
+      "adequacy": {
+        "min_detectable_share": 0.0721575245055146,
+        "non_null": 40,
+        "null_rate_se": 0.0
+      },
+      "cardinality": 1,
+      "cardinality_ratio": 0.025,
+      "distribution": null,
+      "distribution_params": null,
+      "dow_histogram": null,
+      "dtype": "string",
+      "enum_values": {
+        "paid": 1.0
+      },
+      "fit_score": null,
+      "fk_ref_table": null,
+      "hour_histogram": null,
+      "is_enum": true,
+      "is_foreign_key": false,
+      "is_primary_key": false,
+      "is_unique": false,
+      "max_value": [
+        "str",
+        "paid"
+      ],
+      "mean": null,
+      "min_value": [
+        "str",
+        "paid"
+      ],
+      "name": "status",
+      "null_count": 0,
+      "null_rate": 0.0,
+      "outlier_rate": null,
+      "pattern": null,
+      "pattern_contains_rates": null,
+      "pattern_rates": null,
+      "precision": null,
+      "quantiles": null,
+      "scale": null,
+      "std": null,
+      "string_length": {
+        "max": 4.0,
+        "mean": 4.0,
+        "min": 4.0,
+        "p95": 4.0
+      },
+      "temporal_histogram": null,
+      "type_inference": {
+        "confidence": 1.0,
+        "identifier": null,
+        "parse_shares": {
+          "boolean": 0.0,
+          "date": 0.0,
+          "datetime": 0.0,
+          "float": 0.0,
+          "integer": 0.0
+        },
+        "source": "inferred",
+        "type": "string"
+      },
+      "value_counts_ext": {
+        "paid": 1.0
+      },
+      "value_counts_ext_order": null
+    }
+  },
+  "correlation_matrix": {
+    "amount": {
+      "id": 0.0
+    },
+    "id": {
+      "amount": 0.0
+    }
+  },
+  "detected_fks": {},
+  "joint": {
+    "associations": [],
+    "conditionals": [],
+    "dependencies": [],
+    "dependency_pairs_evaluated": 1,
+    "implausible_by_dependency": 0.0,
+    "implausible_by_placeholder": 0.0,
+    "implausible_rate": 0.0,
+    "keys": [],
+    "multi_determinant_capped": false,
+    "multi_determinant_pairs_evaluated": 0,
+    "rows_analyzed": 40,
+    "sampled": false,
+    "version": 1
+  },
+  "name": "orders",
+  "primary_key": [
+    "id"
+  ],
+  "row_count": 40,
+  "sampling": {
+    "adequacy": "limited",
+    "adequacy_reason": "a value must be at least 7.22% of the rows to be seen with 95% probability, above 1%: rarer values may be missing",
+    "internal": [],
+    "method": "none",
+    "population_rows": 40,
+    "requested": null,
+    "sampled_rows": 40,
+    "seed": null
+  }
+}

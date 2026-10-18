@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sqllocks-shape-behavior"
 # Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
-version = "0.9.1"
+version = "0.9.3"
 description = "Shape plugin: behavior models (state machines on a virtual clock)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,7 +21,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Database",
 ]
-dependencies = ["sqllocks-shape==0.9.1"]
+dependencies = ["sqllocks-shape==0.9.3"]
 
 # Entry points (shape.* groups, plugin API v1); see docs/plugins/authoring.md.
 [project.urls]
@@ -48,3 +48,6 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 shape_behavior = ["examples/*.json"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }

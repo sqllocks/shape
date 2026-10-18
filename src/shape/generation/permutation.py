@@ -10,6 +10,9 @@ Stable interface: ``permute``.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import cast
+
 import numpy as np
 import numpy.typing as npt
 
@@ -40,7 +43,10 @@ def permute(index: npt.NDArray[np.integer], n: int, key: int) -> npt.NDArray[np.
     if n < 1:
         raise ValueError("n must be at least 1")
     index = np.asarray(index)
-    if index.size and (int(index.min()) < 0 or int(index.max()) >= n):
+    if index.size and (
+        int(cast(Callable[[], np.integer], index.min)()) < 0
+        or int(cast(Callable[[], np.integer], index.max)()) >= n
+    ):
         # outside the domain the cycle walk may never come back into it
         raise ValueError(f"every index must be in 0 .. {n - 1}")
     bits = max(2, (n - 1).bit_length())

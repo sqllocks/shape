@@ -14,6 +14,7 @@ import re
 from collections.abc import Callable
 from functools import cache
 from importlib import resources
+from typing import cast
 
 import numpy as np
 import numpy.typing as npt
@@ -465,7 +466,10 @@ def float_replacements(
         return values.copy()
     mean = float(values.mean())
     std = float(values.std(ddof=1)) if values.size > 1 else 0.0
-    lo, hi = float(values.min()), float(values.max())
+    lo, hi = (
+        float(cast(Callable[[], np.float64], values.min)()),
+        float(cast(Callable[[], np.float64], values.max)()),
+    )
     scale = std if std > 0 else max(abs(mean), 1.0) * 0.1
     out = np.clip(rng.normal(mean, scale, values.size), lo, hi)
     for _ in range(20):

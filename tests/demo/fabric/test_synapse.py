@@ -291,7 +291,8 @@ def test_same_exit_value_as_the_fabric_spark_notebook(spark, lakehouse, adls):
     syn = json.loads(_run(spark, adls, _params(lakehouse, 2, contractPath=""))[0])
     spark.sql("DROP TABLE IF EXISTS orders_day2")
     spark.sql(
-        f"CREATE TABLE orders_day2 USING DELTA LOCATION '{lakehouse / 'Tables' / 'orders_day2'}'"
+        "CREATE TABLE orders_day2 USING DELTA "
+        f"LOCATION '{(lakehouse / 'Tables' / 'orders_day2').as_uri()}'"
     )
     fab_raw, _ = run_notebook(
         NOTEBOOKS / "shape_profile_spark.ipynb",
@@ -336,7 +337,8 @@ def test_distributed_mode_refuses_a_contract_and_a_bad_mode(spark, lakehouse, ad
 def test_a_catalog_table_can_be_profiled_by_name(spark, lakehouse, adls):
     spark.sql("DROP TABLE IF EXISTS orders_day1")
     spark.sql(
-        f"CREATE TABLE orders_day1 USING DELTA LOCATION '{lakehouse / 'Tables' / 'orders_day1'}'"
+        "CREATE TABLE orders_day1 USING DELTA "
+        f"LOCATION '{(lakehouse / 'Tables' / 'orders_day1').as_uri()}'"
     )
     raw, _, _ = _run(spark, adls, _params(lakehouse, 1, sourcePath="", tableName="orders_day1"))
     out = json.loads(raw)

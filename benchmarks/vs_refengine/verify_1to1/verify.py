@@ -1,50 +1,40 @@
-"""`shape verify` against the pinned baseline's `verify` on retail output (P6-09 parity).
-
-    source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/verify_1to1/verify.py
-
-Each scenario is a copy of a retail run (the baseline's own output and the reference port's)
-with one defect injected: a duplicate primary key, orphan foreign keys, nulls in a non-nullable
-column, a missing or extra column, a retyped column, a missing table, plus statistical
-overrides (a KS and a chi-squared declaration). Both CLIs run on the same directory with the
-same schema, and the harness compares exit codes and, gate by gate, pass/fail, errors, warnings
-and details (the report JSON of each). Exits 0 when every scenario agrees, 1 otherwise, 2 when
-a required retail run is missing (see domain_1to1/generate.py).
-
-Needs the dumped retail schema (`dump_schema.py retail`). The baseline's `verify` runs in its
-own venv; nothing under $REFENGINE_ROOT is modified.
-"""
+"""Verify-CLI scenarios against the release CLI, on identical inputs per comparison."""
 
 from __future__ import annotations
 
 import argparse
 import json
-import re
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
-import pyarrow as pa
-import pyarrow.compute as pc
-import pyarrow.parquet as pq
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.compute as pc  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import _refpkg  # noqa: E402
-from paths import BENCH_OUT_DIR, REFENGINE_VENV, SHAPE_PY  # noqa: E402
+from paths import (  # noqa: E402 (harness path bootstrap)
+    BASELINE_PY,
+    BASELINE_SHAPE,
+    BENCH_OUT_DIR,
+    SHAPE_PY,
+)
+from paths import HERE as BENCH  # noqa: E402 (harness path bootstrap)
+from recorded_store import RecordingError, load, sha256  # noqa: E402 (harness path bootstrap)
 
 RUNS = {
-    "baseline": BENCH_OUT_DIR / "refengine" / "retail" / "small" / "seed42",
-    "port": BENCH_OUT_DIR / "reference_port" / "retail" / "small" / "seed1042",
+    "baseline": BENCH_OUT_DIR / "baseline" / "retail" / "small" / "seed42",
+    "shape": BENCH_OUT_DIR / "shape" / "retail" / "small" / "seed1042",
 }
-SCHEMA = BENCH_OUT_DIR / "schemas" / "retail_3nf.json"
+SCHEMA = BENCH / "fixtures" / "schemas" / "retail_3nf.json"
 WORK = BENCH_OUT_DIR / "verify_1to1"
+
 Tables = dict[str, pa.Table]
-
-
-# --- scenarios: a mutation of the tables, and an edit of the schema document ------------------
 
 
 def _mask(n: int, idx: list[int]) -> pa.Array:
@@ -144,9 +134,6 @@ SCENARIOS: list[tuple[str, Any, Any, bool]] = [
 ]
 
 
-# --- schema conversion: the baseline's schema dump -> a Shape gate schema --------------------
-
-
 def to_gate_schema(doc: dict[str, Any]) -> dict[str, Any]:
     tables: dict[str, Any] = {}
     for tname, t in doc["tables"].items():
@@ -171,41 +158,6 @@ def to_gate_schema(doc: dict[str, Any]) -> dict[str, Any]:
     return {"format": "shape-gates", "version": 1, "tables": tables, "relationships": rels}
 
 
-# --- running both CLIs -----------------------------------------------------------------------
-
-
-def run_cli(cmd: list[str], report: Path) -> tuple[int, dict[str, Any]]:
-    proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
-    if not report.exists():
-        raise RuntimeError(f"{cmd[0]} wrote no report:\n{proc.stdout}\n{proc.stderr}")
-    return proc.returncode, json.loads(report.read_text())
-
-
-_COERCED = re.compile(
-    r"Table '([^']+)' column '([^']+)': expected type compatible with 'integer', got 'float64'"
-)
-
-
-def drop_null_coercion(base: dict[str, Any], data: Path) -> int:
-    """Remove the baseline's type warnings that its loader causes: pandas turns an integer
-    column holding nulls into float64 and then reports it as not integer. Shape reads the
-    Parquet type (int64 with nulls) and has nothing to warn about. Returns how many were
-    removed; they are listed in the output, never silently dropped."""
-    removed = 0
-    for g in base["gates"]:
-        if g["gate"] != "schema_conformance":
-            continue
-        keep = []
-        for w in g["warnings"]:
-            m = _COERCED.fullmatch(w)
-            if m and pa.types.is_integer(pq.read_schema(data / f"{m[1]}.parquet").field(m[2]).type):
-                removed += 1
-                continue
-            keep.append(w)
-        g["warnings"] = keep
-    return removed
-
-
 def gates_of(report: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {g["gate"]: g for g in report["gates"]}
 
@@ -227,91 +179,135 @@ def compare(base: dict[str, Any], shape: dict[str, Any]) -> list[str]:
     return out
 
 
-def run_scenario(run: str, name: str, mutate: Any, edit: Any, stat: bool) -> dict[str, Any]:
+def canonical(report: dict[str, Any], data: Path, schema: Path) -> dict[str, Any]:
+    result = {
+        "passed": report["passed"],
+        "row_counts": report["row_counts"],
+        "gates": [
+            {k: g[k] for k in ("gate", "passed", "errors", "warnings", "details")}
+            for g in report["gates"]
+        ],
+    }
+    text = json.dumps(result).replace(str(data), "$DATA").replace(str(schema), "$SCHEMA")
+    return cast(dict[str, Any], json.loads(text))
+
+
+def scenario_data(run: str, name: str, mutate: Any, edit: Any) -> tuple[Path, Path]:
     src = RUNS[run]
+    if not src.is_dir():
+        raise RecordingError("verify_cli:" + name + ": missing retail input " + run)
     tables = {p.stem: pq.read_table(p) for p in sorted(src.glob("*.parquet"))}
     out = WORK / run / name
     shutil.rmtree(out, ignore_errors=True)
     data = out / "data"
     data.mkdir(parents=True)
     for tname, t in mutate(tables).items():
-        pq.write_table(t, data / f"{tname}.parquet")
-    doc = edit(json.loads(SCHEMA.read_text()))
-    (out / "baseline_schema.json").write_text(json.dumps(doc))
-    (out / "gates.json").write_text(json.dumps(to_gate_schema(doc)))
-    flags = ["--format", "parquet", "--statistical"] if stat else ["--format", "parquet"]
-    refengine = REFENGINE_VENV / "bin" / _refpkg.CONSOLE
-    code_b, rep_b = run_cli(
-        [
-            str(refengine),
-            "verify",
-            str(data),
-            *flags,
-            "--schema",
-            str(out / "baseline_schema.json"),
-            "-o",
-            str(out / "baseline.json"),
-        ],
-        out / "baseline.json",
+        pq.write_table(t, data / (tname + ".parquet"))
+    schema = out / "gates.json"
+    schema.write_text(json.dumps(to_gate_schema(edit(json.loads(SCHEMA.read_text())))))
+    return data, schema
+
+
+def cli_report(tool: str, data: Path, schema: Path, stat: bool) -> dict[str, Any]:
+    out = data.parent / (tool + ".json")
+    cmd = [str(BASELINE_SHAPE)] if tool == "baseline" else [str(SHAPE_PY), "-m", "shape.cli.main"]
+    cmd += ["verify", str(data), "--format", "parquet", "--schema", str(schema), "-o", str(out)]
+    if stat:
+        cmd.append("--statistical")
+    env = dict(os.environ)
+    if tool == "baseline":
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+    proc = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    if not out.is_file():
+        raise RecordingError("verify_cli: no CLI report")
+    return {
+        "exit_code": proc.returncode,
+        "report": canonical(json.loads(out.read_text()), data, schema),
+    }
+
+
+def capture_baseline_scenario(name: str, mutate: Any, edit: Any, stat: bool) -> dict[str, Any]:
+    seeds = {"baseline": 42, "shape": 1042}
+    for seed in seeds.values():
+        # Both seed inputs are produced by the immutable release during recording.
+        cmd = [
+            str(BASELINE_PY),
+            str(BENCH / "domain_1to1" / "generate.py"),
+            "--impl",
+            "shape",
+            "--domain",
+            "retail",
+            "--scale",
+            "small",
+            "--seed",
+            str(seed),
+        ]
+        env = dict(os.environ)
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+        if subprocess.run(cmd, env=env, capture_output=True).returncode:
+            raise RecordingError("verify_cli:" + name + ": release input unavailable")
+    reports = {}
+    for run in RUNS:
+        data, schema = scenario_data(run, name, mutate, edit)
+        reports[run] = cli_report("baseline", data, schema, stat)
+    return {"runs": reports, "inputs": {"fixtures/schemas/retail_3nf.json": sha256(SCHEMA)}}
+
+
+def run_scenario(
+    run: str, name: str, mutate: Any, edit: Any, stat: bool, record: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    recording = record or load(
+        "verify_cli", name, inputs={"fixtures/schemas/retail_3nf.json": sha256(SCHEMA)}
     )
-    shape_cmd = [
-        str(SHAPE_PY),
-        "-m",
-        "shape.cli.main",
-        "verify",
-        str(data),
-        *flags,
-        "--schema",
-        str(out / "gates.json"),
-        "-o",
-        str(out / "shape.json"),
-    ]
-    code_s, rep_s = run_cli(shape_cmd, out / "shape.json")
-    coerced = drop_null_coercion(rep_b, data)
-    diffs = compare(rep_b, rep_s)
-    if code_b != code_s:
-        diffs.append(f"exit code: baseline {code_b} vs shape {code_s}")
+    data, schema = scenario_data(run, name, mutate, edit)
+    base = cli_report("baseline", data, schema, stat)
+    if base != recording["runs"][run]:
+        raise RecordingError(
+            "verify_cli:" + name + ": fresh release report differs from recording (" + run + ")"
+        )
+    current = cli_report("shape", data, schema, stat)
+    diffs = compare(base["report"], current["report"])
+    if base["exit_code"] != current["exit_code"]:
+        diffs.append("exit code differs")
     return {
         "run": run,
         "scenario": name,
-        "exit": code_s,
-        "passed": rep_s["passed"],
-        "coerced_warnings": coerced,
+        "exit": current["exit_code"],
+        "passed": current["report"]["passed"],
         "diffs": diffs,
     }
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--run", choices=sorted(RUNS), action="append", help="default: both")
-    ap.add_argument("scenarios", nargs="*", help="default: all")
-    args = ap.parse_args(argv)
-    runs = args.run or sorted(RUNS)
-    for r in runs:
-        if not (RUNS[r] / "customer.parquet").exists():
-            print(f"missing retail run {RUNS[r]}; see domain_1to1/generate.py", file=sys.stderr)
-            return 2
-    if not SCHEMA.exists():
-        print(f"missing {SCHEMA}; run dump_schema.py retail", file=sys.stderr)
-        return 2
-    results = []
-    for r in runs:
-        for name, mutate, edit, stat in SCENARIOS:
-            if args.scenarios and name not in args.scenarios:
-                continue
-            res = run_scenario(r, name, mutate, edit, stat)
-            results.append(res)
-            verdict = "AGREE" if not res["diffs"] else "DIFFER"
-            print(
-                f"{verdict:6} {r:9} {name:20} exit={res['exit']} passed={res['passed']} "
-                f"(baseline null-coercion warnings set aside: {res['coerced_warnings']})"
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--run", choices=list(RUNS), action="append")
+    ap.add_argument("scenarios", nargs="*")
+    a = ap.parse_args(argv)
+    if set(a.scenarios) - {row[0] for row in SCENARIOS}:
+        ap.error("unknown scenario")
+    failed = False
+    for name, mutate, edit, stat in SCENARIOS:
+        if a.scenarios and name not in a.scenarios:
+            continue
+        try:
+            record = load(
+                "verify_cli", name, inputs={"fixtures/schemas/retail_3nf.json": sha256(SCHEMA)}
             )
-            for d in res["diffs"]:
-                print(f"         {d}")
-    (WORK / "result.json").write_text(json.dumps(results, indent=1))
-    bad = [r for r in results if r["diffs"]]
-    print(f"\n{len(results) - len(bad)}/{len(results)} scenarios agree")
-    return 1 if bad else 0
+            for run in a.run or list(RUNS):
+                result = run_scenario(run, name, mutate, edit, stat, record)
+                failed = failed or bool(result["diffs"])
+                print(run + "/" + name + ": " + ("PASS" if not result["diffs"] else "MISMATCH"))
+        except (RecordingError, OSError, KeyError) as exc:
+            print(
+                str(exc)
+                if isinstance(exc, RecordingError)
+                else "verify_cli:" + name + ": unavailable",
+                file=sys.stderr,
+            )
+            return 2
+    return int(failed)
 
 
 if __name__ == "__main__":

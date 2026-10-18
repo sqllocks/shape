@@ -27,6 +27,7 @@ def sha256_file(path):
 
 
 def load_geonames_postal(path, country=None):
+    """Read GeoNames postal reference rows from a local tab-separated file."""
     p = Path(path)
     out = []
     with p.open("r", encoding="utf-8", errors="replace", newline="") as f:
@@ -75,6 +76,7 @@ _GAZETTEER_KINDS = ("zcta", "county", "place", "state")
 
 
 def load_census_gazetteer(path, kind, version):
+    """Read a local census gazetteer file for a supported kind and version."""
     if kind not in _GAZETTEER_KINDS:
         raise ValueError(f"kind must be one of {', '.join(_GAZETTEER_KINDS)}; got {kind!r}")
     p = Path(path)

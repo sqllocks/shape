@@ -137,6 +137,7 @@ def top_values_check(
 def memorization_check(
     generated: dict[str, pa.Table], source: dict[str, pa.Table], classes: dict[str, str]
 ) -> dict[str, Any]:
+    """Measure repeated source rows in generated data for the bundle attestation."""
     from shape.quality.gates import ValidationContext
     from shape.quality.memorization import MemorizationGate
 
@@ -185,6 +186,8 @@ def _manifest_file(data_dir: Path, files: list[Path]) -> Path | None:
 
 @dataclass
 class CreateResult:
+    """Paths and attestation returned after creating a share bundle."""
+
     ok: bool
     attestation: dict[str, Any]
     problems: list[str] = field(default_factory=list)
@@ -434,6 +437,8 @@ def _stream_member(src: Any, dst: Any, info: zipfile.ZipInfo, written: int) -> i
 
 @dataclass
 class VerifyResult:
+    """Verification status, manifest and attestation read from a share bundle."""
+
     ok: bool
     lines: list[str]
     attestation: dict[str, Any]

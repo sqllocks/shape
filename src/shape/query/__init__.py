@@ -1,3 +1,5 @@
+"""Model query interfaces and the callable package forwarding to the public query API."""
+
 from shape._callable import make_callable  # noqa: E402
 
 from .core import ShapeQueryError as ShapeQueryError

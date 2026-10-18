@@ -168,6 +168,9 @@ class SqlConnection:
         self.warehouse = (
             _tsql.is_warehouse(self.connection_string) if warehouse is None else warehouse
         )
+        # A Synapse dedicated pool refuses CREATE/DROP TABLE inside a transaction (error 111212),
+        # which the first statement of a non-autocommit connection has already opened.
+        self.ddl_autocommit = False
 
     def get(self) -> Any:
         if self._conn is None:
@@ -187,6 +190,18 @@ class SqlConnection:
         cursor = self.get().cursor()
         cursor.execute(sql, *params)
         return cursor
+
+    def ddl(self, sql: str) -> Any:
+        """``sql`` (a CREATE or DROP TABLE): outside any transaction when ``ddl_autocommit``."""
+        if not self.ddl_autocommit:
+            return self.execute(sql)
+        conn = self.get()
+        conn.commit()  # ends the transaction an earlier statement opened
+        conn.autocommit = True
+        try:
+            return conn.cursor().execute(sql)
+        finally:
+            conn.autocommit = False
 
     def table_exists(self, schema_name: str, table: str) -> bool:
         cursor = self.execute(
@@ -258,8 +273,8 @@ def prepare_table(
     if exists and mode != "replace":
         return False
     if exists:
-        db.execute(_tsql.drop_table_sql(schema_name, table))
-    db.execute(
+        db.ddl(_tsql.drop_table_sql(schema_name, table))
+    db.ddl(
         _tsql.create_table_sql(
             schema_name,
             table,
@@ -296,7 +311,9 @@ def write_many(
         per = {**common, **dict((options or {}).get(table, {}))}
         try:
             result.per_table[table] = writer.write_table(table, tables[table], **per)
+            result.notes += list(getattr(writer, "drain_notes", lambda: [])())
         except WriteError as exc:
+            result.notes += list(getattr(writer, "drain_notes", lambda: [])())
             exc.result = result
             result.elapsed_seconds = time.monotonic() - start
             raise
@@ -312,7 +329,11 @@ def undo(db: SqlConnection, schema_name: str, table: str, created: bool) -> None
     db.rollback()
     if created:
         try:
-            db.execute(_tsql.drop_table_sql(schema_name, table, if_exists=True))
+            if db.ddl_autocommit:  # the pool does not parse IF EXISTS
+                if db.table_exists(schema_name, table):
+                    db.ddl(_tsql.drop_table_sql(schema_name, table))
+            else:
+                db.execute(_tsql.drop_table_sql(schema_name, table, if_exists=True))
             db.commit()
         except Exception:  # noqa: S110  # nosec B110 - the original error is the one to report
             pass
@@ -560,8 +581,7 @@ class SqlDatabaseWriter:
                     yield piece
 
     def _send(self, cursor: Any, sql: str, piece: pa.RecordBatch) -> None:
-        if hasattr(cursor, "fast_executemany"):
-            cursor.fast_executemany = _tsql.widest_first(piece)
+        _tsql.use_fast_executemany(cursor, piece)
         cursor.executemany(sql, _tsql.rows_as_params(piece))
 
     def _insert(

@@ -22,6 +22,10 @@ h = importlib.util.module_from_spec(spec)
 sys.modules["verify_1to1"] = h
 spec.loader.exec_module(h)
 
+from .historical_quality import drop_null_coercion  # noqa: E402 (harness path bootstrap)
+
+h.drop_null_coercion = drop_null_coercion
+
 DUMP = {
     "tables": {
         "a": {

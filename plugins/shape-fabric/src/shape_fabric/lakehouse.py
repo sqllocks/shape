@@ -65,12 +65,23 @@ class _Counting:
 
 
 def write_batches(
-    handle: BinaryIO, fmt: str, batches: Iterable[pa.RecordBatch], schema: pa.Schema
+    handle: BinaryIO,
+    fmt: str,
+    batches: Iterable[pa.RecordBatch],
+    schema: pa.Schema,
+    *,
+    int96_timestamps: bool = False,
 ) -> None:
     """Write ``batches`` to an open binary ``handle`` in ``fmt`` (``schema`` is the first
-    batch's)."""
+    batch's). ``int96_timestamps`` writes Parquet timestamps as INT96 (a Synapse dedicated pool
+    reads no microsecond or nanosecond ``INT64`` timestamps)."""
     if fmt == "parquet":
-        with pq.ParquetWriter(handle, schema, compression="snappy") as writer:
+        with pq.ParquetWriter(
+            handle,
+            schema,
+            compression="snappy",
+            use_deprecated_int96_timestamps=int96_timestamps,
+        ) as writer:
             for batch in batches:
                 writer.write_batch(batch)
     elif fmt == "csv":

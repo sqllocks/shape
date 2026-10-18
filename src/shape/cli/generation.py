@@ -303,6 +303,8 @@ def _sink_options(a: argparse.Namespace) -> dict[str, Any]:
                 options[key] = value
     elif fmt == "delta":
         options["mode"] = a.delta_mode
+        if getattr(a, "table_prefix", ""):
+            options["table_prefix"] = a.table_prefix
         if a.partition_by:
             options["partition_by"] = list(a.partition_by)
     return options
@@ -592,6 +594,12 @@ def _generate(a: argparse.Namespace, engine: Any, mode: dict[str, Any] | None = 
     from shape.generation.identifiers import announce
     from shape.generation.output import format_summary, write_engine
     from shape.runlog import current
+
+    if getattr(a, "table_prefix", "") and not a.to and a.format != "delta":
+        raise ValueError(
+            "--table-prefix needs a Delta output or a supported --to destination; "
+            "this output cannot honour a physical table prefix"
+        )
 
     run = current()
     announce(engine.identifiers)
@@ -885,6 +893,7 @@ COMMANDS = {
 
 
 def run(a: argparse.Namespace) -> int:
+    """Dispatch parsed generation arguments and return the command exit code."""
     return COMMANDS[a.cmd](a)
 
 

@@ -8,7 +8,8 @@ clarity over speed (one Python loop over the groups).
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from typing import Any, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -34,7 +35,7 @@ def _ints(a: Any, what: str) -> npt.NDArray[np.int64]:
 
 
 def _check_codes(codes: npt.NDArray[np.int64]) -> None:
-    if codes.size and int(codes.max()) >= codes.size:
+    if codes.size and int(cast(Callable[[], np.int64], codes.max)()) >= codes.size:
         raise ValueError("group codes must be dense: below the number of rows")
 
 
@@ -116,7 +117,10 @@ def cap_per_parent(indices: Any, pool: int, max_per_parent: int, k0: int, k1: in
     if pool < 1 or max_per_parent < 1:
         raise ValueError("pool and max_per_parent must be positive")
     idx = _ints(indices, "indices")
-    if idx.size and (int(idx.min()) < 0 or int(idx.max()) >= pool):
+    if idx.size and (
+        int(cast(Callable[[], np.int64], idx.min)()) < 0
+        or int(cast(Callable[[], np.int64], idx.max)()) >= pool
+    ):
         raise ValueError("indices must lie in 0..pool")
     cap = min(int(max_per_parent), 2**32 - 1)
     counts = np.zeros(pool, dtype=np.int64)

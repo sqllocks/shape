@@ -95,8 +95,8 @@ def check_publish(wf: dict[str, Any], text: str) -> list[str]:
             f"{where}: triggers must be workflow_dispatch and tag pushes, not {sorted(on)}"
         )
     repo_input = (on.get("workflow_dispatch") or {}).get("inputs", {}).get("repository", {})
-    if repo_input.get("options") != ["testpypi", "pypi"]:
-        problems.append(f"{where}: the manual run must choose repository testpypi or pypi")
+    if repo_input.get("options") != ["testpypi", "pypi", "dry-run"]:
+        problems.append(f"{where}: the manual run must choose repository testpypi, pypi or dry-run")
     push = on.get("push") or {}
     if push.get("tags") != ["v*"] or set(push) != {"tags"}:
         problems.append(f"{where}: pushes must trigger on v* tags only")
@@ -140,6 +140,18 @@ def check_publish(wf: dict[str, Any], text: str) -> list[str]:
         ]
         if not after or not all(set(publishers) <= set(jobs[n].get("needs", [])) for n in after):
             problems.append(f"{where}: {script} must {what} after publishing")
+    # a dry run (repository = dry-run) uploads nothing and reads no index
+    for name, job in jobs.items():
+        reads_index = name in publishers or any(
+            script in "\n".join(str(s.get("run", "")) for s in _steps(job))
+            for script in (
+                "scripts/release_index_check.py",
+                "scripts/release_smoke.py",
+                "scripts/release_smoke_alpine.sh",
+            )
+        )
+        if reads_index and name not in builds and "'dry-run'" not in str(job.get("if", "")):
+            problems.append(f"{where}: job {name} must be skipped by a dry run")
     return problems
 
 

@@ -1,7 +1,8 @@
 # Changelog
 
-Shape is in **early access**. Profiling is available now; data generation and
-pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
+Status: available.
+
+**Early access 0.9.3.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
 ## Unreleased
 
@@ -10,6 +11,215 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   preserved. Undeclared strings are now unbounded instead of VARCHAR(255), and database writers
   no longer size strings from the first batch. `shape generate --to ... --dry-run` includes the
   resolved DDL without connecting or generating values. See `docs/SINKS.md`.
+Development: the dev and CI environment is now locked with uv; user installs are unchanged.
+
+Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
+
+Integrations: the `anonymeter` extra of sqllocks-shape-integrations is withdrawn; Anonymeter 1.x requires NumPy < 1.27 and Shape requires NumPy >= 2, so the extra could not be installed. The adapter stays and explains this when Anonymeter is missing.
+
+Fix: `shape diff` now refuses safe profiles instead of reporting no changes (they cannot be diffed, as docs/PROJECT.md states).
+
+Fix: `shape validate` accepts v1 contracts; unknown contract rules are now errors instead of being ignored; CONTRACTS.md lists every rule (including valid_as).
+
+Fix (privacy): safe profiles no longer keep an excluded column's name or a sensitive column's fitted distribution, whatever path built them.
+
+Converting a full capture to the safe form now gives a different content ID when the profile has sensitive columns, because their fitted distributions are no longer kept.
+
+- Correct Fabric plugin PyPI installation guidance and align GitHub Action status with the experimental CI capability.
+- Keep the GitHub Action comment source label when a missing baseline leaves no project annotation in the result.
+- Clarify that Excel sentinel findings include typed date/datetime cells and cover six `9999-12-31` datetime cells with a regression test.
+- Read standard dated landing layouts in `shape chaos --input`, preserving table names and provenance checks.
+- Changed: `shape plan` now prints human-readable text by default; scripts that parse its output must add `--json` (the JSON keys are unchanged).
+
+## 0.9.3
+
+0.9.2 was published to TestPyPI only and was never released to PyPI; its changes are part of 0.9.3.
+
+### Added
+
+- **Synapse dedicated SQL pool live test.** The Fabric plugin ships a live test that writes
+  to a real Synapse dedicated SQL pool, driven by `SHAPE_TEST_SYNAPSE_URI`,
+  `SHAPE_TEST_SYNAPSE_STAGING` and the service-principal settings
+  `SHAPE_TEST_SYNAPSE_TENANT_ID`, `SHAPE_TEST_SYNAPSE_CLIENT_ID` and
+  `SHAPE_TEST_SYNAPSE_CLIENT_SECRET`. The `fabric-live` workflow resumes the pool before the
+  tests and pauses it afterwards.
+- **`--source-config KEY=REF`** (global option). Passes an Azure read credential to a command
+  by reference. `KEY` is `token`, `account_key`, `sas_token` or `connection_string`; `REF` is an
+  `env://`, `file://` or `kv://` reference. A literal secret is refused, and the value lives only
+  for that command.
+- **`--lakehouse-schema NAME`** on `shape generate --scale-mode fabric_spark` and
+  `shape demo init`. Writes the tables into a schema of a schema-enabled Lakehouse.
+- **`--table-prefix`** now works with the Delta sink and with the database and Fabric
+  destinations (PostgreSQL, MySQL, Snowflake, Databricks, SQL Server, Warehouse, Synapse, SQL
+  database, Lakehouse, Eventhouse). Where a destination cannot honour a prefix, the command stops
+  before writing and says so, instead of ignoring the option.
+- **Two timeout settings for Fabric SQL writes.** `SHAPE_SQL_QUERY_TIMEOUT` (whole seconds,
+  default 900) limits each SQL statement of the Warehouse, SQL database and Synapse writers, so
+  a stalled load fails instead of waiting forever. `SHAPE_WAREHOUSE_INSERT_SECONDS` (whole
+  seconds, default 600) limits how long the slower row-by-row Warehouse fallback may take per
+  table. A value that is not a whole number is ignored and the default applies.
+
+### Verified
+
+- **Kerberos sign-in.** Shape 0.9.1 `--auth kerberos` was verified on 2026-10-12 against a
+  lab Active Directory domain with SQL Server 2022 (Windows authentication only), from an
+  Ubuntu 24.04 client: 21,750 rows in 9 tables, exit 0, and the server recorded
+  `auth_scheme = KERBEROS`. A keytab with mode 644 and a wrong principal both exit 2. No code
+  changed for this.
+
+### Fixed
+
+
+- **Nested columns (issue #1).** `shape profile` now profiles Parquet, Delta and JSON Lines
+  tables that hold list, struct or map columns, where it stopped with `unhashable type: nested
+  Arrow column`. The profile records the column's exact Arrow type, its null rate and, for a list
+  or a map, the distribution of its lengths; the other columns are unchanged. `diff`, `check`,
+  `inspect` and `generate --from` work on such a profile, and `generate` writes the column with
+  the same Arrow type. `generate` stops with an error that names the column for a union,
+  extension, run-end encoded or view type inside a nested column, and `shape fidelity` refuses a
+  nested column by name. An error whose message holds a backtrace is now one `shape: error:` line.
+- **Local Delta tables no longer hang at exit.** `shape profile` (and every read of a local Delta
+  table) could hang, or abort with `terminate called without an active exception`, as the process
+  ended after a failed read (for example a damaged data file or a nested column). A local table is
+  now read through Arrow's own file system.
+- **`shape profile-model` / `semantic-model://`.** A table the semantic model cannot read stops
+  with one error naming the model and table and suggesting a refresh, instead of the raw
+  sempy/ADOMD error.
+- **Warehouse and Synapse primary keys.** Fabric Warehouse rejected a primary key written
+  inside `CREATE TABLE` (error 24584). Shape now creates the table first and then adds the key
+  with `ALTER TABLE ... PRIMARY KEY NONCLUSTERED ... NOT ENFORCED`. SQL Server and Azure SQL keep
+  their enforced keys.
+- **Time ranges stay text.** A column of values such as `18:00-18:59` is no longer read as a
+  UTC offset when profiling; it stays text.
+- **Profiling a database with zoned text dates.** `shape profile-db` no longer stops at a
+  sampled text column that holds dates with a time zone. The column keeps its SQL type and
+  statistics, is left out of relationship inference, and carries a `profiling_note` saying so.
+- **Schema-enabled Lakehouses.** Tables are written under `Tables/<schema>/<table>`, where
+  the SQL endpoint and semantic models can see them. Shape asks Fabric which kind of Lakehouse
+  the target is, uses `dbo` unless you give a schema, refuses a schema for a classic Lakehouse,
+  and, when it cannot tell, stops and tells you to set `schema_enabled=true|false`. Before, the
+  Delta sink assumed a classic Lakehouse and wrote the tables where schema-enabled Lakehouses
+  could not see them. Writing uses one extra read call to Fabric. This needs a credential; with
+  only a raw storage token, give the schema in the path (`.../Tables/dbo`).
+- **Missing Delta tables** are reported as `no Delta table at <path>`, with credentials
+  removed from the path.
+- **The `abfss://` sink writes into a Fabric Lakehouse.** It used to fail with
+  `OperationNotAllowedOnThePath`, because it checked for the Lakehouse with a request OneLake
+  refuses on an item folder. It now finds the Lakehouse in the workspace listing. A Lakehouse
+  given by GUID is no longer checked up front; a missing one is reported by the first write.
+- **MySQL without TLS.** The `caching_sha2_password` sign-in crash is replaced by a message
+  that says to use verified TLS (`ssl_ca=PATH&ssl-mode=VERIFY_CA`) or ask the administrator for
+  a supported authentication method. Shape does not fetch an untrusted key.
+- **Azure storage credentials.** Storage environment keys are now used in a fixed order:
+  explicit options, then `AZURE_STORAGE_ACCOUNT_KEY`, `AZURE_STORAGE_SAS_TOKEN`,
+  `AZURE_STORAGE_CONNECTION_STRING`, then the Fabric or Synapse notebook identity, then
+  `DefaultAzureCredential`. An ambient account key no longer overrides the identity you selected
+  for OneLake. A sign-in error that cannot succeed on retry (a tenant mismatch or a disabled
+  account, for example) now fails once with one clear message; timeouts and throttling still
+  retry.
+- **Warehouse loads when `COPY INTO` fails.** When OneLake cannot supply the storage token
+  (SQL error 13840), the load falls back to parameterized `INSERT` in batches of 5,000 rows,
+  keeping keys, write modes, rollback and the loaded-row check. The fallback is slower and is no
+  longer silent: it prints a `WARNING` on stderr, records the note in `WriteResult.notes` and
+  `summary()`, and fails with a rollback past `SHAPE_WAREHOUSE_INSERT_SECONDS`. Batched
+  inserts now size text columns from the whole batch, not the first row, so they no longer
+  fall back to one round trip per row.
+  Emptied OneLake staging folders are removed after a load.
+- **Fabric notebook deploy.** Fabric sometimes answers with a long-running operation address
+  on a regional `*.analysis.windows.net` host. Shape now polls the Fabric API for that
+  operation instead of refusing it, and never sends your token to the other host.
+- **Fabric errors say what happened.** Errors show the HTTP status and Fabric's code and
+  message, with secrets removed. A failed Spark job keeps Fabric's error code and details, or
+  says Fabric gave no reason.
+- **Fabric portal connection strings.** The ADO.NET-style string from the Fabric portal
+  (`Data Source=...;Initial Catalog=...`) is accepted by the SQL writers and `shape profile-db`.
+- **Semantic models for service principals.** If Fabric's direct lookup fails for a service
+  principal, Shape lists models over REST and warns that it did.
+- **Synapse.** The dedicated-pool writer sends its DDL in autocommit, stages timestamps in
+  Parquet as INT96, and writes NaN and infinite values as NULL.
+- **Fabric Git sync test.** The nightly job and `fabric-live` use `FABRIC_GIT_WORKSPACE_ID`
+  (the Git-connected workspace) in place of `FABRIC_WORKSPACE_ID`; tenant, client and remote
+  are variables, the client secret and Git token stay secrets. This affects people who run the
+  live tests, not users of the package.
+- **`shape profile validate --safe` and wide or multi-table profiles.** Multi-table
+  `--dataset` profiles and single wide tables now validate clean. A profile records which
+  columns an internal sample covered as positions, `sampling.internal[].column_indexes`, in
+  place of names (`columns`). The profile format version is unchanged, and profiles written by
+  0.9.1 still load and report the same findings until you profile again. Profile content ids
+  change for the same data.
+- **Privacy.** A scenario pack's stream topic emits only its `payload_fields` columns, and
+  `pack validate` rejects a field that is not a column. A pack run creates its manifest
+  exclusively, so two runs in the same second keep their own manifests. `shape chaos --input`
+  and `shape incremental --input` skip the ground-truth logs of an earlier chaos run and name a
+  file that cannot be read as a table. `shape registry ROOT commit` runs its leak scan on any
+  JSON document with `tables`, so removing `redaction_manifest` no longer lets a leaking
+  profile through. `shape.yml` `gates.NAME.mode` also accepts the four gates only
+  `shape verify` runs (`reconciliation`, `timeseries_quality`, `memorization`, `utility`).
+  `shape fabric setup` names `shape fabric notebook` in its next steps.
+- **VS Code "Compare with Git HEAD".** The comparison document now opens; the custom
+  editor had claimed it and no diff appeared.
+### Changed
+
+- **Default Lakehouse name for `shape fabric setup` is `shape_lakehouse`** (was
+  `shape-lakehouse`). Fabric rejects the hyphen with HTTP 400. Names must begin with a letter and
+  use only letters, digits and underscores (at most 123 characters); Shape now checks this before
+  any request.
+- Replaced the 49 bundled AMA CPT procedure values and descriptions with synthetic
+  `SP-01` through `SP-49` and `Synthetic procedure NN`. The letters and hyphen distinguish
+  these five-character codes from CPT formats. Arrow schema, row count, charges and
+  selection weights are unchanged. Healthcare examples and exact writer fixtures now
+  use synthetic procedures and a two-character synthetic sample modifier (`S0`), with
+  local FHIR code systems. The extra sample procedure outside the catalog is `SP-50`.
+- Replaced bundled GICS sector codes/names and industry names with a generic synthetic
+  taxonomy (`SA` through `SK`, `Synthetic sector A` through `Synthetic sector K`, and
+  synthetic industry labels), including company classifications. Schemas, identifiers
+  and cardinalities are preserved. Legacy reference aliases remain readable.
+- **Seeded output changes:** healthcare and capital-markets generation produces new
+  procedure/classification labels and dataset ids with the same seed. Regenerate fixtures
+  for those domains. `GENERATION_STABILITY.md`, `API_STABILITY.md` and `RELEASE_POLICY.md`
+  reserve cross-release compatibility promises for future 1.x releases and exclude domain
+  reference data from the generator content promise; this early-access patch changes no
+  generator algorithm or format version. Exact affected writer fixtures were regenerated.
+- **Owner decisions:** the synthetic replacements follow the Owner's decisions recorded in
+  `docs/plans/OWNER_DECISIONS.md` (GICS taxonomy and the 49 CPT codes replaced by synthetic
+  values in 0.9.2), and resolve the healthcare and capital-markets upstream-source owner notes in
+  `THIRD_PARTY_NOTICES.md`. Other domain owner notes remain unresolved.
+- Core and all twelve first-party plugins advance together to 0.9.2. Exact SQL headers
+  and documented artifact/registry digests were regenerated for the new writer version.
+
+### Internal and CI (no change to the package or CLI)
+
+- The regression comparison that the benchmark and nightly parity jobs run now uses the
+  recorded output of the published Shape 0.9.1 release as its baseline; the old comparison
+  engine is no longer installed. `docs/PERFORMANCE.md` joins the documentation site. Nothing
+  you install or run changes.
+- The macOS bounded-memory tests measure the live heap peak instead of resident size, with
+  the same inputs, floor and 10% tolerance. Test change only.
+- The documentation site gains the "Published receipts" pages (Owner-run evidence for the
+  documented examples) and the decisions page.
+- The Fabric test fakes now enforce Warehouse DDL rules and both Lakehouse table layouts, and the live
+  tests run unattended in the `fabric-live` workflow. Test and workflow change only.
+
+## 0.9.1
+
+**Release date: 2026-10-11**
+
+### Fixed
+
+- CI provisions the executable documentation's pinned environment and released plugins, and
+  restores the Fabric talk kit and its unmeasured live-timings placeholder.
+- Safe-profile validation handles JSON row counts larger than a floating-point number without
+  crashing, while retaining the minimum cohort check.
+- Bounded CSV profiling avoids CPU-scaled decoded read-ahead buffers.
+- Bounded profiling reclaims freed allocator pages after each batch, including on macOS; its
+  RSS regression test fixes Arrow's serial-reader executor sizes to avoid allocator scheduling noise.
+- Fabric setup reports portable source paths, and Synapse derives table labels from Windows paths.
+- Eventhouse emitters and writers synchronize streaming schema caches before ingesting into
+  newly created or changed tables.
+- Eventhouse truncate and replace wait for streamed rows to be sealed, using a
+  configurable command timeout instead of the shorter ingestion timeout.
+- Eventhouse replacement resets rows and column types while preserving table identity,
+  avoiding stale streaming routes after dropping and recreating a table.
 
 - `shape share-bundle verify` bounds every member of a bundle before reading it (#684): at most
   10,000 members, 8 MiB for `attestation.json` and `manifest.json`, 2 GiB per data file and 8 GiB
@@ -56,7 +266,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `distribution`, `normal` and the `beta`, `exponential`, `gamma`, `log_normal`, `normal`,
   `pareto`, `power_law_cutoff` and `weibull` families, 77 files of the golden byte corpus, and the
   hr and healthcare domain outputs, and the vault test's profile-fitted CSV digest
-  (`docs/plans/lane_status/W8-04b.md` lists old and new ids). Those ids already differed between
+  (the implementation tests lists old and new ids). Those ids already differed between
   CI's machines before; now they are the same on Linux, macOS (arm64) and Windows.
   `formula` expressions keep numpy's `np_log`, `np_exp` and float powers (they equal numpy's own
   evaluation), and specs fitted to a profile are not covered (`docs/GENERATION_STABILITY.md`).
@@ -570,7 +780,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `scripts/gen_performance_page.py` (`--check` fails when the page is stale): a workload's numbers
   are published only when its equivalence verifier exited 0 (and its re-run on the timed output,
   where there is one); nothing is published from a modified tree. The nightly parity suite
-  (`benchmarks/vs_refengine/nightly.py`) runs the full comparison, now including Shape's generation
+  (the local workload tests) runs the full workload validation, now including Shape's generation
   of every baseline domain at medium and of retail at large, in shards; merges them; marks a night
   green only when every workload of the full suite is recorded with a passing verifier; and keeps
   the nightly history and the green streak.
@@ -598,8 +808,8 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   series, stuck values, daylight-saving missing and repeated local hours with an explicit time
   zone). The contract accepts the same optional rules and `shape check` takes `--data`;
   `shape.quality.reconcile` and `shape.quality.check_timeseries` are the Python API.
-- Fixed (#223): the Eventhouse writer made a KQL table and wrote to it at once, so the engine answered `Entity ... of kind 'Table' was not found` and the write failed with 0 accepted requests; its first request to a table now waits (backoff, `ready_timeout`, default 120 s) for the table to be ready, as the emitter already did. A column the engine refuses (`BadRequest_EntityNameIsNotValid` for `say "hi"`: quoting cannot help, only letters, digits, `_`, space, `.` and `-` are valid in a Kusto column name) is now created under a valid name (other characters become `_`, collisions get a numeric suffix) while the ingestion mapping's JSON path keeps the event's own key. Details in `docs/plans/lane_status/BF-223.md`.
-- Fixed (#78): the SQL emulator test helper `rows_of` returned pyodbc `Row` objects, which no longer compare equal to tuples, so `test_awkward_names_cannot_break_out_of_their_quotes` failed in the Nightly `sqlserver-e2e` job. It now returns plain tuples; every assertion is unchanged. The Nightly `fabric-emit-e2e` job failed at install because `shape-fabric` requires `sqllocks-shape-sqlserver==0.9.0`, which the job did not install (workflow diff in `docs/plans/lane_status/BF-78.md`).
+- Fixed (#223): the Eventhouse writer made a KQL table and wrote to it at once, so the engine answered `Entity ... of kind 'Table' was not found` and the write failed with 0 accepted requests; its first request to a table now waits (backoff, `ready_timeout`, default 120 s) for the table to be ready, as the emitter already did. A column the engine refuses (`BadRequest_EntityNameIsNotValid` for `say "hi"`: quoting cannot help, only letters, digits, `_`, space, `.` and `-` are valid in a Kusto column name) is now created under a valid name (other characters become `_`, collisions get a numeric suffix) while the ingestion mapping's JSON path keeps the event's own key. Details in the implementation tests.
+- Fixed (#78): the SQL emulator test helper `rows_of` returned pyodbc `Row` objects, which no longer compare equal to tuples, so `test_awkward_names_cannot_break_out_of_their_quotes` failed in the Nightly `sqlserver-e2e` job. It now returns plain tuples; every assertion is unchanged. The Nightly `fabric-emit-e2e` job failed at install because `shape-fabric` requires `sqllocks-shape-sqlserver==0.9.0`, which the job did not install (workflow diff in the implementation tests).
 - Fixed (#462, #463, #464, follow-up): `row_count` bounds must also be finite (an infinite bound was accepted); every table's contract in a dataset contract is validated before any table is evaluated, and its errors name the table (`table 'orders': unique for column 'id' must be true or false, not 'true'`); a `tables` that is not an object and a table name that is not a text are reported as such; `x_` extension keys beside `tables` are accepted again (they were refused as table rules).
 - `semantic-model://` source and `shape profile-model` (`sqllocks-shape-fabric`, `docs/plugins/
   cloud-sources.md`, `docs/plugins/fabric-commands.md`). `shape profile semantic-model://<workspace>/
@@ -1129,7 +1339,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   or an Eventhouse and records a session that `cleanup` removes exactly; the operations are plain functions
   (`shape.demo`) the JSON bridge calls too. A scenario runs its own domains, a failed run is rolled back,
   `preflight` checks each target, a profile never stores a secret and reports are escaped. Harness:
-  `benchmarks/vs_refengine/demo_1to1/` (the fidelity report and the metadata exactly, the generated data by
+  the local workload tests (the fidelity report and the metadata exactly, the generated data by
   T-21, an allow-list with probes, negative controls).
 - `shape fabric publish|notebook|deploy-notebook|setup|export-model` and the top-level `shape publish`,
   `shape notebook`, `shape deploy-notebook`, `shape setup-fabric`, `shape export-model`
@@ -1137,7 +1347,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   Warehouse, SQL Database or Eventhouse; make and deploy a Fabric notebook; make a Fabric Environment;
   export a Power BI semantic model (`.bim`). Names that reach M and DAX are quoted, an accepted (202)
   creation is followed to its end, the workspace listing is read across pages, and the notebook part is
-  named for its format. Harness: `benchmarks/vs_refengine/fabric_commands_1to1/` (the `.bim`, the
+  named for its format. Harness: the local workload tests (the `.bim`, the
   notebook, the requests and the landing zone against the baseline, an allow-list with probes,
   negative controls).
 - Sinks for OneLake, ADLS Gen2 and databases (`docs/SINKS.md`): `shape generate --to URI` and
@@ -1180,7 +1390,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `options.include_raw_values` is set. JSON Schemas for every request and result are published in
   `docs/bridge/schema/` (`shape bridge schema --out|--check`) with test vectors in
   `docs/bridge/vectors/`; a compatibility test per command keeps them from changing silently.
-  Harness: `benchmarks/vs_refengine/bridge_1to1/`.
+  Harness: the local workload tests.
 
 - `shape.yml` project file and `shape init` (`docs/PROJECT.md`): named sources, a baseline per
   source (previous run, same weekday, rolling window, month end or a pinned artifact, resolved
@@ -1241,14 +1451,14 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router
   with its `shape_spark_worker` notebook, a per-chunk-file process option, `ChunkedGenerator` and
-  `MultiStoreWriter`. Row counts are exact in every mode. Harness: `benchmarks/vs_refengine/scale_1to1/`
+  `MultiStoreWriter`. Row counts are exact in every mode. Harness: the local workload tests
   (T-21 for retail at medium, with negative controls).
 - `sqllocks-shape-simulation`: file-drop, SCD2-drop, stream, hybrid and workflow simulators and
   `shape simulate file-drop|scd2|stream|hybrid|workflow` (`docs/SIMULATION_FILES_EVENTS.md`). The
   stream emitter runs on the emit runtime (its pacing, sinks and encoders); the runtime accepts any
   counted, resumable sequence of event blocks (`EventSequence`), and sink selection moved from the
   `shape emit` command to `shape.streaming.emit.open_sink`. Harness:
-  `benchmarks/vs_refengine/simulation_1to1/` (mechanism parity and T-21 per simulator, an allow-list
+  the local workload tests (mechanism parity and T-21 per simulator, an allow-list
   of the defects fixed, negative controls).
 - `shape-simulation` (`docs/plugins/simulation.md`): the pattern simulators (clickstream, financial
   reversals / fraud bursts / settlements, IoT drift / missing readings / alert storms / fleet status,
@@ -1259,7 +1469,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   start a trace carry its ids; `latency_spike_enabled` and `outage_enabled` are honoured and a run
   without tracing has no trace ids; fractional durations count; IoT alerts do not depend on the
   storm switch; readings per sensor and the domains' own column names are understood. Harness:
-  `benchmarks/vs_refengine/simulation_1to1/verify_patterns.py` (parity verifier, negative controls,
+  the local workload tests (parity verifier, negative controls,
   allow-list probes).
 - Landing layout (`docs/LANDING.md`): `--path-template`, `--batch-date` and `--table-format` on
   `shape generate`, `shape continue` and `shape chaos` write one file per table per business date
@@ -1320,7 +1530,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
   `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised
   (Arrow kernels, several threads for large batches) with byte-identical output. Harness:
-  `benchmarks/vs_refengine/stream_1to1/` (equivalence verifier, bench, negative control; wired into
+  the local workload tests (equivalence verifier, bench, negative control; wired into
   `run.py --only stream`).
 - Composites (`docs/GENERATION_ENGINE.md`): `shape composite PRESET|DOMAIN+DOMAIN` generates several domains
   as one dataset, tables prefixed with their domain and linked by shared entities (a person, a location,
@@ -1522,7 +1732,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   run on several threads, could use libm's `exp`/`log` instead of numpy's and differ in the last
   digits (#323).
 - `shape.profile.infer.infer_column_type` rules out dates in a text column after one failed parse,
-  as the profiler does, instead of parsing every distinct value: 26x faster on the profiling
+  as the profiler does, instead of parsing every distinct value: uses the same date-classification path on the profiling
   benchmark files, with the same answers (#336).
 
 ### Fixed
@@ -1673,7 +1883,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   and `pyarrow>=14.0.1` (a fixed decision); raising them is with the project owner.
   `ci/constraints-min.txt` pins numpy 2.3.0 and pyarrow 19.0.1, the oldest versions the
   minimum-versions check runs.
-- Second audit of the scenario area (`HUNT2-scenario`, `docs/plans/lane_status/HUNT2-scenario.md`):
+- Second audit of the scenario area (`HUNT2-scenario`, the implementation tests):
   pack chaos runs the referential category once over the mutated tables, not once per table, and the
   manifest's `volume` count is the rows added or removed (#659, #660); the `referential_integrity`
   gate fails, instead of raising, when chaos retyped a key (#673); value chaos works on integer

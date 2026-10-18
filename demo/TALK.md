@@ -84,8 +84,8 @@ Say exactly this, and no more:
 
 - "On a 4-core machine, profiling a 1M-row, 20-column Parquet file took 1.9 s and peaked at
   638 MB. Five million rows by ten columns took 4.8 s and 2,107 MB."
-- "Memory grows with the data in this mode. A bounded mode whose memory stays flat is being
-  built; I have no measurement of it yet."
+- "Memory grows with the data in this mode. Bounded profiling is available in 0.9.1; this sheet
+  measures exact mode only."
 - "Fabric notebooks default to 2 vCores, so we set 8. Here is what we measured live:" and
   then only the numbers in `LIVE_TIMINGS.md`. (The 2-vCore default is Microsoft's documented
   limit, recorded in `integrations/fabric/RUNBOOK.md` section 1.1.)
@@ -107,8 +107,8 @@ data sizes or core counts; any speed or memory figure for bounded mode or the Ru
 
 ## Wording
 
-Shape is early access: profiling is available now; data generation and pipeline integration
-are in progress. Don't claim more.
+Shape 0.9.3 is early access. Profiling, generation and the released sink plugins are
+available. Describe only the installed plugins and the behavior demonstrated here.
 
 ## Where things are
 

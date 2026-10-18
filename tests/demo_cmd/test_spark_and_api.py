@@ -40,6 +40,20 @@ def spark_run(schema_file, runtime, **extra):
     )
 
 
+def test_owner_schema_enabled_demo_records_and_submits_the_schema(spark, schema_file):
+    fabric, runtime = spark
+    fabric.schema_enabled = True
+    demo_init("lake", workspace_id=WS, lakehouse_id=LH, lakehouse_schema="dbo")
+    result = spark_run(schema_file, runtime)
+    start = json.loads(fabric.calls[-1]["body"])
+    assert start["executionData"]["configuration"]["conf"]["spark.shape.lakehouseSchema"] == "dbo"
+    from shape.demo.manifest import DemoManifest
+
+    manifest = DemoManifest.load(result["session_id"], runtime.manifest_dir)
+    lakehouse = [artifact for artifact in manifest.artifacts if artifact.target == "lakehouse"]
+    assert lakehouse and all("/Tables/dbo/" in artifact.detail for artifact in lakehouse)
+
+
 def test_a_spark_run_submits_a_job_and_records_where_the_tables_will_be(home, schema_file, spark):
     fabric, runtime = spark
     result = spark_run(schema_file, runtime, seed=6)

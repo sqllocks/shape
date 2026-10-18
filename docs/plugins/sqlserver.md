@@ -1,15 +1,34 @@
 # SQL Server, Azure SQL and Fabric SQL (`shape-sqlserver`)
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](../contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" sqlserver
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for sqlserver
+    ```
+
+
 `sqllocks-shape-sqlserver` profiles a relational database and reads its tables. It talks to
 SQL Server 2016 and later, Azure SQL Database, Azure SQL Managed Instance, Fabric Warehouse and
 Fabric SQL database through `pyodbc`.
 
 ## Install
 
-```bash
-pip install 'sqllocks-shape[sqlserver]'         # the plugin and pyodbc
-pip install 'sqllocks-shape-sqlserver[entra]'   # adds azure-identity for --auth cli|msi|spn
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-0).
+
 
 `pyodbc` needs the **Microsoft ODBC Driver 18 for SQL Server** (and unixODBC on Linux).
 Nothing is imported until a connection is opened, so `shape plugins doctor` is clean without
@@ -17,10 +36,27 @@ them. `shape plugins list` shows `shape.sources:mssql` and `shape.commands:profi
 
 ## Profile a database
 
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 1 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```bash
 shape profile-db --server myserver.database.windows.net --database shop \
     --schema dbo --sample-rows 1000 -o shop.shape --json shop-summary.json
 ```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {"written": "shop.shape", "shape_content_id": "5226585e9359764bb7571869ddf5b34e3e2fcd3b7ef620505f513fe7487262fa", "tables": 7, "relationships": 5}
+    ```
+
+Evidence: [run 38337418136, ubuntu-latest, `de4c1fb12885`](../evidence/transcripts/docs-transcripts-38337418136-de4c1fb12885-ubuntu-latest-profile-db-warehouse.json).
+
 
 | Option | Meaning |
 |---|---|
@@ -79,13 +115,18 @@ its start. The choice is deterministic: the same data gives the same rows on eve
   table. Hash collisions are settled by the key; on a heap two different rows with the same
   hash at the cut-off could in principle be picked differently from run to run, which is
   vanishingly rare.
-- **Cost.** One full scan of the table per profiled table, plus a top-n sort that keeps only n
-  rows in memory (nothing spills). Measured on SQL Server 2022 in a container, a 5-million-row
-  table with a primary key took about 3 seconds against 4 milliseconds for the first n rows;
-  it grows linearly with the table. Only `CHECKSUM`, `CAST`, `ORDER BY` and `TOP` are used, plain T-SQL
-  that SQL Server 2019 and later and Azure SQL are documented to support; it was tested on
-  SQL Server 2022. Azure SQL and Fabric SQL were not available to test here: if a server rejects the query, the table's first n rows are read instead, a warning is
-  logged, and the profile says so (`sample_method`, below).
+- **Cost.** The sampling query scans the table and uses a top-n sort. The reader constructs
+  the query with `CHECKSUM`, `CAST`, `ORDER BY` and `TOP`. If the server rejects it, the reader
+  falls back to the first n rows, logs a warning and records the sampling method.
+  The container measurement creates a disposable 100,000-row table and records the adapter's first-row and checksum-spread queries for 1,000 rows, including the exact SQL and returned row counts. Three raw timings for each query apply only to the labelled runner and data.
+
+<!-- owner-example: sql-sampling-measurement -->
+
+```bash {.runnable-owner}
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" sqlserver
+```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](../evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-sql-sampling-measurement.json).
 - Other ways were rejected: `TABLESAMPLE` samples whole pages, so a table of few pages is
   sampled coarsely and the rows depend on page layout rather than on the data alone;
   `ORDER BY NEWID()` is not repeatable. There is no seed: the rows follow from the data alone.
@@ -160,6 +201,17 @@ split at `_` and at CamelCase boundaries: `customer_id`, `CustomerId`, `customer
 has no word boundary to split at, so it is not matched: declare the key, or use `_` or
 CamelCase.
 
+### Time ranges and zoned text
+
+Database profiling uses SQL's declared column types. A time bucket such as `18:00-18:59`
+stays text. If sampled text contains a zoned timestamp that the relationship inference cannot
+model, that column receives a `profiling_note`; its SQL type and sampled statistics are kept,
+and other columns and tables are still profiled. Unrelated catalog, permission and profiling
+errors remain failures. Ordinary file/DataFrame profiling still requires zoned text to be
+converted to a timestamp explicitly.
+
+See [Time zones and dateless text](../PROFILING_NOTES.md#time-zones-and-dateless-text).
+
 ## Read a table
 
 `mssql://` is a `shape.sources` plugin: one table as Arrow record batches.
@@ -181,6 +233,17 @@ reading twice gives the same data. `datetimeoffset` arrives as UTC timestamps, `
 `decimal` as `decimal128`, `uniqueidentifier` as text. A column of a user-defined alias type
 (`CREATE TYPE Amount FROM decimal(10, 2)`) is read and profiled as its base system type.
 
+## Time limits
+
+`shape profile-db` connects with a 30-second login timeout (`timeout=30`) and sets no limit on a
+statement's run time. `SHAPE_SQL_QUERY_TIMEOUT` (default 900 seconds) and
+`SHAPE_WAREHOUSE_INSERT_SECONDS` (default 600 seconds) belong to the Fabric writers and do **not**
+apply to `profile-db`; see [fabric-writers.md](fabric-writers.md#time-limits).
+
+A Fabric portal connection string (`Data Source=...;Initial Catalog=...`) is accepted: the plugin
+turns it into an ODBC string with `Driver={ODBC Driver 18 for SQL Server}`. An ODBC string, with
+or without `Driver=`, or a DSN passes through unchanged.
+
 ## For plugin authors
 
 `shape_sqlserver.sql` and `shape_sqlserver.auth` are meant to be shared (the Fabric plugin
@@ -198,3 +261,24 @@ so contract tests need no server.
 - `pytest -m emulator plugins/shape-sqlserver/tests` runs against a real SQL Server 2022
   (`docker compose -f ci/emulators/docker-compose.yml up -d --wait mssql`, with
   `msodbcsql18` installed). CI runs it nightly.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO/plugins/shape-sqlserver"
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    (no output)
+    ```

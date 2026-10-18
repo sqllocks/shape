@@ -1,0 +1,37 @@
+{
+  "run_id": "38266883768",
+  "commit": "1fa052d08a93cecd303f4db1a9682539b59471b1",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765378560,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "25.0.1",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "page": "docs/EMIT.md",
+  "example": "emit-overhead",
+  "command": "python \"$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py\" emit",
+  "exit_code": 0,
+  "status": "passed",
+  "elapsed_seconds": 5.993287531999954,
+  "stdout": "{\n  \"workload\": \"retail, seed=7, 5000 events, file emitter, paired live/no-live, fresh process per run\",\n  \"verification\": \"Warm-up pair and every timed pair emitted 5000 byte-identical events\",\n  \"trials\": [\n    [\n      {\n        \"live\": false,\n        \"seconds\": 0.698072097000022,\n        \"events\": 5000,\n        \"sha256\": \"13f7a3d883c73aa1a00f2ff6dce39b6b981cae93e30a6a7e13292bf60a930be9\"\n      },\n      {\n        \"live\": true,\n        \"seconds\": 0.8187378719999856,\n        \"events\": 5000,\n        \"sha256\": \"13f7a3d883c73aa1a00f2ff6dce39b6b981cae93e30a6a7e13292bf60a930be9\"\n      }\n    ],\n    [\n      {\n        \"live\": false,\n        \"seconds\": 0.7343630789999906,\n        \"events\": 5000,\n        \"sha256\": \"13f7a3d883c73aa1a00f2ff6dce39b6b981cae93e30a6a7e13292bf60a930be9\"\n      },\n      {\n        \"live\": true,\n        \"seconds\": 0.8472607100000005,\n        \"events\": 5000,\n        \"sha256\": \"13f7a3d883c73aa1a00f2ff6dce39b6b981cae93e30a6a7e13292bf60a930be9\"\n      }\n    ],\n    [\n      {\n        \"live\": false,\n        \"seconds\": 0.6848532579999755,\n        \"events\": 5000,\n        \"sha256\": \"13f7a3d883c73aa1a00f2ff6dce39b6b981cae93e30a6a7e13292bf60a930be9\"\n      },\n      {\n        \"live\": true,\n        \"seconds\": 0.7026429410000219,\n        \"events\": 5000,\n        \"sha256\": \"13f7a3d883c73aa1a00f2ff6dce39b6b981cae93e30a6a7e13292bf60a930be9\"\n      }\n    ]\n  ]\n}\n"
+}

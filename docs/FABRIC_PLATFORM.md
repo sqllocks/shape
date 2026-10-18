@@ -1,5 +1,7 @@
 # Fabric platform inventory
 
+Status: experimental.
+
 Every Fabric and OneLake surface that Shape calls or targets, with its release stage. A test
 (`tests/docs/test_fabric_platform.py`) reads the table below and fails when the code builds a
 Fabric REST path or names an item type that is not listed, or is listed `preview` or `retired`,
@@ -30,6 +32,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 | rest | POST /v1/workspaces/{workspace_id}/items | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/create-item | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, src/shape/scale/spark.py, plugins/shape-fabric/tests/test_live_git_sync.py |
 | rest | DELETE /v1/workspaces/{workspace_id}/items/{item_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/delete-item | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, plugins/shape-fabric/tests/test_live_git_sync.py |
 | rest | POST /v1/workspaces/{workspace_id}/items/{item_id}/updateDefinition | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/update-item-definition | 2026-10-03 | plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | GET /v1/workspaces/{workspace_id}/lakehouses/{lakehouse_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/lakehouse/items/get-lakehouse | 2026-10-12 | src/shape/integrations/fabric/lakehouse_kind.py, src/shape/scale/spark.py |
 | rest | GET /v1/workspaces/{workspace_id}/notebooks | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/notebook/items/list-notebooks | 2026-10-03 | src/shape/scale/spark.py |
 | rest | POST /v1/workspaces/{workspace_id}/items/{item_id}/jobs/instances | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/run-on-demand-item-job | 2026-10-03 | src/shape/scale/spark.py |
 | rest | GET /v1/workspaces/{workspace_id}/items/{item_id}/jobs/instances/{run_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/get-item-job-instance | 2026-10-03 | src/shape/scale/jobs.py |
@@ -78,6 +81,22 @@ and today's date. If the page says preview, the call does not go in; open an iss
 - **Runtime 2.0** is the latest GA runtime; Learn says it becomes the default for new workspaces
   in late September 2026.
 
+## Fabric errors, long-running operations and semantic models
+
+A Fabric REST error is shown with its service code and message, `errorCode: message` (for example
+`InvalidInput: The request has invalid input. DisplayName: ...`), with credentials redacted, after
+the HTTP status and the URL. The long error body Fabric sends (it can carry a long `requestId`) is
+read in full, so the code and the explanation are not cut off.
+
+A create that Fabric accepts with HTTP 202 is a long-running operation. Its `Location` may name a
+regional `*.analysis.windows.net` host instead of the Fabric API. Shape takes the operation id from
+`/v1/operations/<id>` on such a host and polls the Fabric API itself, so the bearer token is never
+sent there; another host or path is refused with a message naming the host.
+
+`semantic-model://` finds a model with `sempy`'s default listing and then its REST listing, which
+Microsoft documents for service principals; see
+[cloud sources](plugins/cloud-sources.md#semantic-models-semantic-model).
+
 ## Git sync
 
 Teams keep `.shape` profiles in the same Git repository as their Fabric items (`shape git-setup`
@@ -101,22 +120,64 @@ The test works on the branch the workspace is connected to (it reads it from the
 it does not create a branch, because moving a workspace to another branch is a separate set of
 calls. It commits only a `shape/` folder and one item folder, and removes them again.
 
-Secrets (a missing one fails the test naming it, in this order): `FABRIC_TENANT_ID`,
-`FABRIC_CLIENT_ID`, `FABRIC_CLIENT_SECRET` (a service principal that is a contributor of the
-workspace), `FABRIC_WORKSPACE_ID`, `FABRIC_GIT_REMOTE` (an HTTPS remote of the repository the
-workspace is connected to) and `FABRIC_GIT_TOKEN` (write access to it). `FABRIC_GIT_USER` is the
-user name sent with the token (default `x-access-token`). The service principal also needs its
-Git credentials set up for the workspace.
+Variables (a missing one fails the test naming it, in this order): `FABRIC_TENANT_ID`,
+`FABRIC_CLIENT_ID`, `FABRIC_CLIENT_SECRET` (a service principal that is an admin or contributor of
+the workspace), `FABRIC_GIT_WORKSPACE_ID` (the Git-connected workspace; it is not the workspace the
+other live tests use), `FABRIC_GIT_REMOTE` (an HTTPS remote of the repository the workspace is
+connected to) and `FABRIC_GIT_TOKEN` (write access to it). `FABRIC_GIT_USER` is the user name sent
+with the token (default `x-access-token`).
+
+Fabric's Git APIs use the calling principal's **own** Git credentials, not those of the person who
+connected the workspace. A service principal that has none gets `GitCredentialsNotConfigured` from
+`git/status`, even though the portal shows the workspace connected, and `NotConnected` from
+`git/connection`. Set them once with `PATCH /v1/workspaces/{id}/git/myGitCredentials` and
+`{"source": "ConfiguredConnection", "connectionId": "<id>"}` for a GitHub connection the principal
+can use
+([Automate Git integration with a service principal](https://learn.microsoft.com/fabric/cicd/git-integration/automate-git-integration-with-service-principal)).
+The `fabric-live` workflow does this, idempotently, when it is dispatched with
+`set_git_credentials=true` (see [the live workflow](plugins/fabric-writers.md#the-fabric-live-workflow)).
+The test reads `git/status` with a 180-second read timeout (Fabric asks the Git provider before it
+answers) and takes any incoming commits with "update from Git" before it commits, because Fabric
+refuses a commit while the repository is ahead (`CommitFailedDueToIncomingChanges`).
+
+This test runs in the `fabric-live` workflow against the shape-git-test workspace, nightly and on
+demand.
 
 Run by hand:
 
+<!-- example: 0 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```
 pip install -e '.[dev]' -e 'plugins/shape-fabric[entra]'
-FABRIC_TENANT_ID=... FABRIC_CLIENT_ID=... FABRIC_CLIENT_SECRET=... FABRIC_WORKSPACE_ID=... \
+FABRIC_TENANT_ID=... FABRIC_CLIENT_ID=... FABRIC_CLIENT_SECRET=... FABRIC_GIT_WORKSPACE_ID=... \
 FABRIC_GIT_REMOTE=https://github.com/<owner>/<repo>.git FABRIC_GIT_TOKEN=... \
 SHAPE_LIVE_RESULT=git-sync-result.json \
 pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py
 ```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    ======================================= test session starts ========================================
+    platform linux -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0
+    rootdir: <checkout>
+    configfile: pyproject.toml
+    plugins: Faker-40.43.0, hypothesis-6.169.0, platformdirs-4.13.0, sqllocks-shape-0.9.1, cov-7.1.0
+    collected 1 item
+    
+    plugins/shape-fabric/tests/test_live_git_sync.py .                                           [100%]
+    
+    ================================== 1 passed in 143.59s (0:02:23) ===================================
+    ```
+
+Evidence: [run 38320894194, ubuntu-latest, `6eb065e8f734`](evidence/transcripts/docs-transcripts-38320894194-6eb065e8f734-ubuntu-latest-git-sync-live.json).
+
+A second run of the same test against the same Git workspace (run 38327274076) failed with `CommitFailedDueToIncomingChanges`: the test leaves the workspace with changes to update from Git, so it passes on a clean workspace and fails when repeated until Git is updated.
+
 
 The nightly job `fabric-git-sync-live` runs it only where the secrets are set and uploads the
 result file. The result is a `shape-live-check` document (`format`, integer `version`,

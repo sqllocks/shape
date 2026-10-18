@@ -16,7 +16,7 @@ from shape_fabric.eventhouse import (
     kusto_type,
     parse_uri,
 )
-from shape_fabric.testing import EventhouseHarness
+from shape_fabric.testing import EventhouseHarness, FakeKusto
 
 from shape.errors import ShapeError
 from shape.plugins import kit
@@ -80,10 +80,12 @@ def test_each_shape_table_gets_a_kql_table_and_a_mapping_before_its_first_events
     e = h.make()
     assert e.emit(h.uri, [a, b, a]) == 8
     cmds = [c for _, c in h.kusto.commands]
-    assert len(cmds) == 6  # table, mapping and policy for `a` and for `b`, once each
+    assert len(cmds) == 8  # table, mapping, policy and cache synchronization, once per table
     assert cmds[0].startswith(".create-merge table ['a'] (['x']:long, ['s']:string,")
     assert "ingestion json mapping 'shape_json'" in cmds[1]
     assert cmds[2] == ".alter table ['a'] policy streamingingestion enable"
+    assert cmds[3] == ".clear table ['a'] cache streamingingestion schema"
+    assert cmds[7] == ".clear table ['b'] cache streamingingestion schema"
     assert [t for t, _ in h.kusto.requests] == ["a", "b", "a"]
     assert all(d == "db1" for d, _ in h.kusto.commands)
 
@@ -238,17 +240,18 @@ def test_options_are_checked():
 def test_a_refused_streaming_policy_is_not_an_error_but_a_refused_table_is():
     a, _ = _events()
     seen = []
+    kusto = FakeKusto()
 
     def transport(method, url, headers, body, timeout):
         if url.endswith("/v1/rest/mgmt"):
             csl = json.loads(body)["csl"]
             seen.append(csl.split()[0] + " " + csl.split()[1])
-            if "streamingingestion" in csl:
+            if "policy streamingingestion" in csl:
                 return 403, {}, b"no policy rights"
-        return 200, {}, b"{}"
+        return kusto(method, url, headers, body, timeout)
 
     assert EventhouseEmitter(transport).emit("eventhouse://h/db?tls=false", [a]) == 3
-    assert seen == [".create-merge table", ".create-or-alter table", ".alter table"]
+    assert seen == [".create-merge table", ".create-or-alter table", ".alter table", ".clear table"]
 
     def refuse_table(method, url, headers, body, timeout):
         return 403, {}, b"no rights"
@@ -267,6 +270,7 @@ def test_a_new_table_that_is_not_ready_yet_is_waited_for_once():
         ),
     ]
     ingests = []
+    kusto = FakeKusto()
 
     def transport(method, url, headers, body, timeout):
         if "/v1/rest/ingest/" in url:
@@ -274,7 +278,7 @@ def test_a_new_table_that_is_not_ready_yet_is_waited_for_once():
             if answers:
                 status, text = answers.pop(0)
                 return status, {}, text
-        return 200, {}, b"{}"
+        return kusto(method, url, headers, body, timeout)
 
     emitter = EventhouseEmitter(transport, busy_pause=0.001)
     assert emitter.emit("eventhouse://h/db?tls=false", [a]) == 3
@@ -289,12 +293,13 @@ def test_a_new_table_that_is_not_ready_yet_is_waited_for_once():
 def test_a_table_that_never_becomes_ready_fails_after_the_wait():
     a, _ = _events()
     calls = []
+    kusto = FakeKusto()
 
     def transport(method, url, headers, body, timeout):
         if "/v1/rest/ingest/" in url:
             calls.append(url)
             return 400, {}, b'{"error": {"code": "BadRequest_EntityNotFound"}}'
-        return 200, {}, b"{}"
+        return kusto(method, url, headers, body, timeout)
 
     with pytest.raises(ShapeError, match="EntityNotFound"):
         EventhouseEmitter(transport, busy_pause=0.001).emit(

@@ -59,6 +59,7 @@ class FakeKusto:
         self.calls = 0
         self.tables: dict[str, list[str]] = {}  # KQL tables and their column names
         self.by_table: dict[str, list[dict[str, Any]]] = {}  # delivered rows, per KQL table
+        self.column_types: dict[str, dict[str, str]] = {}
 
     def __call__(
         self, method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
@@ -93,6 +94,25 @@ class FakeKusto:
 
     def _mgmt(self, csl: str) -> tuple[int, dict[str, str], bytes]:
         names = _kql_names(csl)
+        if csl.startswith(".show table ") and csl.endswith(" schema as json"):
+            if names[0] not in self.tables:
+                return 400, {}, b"Entity not found"
+            schema = json.dumps(
+                {
+                    "Name": names[0],
+                    "OrderedColumns": [
+                        {"Name": column, "CslType": self.column_types.get(names[0], {}).get(column)}
+                        for column in self.tables[names[0]]
+                    ],
+                }
+            )
+            return (
+                200,
+                {},
+                json.dumps(
+                    {"Tables": [{"Columns": [{"ColumnName": "Schema"}], "Rows": [[schema]]}]}
+                ).encode(),
+            )
         if csl.startswith(".show tables"):
             literal = re.search(r"TableName == '((?:[^'\\]|\\.)*)'", csl)
             name = re.sub(r"\\(.)", r"\1", literal.group(1)) if literal else ""
@@ -101,15 +121,43 @@ class FakeKusto:
             if names[0] in self.tables:
                 return 400, {}, b"Entity already exists: table " + names[0].encode()
             self.tables[names[0]] = names[1:]
+            self.column_types[names[0]] = self._column_types(csl)
         elif csl.startswith(".create-merge table"):
             have = self.tables.setdefault(names[0], [])
             have.extend(n for n in names[1:] if n not in have)
+            self.column_types.setdefault(names[0], {}).update(self._column_types(csl))
+        elif csl.startswith(".alter table ") and " policy " not in csl:
+            if names[0] not in self.tables:
+                return 400, {}, b"Entity not found"
+            self.tables[names[0]] = names[1:]
+            self.column_types[names[0]] = self._column_types(csl)
         elif csl.startswith(".drop table"):
             self.tables.pop(names[0], None)
             self.by_table.pop(names[0], None)
+            self.column_types.pop(names[0], None)
         elif csl.startswith(".clear table"):
+            if csl.endswith(" cache streamingingestion schema"):
+                return (
+                    200,
+                    {},
+                    json.dumps(
+                        {
+                            "Tables": [
+                                {
+                                    "Columns": [{"ColumnName": "NodeId"}, {"ColumnName": "Status"}],
+                                    "Rows": [["fake-node", "Succeeded"]],
+                                }
+                            ]
+                        }
+                    ).encode(),
+                )
             self.by_table[names[0]] = []
         return 200, {}, b"{}"
+
+    @staticmethod
+    def _column_types(csl: str) -> dict[str, str]:
+        pairs = re.findall(r"\['((?:[^'\\]|\\.)*)'\]:(\w+)", csl)
+        return {re.sub(r"\\(.)", r"\1", name): kind for name, kind in pairs}
 
 
 WORKSPACE_ID = "11111111-1111-4111-8111-111111111111"
@@ -176,6 +224,15 @@ class FakeFabricItems:
             rows = [i for i in self.items if kind in (None, i["type"])]
             return self._page(rows, query)
         doc = json.loads(body)
+        if doc["type"] == "Lakehouse" and not re.fullmatch(
+            r"[A-Za-z][A-Za-z0-9_]{0,122}", doc["displayName"]
+        ):
+            # what Fabric answers (live, 2026-10-12) to a hyphen in a Lakehouse name
+            bad = {
+                "errorCode": "InvalidInput",
+                "message": f"The request has invalid input. DisplayName: {doc['displayName']}",
+            }
+            return 400, {}, json.dumps(bad).encode()
         if any(
             i["displayName"] == doc["displayName"] and i["type"] == doc["type"] for i in self.items
         ):
@@ -294,6 +351,10 @@ class MemoryFS:
         for f in doomed:
             del self.files[f]
 
+    def ls(self, path: str, detail: bool = False) -> list[str]:
+        """The files under ``path`` (this filesystem has no empty folders)."""
+        return self.find(path)
+
     def find(self, path: str) -> list[str]:
         key = self._key(path)
         return sorted(f for f in self.files if f == key or f.startswith(key + "/"))
@@ -307,6 +368,41 @@ _QUALIFIED = re.compile(rf"{_NAME}\.{_NAME}")
 
 def _unbracket(name: str) -> str:
     return name.replace("]]", "]")
+
+
+class FakeLakehouse:
+    """Delta registration in classic and schema-enabled Lakehouses.
+
+    Files may be written anywhere, but only Tables/<table> (classic) or
+    Tables/<existing-schema>/<table> (schemas enabled) become usable Fabric tables.
+    An invalid layout is recorded as unidentified, as in the Fabric UI.
+    """
+
+    def __init__(
+        self, *, schema_enabled: bool = False, schemas: tuple[str, ...] = ("dbo",)
+    ) -> None:
+        self.schema_enabled = schema_enabled
+        self.schemas = set(schemas)
+        self.tables: dict[tuple[str | None, str], int] = {}
+        self.unidentified: list[str] = []
+
+    def write_deltalake(self, location: str, data: Any, **options: Any) -> None:
+        path = urlsplit(location).path
+        _, marker, tail = path.partition("/Tables/")
+        parts = tail.strip("/").split("/")
+        wanted = 2 if self.schema_enabled else 1
+        if (
+            not marker
+            or len(parts) != wanted
+            or (self.schema_enabled and parts[0] not in self.schemas)
+        ):
+            self.unidentified.append(location)
+            return
+        rows = (
+            data.num_rows if isinstance(data, pa.Table) else sum(batch.num_rows for batch in data)
+        )
+        schema, table = (parts[0], parts[1]) if self.schema_enabled else (None, parts[0])
+        self.tables[(schema, table)] = rows
 
 
 class SqlConstraint:
@@ -366,9 +462,11 @@ class FakeSqlServer:
 
     ``fail`` is called with ``(sql, params)`` before each statement and may raise;
     ``copy_reports_rowcount=False`` makes ``COPY INTO`` report ``-1`` as some drivers do.
+    A staging filesystem selects Warehouse semantics; a real connection string selects its
+    dialect. Bare labels used by injected fake connections retain the configured dialect.
     """
 
-    def __init__(self, files: MemoryFS | None = None) -> None:
+    def __init__(self, files: MemoryFS | None = None, *, warehouse: bool | None = None) -> None:
         self.tables: dict[tuple[str, str], SqlTable] = {}
         self.schemas: set[str] = {"dbo"}
         self.files = files or MemoryFS()
@@ -379,11 +477,15 @@ class FakeSqlServer:
         self.copy_loads_fewer = 0
         self.identity_insert: tuple[str, str] | None = None  # session state: not rolled back
         self.enforce_keys = False  # True: a duplicate primary key raises (as a real server does)
+        self._warehouse_override = warehouse
+        self.warehouse = files is not None if warehouse is None else warehouse
         self._committed: tuple[dict[tuple[str, str], SqlTable], set[str]] | None = None
         self.snapshot()
 
     def snapshot(self) -> None:
-        self._committed = (copy.deepcopy(self.tables), set(self.schemas))
+        # Capture the mapping first: concurrent generation can create another table while
+        # deepcopy walks this table's rows. Never iterate the live mapping during that walk.
+        self._committed = (copy.deepcopy(self.tables.copy()), set(self.schemas))
 
     def restore(self) -> None:
         assert self._committed is not None
@@ -393,6 +495,14 @@ class FakeSqlServer:
     def connect(
         self, connection_string: str, credential: Any = None, **_kw: Any
     ) -> FakeSqlConnection:
+        from ._tsql import is_warehouse
+
+        if "warehouse" in _kw:
+            self.warehouse = bool(_kw["warehouse"])
+        elif self._warehouse_override is not None:
+            self.warehouse = self._warehouse_override
+        elif "=" in connection_string or "://" in connection_string:
+            self.warehouse = is_warehouse(connection_string)
         self.connections += 1
         return FakeSqlConnection(self)
 
@@ -447,6 +557,7 @@ class FakeSqlConnection:
 
 class FakeSqlCursor:
     fast_executemany = False
+    _int64_timestamps_rejected = False
 
     def __init__(self, server: FakeSqlServer) -> None:
         self.server = server
@@ -553,6 +664,18 @@ class FakeSqlCursor:
         return self.server.tables[key]
 
     def _create(self, sql: str) -> None:
+        create, separator, alter = sql.partition(";\nALTER TABLE ")
+        if separator:
+            self._create(create)
+            self._alter("ALTER TABLE " + alter)
+            return
+        if self.server.warehouse and re.search(
+            r"\b(PRIMARY KEY|UNIQUE)\b", re.sub(_NAME, "identifier", sql)
+        ):
+            raise RuntimeError(
+                "(24584) The PRIMARY KEY or UNIQUE keyword is not supported in the CREATE "
+                "TABLE statement in this edition of SQL Server"
+            )
         text = " ".join(sql.split())
         temporary = re.match(rf"CREATE TABLE {_NAME} \(", text)
         if temporary:
@@ -709,6 +832,19 @@ class FakeSqlCursor:
         self.server.identity_insert = key
 
     def _alter(self, text: str) -> None:
+        if self.server.warehouse and " ADD CONSTRAINT " in text:
+            match = re.fullmatch(
+                rf"ALTER TABLE {_NAME}\.{_NAME} ADD CONSTRAINT {_NAME} "
+                rf"(?:PRIMARY KEY|UNIQUE) NONCLUSTERED \(({_NAME}(?:, {_NAME})*)\) NOT ENFORCED",
+                text,
+            )
+            if match is None:
+                raise RuntimeError("Warehouse keys require NONCLUSTERED NOT ENFORCED")
+            target = self._table(_unbracket(match.group(1)), _unbracket(match.group(2)))
+            names = [_unbracket(n) for n in re.findall(_NAME, match.group(4))]
+            if any(n not in target.names() for n in names):
+                raise RuntimeError("a constraint names an unknown column")
+            return  # informational only: Warehouse does not enforce uniqueness
         match = re.match(
             rf"ALTER TABLE {_NAME}\.{_NAME} (NOCHECK|WITH CHECK CHECK|CHECK) CONSTRAINT "
             rf"(ALL|{_NAME})$",
@@ -821,10 +957,17 @@ class FakeSqlCursor:
     def _load_folder(self, table: SqlTable, folder: str) -> None:
         loaded = 0
         for path in self.server.files.find(folder):
-            parquet = pq.read_table(io.BytesIO(self.server.files.files[path]))
+            raw = self.server.files.files[path]
+            parquet = pq.read_table(io.BytesIO(raw))
+            meta = pq.ParquetFile(io.BytesIO(raw)).metadata.schema
+            physical = {meta.column(i).name: meta.column(i).physical_type for i in range(len(meta))}
             for field in parquet.schema:
-                if pa.types.is_timestamp(field.type) and field.type.unit == "ns":
+                if not pa.types.is_timestamp(field.type) or physical.get(field.name) == "INT96":
+                    continue  # INT96 holds nanoseconds and is accepted by a dedicated pool
+                if field.type.unit == "ns":
                     raise RuntimeError("Unsupported Parquet type TIMESTAMP(NANOS)")
+                if self._int64_timestamps_rejected and field.type.unit == "us":
+                    raise RuntimeError("Unsupported Parquet type TIMESTAMP(MICROS)")
             names = [c[0] for c in table.columns]
             if parquet.schema.names != names:
                 raise RuntimeError(f"Parquet columns {parquet.schema.names} do not match {names}")
@@ -859,6 +1002,8 @@ class FakeSynapseCursor(FakeSqlCursor):
         super()._create(sql[: tail.start()] if tail else sql)
         server: FakeSynapsePool = self.server  # type: ignore[assignment]
         server.table_options[tuple(_unbracket(g) for g in head.groups())] = options  # type: ignore[index]
+
+    _int64_timestamps_rejected = True  # a dedicated pool reads no MICROS/NANOS INT64 timestamps
 
     def _copy(self, text: str) -> None:
         match = _SYNAPSE_COPY.match(text)
@@ -896,6 +1041,7 @@ class FakeSynapsePool(FakeSqlServer):
     ) -> FakeSqlConnection:
         self.connections += 1
         self.last_connection = (connection_string, credential)
+        self.warehouse = True
         return FakeSynapseConnection(self)
 
 
@@ -1081,3 +1227,21 @@ class FakeIdentity:
         monkeypatch.setattr(package, "identity", module, raising=False)
         monkeypatch.setitem(sys.modules, "azure.identity", module)
         return self
+
+
+def remove_item(api, workspace, kind, name, *, wait=60.0, pause=2.0, clock=None, sleep=None):
+    """Delete the item ``name`` of ``kind``, waiting up to ``wait`` seconds for it to show in the
+    listing. A creation Fabric accepted can be absent from the listing for a moment (or longer
+    when the test stopped early); looking once and giving up left six notebooks behind."""
+    import time
+
+    clock, sleep = clock or time.monotonic, sleep or time.sleep
+    deadline = clock() + wait
+    while True:
+        found = api.find_item(workspace, kind, name)
+        if found:
+            api.delete_item(workspace, found["id"])
+            return True
+        if clock() >= deadline:
+            return False
+        sleep(pause)

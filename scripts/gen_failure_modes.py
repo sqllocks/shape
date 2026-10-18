@@ -16,7 +16,9 @@ DEFAULT = Path(__file__).resolve().parents[1] / "docs" / "FAILURE_MODES.md"
 def render() -> str:
     from shape.scenario.library import catalog
 
-    return catalog.render_markdown(catalog.load_catalog())
+    return catalog.render_markdown(catalog.load_catalog()).replace(
+        "# Failure modes\n\n", "# Failure modes\n\nStatus: experimental.\n\n\n", 1
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

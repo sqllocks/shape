@@ -1,0 +1,80 @@
+{
+  "format": 1,
+  "identities": {
+    "9a9e27a5c5212f5b6045181b8b54ddcf4f30d4d6c1fbb77809af6a032678eb9f": "profile:3694252ac3a1f6b7b76b8b47567df249233a42cc54d06ac4bae605dd7262217e",
+    "0f3e92b49736b91ddcba63abc99bf5ed471d678f590c3af35cae133857b59f73": "profile:22a70b0e4f2df0c8150583eeb5278d1c8170d54fdc658c1e68cf59337c104f05",
+    "f994fb5896c575722a7c4635f926dde436eedd1dc36a8fb0cdf3bc056bbe2e9f": "profile:f994fb5896c575722a7c4635f926dde436eedd1dc36a8fb0cdf3bc056bbe2e9f",
+    "a098e95b2f043449865a8b2d84978c9d1319816d8180e64091106b3a097a700c": "profile:e2b18067e9ea07710719590533e0b3af6ff97de2e425f455008cbd14d8717921",
+    "6656233ec16e9ecc8abc49c08f4eff6af834ea06d910af12d63c48bd9f518fa9": "registry:a558b207aad6fa03ba06314ec324474d5ce08f7e7c2ded782a86f2c94fe9f122",
+    "7d00f3f08859889f695af0d6c9af650933e25fd061c096776206e16b9dae3616": "profile:90831e234334ec16ba1beb845c3e5149bcb7f24b064946c5df31b9cd5ca68883",
+    "3e34a5fdb3bdd9c926762c64400a5bc68a3823b8dafd52c4904649bc5c1d4ef9": "registry:3c89a8a016e38931f9313af9591c2ee9e0c24025a80e1398dce9fd231c03fa4c",
+    "0cb35faaeb87e0b7baeb655c583d4222db902b30183fb72e8e185e1ebdb04bf7": "profile:8f7259365176eed5fb1e396c3f0a8e3569650853c0e458574cd7a7a13e397157",
+    "b4b96ba1d7bca3b3e883a85360fa187b804f1013b461edcf6d7b4a3d5c3e5866": "registry:04bebf00c64e23c50e5bfdbd7228d6b87431285786c9536e9018174f90c9ff8b",
+    "d22b184b645e0011ced70f8d8b808399ffdd286859a0e26243f06855e31fa79a": "profile:ba53b748372489b1877789e67f47d4a68d2e875828466d13776bdbc99265e4ea",
+    "38fa4c1303b2d9f144e4deecd4536a36c0572ea928f09be8fc8fc173d659306e": "profile:90ced408c95839ff9a43b58db4757a124e86d2e6f1533026314ae6d321a99ec4",
+    "70bc5c098e851f87a095f44b59dcc7ee6efb3b57651ab5fef337ee6ea97fa73b": "profile:79aa14b4c242751991ce20609b5df93a568bc1ec50f051bc98a2b157bafcff6e",
+    "aca90fa231d0ace0aefe95c8ae0bc9f29ac6866d22a6bc6f2ea00d75c1e6d279": "profile:aca90fa231d0ace0aefe95c8ae0bc9f29ac6866d22a6bc6f2ea00d75c1e6d279",
+    "c394cda2cd521caed0b79b6bfb9e69fbce5121e5b03e359098a42a35ae1d2079": "profile:f1d4a6cb098f2d910edf04a142c86baeb7078c353aabb029a0ae78575b3e0d13",
+    "70621cbb570ba8b67113d7819cdbf55dd15c0dfb1273865bc8ddfc64e5a63f1d": "profile:386e791c8bb541ccb7d7ceb5d5883688ceb89d1cd2aa58c737231c009da0cc82",
+    "9f059bc2d015b14d2e02d1de7a7a2e91f0f6ec3c3677c68f8d46b288f927d72a": "profile:09eec8e2d8dde753da1a6e8525beff8ac297e5fad96bcfd171b58a776a6a6de0",
+    "df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5": "profile:df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5"
+  },
+  "sources": {
+    "9a9e27a5c5212f5b6045181b8b54ddcf4f30d4d6c1fbb77809af6a032678eb9f": [
+      "docs/tutorials/01-first-profile.md",
+      "docs/tutorials/02-read-report.md",
+      "docs/tutorials/03-drift.md",
+      "docs/tutorials/04-contract.md",
+      "docs/tutorials/05-generate-profile.md"
+    ],
+    "0f3e92b49736b91ddcba63abc99bf5ed471d678f590c3af35cae133857b59f73": [
+      "docs/tutorials/03-drift.md",
+      "docs/tutorials/04-contract.md"
+    ],
+    "f994fb5896c575722a7c4635f926dde436eedd1dc36a8fb0cdf3bc056bbe2e9f": [
+      "docs/tutorials/05-generate-profile.md"
+    ],
+    "a098e95b2f043449865a8b2d84978c9d1319816d8180e64091106b3a097a700c": [
+      "docs/HISTORY.md"
+    ],
+    "6656233ec16e9ecc8abc49c08f4eff6af834ea06d910af12d63c48bd9f518fa9": [
+      "docs/HISTORY.md"
+    ],
+    "7d00f3f08859889f695af0d6c9af650933e25fd061c096776206e16b9dae3616": [
+      "docs/HISTORY.md"
+    ],
+    "3e34a5fdb3bdd9c926762c64400a5bc68a3823b8dafd52c4904649bc5c1d4ef9": [
+      "docs/HISTORY.md"
+    ],
+    "0cb35faaeb87e0b7baeb655c583d4222db902b30183fb72e8e185e1ebdb04bf7": [
+      "docs/HISTORY.md"
+    ],
+    "b4b96ba1d7bca3b3e883a85360fa187b804f1013b461edcf6d7b4a3d5c3e5866": [
+      "docs/HISTORY.md"
+    ],
+    "d22b184b645e0011ced70f8d8b808399ffdd286859a0e26243f06855e31fa79a": [
+      "docs/DETECTIVE.md"
+    ],
+    "38fa4c1303b2d9f144e4deecd4536a36c0572ea928f09be8fc8fc173d659306e": [
+      "docs/PROFILE_MERGE.md"
+    ],
+    "70bc5c098e851f87a095f44b59dcc7ee6efb3b57651ab5fef337ee6ea97fa73b": [
+      "docs/PROFILE_MERGE.md"
+    ],
+    "aca90fa231d0ace0aefe95c8ae0bc9f29ac6866d22a6bc6f2ea00d75c1e6d279": [
+      "docs/PROFILE_MERGE.md"
+    ],
+    "c394cda2cd521caed0b79b6bfb9e69fbce5121e5b03e359098a42a35ae1d2079": [
+      "docs/PROFILE_MERGE.md"
+    ],
+    "70621cbb570ba8b67113d7819cdbf55dd15c0dfb1273865bc8ddfc64e5a63f1d": [
+      "docs/PROFILE_MERGE.md"
+    ],
+    "9f059bc2d015b14d2e02d1de7a7a2e91f0f6ec3c3677c68f8d46b288f927d72a": [
+      "docs/PROPOSALS.md"
+    ],
+    "df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5": [
+      "docs/PROPOSALS.md"
+    ]
+  }
+}

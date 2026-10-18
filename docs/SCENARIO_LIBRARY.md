@@ -1,15 +1,30 @@
 # The starter scenario library
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" SCENARIO_LIBRARY
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for SCENARIO_LIBRARY
+    ```
+
+
 Shape ships a small library of named, versioned scenarios, each with an **answer key**, and named
 **suites** that run several of them and compare every outcome with its key. They are for CI: plant
 a known problem in a built-in domain and check that your gates, or Shape's own, see it.
 
-```bash
-shape pack list --library                    # the scenarios and suites
-shape pack run library:nulls_injected        # run one; exit 0 when it meets its answer key
-shape suite run smoke                        # a suite; exit 0 when every scenario met its key
-shape suite run schema-evolution --scale tiny --json
-```
+[Run this example](#local-example-0).
+
 
 All the scenarios use the `retail` domain (the one built-in domain; `pip install
 'sqllocks-shape[domains]'`). A scenario runs at the scale you give (a preset of the domain, such as
@@ -159,3 +174,74 @@ own file, whose scenarios are library names.
 
 A scenario that does not meet its key is a bug in the scenario, the key or Shape; do not loosen the
 key to make it pass.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape pack list --library                    # the scenarios and suites
+shape pack run library:nulls_injected        # run one; exit 0 when it meets its answer key
+shape suite run smoke                        # a suite; exit 0 when every scenario met its key
+shape suite run schema-evolution --scale tiny --json
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    domain    id                          description
+    retail    clean_baseline              Retail generated as is: every validation gate passes
+    retail    nulls_injected              About 8% of customer last names are null although the column is not nullable: the null check must fail and nothing else may
+    retail    duplicate_rows              Return rows take over the primary key of another return, so keys repeat: the uniqueness gate must fail; the references into the table stay intact
+    retail    orphaned_foreign_keys       About 3% of orders point at a customer that does not exist: the referential integrity gate must fail
+    retail    late_arriving_data          About 10% of orders carry an order date 45 days before the rest of the batch, as when a late feed lands behind newer data
+    retail    schema_add_column           A column appears on a schedule: orders gain a channel on day 5
+    retail    schema_rename_column        A column is renamed on a schedule: order status becomes order_status on day 5
+    retail    schema_drop_column          A column disappears on a schedule: stores lose their state on day 5
+    retail    schema_retype_column        A column changes type on a schedule: the customer active flag turns from the text true or false into an integer on day 5
+    retail    schema_evolution_schedule   All four schema changes on one schedule: a column is added on day 5, one renamed on day 10, one dropped on day 15 and one retyped on day 20
+    retail    null_flood                  About 60% of customer last names are null although the column is not nullable: far beyond a stray missing value, as when a source column stops being filled
+    retail    unit_change                 From the middle of the batch on, order totals are 100 times larger, as when a feed switches from dollars to cents
+    retail    truncated_strings           About 40% of customer emails are cut to five characters, as when a column is loaded into a narrower one
+    retail    placeholder_values          About 20% of customer first names are the text N/A, as when a form fills a required field with a stand-in
+    retail    encoding_corruption         About 30% of customer emails end in the characters that UTF-8 text turns into when it is read as Latin-1
+    retail    volume_spike                The order table carries ten times as many rows as it should, as when a retry loop re-sends a batch
+    retail    empty_load                  The order table arrives with no rows, as when an upstream job succeeds without writing
+    retail    partial_load                The order table arrives with a single row, as when a job is cut short
+    retail    out_of_order_events         Every order date is swapped with another order's, so the dates no longer follow the order in which the rows arrived
+    retail    timezone_offset             Every order date moves eight hours later, as when a writer starts to emit UTC instead of local time
+    retail    dst_boundary                About 30% of order dates are moved onto the hours around the daylight-saving changes of 2024 and 2025
+    retail    concept_drift               Customer addresses keep their cities and states, but the cities are swapped between rows, so a city no longer implies its state
+    retail    class_imbalance_shift       Orders that were mostly completed become mostly cancelled from day 5: the mix of order statuses moves, and no value is new
+    retail    new_category_values         A status that no order had before, lost, appears on day 5 for 15% of the orders
+    retail    null_rate_creep             The share of customers without a last name climbs to 40% over ten days, starting on day 5
+    retail    numeric_shift               Product unit prices are 1.8 times larger from day 5, as when prices are raised or a unit changes
+    retail    late_backfill               About 20% of orders carry an order date 200 days before the rest of the batch, as when a backfill lands in the live table
+    retail    detective_text_trouble      Customer emails end in the characters that UTF-8 text turns into when it is read as Latin-1, and half of the customer last names are cut to three characters
+    retail    detective_renovations       Four schema changes at once, one in each of four tables: order status is renamed, store state is dropped, the customer active flag turns into an integer and products gain a channel
+    retail    detective_clocks_and_keys   Order dates arrive 200 days late for 20% of the rows and every date is eight hours off; return ids repeat; address cities are swapped between rows
+    suites: failure-modes, schema-evolution, smoke (shape suite run NAME)
+    nulls_injected (retail, scale small, seed 42)
+      gate schema_conformance: PASS
+      gate referential_integrity: PASS
+      gate row_count: PASS
+      gate null_check: FAIL (customer.last_name has nulls)
+      gate uniqueness: PASS
+      defect inject_nulls: 80 rows
+    answer key: met
+    suite smoke (scale small)
+      ok   clean_baseline (0.5s)
+      ok   nulls_injected (0.1s)
+      ok   duplicate_rows (0.1s)
+      ok   orphaned_foreign_keys (0.1s)
+      ok   schema_add_column (0.5s)
+    5 of 5 scenarios met their answer key
+    {"met": true, "scale": "tiny", "scenarios": [{"met": true, "mismatches": [], "outcome": {"defects": {}, "domain": "retail", "drift": [{"between": [0, 10], "changes": [{"column": "order.(rows)", "kind": "implausible_rate_change"}, {"column": "order.channel", "kind": "column_added"}, {"column": "order.customer_id", "kind": "cardinality_change"}, {"column": "order.customer_id", "kind": "mean_shift"}, {"column": "order.customer_id", "kind": "new_categorical_values"}, {"column": "order.customer_id", "kind": "spread_change"}, {"column": "order.customer_id ~ shipping_address_id", "kind": "association_shift"}, {"column": "order.customer_id ~ store_id", "kind": "association_shift"}, {"column": "order.order_date", "kind": "day_of_week_change"}, {"column": "order.order_date", "kind": "hour_of_day_change"}, {"column": "order.order_date", "kind": "placeholder_surge"}, {"column": "order.order_total", "kind": "spread_change"}, {"column": "order.promotion_id ~ status", "kind": "association_shift"}, {"column": "order.shipping_address_id", "kind": "distribution_change"}, {"column": "order.shipping_address_id", "kind": "distribution_shift"}, {"column": "order.shipping_address_id", "kind": "mean_shift"}, {"column": "order.shipping_address_id", "kind": "null_rate_change"}, {"column": "order.shipping_address_id ~ order_total", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ store_id", "kind": "association_shift"}, {"column": "order.status", "kind": "category_shift"}, {"column": "order.status ~ order_total", "kind": "association_shift"}, {"column": "order.store_id", "kind": "new_categorical_values"}, {"column": "order.store_id ~ customer_id", "kind": "association_shift"}, {"column": "order.store_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.store_id ~ shipping_address_id", "kind": "association_shift"}]}], "elapsed_seconds": 0.496, "files": [], "gate_messages": {}, "gates": {}, "scale": "tiny", "scenario": "schema_add_column", "seed": 42}, "scenario": "schema_add_column"}, {"met": true, "mismatches": [], "outcome": {"defects": {}, "domain": "retail", "drift": [{"between": [0, 10], "changes": [{"column": "order.(rows)", "kind": "implausible_rate_change"}, {"column": "order.customer_id", "kind": "cardinality_change"}, {"column": "order.customer_id", "kind": "mean_shift"}, {"column": "order.customer_id", "kind": "new_categorical_values"}, {"column": "order.customer_id", "kind": "spread_change"}, {"column": "order.customer_id ~ shipping_address_id", "kind": "association_shift"}, {"column": "order.customer_id ~ store_id", "kind": "association_shift"}, {"column": "order.order_date", "kind": "day_of_week_change"}, {"column": "order.order_date", "kind": "hour_of_day_change"}, {"column": "order.order_date", "kind": "placeholder_surge"}, {"column": "order.order_status", "kind": "column_added"}, {"column": "order.order_total", "kind": "spread_change"}, {"column": "order.shipping_address_id", "kind": "distribution_change"}, {"column": "order.shipping_address_id", "kind": "distribution_shift"}, {"column": "order.shipping_address_id", "kind": "mean_shift"}, {"column": "order.shipping_address_id", "kind": "null_rate_change"}, {"column": "order.shipping_address_id ~ order_total", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ store_id", "kind": "association_shift"}, {"column": "order.status", "kind": "column_removed"}, {"column": "order.store_id", "kind": "new_categorical_values"}, {"column": "order.store_id ~ customer_id", "kind": "association_shift"}, {"column": "order.store_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.store_id ~ shipping_address_id", "kind": "association_shift"}]}], "elapsed_seconds": 0.204, "files": [], "gate_messages": {}, "gates": {}, "scale": "tiny", "scenario": "schema_rename_column", "seed": 42}, "scenario": "schema_rename_column"}, {"met": true, "mismatches": [], "outcome": {"defects": {}, "domain": "retail", "drift": [{"between": [0, 10], "changes": [{"column": "store.state", "kind": "column_removed"}]}], "elapsed_seconds": 0.082, "files": [], "gate_messages": {}, "gates": {}, "scale": "tiny", "scenario": "schema_drop_column", "seed": 42}, "scenario": "schema_drop_column"}, {"met": true, "mismatches": [], "outcome": {"defects": {}, "domain": "retail", "drift": [{"between": [0, 10], "changes": [{"column": "customer.is_active", "kind": "dtype_change"}, {"column": "customer.is_active", "kind": "true_rate_change"}]}], "elapsed_seconds": 0.135, "files": [], "gate_messages": {}, "gates": {}, "scale": "tiny", "scenario": "schema_retype_column", "seed": 42}, "scenario": "schema_retype_column"}, {"met": true, "mismatches": [], "outcome": {"defects": {}, "domain": "retail", "drift": [{"between": [0, 7], "changes": [{"column": "order.(rows)", "kind": "implausible_rate_change"}, {"column": "order.channel", "kind": "column_added"}, {"column": "order.customer_id", "kind": "new_categorical_values"}, {"column": "order.customer_id ~ order_date", "kind": "association_shift"}, {"column": "order.customer_id ~ order_total", "kind": "association_shift"}, {"column": "order.customer_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.customer_id ~ shipping_address_id", "kind": "association_shift"}, {"column": "order.customer_id ~ status", "kind": "association_shift"}, {"column": "order.customer_id, store_id -> shipping_address_id", "kind": "dependency_broken"}, {"column": "order.order_date", "kind": "day_of_week_change"}, {"column": "order.order_date", "kind": "hour_of_day_change"}, {"column": "order.order_total", "kind": "new_categorical_values"}, {"column": "order.order_total", "kind": "placeholder_surge"}, {"column": "order.order_total ~ promotion_id", "kind": "association_shift"}, {"column": "order.order_total ~ shipping_address_id", "kind": "association_shift"}, {"column": "order.order_total ~ store_id", "kind": "association_shift"}, {"column": "order.promotion_id ~ customer_id", "kind": "association_shift"}, {"column": "order.shipping_address_id", "kind": "mean_shift"}, {"column": "order.shipping_address_id", "kind": "null_rate_change"}, {"column": "order.shipping_address_id -> customer_id", "kind": "dependency_broken"}, {"column": "order.shipping_address_id ~ order_date", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ order_total", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ store_id", "kind": "association_shift"}, {"column": "order.status ~ order_total", "kind": "association_shift"}, {"column": "order.status ~ shipping_address_id", "kind": "association_shift"}, {"column": "order.store_id", "kind": "new_categorical_values"}, {"column": "order.store_id ~ customer_id", "kind": "association_shift"}, {"column": "order.store_id ~ order_date", "kind": "association_shift"}, {"column": "order.store_id ~ order_total", "kind": "association_shift"}, {"column": "order.store_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.store_id ~ shipping_address_id", "kind": "association_shift"}, {"column": "store.city ~ state", "kind": "association_shift"}, {"column": "store.state", "kind": "new_categorical_values"}, {"column": "store.store_type ~ state", "kind": "association_shift"}]}, {"between": [0, 12], "changes": [{"column": "order.channel", "kind": "column_added"}, {"column": "order.customer_id", "kind": "new_categorical_values"}, {"column": "order.customer_id ~ order_date", "kind": "association_shift"}, {"column": "order.customer_id ~ shipping_address_id", "kind": "association_shift"}, {"column": "order.order_date", "kind": "cardinality_change"}, {"column": "order.order_date", "kind": "day_of_week_change"}, {"column": "order.order_date", "kind": "hour_of_day_change"}, {"column": "order.order_date", "kind": "placeholder_surge"}, {"column": "order.order_status", "kind": "column_added"}, {"column": "order.promotion_id ~ order_date", "kind": "association_shift"}, {"column": "order.shipping_address_id", "kind": "cardinality_change"}, {"column": "order.shipping_address_id", "kind": "category_shift"}, {"column": "order.shipping_address_id", "kind": "new_categorical_values"}, {"column": "order.shipping_address_id", "kind": "null_rate_change"}, {"column": "order.shipping_address_id", "kind": "outlier_rate_change"}, {"column": "order.shipping_address_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ store_id", "kind": "association_shift"}, {"column": "order.status", "kind": "column_removed"}, {"column": "order.store_id", "kind": "new_categorical_values"}, {"column": "order.store_id ~ order_total", "kind": "association_shift"}, {"column": "order.store_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.store_id ~ shipping_address_id", "kind": "association_shift"}, {"column": "store.state", "kind": "new_categorical_values"}]}, {"between": [0, 17], "changes": [{"column": "order.channel", "kind": "column_added"}, {"column": "order.customer_id", "kind": "cardinality_change"}, {"column": "order.customer_id", "kind": "new_categorical_values"}, {"column": "order.customer_id ~ order_date", "kind": "association_shift"}, {"column": "order.customer_id ~ order_total", "kind": "association_shift"}, {"column": "order.customer_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.customer_id ~ store_id", "kind": "association_shift"}, {"column": "order.order_date", "kind": "cardinality_change"}, {"column": "order.order_date", "kind": "day_of_week_change"}, {"column": "order.order_date", "kind": "hour_of_day_change"}, {"column": "order.order_status", "kind": "column_added"}, {"column": "order.order_total", "kind": "new_categorical_values"}, {"column": "order.order_total", "kind": "spread_change"}, {"column": "order.promotion_id ~ customer_id", "kind": "association_shift"}, {"column": "order.promotion_id ~ order_total", "kind": "association_shift"}, {"column": "order.shipping_address_id", "kind": "cardinality_change"}, {"column": "order.shipping_address_id", "kind": "category_shift"}, {"column": "order.shipping_address_id", "kind": "distribution_change"}, {"column": "order.shipping_address_id", "kind": "mean_shift"}, {"column": "order.shipping_address_id", "kind": "new_categorical_values"}, {"column": "order.shipping_address_id", "kind": "null_rate_change"}, {"column": "order.shipping_address_id ~ order_total", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ store_id", "kind": "association_shift"}, {"column": "order.status", "kind": "column_removed"}, {"column": "order.store_id", "kind": "new_categorical_values"}, {"column": "order.store_id ~ order_total", "kind": "association_shift"}, {"column": "order.store_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.store_id ~ shipping_address_id", "kind": "association_shift"}, {"column": "store.state", "kind": "column_removed"}]}, {"between": [0, 29], "changes": [{"column": "customer.is_active", "kind": "dtype_change"}, {"column": "customer.is_active", "kind": "true_rate_change"}, {"column": "order.channel", "kind": "column_added"}, {"column": "order.customer_id", "kind": "cardinality_change"}, {"column": "order.customer_id", "kind": "new_categorical_values"}, {"column": "order.customer_id ~ order_date", "kind": "association_shift"}, {"column": "order.customer_id ~ shipping_address_id", "kind": "association_shift"}, {"column": "order.customer_id, store_id -> shipping_address_id", "kind": "dependency_broken"}, {"column": "order.order_date", "kind": "cardinality_change"}, {"column": "order.order_date", "kind": "day_of_week_change"}, {"column": "order.order_date", "kind": "hour_of_day_change"}, {"column": "order.order_status", "kind": "column_added"}, {"column": "order.order_total", "kind": "new_categorical_values"}, {"column": "order.order_total", "kind": "spread_change"}, {"column": "order.promotion_id ~ order_total", "kind": "association_shift"}, {"column": "order.shipping_address_id", "kind": "mean_shift"}, {"column": "order.shipping_address_id", "kind": "new_categorical_values"}, {"column": "order.shipping_address_id", "kind": "null_rate_change"}, {"column": "order.shipping_address_id -> customer_id", "kind": "dependency_broken"}, {"column": "order.shipping_address_id ~ order_date", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ order_total", "kind": "association_shift"}, {"column": "order.shipping_address_id ~ store_id", "kind": "association_shift"}, {"column": "order.status", "kind": "column_removed"}, {"column": "order.store_id", "kind": "new_categorical_values"}, {"column": "order.store_id ~ customer_id", "kind": "association_shift"}, {"column": "order.store_id ~ order_date", "kind": "association_shift"}, {"column": "order.store_id ~ order_total", "kind": "association_shift"}, {"column": "order.store_id ~ promotion_id", "kind": "association_shift"}, {"column": "order.store_id ~ shipping_address_id", "kind": "association_shift"}, {"column": "store.state", "kind": "column_removed"}]}], "elapsed_seconds": 0.905, "files": [], "gate_messages": {}, "gates": {}, "scale": "tiny", "scenario": "schema_evolution_schedule", "seed": 42}, "scenario": "schema_evolution_schedule"}], "suite": "schema-evolution", "format": "shape-result", "version": 1, "command": "suite run", "exit_code": 0}
+    ```

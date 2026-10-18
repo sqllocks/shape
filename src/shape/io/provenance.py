@@ -45,6 +45,7 @@ def is_ignored(path: str | Path) -> bool:
 
 
 def sha256_file(path: str | Path) -> str:
+    """Return the SHA-256 hex digest of a file read in bounded chunks."""
     digest = hashlib.sha256()
     with open(path, "rb") as f:
         for block in iter(lambda: f.read(1 << 20), b""):
@@ -164,16 +165,19 @@ def has_synthetic_marker(path: str | Path) -> bool:
     return SYNTHETIC_KEY in metadata
 
 
-def verify_file(path: str | Path) -> str:
+def verify_file(path: str | Path, *, folder: str | Path | None = None) -> str:
     """:data:`VERIFIED` when ``path`` is listed with a matching SHA-256 in its folder's sidecar or
     is a Parquet file with the ``shape_synthetic`` marker; :data:`CHANGED` when it is listed but
-    its bytes differ; :data:`UNMARKED` otherwise."""
+    its bytes differ; :data:`UNMARKED` otherwise. ``folder`` selects a landing root whose
+    sidecar lists nested files by their relative paths."""
     file = Path(path)
-    record = read_provenance(file.parent)
+    root = Path(folder) if folder is not None else file.parent
+    relative = file.resolve().relative_to(root.resolve()).as_posix()
+    record = read_provenance(root)
     listed = False
     if record is not None:
         for entry in record["files"]:
-            if isinstance(entry, dict) and entry.get("path") == file.name:
+            if isinstance(entry, dict) and entry.get("path") == relative:
                 listed = True
                 if entry.get("sha256") == sha256_file(file):
                     return VERIFIED

@@ -32,6 +32,7 @@ class BoundingBox:
 
 
 def haversine_km(a: GeoPoint, b: GeoPoint) -> float:
+    """Return great-circle distance between two geographic points in kilometres."""
     r = 6371.0088
     p1, p2 = radians(a.latitude), radians(b.latitude)
     dp = radians(b.latitude - a.latitude)

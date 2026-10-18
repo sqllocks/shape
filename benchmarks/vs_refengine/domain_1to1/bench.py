@@ -1,20 +1,19 @@
-"""Fair benchmark harness: generate + write Parquet, RefEngine vs an implementation.
+"""Fair benchmark harness: generate + write Parquet, Shape release vs an implementation.
 
     source scripts/env.sh
     "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/bench.py \\
-        --impl reference_port|shape --domain retail --scales medium,large --runs 3
+        --impl shape --domain retail --scales medium,large --runs 3
 
-Every run is a fresh subprocess of ``generate.py`` in the tool's own venv (RefEngine's, or
+Every run is a fresh subprocess of ``generate.py`` in the tool's own venv (Shape release's, or
 Shape's), so the timed region is the same code path that the verifier's inputs come from:
 
     construct domain / load config + reference data + pools
   + generate all tables (incl. compute phase + business-rule fixing)
   + write each table to Parquet
-      RefEngine: PandasWriter.to_parquet (the `refengine generate --format parquet` path)
-      impl:    reference_port: sequential pyarrow write_table, snappy; shape: product path
+      Both tools: the same Shape Engine and sequential PyArrow Parquet writer.
 
 Library imports happen before the timed region for both (reported separately). The timed
-runs write the layout directories ``$BENCH_OUT_DIR/<impl>/<domain>/<scale>/seed42`` (RefEngine)
+runs write the layout directories ``$BENCH_OUT_DIR/<impl>/<domain>/<scale>/seed42`` (Shape release)
 and ``seed1042`` (impl); each run replaces the previous directory, so no cache survives
 between runs, and those same directories are then verified (run.py runs verify.py on them).
 Tools are interleaved run-by-run; the median of --runs runs is reported. The whole run holds
@@ -32,14 +31,16 @@ import statistics
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 import generate  # noqa: E402
 from common import bench_lock, machine_meta, wait_for_quiet  # noqa: E402
-from paths import BENCH_OUT_DIR, REFENGINE_PY, SHAPE_PY  # noqa: E402
+from paths import BASELINE_PY, BENCH_OUT_DIR, SHAPE_PY  # noqa: E402
 
+BASELINE_ONLY = False
 REF_SEED = 42
 IMPL_SEED = 1042
 SUMMARY_KEYS = (
@@ -60,16 +61,16 @@ def other_procs_cores(before: float, after: float) -> float:
     return max(0.0, after - before)
 
 
-def run_once(tool: str, impl: str, domain: str, scale: str) -> dict:
-    """One timed run in a fresh process. ``tool`` is 'refengine' or the impl name."""
-    py = REFENGINE_PY if tool == "refengine" else SHAPE_PY
-    seed = REF_SEED if tool == "refengine" else IMPL_SEED
+def run_once(tool: str, impl: str, domain: str, scale: str) -> dict[str, Any]:
+    """One timed run in a fresh process. ``tool`` is 'baseline' or the impl name."""
+    py = BASELINE_PY if tool == "baseline" else SHAPE_PY
+    seed = REF_SEED if tool == "baseline" else IMPL_SEED
     load = wait_for_quiet()
     cmd = [
         str(py),
         str(HERE / "generate.py"),
         "--impl",
-        tool,
+        "shape",
         "--domain",
         domain,
         "--scale",
@@ -77,23 +78,33 @@ def run_once(tool: str, impl: str, domain: str, scale: str) -> dict:
         "--seed",
         str(seed),
     ]
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    env = dict(os.environ)
+    if tool == "baseline":
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+    r = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    if r.returncode:
+        tail = "\n".join((r.stdout + "\n" + r.stderr).splitlines()[-200:])
+        print(
+            f"generate:{domain}:{scale}: command {' '.join(cmd)}; exit {r.returncode}\n{tail}",
+            file=sys.stderr,
+        )
     if r.returncode == 2:
         raise generate.Unsupported(r.stderr.strip())
     if r.returncode != 0:
-        raise RuntimeError(f"{' '.join(cmd)} failed:\n{r.stderr[-2000:]}")
+        raise RuntimeError(f"generation process failed (exit {r.returncode})")
     line = next(ln for ln in reversed(r.stdout.splitlines()) if ln.startswith("GEN_JSON "))
     rec = json.loads(line[len("GEN_JSON ") :])
     rec["loadavg_before"] = load
-    return rec
+    return cast(dict[str, Any], rec)
 
 
-def summarize(runs: list[dict]) -> dict:
+def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
     def med(k: str) -> float:
-        return statistics.median(r[k] for r in runs)
+        return float(statistics.median(r[k] for r in runs))
 
     rows = sum(runs[0]["rows"].values())
-    s = {k: med(k) for k in SUMMARY_KEYS}
+    s: dict[str, Any] = {k: med(k) for k in SUMMARY_KEYS}
     s["rows"] = rows
     s["rows_per_s_total"] = rows / s["total_s"]
     s["rows_per_s_generate"] = rows / s["gen_s"]
@@ -112,8 +123,8 @@ def summarize(runs: list[dict]) -> dict:
 
 def bench(
     impl: str, domain: str, scales: list[str], runs: int, report: Path, warmup: int = 0
-) -> dict:
-    results: dict = {
+) -> dict[str, Any]:
+    results: dict[str, Any] = {
         "meta": {
             **machine_meta(),
             "impl": impl,
@@ -126,10 +137,10 @@ def bench(
         },
         "scales": {},
     }
-    tools = ["refengine", impl]
+    tools = ["baseline"] if BASELINE_ONLY else ["baseline", impl]
     with bench_lock():
         for scale in scales:
-            raw: dict[str, list] = {t: [] for t in tools}
+            raw: dict[str, list[Any]] = {t: [] for t in tools}
             for i in range(warmup):  # T-19: discarded warm-up runs, fresh processes like the rest
                 for t in tools:
                     r = run_once(t, impl, domain, scale)
@@ -156,7 +167,7 @@ def bench(
     return results
 
 
-def print_table(results: dict) -> None:
+def print_table(results: dict[str, Any]) -> None:
     m = results["meta"]
     for scale, d in results["scales"].items():
         S = d["summary"]
@@ -175,20 +186,21 @@ def print_table(results: dict) -> None:
                 f"{s['rows_per_s_generate']:>12,.0f} {s['peak_rss_mb']:>12.0f}"
             )
         impl = m["impl"]
-        if "refengine" in S and impl in S:
-            line = f"speedup ({impl} vs refengine): total "
-            line += f"{S['refengine']['total_s'] / S[impl]['total_s']:.2f}x"
+        if "baseline" in S and impl in S:
+            line = f"speedup ({impl} vs baseline): total "
+            line += f"{S['baseline']['total_s'] / S[impl]['total_s']:.2f}x"
             if S[impl]["write_s"] > 0:  # an impl that overlaps generate and write reports no split
                 line += (
-                    f", generate {S['refengine']['gen_s'] / S[impl]['gen_s']:.2f}x, write "
-                    f"{S['refengine']['write_s'] / S[impl]['write_s']:.2f}x"
+                    f", generate {S['baseline']['gen_s'] / S[impl]['gen_s']:.2f}x, write "
+                    f"{S['baseline']['write_s'] / S[impl]['write_s']:.2f}x"
                 )
             print(line)
 
 
 def main(argv: list[str] | None = None) -> int:
+    global BASELINE_ONLY
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--impl", choices=["reference_port", "shape"], required=True)
+    ap.add_argument("--impl", choices=["shape"], required=True)
     ap.add_argument("--domain", default="retail")
     ap.add_argument("--scales", default="medium")
     ap.add_argument("--runs", type=int, default=3)
@@ -200,7 +212,9 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="results JSON (default: $BENCH_OUT_DIR/bench/<impl>_<domain>.json)",
     )
+    ap.add_argument("--baseline-only", action="store_true")
     a = ap.parse_args(argv)
+    BASELINE_ONLY = a.baseline_only
     report = Path(a.report) if a.report else BENCH_OUT_DIR / "bench" / f"{a.impl}_{a.domain}.json"
     try:
         bench(a.impl, a.domain, a.scales.split(","), a.runs, report, a.warmup)

@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import subprocess
 import sys
 from collections import OrderedDict
+from pathlib import Path
 
 import numpy as np
 import pyarrow as pa
@@ -372,18 +374,30 @@ def test_snapshot_restore_continues_exactly():
 # ------------------------------------------------------------- at scale
 
 _SCALE = """
-import sys, time
+import json, sys, time
 import numpy as np
 from shape.streaming.dedupe import Deduplicator
 from shape.streaming.keyed import KeyedSketches
 
-def peak_rss():
+def resident_rss():
+    # Sample retained state at completed-batch boundaries. A lifetime high-water mark
+    # also includes transient sorting/hash buffers and allocator-unused pages.
+    import gc
+    import pyarrow as pa
+    from shape.profile._memory import release_unused
+    gc.collect()
+    release_unused(pa.default_memory_pool())
     if sys.platform.startswith("linux"):
-        return int(open("/proc/self/status").read().split("VmHWM:")[1].split()[0]) * 1024
-    if sys.platform == "darwin":
-        import resource
-        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return int(open("/proc/self/status").read().split("VmRSS:")[1].split()[0]) * 1024
     import ctypes
+    if sys.platform == "darwin":
+        # Live heap bytes from the interposer the test loads (live_heap_peak_darwin.c).
+        # Resident size here includes ~0.5 GB of freed pages the allocator keeps, and swings
+        # by more than the tolerance between identical runs. An AttributeError means the
+        # interposer did not load: fail, never fall back.
+        live = ctypes.CDLL(None).rss_live_current
+        live.restype = ctypes.c_int64
+        return live()
     from ctypes import wintypes as w
     class C(ctypes.Structure):
         _fields_ = [("cb", w.DWORD), ("faults", w.DWORD)] + [
@@ -393,14 +407,37 @@ def peak_rss():
     p = ctypes.windll.psapi
     p.GetProcessMemoryInfo.argtypes = [w.HANDLE, ctypes.c_void_p, w.DWORD]
     assert p.GetProcessMemoryInfo(k.GetCurrentProcess(), ctypes.byref(c), c.cb)
-    return c.peak
+    return c.ws
+
+def peak_heap():
+    # macOS only: the lifetime high-water mark of live heap bytes, so a transient that grows
+    # after the checkpoint still counts. Other platforms compare retained memory alone.
+    if sys.platform != "darwin":
+        return 0
+    import ctypes
+    peak = ctypes.CDLL(None).rss_live_peak
+    peak.restype = ctypes.c_int64
+    return peak()
 
 events, keys, batch = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
 checkpoint = int(sys.argv[4])
 rng = np.random.default_rng(7)
 sketches = KeyedSketches(max_keys=keys + keys // 8, ttl=float(keys))  # TTL in event-time seconds
 dedupe = Deduplicator(max_keys=keys + keys // 8)
-done, at_checkpoint, kept = 0, None, 0
+
+def state_bytes():
+    return json.dumps({
+        "events": done,
+        "live": len(sketches),
+        "held": len(dedupe),
+        "sketch_arrays": sketches.nbytes,
+        "dedupe_arrays": dedupe.nbytes,
+        "index": sys.getsizeof(sketches._index),
+        "free_slots": len(sketches._free),
+        "free_list": sys.getsizeof(sketches._free),
+    })
+
+done, at_checkpoint, peak_at_checkpoint, kept = 0, None, None, 0
 while done < events:
     n = min(batch, events - done)
     k = rng.integers(0, keys, n)
@@ -409,21 +446,45 @@ while done < events:
     kept += int(dedupe.filter(k).sum())
     done += n
     if at_checkpoint is None and done >= checkpoint:
-        at_checkpoint = peak_rss()
-print(at_checkpoint, peak_rss(), len(sketches), len(dedupe), kept)
+        at_checkpoint = resident_rss()
+        peak_at_checkpoint = peak_heap()
+        print("checkpoint state: " + state_bytes(), file=sys.stderr)
+print("final state: " + state_bytes(), file=sys.stderr)
+print(at_checkpoint, resident_rss(), len(sketches), len(dedupe), kept,
+      peak_at_checkpoint, peak_heap())
 """
 
 
+def _live_heap_env(tmp_path):
+    """macOS only: an environment that loads the live-heap interposer into the child, built
+    from tests/profile/live_heap_peak_darwin.c with clang. PYTHONMALLOC=malloc sends the
+    interpreter's own objects through the counted heap. None elsewhere."""
+    if sys.platform != "darwin":
+        return None
+    dylib = tmp_path / "live_heap_peak.dylib"
+    source = Path(__file__).parents[1] / "profile" / "live_heap_peak_darwin.c"
+    subprocess.run(["clang", "-dynamiclib", "-O2", "-o", str(dylib), str(source)], check=True)
+    return {**os.environ, "DYLD_INSERT_LIBRARIES": str(dylib), "PYTHONMALLOC": "malloc"}
+
+
 @pytest.mark.heavy
-def test_memory_does_not_grow_after_ten_million_events():
-    """Across 10^8 events and 10^6 keys, RSS grows at most 10% after the first 10^7 events.
-    The per-key sketches (with a TTL) and the deduplicator are both under their caps."""
+def test_memory_does_not_grow_after_ten_million_events(tmp_path):
+    """Across 10^8 events and 10^6 keys, retained memory grows at most 10% after the first
+    10^7 events. The per-key sketches (with a TTL) and the deduplicator are both under their
+    caps. Linux and Windows read RSS. macOS reads live heap bytes (resident size there holds
+    freed pages and varied by up to 14% on identical state) and also requires the live-heap
+    peak not to grow by more than 10% after the checkpoint."""
     r = subprocess.run(
         [sys.executable, "-c", _SCALE, str(10**8), str(10**6), str(2**20), str(10**7)],
         capture_output=True,
         text=True,
         check=True,
+        env=_live_heap_env(tmp_path),
     )
-    at_ten_million, final, live, held, kept = (int(x) for x in r.stdout.split())
-    assert final <= at_ten_million * 1.10, (at_ten_million, final)
+    at_ten_million, final, live, held, kept, peak_at_ten_million, peak = (
+        int(x) for x in r.stdout.split()
+    )
+    assert final <= at_ten_million * 1.10, (at_ten_million, final, r.stderr)
+    if sys.platform == "darwin":
+        assert peak <= peak_at_ten_million * 1.10, (peak_at_ten_million, peak, r.stderr)
     assert live <= 1_125_000 and held <= 1_125_000 and 0 < kept <= 10**6

@@ -680,6 +680,8 @@ class Snapshot:
 
 @dataclass
 class TimeTravelResult:
+    """A generated snapshot, its time and the applied incremental changes."""
+
     snapshots: list[Snapshot]
     domain_name: str
     config: TimeTravelConfig

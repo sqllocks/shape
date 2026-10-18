@@ -1,0 +1,35 @@
+name: External documentation links
+on:
+  schedule:
+    - cron: '21 3 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.12"
+          enable-cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - run: uv sync --locked --group docs
+      - run: uv run --locked --no-sync python scripts/check_docs_requirements.py
+      - run: uv run --locked --no-sync mkdocs build --strict
+      # --root-dir resolves the root-relative links of the 404 page; the site's own domain
+      # (site_url) is excluded because its pages are checked here as files and it is only
+      # published from a release tag.
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress --max-retries 3 --timeout 30
+            --root-dir ${{ github.workspace }}/site
+            --exclude '^https://docs\.shapedata\.ai/'
+            site/**/*.html site/*.html
+          fail: true

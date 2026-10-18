@@ -6,6 +6,7 @@ Both operate on :class:`shape.profile.reference.Profile` objects. The rule vocab
 
 from __future__ import annotations
 
+import difflib
 import json
 import math
 from dataclasses import dataclass, field, replace
@@ -72,6 +73,10 @@ _COLUMN_RULES = {
 
 class ContractError(ValueError):
     """The contract itself is malformed."""
+
+
+class ContractRuleError(ContractError):
+    """A contract names an unknown rule or gives a rule a malformed value."""
 
 
 @dataclass
@@ -159,7 +164,7 @@ def _validate_data_rules(contract: dict[str, Any], *, top: bool) -> None:
         try:
             validators[key](contract[key])
         except ValueError as exc:
-            raise ContractError(str(exc)) from exc
+            raise ContractRuleError(str(exc)) from exc
 
 
 def _validate_contract(contract: dict[str, Any], *, top: bool = True) -> None:
@@ -182,7 +187,7 @@ def _validate_contract(contract: dict[str, Any], *, top: bool = True) -> None:
         _check_strength(rc["strength"], "row_count")
     for key, value in rc.items():
         if key != "strength" and not _is_finite_number(value):
-            raise ContractError(f"row_count.{key} must be a number, not {value!r}")
+            raise ContractRuleError(f"row_count.{key} must be a number, not {value!r}")
     columns = contract.get("columns", {})
     if not isinstance(columns, dict):
         raise ContractError("'columns' must be an object")
@@ -191,17 +196,23 @@ def _validate_contract(contract: dict[str, Any], *, top: bool = True) -> None:
             raise ContractError(f"rules for column {name!r} must be an object")
         bad = set(rules) - _COLUMN_RULES
         if bad:
-            raise ContractError(f"unknown rules for column {name!r}: {sorted(bad)}")
+            hints = []
+            for key in sorted(bad):
+                close = difflib.get_close_matches(key, sorted(_COLUMN_RULES), n=1, cutoff=0.6)
+                if close:
+                    hints.append(f"did you mean '{close[0]}' for '{key}'?")
+            hint = f" ({'; '.join(hints)})" if hints else ""
+            raise ContractRuleError(f"unknown rules for column {name!r}: {sorted(bad)}{hint}")
         if "strength" in rules:
             _validate_column_strength(name, rules)
         _validate_column_rules(name, rules)
     if "allow_extra_columns" in contract and not isinstance(contract["allow_extra_columns"], bool):
-        raise ContractError(
+        raise ContractRuleError(
             f"allow_extra_columns must be true or false, not {contract['allow_extra_columns']!r}"
         )
     required = contract.get("required_columns", [])
     if not isinstance(required, list) or not all(isinstance(c, str) for c in required):
-        raise ContractError("'required_columns' must be a list of column names")
+        raise ContractRuleError("'required_columns' must be a list of column names")
     for name, rules in columns.items():
         _validate_no_placeholder(name, rules)
         _validate_valid_as(name, rules)
@@ -212,16 +223,22 @@ def _validate_contract(contract: dict[str, Any], *, top: bool = True) -> None:
 
 def _validate_column_rules(name: str, rules: dict[str, Any]) -> None:
     """The values of one column's rules. Nothing is coerced: ``"false"`` is not ``false``."""
+    for key in ("dtype", "pattern", "distribution"):
+        if key in rules and not isinstance(rules[key], str):
+            # No recognised pattern or fitted distribution is represented by null in profiles.
+            if key in ("pattern", "distribution") and rules[key] is None:
+                continue
+            raise ContractRuleError(f"{key} for column {name!r} must be text, not {rules[key]!r}")
     if "allowed_values" in rules and not isinstance(rules["allowed_values"], list):
-        raise ContractError(f"allowed_values for column {name!r} must be a list")
+        raise ContractRuleError(f"allowed_values for column {name!r} must be a list")
     for key in ("nullable", "unique"):
         if key in rules and not isinstance(rules[key], bool):
-            raise ContractError(
+            raise ContractRuleError(
                 f"{key} for column {name!r} must be true or false, not {rules[key]!r}"
             )
     for key in ("max_null_rate", "min_true_rate", "max_true_rate"):
         if key in rules and not (_is_finite_number(rules[key]) and 0 <= rules[key] <= 1):
-            raise ContractError(
+            raise ContractRuleError(
                 f"{key} for column {name!r} must be a number from 0 to 1, not {rules[key]!r}"
             )
     # A column's ``min`` and ``max`` take any value: one the profile's bound cannot be compared
@@ -259,7 +276,7 @@ def _validate_tables(contract: dict[str, Any], *, top: bool) -> None:
         try:
             _validate_contract(sub, top=False)
         except ContractError as exc:
-            raise ContractError(f"table {tname!r}: {exc}") from exc
+            raise type(exc)(f"table {tname!r}: {exc}") from exc
 
 
 def validate_contract(contract: dict[str, Any]) -> None:
@@ -269,7 +286,7 @@ def validate_contract(contract: dict[str, Any]) -> None:
 
 def _check_strength(value: Any, where: str) -> None:
     if not isinstance(value, str) or value not in STRENGTHS:
-        raise ContractError(
+        raise ContractRuleError(
             f"unknown strength {value!r} for {where}: use one of {', '.join(STRENGTHS)}"
         )
 
@@ -286,13 +303,13 @@ def _validate_column_strength(name: str, rules: dict[str, Any]) -> None:
         _check_strength(value, f"column {name!r}")
         return
     if not isinstance(value, dict):
-        raise ContractError(
+        raise ContractRuleError(
             f"strength for column {name!r} must be one of {', '.join(STRENGTHS)} or an object "
             "from rule name to strength"
         )
     for rule, strength in value.items():
         if rule not in _COLUMN_RULES or rule == "strength":
-            raise ContractError(f"strength for column {name!r} names unknown rule {rule!r}")
+            raise ContractRuleError(f"strength for column {name!r} names unknown rule {rule!r}")
         _check_strength(strength, f"rule {rule!r} of column {name!r}")
 
 
@@ -303,16 +320,16 @@ def _validate_no_placeholder(name: str, rules: dict[str, Any]) -> None:
     if isinstance(rule, bool):
         return
     if not isinstance(rule, dict) or set(rule) - {"max_share", "allow"}:
-        raise ContractError(
+        raise ContractRuleError(
             f"no_placeholder for column {name!r} must be true or an object with 'max_share' "
             "and 'allow'"
         )
     if "max_share" in rule and not (_is_number(rule["max_share"]) and 0 <= rule["max_share"] <= 1):
-        raise ContractError(f"no_placeholder.max_share for column {name!r} must be from 0 to 1")
+        raise ContractRuleError(f"no_placeholder.max_share for column {name!r} must be from 0 to 1")
     if "allow" in rule and not (
         isinstance(rule["allow"], list) and all(isinstance(v, str) for v in rule["allow"])
     ):
-        raise ContractError(f"no_placeholder.allow for column {name!r} must be a list of texts")
+        raise ContractRuleError(f"no_placeholder.allow for column {name!r} must be a list of texts")
 
 
 def _validate_valid_as(name: str, rules: dict[str, Any]) -> None:
@@ -322,17 +339,17 @@ def _validate_valid_as(name: str, rules: dict[str, Any]) -> None:
 
     rule = rules["valid_as"]
     if not isinstance(rule, dict) or set(rule) - {"kind", "min_valid_rate"}:
-        raise ContractError(
+        raise ContractRuleError(
             f"valid_as for column {name!r} must be an object with 'kind' and 'min_valid_rate'"
         )
-    if rule.get("kind") not in KINDS:
-        raise ContractError(
+    if not isinstance(rule.get("kind"), str) or rule["kind"] not in KINDS:
+        raise ContractRuleError(
             f"valid_as for column {name!r}: 'kind' must be one of {', '.join(KINDS)}"
         )
     if "min_valid_rate" in rule and not (
         _is_number(rule["min_valid_rate"]) and 0 <= rule["min_valid_rate"] <= 1
     ):
-        raise ContractError(f"valid_as.min_valid_rate for column {name!r} must be from 0 to 1")
+        raise ContractRuleError(f"valid_as.min_valid_rate for column {name!r} must be from 0 to 1")
 
 
 def _names(value: Any) -> list[str] | None:
@@ -348,7 +365,7 @@ def _validate_reference_pair(contract: dict[str, Any]) -> None:
         return
     rules = contract["reference_pair"]
     if not isinstance(rules, list):
-        raise ContractError("'reference_pair' must be a list of rules")
+        raise ContractRuleError("'reference_pair' must be a list of rules")
     for rule in rules:
         if not isinstance(rule, dict) or set(rule) - {
             "columns",
@@ -356,7 +373,7 @@ def _validate_reference_pair(contract: dict[str, Any]) -> None:
             "min_match_rate",
             "strength",
         }:
-            raise ContractError(
+            raise ContractRuleError(
                 "each 'reference_pair' rule is an object with 'columns', 'reference' and "
                 "'min_match_rate' (and optionally 'strength')"
             )
@@ -365,43 +382,45 @@ def _validate_reference_pair(contract: dict[str, Any]) -> None:
                 rule["strength"], f"the 'reference_pair' rule on {rule.get('columns')!r}"
             )
         if _names(rule.get("columns")) is None or not isinstance(rule.get("reference"), str):
-            raise ContractError(
+            raise ContractRuleError(
                 "reference_pair: 'columns' is a list of column names, 'reference' the name the "
                 "profile gave the reference"
             )
         rate: Any = rule.get("min_match_rate")
         if not (_is_number(rate) and 0 < rate <= 1):
-            raise ContractError("reference_pair needs 'min_match_rate' above 0 and up to 1")
+            raise ContractRuleError("reference_pair needs 'min_match_rate' above 0 and up to 1")
 
 
 def _validate_joint_rules(contract: dict[str, Any]) -> None:
     if "max_implausible_rate" in contract and not (
         _is_number(contract["max_implausible_rate"]) and 0 <= contract["max_implausible_rate"] <= 1
     ):
-        raise ContractError("max_implausible_rate must be a number from 0 to 1")
+        raise ContractRuleError("max_implausible_rate must be a number from 0 to 1")
     _validate_reference_pair(contract)
     for key, needs in (("fd", ("determinant", "dependent")), ("implies", ("if", "then"))):
         if key not in contract:
             continue
         rules = contract[key]
         if not isinstance(rules, list):
-            raise ContractError(f"'{key}' must be a list of rules")
+            raise ContractRuleError(f"'{key}' must be a list of rules")
         for rule in rules:
             if not isinstance(rule, dict) or set(rule) - {*needs, "min_confidence", "strength"}:
-                raise ContractError(
+                raise ContractRuleError(
                     f"each '{key}' rule is an object with {', '.join(repr(n) for n in needs)} "
                     "and 'min_confidence' (and optionally 'strength')"
                 )
             if "strength" in rule:
                 _check_strength(rule["strength"], f"the '{key}' rule {_rule_label(key, rule)}")
             if any(n not in rule for n in needs):
-                raise ContractError(f"a '{key}' rule needs {', '.join(repr(n) for n in needs)}")
+                raise ContractRuleError(f"a '{key}' rule needs {', '.join(repr(n) for n in needs)}")
             conf: Any = rule.get("min_confidence")
             if not (_is_number(conf) and 0 < conf <= 1):
-                raise ContractError(f"a '{key}' rule needs 'min_confidence' above 0 and up to 1")
+                raise ContractRuleError(
+                    f"a '{key}' rule needs 'min_confidence' above 0 and up to 1"
+                )
             if key == "fd":
                 if _names(rule["determinant"]) is None or not isinstance(rule["dependent"], str):
-                    raise ContractError(
+                    raise ContractRuleError(
                         "fd: 'determinant' is a column name or a list of them, 'dependent' a name"
                     )
             else:
@@ -412,7 +431,7 @@ def _validate_joint_rules(contract: dict[str, Any]) -> None:
                         or set(cond) != {"column", "equals"}
                         or not isinstance(cond["column"], str)
                     ):
-                        raise ContractError(
+                        raise ContractRuleError(
                             f"implies: '{side}' is an object with 'column' and 'equals'"
                         )
 
@@ -883,7 +902,9 @@ def diff(
 ) -> DiffResult:
     """Compare two profiles with the documented defaults (``docs/DRIFT.md``).
 
-    ``baseline`` and ``current`` are profiles; a window of the stream profiler works too. A
+    ``baseline`` and ``current`` are profiles; a window of the stream profiler works too.
+    Share-safe exports (``shape-safe-profile``) raise ``ValueError``: diff the ``.shape``
+    captures instead. A
     comparison that needs a value a safe capture left out (see ``shape.save(capture=)``) is listed
     in ``not_evaluable`` and never counted as drift.
     ``thresholds`` overrides the defaults for every column, ``column_thresholds`` for the columns
@@ -903,7 +924,11 @@ def diff(
     ``class`` change them (``docs/DRIFT.md``). ``fail_on`` (one of those classes) sets
     ``DiffResult.failed`` when an unplanned change of that class or a stricter one is reported.
     """
+    from shape.diff._inputs import refuse_safe_profile
     from shape.project.changes import coerce
+
+    refuse_safe_profile(baseline, "baseline")
+    refuse_safe_profile(current, "current")
 
     if fail_on is not None:
         check_fail_on(fail_on)

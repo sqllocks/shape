@@ -298,7 +298,9 @@ class SnowflakeSink(DatabaseSink):
             schema = _cloud.parquet_batch(first).schema
             for index, (group, batch_end) in enumerate(groups()):
                 path = workdir / f"shape_{run}_{index:06d}.parquet"
-                pq.write_table(pa.Table.from_batches(group, schema=schema), path)
+                # The upload must see a finished file with no live writer handle.
+                with pa.OSFile(str(path), "wb") as destination:
+                    pq.write_table(pa.Table.from_batches(group, schema=schema), destination)
                 put_any = True
                 cur.execute(
                     f"PUT {_cloud.string_literal('file://' + path.as_posix())} {stage} "
@@ -323,8 +325,10 @@ class SnowflakeSink(DatabaseSink):
                 if put_any:
                     self._remove(cur, stage, run)
             finally:
-                shutil.rmtree(workdir, ignore_errors=True)
-                cur.close()
+                try:
+                    cur.close()
+                finally:
+                    shutil.rmtree(workdir, ignore_errors=True)
         return loaded
 
     @staticmethod

@@ -77,6 +77,8 @@ def _flat(column: Any) -> pa.Array:
 
 
 class EventPlan:
+    """Create an event sequence from generated tables and ordering options."""
+
     def __init__(
         self,
         engine: Engine,

@@ -42,6 +42,7 @@ class _RateAction(argparse.Action):
 
 
 def add_arguments(sub: Any) -> None:
+    """Add the emit command options to an argparse parser."""
     em = sub.add_parser(
         "emit",
         help="emit a domain's or schema's rows as a stream of events",
@@ -149,7 +150,7 @@ def add_options(em: Any, *, stream: bool = False) -> None:
     rate.add_argument(
         "--speed",
         metavar="FACTOR",
-        help="replay by event time, FACTOR times faster than the clock (60x: an hour in a "
+        help="replay by event time, FACTOR times the clock rate (60x: an hour in a "
         "minute); needs events with a date or timestamp column, in time order (`shape stream`)",
     )
     rate.add_argument("--max-events", type=int, metavar="N", help="stop after N events in all")
@@ -897,6 +898,7 @@ def _auth_options(a: argparse.Namespace, scheme: str, *, offline: bool = False) 
 
 
 def run(a: argparse.Namespace) -> int:
+    """Dispatch parsed emit arguments and return the command exit code."""
     from shape.cli.generation import load_target
     from shape.errors import ShapeError
     from shape.generation.engine import Engine

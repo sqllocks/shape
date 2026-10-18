@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Support
+    url: mailto:support@shapedata.ai
+    about: Ask for help without posting private data.
+  - name: Security reports
+    url: https://github.com/sqllocks/shape/security/policy
+    about: Report a vulnerability privately.

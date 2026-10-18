@@ -262,9 +262,13 @@ def adequacy_level(rows: int) -> tuple[str, str]:
 
 
 def internal_entry(
-    analysis: str, rows: int | None = None, columns: list[str] | None = None
+    analysis: str, rows: int | None = None, columns: list[int] | None = None
 ) -> dict[str, Any]:
-    """One ``internal`` entry of the record, from the registry (``rows`` overrides it)."""
+    """One ``internal`` entry of the record, from the registry (``rows`` overrides it).
+
+    ``columns`` are positions in the table's own ``columns`` object, written as
+    ``column_indexes``: a list of names would be a list of raw strings, which the leak scanner
+    reads as a value dump. A profile written before 0.9.3 has the names under ``columns``."""
     spec = INTERNAL[analysis]
     entry: dict[str, Any] = {
         "analysis": analysis,
@@ -273,7 +277,7 @@ def internal_entry(
         "seed": spec["seed"],
     }
     if columns:
-        entry["columns"] = sorted(columns)
+        entry["column_indexes"] = sorted(columns)
     return entry
 
 
@@ -326,6 +330,7 @@ def internal_samples(
     (``samples``); the joint analysis says its own sample (``sampled``, ``rows_analyzed``), and
     its association entries say which pairs of numeric columns were too long for Kendall's tau."""
     out: list[dict[str, Any]] = []
+    position = {c.name: i for i, c in enumerate(columns)}
     for analysis in (
         "pattern_detection",
         "pattern_rates",
@@ -333,7 +338,7 @@ def internal_samples(
         "distribution_fit",
         "univariate",
     ):
-        named = [c.name for c in columns if analysis in c.samples]
+        named = [i for i, c in enumerate(columns) if analysis in c.samples]
         if named:
             out.append(internal_entry(analysis, columns=named))
     if joint:
@@ -349,7 +354,8 @@ def internal_samples(
         analysed = int(joint.get("rows_analyzed") or 0)
         mo = joint.get("multivariate_outliers")
         if mo and int(mo.get("rows") or 0) > MCD_SAMPLE_ROWS:
-            out.append(internal_entry("multivariate_outliers", columns=list(mo["columns"])))
+            used = [position[n] for n in mo["columns"] if n in position]
+            out.append(internal_entry("multivariate_outliers", columns=used))
         if joint.get("cohorts") and analysed > COHORT_SAMPLE_ROWS:
             out.append(internal_entry("cohorts"))
     return out

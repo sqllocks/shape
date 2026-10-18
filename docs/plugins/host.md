@@ -1,5 +1,8 @@
 # Plugin host
 
+Status: experimental.
+
+
 `shape.plugins.host` discovers, checks, loads and registers plugins. Plugins are trusted,
 in-process code; the host checks compatibility, not safety. The API a plugin implements is
 in [api-v1.md](api-v1.md).

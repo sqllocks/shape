@@ -47,6 +47,8 @@ def _version_key(version: str) -> tuple[tuple[float, int, str], ...]:
 
 
 class DomainRegistry:
+    """Register versioned domain definitions and their optional generators."""
+
     def __init__(self):
         self._domains = {}
         self._generators = {}
@@ -114,6 +116,7 @@ US_ADDRESS = DomainDefinition(
 
 
 def domain_to_dict(d: DomainDefinition):
+    """Serialize a domain definition as a JSON-compatible mapping."""
     return {
         "name": d.name,
         "version": d.version,
@@ -136,6 +139,7 @@ def domain_to_dict(d: DomainDefinition):
 
 
 def domain_from_dict(x):
+    """Build a domain definition from its serialized mapping."""
     return DomainDefinition(
         x["name"],
         x["version"],
@@ -156,6 +160,7 @@ class DomainIssue:
 
 
 def validate_domain(d: DomainDefinition):
+    """Return structural issues found in a domain definition."""
     issues = []
     names = [f.name for f in d.fields]
     if not d.name:
@@ -177,6 +182,7 @@ def validate_domain(d: DomainDefinition):
 
 
 def compose_domains(name, version, *domains, description=""):
+    """Combine domain fields and relationships, rejecting conflicting definitions."""
     fields = {}
     rels = []
     constraints = {}
@@ -206,6 +212,7 @@ def extend_domain(
     constraints=None,
     description=None,
 ):
+    """Return a domain definition with the supplied field and relationship extensions."""
     by = {f.name: f for f in base.fields}
     for f in fields:
         by[f.name] = f
@@ -224,6 +231,7 @@ def extend_domain(
 
 
 def save_domain(domain, path):
+    """Validate and save a domain definition as JSON."""
     import json
 
     issues = validate_domain(domain)
@@ -270,6 +278,7 @@ def _has_field(row: Any, name: str) -> bool:
 
 
 def test_domain(domain: DomainDefinition, rows):
+    """Check domain structure and required fields in the supplied rows."""
     issues = list(validate_domain(domain))
     required = {f.name for f in domain.fields if f.required}
     for i, row in enumerate(rows):

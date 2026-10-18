@@ -50,7 +50,11 @@ _EXTRA: dict[str, dict[int, str]] = {
     "profile registry reindex": {},
     "profile registry validate": {1: "the store, the profile or the data has a problem"},
     "stream-profile": {},
-    "diff": {1: "drift was found (with `--fail-on-drift`), or " + SIGNATURE},
+    "diff": {
+        1: "drift was found (with `--fail-on-drift`), or " + SIGNATURE,
+        2: BAD + "; a safe profile (`shape-safe-profile`) cannot be diffed: "
+        "diff the `.shape` captures instead",
+    },
     "inspect": {1: SIGNATURE},
     "cat": {1: "the file's signature check failed (with `--verify`)"},
     "git-setup": {},
@@ -58,7 +62,10 @@ _EXTRA: dict[str, dict[int, str]] = {
     "from-ddl": {},
     "keygen": {},
     "sign": {},
-    "validate": {1: "the schema or contract is not valid"},
+    "validate": {
+        1: "the schema or contract structure is not valid",
+        2: "an unknown contract rule or malformed rule value, or " + BAD,
+    },
     "verify": {
         1: "a validation gate failed that is enforced (a warning too with `--strict`), or "
         "the `.shape` file's signature is invalid"

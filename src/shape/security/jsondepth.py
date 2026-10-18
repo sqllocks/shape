@@ -10,11 +10,13 @@ also never allowed below zero, so stray closing brackets cannot hide depth eithe
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     import numpy as np
+    import numpy.typing as npt
 
 MAX_JSON_DEPTH = 128
 _CHUNK = 8 * 1024 * 1024
@@ -34,7 +36,7 @@ def _max_line_depth(buf: np.ndarray, limit: int) -> int:
     starts = starts[starts < buf.size]
     counts = np.add.reduceat(opens, starts, dtype=np.int32)
     deepest = 0
-    for k in np.flatnonzero(counts > limit):
+    for k in cast("npt.NDArray[np.intp]", np.flatnonzero(counts > limit)):
         lo = int(starts[k])
         hi = int(starts[k + 1]) if k + 1 < len(starts) else buf.size
         deepest = max(deepest, _line_depth(buf[lo:hi]))
@@ -120,6 +122,6 @@ def check_json_document(data: bytes, limit: int = MAX_JSON_DEPTH) -> None:
             (buf == 0x5D) | (buf == 0x7D)
         ).astype(np.int32)
         walk = np.cumsum(step, dtype=np.int32) + depth
-        if int(walk.max()) > limit:
+        if int(cast(Callable[[], np.int32], walk.max)()) > limit:
             raise ValueError(f"JSON is nested deeper than {limit} levels")
         depth = int(walk[-1])

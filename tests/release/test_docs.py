@@ -234,9 +234,25 @@ def test_readme_points_to_the_shipped_safe_profile():
 def test_the_contributing_guide_names_the_checks_ci_runs():
     """#349: the guide sends contributors to `make check` (what the CI test job runs), and every
     directory and script it names exists."""
-    guide = (ROOT / "docs/CONTRIBUTING.md").read_text("utf-8")
+    guide = (ROOT / "CONTRIBUTING.md").read_text("utf-8")
     assert "make check" in guide
     assert 'pytest -m "not emulator and not live"' in guide
     for path in re.findall(r"`((?:[\w.-]+/)+[\w.-]*)`", guide):
         assert (ROOT / path).exists(), path
-    assert "docs/CONTRIBUTING.md" in (ROOT / "CONTRIBUTING.md").read_text("utf-8")
+    import ast
+
+    hooks = ast.parse((ROOT / "scripts/mkdocs_hooks.py").read_text("utf-8"))
+    on_files = next(
+        node for node in hooks.body if isinstance(node, ast.FunctionDef) and node.name == "on_files"
+    )
+    generated = {
+        filename
+        for node in ast.walk(on_files)
+        if isinstance(node, ast.For)
+        and isinstance(node.target, ast.Name)
+        and node.target.id == "filename"
+        for filename in ast.literal_eval(node.iter)
+    }
+    assert "CONTRIBUTING.md" in generated
+    nav = (ROOT / "mkdocs.yml").read_text("utf-8").split("\nnav:\n", 1)[1]
+    assert re.search(r"(?m)^\s*- Contributing: CONTRIBUTING\.md\s*$", nav)

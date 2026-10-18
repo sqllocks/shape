@@ -27,13 +27,17 @@ class ChaosInputError(ValueError):
 
 def table_files(directory: str | Path) -> list[Path]:
     """The table files ``shape chaos --input`` reads from ``directory`` (the sidecar and
-    ``_SUCCESS`` are not tables)."""
+    ``_SUCCESS`` and ground-truth logs are not tables). The standard landing layout
+    ``<table>/ingest_date=<date>/<file>`` is included."""
     folder = Path(directory)
     return sorted(
         p
         for suffix in TABLE_SUFFIXES
-        for p in folder.glob(f"*{suffix}")
-        if p.is_file() and p.name not in IGNORED_FILES
+        for pattern in (f"*{suffix}", f"*/ingest_date=*/*{suffix}")
+        for p in folder.glob(pattern)
+        if p.is_file()
+        and p.name not in IGNORED_FILES
+        and not p.name.startswith("_chaos_ground_truth")
     )
 
 
@@ -51,7 +55,7 @@ def verify_chaos_input(directory: str | Path, *, allow_real_input: bool = False)
     ``"unverified"`` (the caller prints :data:`OVERRIDE_WARNING`)."""
     unverified = False
     for path in table_files(directory):
-        status = verify_file(path)
+        status = verify_file(path, folder=directory)
         if status == VERIFIED:
             continue
         if not allow_real_input:

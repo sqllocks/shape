@@ -245,6 +245,17 @@ class ManifestBuilder:
         target.write_text(ManifestBuilder.to_json(manifest), encoding="utf-8", newline="\n")
 
     @staticmethod
+    def create_file(manifest: RunManifest, path: str | Path) -> None:
+        """Write ``manifest`` to a new file at ``path``; raise ``FileExistsError`` if one is there.
+
+        The file is created exclusively, so two runs that pick the same name at the same moment
+        never replace each other's manifest: the second one gets ``FileExistsError``."""
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("x", encoding="utf-8", newline="\n") as fh:
+            fh.write(ManifestBuilder.to_json(manifest))
+
+    @staticmethod
     def from_file(path: str | Path) -> RunManifest:
         try:
             raw = json.loads(Path(path).read_text(encoding="utf-8"))

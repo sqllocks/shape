@@ -1,5 +1,8 @@
 # Fabric open mirroring landing zone (`fabric-mirror` sink)
 
+Status: experimental.
+
+
 The `fabric-mirror` sink writes tables in the format a Microsoft Fabric **open mirrored database**
 reads from its landing zone, so generated data, or the changes `shape continue` writes, can be
 replicated into a mirrored database.

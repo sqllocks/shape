@@ -33,6 +33,7 @@ def scheme_of(target: str) -> str | None:
 
 
 def is_remote_target(target: str) -> bool:
+    """Return whether a target uses a non-local output destination."""
     return scheme_of(target) is not None
 
 

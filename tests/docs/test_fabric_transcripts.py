@@ -1,0 +1,173 @@
+"""Fabric transcripts: real values exist only during the run, and failures stay failures."""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+NOTE = "Fabric maintainer — supply the transcript for docs/demo.md example 0."
+
+
+def page(root: Path, command: str) -> Path:
+    path = root / "docs/demo.md"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "<!-- example: 0 -->\n\n**Needs a Fabric account. Not run in CI.**\n\n```bash\n"
+        + command
+        + f"\n```\n\n<!-- owner: {NOTE} -->\n\nafter\n"
+    )
+    return path
+
+
+def item(**extra):
+    return {"id": "demo", "page": "docs/demo.md", "index": 0, "note": NOTE, **extra}
+
+
+def run(root: Path, manifest, **kw):
+    from docs_fabric_transcripts import capture
+
+    return capture(root, manifest, run_id="9", commit="c" * 40, runner="test", **kw)
+
+
+def test_success_runs_substituted_command_and_stores_only_placeholders(tmp_path, monkeypatch):
+    monkeypatch.setenv("FABRIC_WORKSPACE_ID", "11111111-2222-3333-4444-555555555555")
+    path = page(tmp_path, "echo workspace WORKSPACE_GUID")
+    manifest = [item(rewrite=[["WORKSPACE_GUID", '"$FABRIC_WORKSPACE_ID"']])]
+    assert run(tmp_path, manifest) == 0
+    text = path.read_text()
+    assert "<!-- owner:" not in text
+    assert "    workspace <workspace-id>" in text
+    assert "echo workspace WORKSPACE_GUID" in text
+    assert "11111111-2222-3333-4444-555555555555" not in text
+    receipt = next((tmp_path / "docs/plans/evidence/owner-notes").glob("*.json")).read_text()
+    assert "11111111-2222-3333-4444-555555555555" not in receipt
+    assert json.loads(receipt)["exit_code"] == 0
+    assert (tmp_path / "docs/evidence/transcripts").is_dir()
+    assert "Evidence: [run 9, test, `cccccccccccc`]" in text
+
+
+def test_failure_keeps_the_note_and_records_the_error(tmp_path):
+    path = page(tmp_path, "echo 'HTTP 403 Forbidden'; exit 1")
+    before = path.read_text()
+    assert run(tmp_path, [item()]) == 1
+    assert path.read_text() == before
+    record = json.loads(
+        next((tmp_path / "docs/plans/evidence/owner-notes").glob("*.json")).read_text()
+    )
+    assert (record["status"], record["exit_code"]) == ("failed", 1)
+    assert "HTTP 403 Forbidden" in record["stdout"]
+
+
+def test_missing_value_fails_naming_it_and_runs_nothing(tmp_path, monkeypatch):
+    monkeypatch.delenv("DOCS_NOT_SET", raising=False)
+    path = page(tmp_path, "touch ran")
+    before = path.read_text()
+    assert run(tmp_path, [item(needs=["DOCS_NOT_SET"])]) == 1
+    assert path.read_text() == before
+    assert not (tmp_path / ".fabric-transcript-work/demo/ran").exists()
+    assert (
+        "DOCS_NOT_SET"
+        in next((tmp_path / "docs/plans/evidence/owner-notes").glob("*.json")).read_text()
+    )
+
+
+def test_credential_in_output_cannot_resolve_a_note(tmp_path, monkeypatch):
+    monkeypatch.setenv("FABRIC_CLIENT_SECRET", "super-private-value")
+    path = page(tmp_path, 'echo "$FABRIC_CLIENT_SECRET"')
+    before = path.read_text()
+    assert run(tmp_path, [item()]) == 1
+    assert path.read_text() == before
+    receipt = next((tmp_path / "docs/plans/evidence/owner-notes").glob("*.json")).read_text()
+    assert "super-private-value" not in receipt
+    assert "credential-leak" in receipt
+
+
+def test_remaining_guids_and_hosts_are_scrubbed(tmp_path):
+    path = page(
+        tmp_path, "echo 7a6b5c4d-1111-2222-3333-444455556666 abc.datawarehouse.fabric.microsoft.com"
+    )
+    assert run(tmp_path, [item()]) == 0
+    assert "<guid> <sql-endpoint>" in path.read_text()
+
+
+def test_job_id_comes_from_the_earlier_example_or_the_newest_record(tmp_path):
+    from docs_fabric_transcripts import resolve_job_id
+
+    assert resolve_job_id("started job-0123456789ab", tmp_path) == "job-0123456789ab"
+    assert resolve_job_id("submitted spark-05281be1 (run)", tmp_path) == "spark-05281be1"
+    (tmp_path / "job-aaaaaaaaaaaa.json").write_text("{}")
+    assert resolve_job_id("no id here", tmp_path) == "job-aaaaaaaaaaaa"
+    assert resolve_job_id("", tmp_path / "missing") == ""
+
+
+def test_manifest_matches_the_unresolved_fabric_notes():
+    from docs_fabric_transcripts import BLOCK
+
+    items = json.loads((ROOT / "tests/docs/fabric_examples.json").read_text())
+    assert len({i["id"] for i in items}) == len(items)
+    for entry in items:
+        text = (ROOT / entry["page"]).read_text()
+        found = [m for m in BLOCK.finditer(text) if m["index"] == str(entry["index"])]
+        resolved = "Evidence: [run" in text and entry["note"] not in text
+        assert found or resolved, entry["id"]
+        if found:
+            assert found[0]["note"] == entry["note"]
+            for pattern, _ in entry.get("rewrite", []):
+                import re
+
+                assert re.search(pattern, found[0]["command"]), (entry["id"], pattern)
+
+
+def test_transcripts_mode_is_a_gated_job_of_fabric_live_and_changes_nothing_else():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/fabric-live.yml").read_text())
+    triggers = workflow.get("on", workflow.get(True))
+    inputs = triggers["workflow_dispatch"]["inputs"]
+    assert inputs["transcripts"]["default"] is False
+    assert inputs["transcripts"]["type"] == "boolean"
+    assert "schedule" in triggers
+    assert workflow["concurrency"] == {"group": "fabric-live", "cancel-in-progress": False}
+    assert not (ROOT / ".github/workflows/docs-fabric-transcripts.yml").exists()
+    live = workflow["jobs"]["fabric-live"]
+    assert live["if"] == "${{ !inputs.transcripts }}"
+    capture = workflow["jobs"]["docs-fabric-transcripts"]
+    assert capture["environment"] == "fabric-live"
+    assert capture["timeout-minutes"] <= 150
+    assert capture["permissions"] == {"contents": "write"}
+    assert workflow["permissions"] == {"contents": "read"}
+    assert capture["if"].startswith("${{ inputs.transcripts &&")
+    assert not any(step.get("continue-on-error") for step in capture["steps"])
+    assert any(s.get("uses", "").startswith("actions/upload-artifact@") for s in capture["steps"])
+
+
+def test_preclean_deletes_only_exact_names_children_first():
+    from docs_fabric_preclean import NOTEBOOK, TABLES, clean_kql, clean_notebook, doomed
+
+    assert doomed(["Customer", "customer_audit", "ORDER", "keep_me", "order_line"]) == [
+        "order_line",
+        "ORDER",
+        "Customer",
+    ]
+    assert TABLES.index("order_line") < TABLES.index("order") < TABLES.index("customer")
+    report: dict = {}
+    gone: list[str] = []
+    items = [
+        {"type": "Notebook", "displayName": NOTEBOOK, "id": "a"},
+        {"type": "Notebook", "displayName": NOTEBOOK + "_2", "id": "b"},
+        {"type": "Lakehouse", "displayName": NOTEBOOK, "id": "c"},
+    ]
+    clean_notebook(items, gone.append, report)
+    assert gone == ["a"]
+    commands: list[str] = []
+
+    def post(csl: str):
+        commands.append(csl)
+        return [["customer"], ["unrelated"]] if csl == ".show tables" else []
+
+    clean_kql(post, report)
+    assert commands == [".show tables", ".drop table ['customer']"]

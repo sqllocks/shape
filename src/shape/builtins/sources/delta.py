@@ -20,6 +20,7 @@ from urllib.parse import urlparse
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.dataset as pa_dataset  # type: ignore[import-untyped]
 
+from shape.io import deltafs
 from shape.profile.reference import delta_fallback
 
 from . import _azure_auth as auth
@@ -91,11 +92,19 @@ class DeltaSource:
             ) from exc
         target = uri[len(PREFIX) :] if _is_cloud(uri) else str(local_path(uri))
         version = options.get("version")
-        return DeltaTable(
-            target,
-            version=None if version is None else int(version),
-            storage_options=_storage_options(target, options) or None,
-        )
+        try:
+            return DeltaTable(
+                target,
+                version=None if version is None else int(version),
+                storage_options=_storage_options(target, options) or None,
+            )
+        except Exception as exc:
+            # Keep unsupported features, permission errors and damaged logs distinct.
+            if type(exc).__name__ != "TableNotFoundError":
+                raise
+            from shape.security.redact import redact_text
+
+            raise FileNotFoundError(f"no Delta table at {redact_text(target)}") from None
 
     def schema(self, uri: str, **options: Any) -> pa.Schema:
         schema: pa.Schema = self._dataset(uri, options).schema
@@ -113,7 +122,10 @@ class DeltaSource:
         error: BaseException | None = None
         if not delta_fallback.never_read_by_delta_rs(table):
             try:
-                return table.to_pyarrow_dataset()
+                if _is_cloud(uri):
+                    deltafs.note_bridge()  # an object store has no native Arrow file system here
+                    return table.to_pyarrow_dataset()
+                return deltafs.local_dataset(table, local_path(uri))
             except Exception as refusal:
                 if not delta_fallback.is_unsupported_feature_error(refusal):
                     raise

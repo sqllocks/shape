@@ -22,7 +22,7 @@ and licensed for the way they are used.
 
 `THIRD_PARTY_NOTICES.md` records, for every asset, the source URL, release, licence (quoted from
 the source's own page, with the date it was read), and whether it is shipped, fetched or
-bring-your-own. `docs/plans/lane_status/HC-codes.md` records the checks.
+bring-your-own. the implementation tests records the checks.
 
 ```python
 import datetime as dt

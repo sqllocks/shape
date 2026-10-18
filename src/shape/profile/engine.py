@@ -23,6 +23,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.io import CsvOptions, open_source
 from shape.kernel.dispatch import get_kernel
+from shape.profile._memory import release_unused
 from shape.profile.error import ErrorModel, hll_error, kll_error, space_saving_error
 
 SCHEMA_VERSION = 1
@@ -135,14 +136,19 @@ def profile_table(
     if csv is None and opts.mode == "bounded":
         # bounded memory: never read a whole CSV at once, and keep the read-ahead small (with
         # the default 16 MiB blocks Arrow's read-ahead buffers made peak RSS creep up with size)
-        csv = CsvOptions(stream=True, block_size=_BOUNDED_CSV_BLOCK)
+        # Arrow otherwise reads ahead one decoded block per CPU thread. Keep only
+        # the current decoded block so allocator retention cannot grow with the file.
+        csv = CsvOptions(stream=True, block_size=_BOUNDED_CSV_BLOCK, use_threads=False)
     src = open_source(source, name=name, batch_size=opts.batch_size, csv=csv)
     state = get_kernel().ProfileState(src.schema, opts.mode)
     pool = pa.default_memory_pool()
-    for i, batch in enumerate(src.batches()):
+    for batch in src.batches():
         state.update(batch)
-        if opts.mode == "bounded" and i % 16 == 15:
-            pool.release_unused()  # keep the allocator from holding on to freed read-ahead blocks
+        if opts.mode == "bounded":
+            del batch
+            # Reclaim freed decode/read-ahead pages before the next batch, rather than letting
+            # sixteen batches of allocator caches contribute to a scheduling-dependent RSS peak.
+            release_unused(pool)
     return table_entry(state, src.name, src.schema, opts.mode, opts.top_n)
 
 

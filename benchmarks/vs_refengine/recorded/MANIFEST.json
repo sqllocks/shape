@@ -1,0 +1,729 @@
+{
+  "baseline_freeze_sha256": "40ded03d70ee1fde26aa4383a37e0ea9a30c9148a8978307d2a54cef4aef7476",
+  "files": {
+    "db/id_named.json": {
+      "bytes": 7190,
+      "sha256": "ab57842bb0127787c855e6008ddd1045fb7e7b0a5ce8e833311feb95d3f70cc3"
+    },
+    "db/id_named.mssql.json": {
+      "bytes": 7196,
+      "sha256": "84aa051399c31c9eea3e84e039293e6f0c5151fc7d5621f46827c82f3a8b5dde"
+    },
+    "db/key_names.json": {
+      "bytes": 17664,
+      "sha256": "fa6440108390a80aef05bfb9aa9609ba4ce1ceb119e8521036a4aae55cc6c540"
+    },
+    "db/key_names.mssql.json": {
+      "bytes": 17670,
+      "sha256": "8ebf81fa08ce44f9783efb757b4d08c742b84aacd781e33a0d0b008cfcd3f14a"
+    },
+    "db/mixed_keys.json": {
+      "bytes": 14164,
+      "sha256": "cc657f29ceada84e5f95e4b6826bf6128c5982dc7215f1041b6bb52d01b6aa61"
+    },
+    "db/mixed_keys.mssql.json": {
+      "bytes": 14170,
+      "sha256": "d328427ef9f14a8dea17224f4ba47b168f1cbb0b9a0550e21e0dfed2f8c3b87c"
+    },
+    "db/name_only.json": {
+      "bytes": 7124,
+      "sha256": "dbab6d8c24eac7f734c0a84e9f981b5b36c210a9d985f892d9a2b0ee41cc2789"
+    },
+    "db/name_only.mssql.json": {
+      "bytes": 7130,
+      "sha256": "392443230b70f6fc6789b045d69136af0defba79d0cc7532e28b3ba7f2043b8e"
+    },
+    "db/retail.json": {
+      "bytes": 45849,
+      "sha256": "7abdefd38e4131f5d19c80332a3a5a6eaf3fee48c13f4c4fb126a38357779d84"
+    },
+    "db/retail.mssql.json": {
+      "bytes": 45860,
+      "sha256": "8d04b033b08e4e55fc37a8fb14692c3ab23e37a5bf6f428883a281bdfc531e9a"
+    },
+    "db/retail_no_sample.json": {
+      "bytes": 42036,
+      "sha256": "1a1557f2e99198eedecf93ae81c1993fc7685a379cd090f6eaa0907d842933d4"
+    },
+    "db/retail_no_sample.mssql.json": {
+      "bytes": 42042,
+      "sha256": "1be9f4675bf9191851d5f9d08fefeca478faf5a324d71ec18bd9b5f362629d3f"
+    },
+    "db/retail_one_row_sample.json": {
+      "bytes": 43984,
+      "sha256": "6bf1336341d66d9d9b11dbbb0088bd4e7244aa86cb824994c96b443c85c59270"
+    },
+    "db/retail_one_row_sample.mssql.json": {
+      "bytes": 44151,
+      "sha256": "df742b863b430a83c809ae507eb1ef32f1424df01f423febc1c804f7e967edf5"
+    },
+    "db/retail_small_sample.json": {
+      "bytes": 45614,
+      "sha256": "f52eed8db68ddf42c43cb37c183add8e48cd6e18db17e67d52dbeb475b5a21e7"
+    },
+    "db/retail_small_sample.mssql.json": {
+      "bytes": 45642,
+      "sha256": "62031ae78d2e6a93aa3776bb2a7c390b4d5cecac7bcb8ebbfdd3963c0fca08e3"
+    },
+    "db/retail_subset.json": {
+      "bytes": 23223,
+      "sha256": "4ff7023299628b6ce29bb360dcd18a4978f51f7a03e9fe8e883b1204f00d6660"
+    },
+    "db/retail_subset.mssql.json": {
+      "bytes": 23225,
+      "sha256": "472bddd7f50b63bc111ab44708880acbe8ec6f8752b4e1c6496bcfd14d1daf57"
+    },
+    "db/retail_unreadable.json": {
+      "bytes": 44748,
+      "sha256": "9b1f5b1cf2a26bcbfb81865d922e1f26f8009657545e78d18de7f328e32a9b5c"
+    },
+    "db/retail_unreadable.mssql.json": {
+      "bytes": 45871,
+      "sha256": "b5d2494791c6105d2fcc8fb1104404fe4f5a8d33ed1d6716f494489866c75344"
+    },
+    "db/warehouse.json": {
+      "bytes": 14738,
+      "sha256": "c907d82c9e011d349908cb754a6228010e2105ea288d8aaa53f0bfa56d83fd34"
+    },
+    "db/warehouse.mssql.json": {
+      "bytes": 14744,
+      "sha256": "6f6aaa4fb06d33cfd0af94dd98c8b2c73867cbc7c60e5e528501d0584bbd1b1d"
+    },
+    "db/warehouse_empty.json": {
+      "bytes": 13637,
+      "sha256": "8ea1e869739d9def7feb4e9e9a75634e15a4be81132fae56487bec42fc8307da"
+    },
+    "db/warehouse_empty.mssql.json": {
+      "bytes": 13643,
+      "sha256": "2fa012d791bbe57b32d3e268f2f37e9fcfd450bfbe03d44192833916501ba0da"
+    },
+    "generate/capital_markets_medium.json": {
+      "bytes": 47720,
+      "sha256": "ad4efa049dbf153680f32b9ae9475ca46bb5e6063400b3e6517232b5ad759264"
+    },
+    "generate/education_medium.json": {
+      "bytes": 262255,
+      "sha256": "afd396ee4961c36ad3cac3330018bf587b52396b873e4e350b6f4365cf35edcb"
+    },
+    "generate/financial_medium.json": {
+      "bytes": 285937,
+      "sha256": "a0a3215b306beb1c25ef3143fb3eb7139af46e578aa2e948abeb44a0bda6246d"
+    },
+    "generate/healthcare_medium.json": {
+      "bytes": 285184,
+      "sha256": "f4d5559a491b268c77334aa773830f2284e6af6bdb61dbcd65697633bfaedd8c"
+    },
+    "generate/hr_medium.json": {
+      "bytes": 275623,
+      "sha256": "c64f8cede7060ce06d450484fdead18de77dafe194db74157201f0af787bacf5"
+    },
+    "generate/insurance_medium.json": {
+      "bytes": 277432,
+      "sha256": "c8675a6145ae606bb601b6181e17da3945d4cce5456288180bec3a3e7211ae35"
+    },
+    "generate/iot_medium.json": {
+      "bytes": 38521,
+      "sha256": "38f1ae90a285ad33158e9aed1f09b35c6913533387675b318fa51628d7f4c2c6"
+    },
+    "generate/manufacturing_medium.json": {
+      "bytes": 45801,
+      "sha256": "b8dd2de5f86947581e0eff1277b742144aa136f7e6f013af2a22c8edb6d9a52f"
+    },
+    "generate/marketing_medium.json": {
+      "bytes": 282608,
+      "sha256": "cbc4540b1e5aef92bd41e62a8440f61c258308746f6d4a3cb4eaf4a36bd69930"
+    },
+    "generate/pulse_medium.json": {
+      "bytes": 257529,
+      "sha256": "b5a89d464c126d7d264fe45e449a9219f1f00639cbd1e19728124ca1f9ee024e"
+    },
+    "generate/real_estate_medium.json": {
+      "bytes": 278826,
+      "sha256": "bdadda6f9b8cf4ec987c634f68f4b37a6fa1dc9b798d9d23425575b204fa1740"
+    },
+    "generate/retail_large.json": {
+      "bytes": 261563,
+      "sha256": "41fd348935c939cf31e53dd6158fc435a5fe4e938cd6ee8ed9cc7ad909d9831d"
+    },
+    "generate/retail_medium.json": {
+      "bytes": 261504,
+      "sha256": "bade9a5a961af6fd959a74b928af060c3c19497e48a437c6de9dfa1d93bc7a43"
+    },
+    "generate/retail_small.json": {
+      "bytes": 261408,
+      "sha256": "dd60004ab6681967cdbfd12606f50559400e02cc4c3b7af7e24ec3938fe24b4d"
+    },
+    "generate/supply_chain_medium.json": {
+      "bytes": 315342,
+      "sha256": "b2c02df5721e6f402c41fe3b62cb718c320100ad2a4f7e8ae150c06bc166c2df"
+    },
+    "generate/telecom_medium.json": {
+      "bytes": 277138,
+      "sha256": "e5bd96113e018abf1a52e1f393e5592baf7f1d4304b96f971ac35dd78a477d53"
+    },
+    "plan/composites.json": {
+      "bytes": 84273,
+      "sha256": "47fdac6da3938c68c1e15f9bc29783073008fe6c7598706a19e091428074a626"
+    },
+    "profile/d1.csv.json": {
+      "bytes": 81345,
+      "sha256": "88e2d72d2d73894864b085b7ad99b7c5cc9e689c74004b6f4548f84bcdf592e0"
+    },
+    "profile/d1.parquet.json": {
+      "bytes": 81794,
+      "sha256": "22d6a53f402d43213ff17394851ad58d81c03e114baaa64d4717e26011a70168"
+    },
+    "profile/d2.csv.json": {
+      "bytes": 1265762,
+      "sha256": "ee968162245bb34053d7dbd3c077dc576a48e7a1829dcdc784eee18b7979f1bc"
+    },
+    "profile/d2.parquet.json": {
+      "bytes": 1265431,
+      "sha256": "ce9b24db79d6cb7aebb25d72db01e44e87ba371d64364f92c289881e87814ccc"
+    },
+    "profile/d3.csv.json": {
+      "bytes": 410874,
+      "sha256": "65a9a9c53fdbda4550914f653e0c81e7f1c7141f80fc57eb51ca2255f6907a49"
+    },
+    "profile/d3.parquet.json": {
+      "bytes": 410896,
+      "sha256": "c8df5a9052c59889dcdbe95988b31e07c8277897814706d5c2a09d2626e7ccdc"
+    },
+    "profile/d4.csv.json": {
+      "bytes": 7211869,
+      "sha256": "5a5076d4c3301b1026d47930729be1779e5701787bcdcc4acf86aaa010444f51"
+    },
+    "profile/d4.parquet.json": {
+      "bytes": 7211917,
+      "sha256": "03665e4f8833fbd1a7e482749e8254133c4e48596a8055febaea64c339262278"
+    },
+    "profile/edge_e130.csv.json": {
+      "bytes": 152365,
+      "sha256": "269d4f17f109aa1e189171a754843a98bea8aad6366a5f02c86c4651e6015da6"
+    },
+    "profile/edge_e130.parquet.json": {
+      "bytes": 152780,
+      "sha256": "5da64d543b0c462f1ba60858206cd0ed363517f47582ad2226a6a27782390914"
+    },
+    "profile/edge_e130_uuidpk.csv.json": {
+      "bytes": 144741,
+      "sha256": "ae2f8d68f83c85cab8a74e83d2dbd75828980bc5a2abcf44ca3539f021c1cde8"
+    },
+    "profile/edge_e130_uuidpk.parquet.json": {
+      "bytes": 145264,
+      "sha256": "a14eb6bb3a85f54c3ec957a213654635751d3572c1b779641264aac8acfd4154"
+    },
+    "profile/edge_e15.csv.json": {
+      "bytes": 48252,
+      "sha256": "e62415071a60b9dbe3959c3f0676a4bf8099d4f44147a3d8f4d6fe2df4b6d157"
+    },
+    "profile/edge_e15.parquet.json": {
+      "bytes": 47883,
+      "sha256": "c6654748b01aa7babc99e6f37427152ae4ea3e4050cfdfa9aa7a5be1597706f4"
+    },
+    "profile/edge_e15_uuidpk.csv.json": {
+      "bytes": 45986,
+      "sha256": "75b0c5d8a926a57e7213459a9eb81baa20dcf0ea439878e62bc1911398fea43e"
+    },
+    "profile/edge_e15_uuidpk.parquet.json": {
+      "bytes": 45727,
+      "sha256": "6b0cef516617e957a8d2b7785e576b89612b2744977cab66a5b581840d93a3ca"
+    },
+    "profile/edge_e3.csv.json": {
+      "bytes": 32226,
+      "sha256": "5c04d1fcf5545b55d264e824d02db940437a60deca63c5bc838dfa81a32cdc87"
+    },
+    "profile/edge_e3.parquet.json": {
+      "bytes": 31637,
+      "sha256": "7778e7b0b8a445ad950aaf9039b64307d8dbb4520c2b7b6d3e554a5aed8337bf"
+    },
+    "profile/edge_e3000.csv.json": {
+      "bytes": 233632,
+      "sha256": "bff6ad22e6b0c29623b27d27620951380c640e678311c06279ba1160536f0d59"
+    },
+    "profile/edge_e3000.parquet.json": {
+      "bytes": 260328,
+      "sha256": "9b982a1c6d653ed8ed94289dd2b4a19c1c5460aee21ad879207cfa3b225bc830"
+    },
+    "profile/edge_e3000_uuidpk.csv.json": {
+      "bytes": 208978,
+      "sha256": "1e88fa31350f34fd69a012029f782cbf9b269eb57d8f704ea2e6f5ae83d09c8b"
+    },
+    "profile/edge_e3000_uuidpk.parquet.json": {
+      "bytes": 235786,
+      "sha256": "401e99a8e1d6ea39489a06efe884c8db27a2cd6e258fe61a6a3b6dfd2978c657"
+    },
+    "profile/edge_e3_uuidpk.csv.json": {
+      "bytes": 30872,
+      "sha256": "bfffc73dbd15350db17bab0160f9cdfa6acfec66402efe5dc31d90baa61b468a"
+    },
+    "profile/edge_e3_uuidpk.parquet.json": {
+      "bytes": 30395,
+      "sha256": "824700a41e12a4891b70e3dcf220a6a691c48d75269d4a62724270bd8e4305d4"
+    },
+    "profile/edge_e60.csv.json": {
+      "bytes": 90018,
+      "sha256": "1413df82df68f9c57782f154da82dbab918c037bd1528d466ca0ec75cd7e8e54"
+    },
+    "profile/edge_e60.parquet.json": {
+      "bytes": 90035,
+      "sha256": "8a761f93f8b1cf6d967c310ed940612647ef03f50ae5a630d9ac0ab08adc6057"
+    },
+    "profile/edge_e60_uuidpk.csv.json": {
+      "bytes": 85616,
+      "sha256": "5728120cee90f507e47dc8c8c269b2f3e7e543163f2872989232a1b9582ce71c"
+    },
+    "profile/edge_e60_uuidpk.parquet.json": {
+      "bytes": 85743,
+      "sha256": "170f8e580635b5c4f4e7f5fe8751d1835c5b716acdaea6582b8157494dfdaba0"
+    },
+    "profile/edge_x_csv_inf.csv.json": {
+      "bytes": 5676,
+      "sha256": "df9ac4ed47d34883cdacc85e07bb3afd55a52e7165696df60a6b09c6985fb1a3"
+    },
+    "profile/edge_x_csv_mixed_chunks.csv.json": {
+      "bytes": 37383,
+      "sha256": "c907114763f7b6f561e9390ba3ff934b3ba53ea54c8d79ca3fa3216c50953939"
+    },
+    "profile/edge_x_csv_mixed_tail.csv.json": {
+      "bytes": 7980,
+      "sha256": "06f784e4e37d729a928515b56a57808d51d9b7391438b8ec895bd0e21ebe0c15"
+    },
+    "profile/edge_x_csv_nan_text.csv.json": {
+      "bytes": 5861,
+      "sha256": "9d505cbf519b60a0aad1ce7ee5c3c52b4a1c8661119b627a8b7e7fb4f85c75ba"
+    },
+    "profile/edge_x_csv_numbers.csv.json": {
+      "bytes": 20970,
+      "sha256": "064b65d3cd602dfbd02b837add62fb07ff64f29cc58f8920311a63c0126791e7"
+    },
+    "profile/edge_x_dates_a.csv.json": {
+      "bytes": 7474,
+      "sha256": "2883107c3df7668709970f2c28a39c4aafc2f3b95e5a7ace3c025bb09f4b8606"
+    },
+    "profile/edge_x_dates_b.csv.json": {
+      "bytes": 7430,
+      "sha256": "00ac1861de758d421123be5c62267dda80b99649216e15f00631fe06f232d8d8"
+    },
+    "profile/edge_x_dates_bad.csv.json": {
+      "bytes": 5761,
+      "sha256": "a21a4b82c6aa9e16a0910365ed9cb0acbfdf7ccc6007129d7370daddee6c0c61"
+    },
+    "profile/edge_x_dates_c.csv.json": {
+      "bytes": 6585,
+      "sha256": "08ae356f0883aaae86a7d3436e059dfa8d8c401f74f35bddeb67b38deae933bb"
+    },
+    "profile/edge_x_dates_d.csv.json": {
+      "bytes": 7745,
+      "sha256": "bbab2d628afe89c0c4f04466b9cb563459ab75b224f58d5e6f1f989ac831aecf"
+    },
+    "profile/edge_x_dates_mixed_fmt.csv.json": {
+      "bytes": 6585,
+      "sha256": "297dccb052de95407e7edc764766b2bafdd9def5ae0aa734dbd7dc381e9dd6f9"
+    },
+    "profile/edge_x_pq_duration.parquet.json": {
+      "bytes": 9701,
+      "sha256": "aad8e67d7d2f66c269b0a994003fb16a8b871f90c73599dc418534b9699ecfe7"
+    },
+    "profile/edge_x_pq_list.parquet.json": {
+      "bytes": 520,
+      "sha256": "97ecbf716e92fb61f9f2b134dede04245830d73dfe64d9b43b28ca60fc2fdb16"
+    },
+    "profile/edge_x_pq_nested.parquet.json": {
+      "bytes": 524,
+      "sha256": "b2380c66db74d48943e3ca1991cf0788f29d8a241dfe3e1523e71675edd61cdf"
+    },
+    "profile/edge_x_pq_nulls.parquet.json": {
+      "bytes": 28540,
+      "sha256": "6f9ba93ab2d2462f5748fe3031aac1bb53e4aac354563fb3a24b0f68ce17f321"
+    },
+    "profile/edge_x_pq_types.parquet.json": {
+      "bytes": 56340,
+      "sha256": "da8a9eecf1e1e406d49c4ba0118771b23382b3ea6885cfb05eef24f057deb3b1"
+    },
+    "profile/edge_x_pq_u64_big.parquet.json": {
+      "bytes": 10428,
+      "sha256": "e7331f6caa2fad74cb12774f89a129a5a59986d039122895ad32e1cf9b36d3e1"
+    },
+    "profile/edge_x_time_ampm.csv.json": {
+      "bytes": 40930,
+      "sha256": "b233ad680bd0292f625c80eebd4bf29759ee69bb197396eafe2306dce778a48a"
+    },
+    "profile/edge_x_time_only.csv.json": {
+      "bytes": 6753,
+      "sha256": "5abff56309718c807f460d931e36f97884f2d532ff565c4e616fcfe8213f6fa8"
+    },
+    "profile/mt.json": {
+      "bytes": 1855335,
+      "sha256": "d9e184aaeb5d83f8fd6cfdedbd6d8a2a717fdf8e2491d853cde537983e5a5c0d"
+    },
+    "profile/mt.parquet.json": {
+      "bytes": 1855369,
+      "sha256": "2b0378faf627b62175ea5dbe71d85cf5e922e7723e58caac161d6471e9451a44"
+    },
+    "stream/retail_order_medium.json": {
+      "bytes": 5998,
+      "sha256": "086669b9ad2a8a773b73f7537a03ff497882f3e3fd3f1ecc46ea3e3dca5ed32b"
+    },
+    "stream/retail_order_small.json": {
+      "bytes": 5977,
+      "sha256": "48cf30efbc9bf260e700bb6d8b7e046815323123bf15211d951dae3e6690ee3a"
+    },
+    "timings_0.9.1.json": {
+      "bytes": 50755,
+      "sha256": "ce960fc7e7fc5448a6e52633b47e1405d79992b25da0b794177b0b1343512c59"
+    },
+    "verify_cli/clean.json": {
+      "bytes": 15503,
+      "sha256": "bedfbc27b4695d5162d30f2d7f0e5c7e5da7338108b5a738c03fbfda3c3d64b8"
+    },
+    "verify_cli/clean_statistical.json": {
+      "bytes": 17291,
+      "sha256": "379f1e6189ba91263bd4c373bbe0a4d16131be50374054c4a74c232eebca203c"
+    },
+    "verify_cli/dup_pk.json": {
+      "bytes": 16216,
+      "sha256": "18fd8766407229ba2f6c978a8c951c5c21424970fd16ec3ebd42420b34be0810"
+    },
+    "verify_cli/extra_column.json": {
+      "bytes": 15774,
+      "sha256": "bc1df5952b2bb4ea2db037ba1589e1c7c43cde4e2e686dc6d60252e1ee2d079d"
+    },
+    "verify_cli/missing_column.json": {
+      "bytes": 15690,
+      "sha256": "121ab7406fd1e9a7dc4df9642513dabf26bb85bee5ffa73aa15e3eea85302334"
+    },
+    "verify_cli/missing_table.json": {
+      "bytes": 14639,
+      "sha256": "240e574bcff520381de61e47ad795956676709c70f9c331140d1643e1d8daccf"
+    },
+    "verify_cli/null_in_required.json": {
+      "bytes": 15896,
+      "sha256": "817b2bcf88d14c328a7e59d4355a37887470fc674edaeb3f4be1cd0dc986bc81"
+    },
+    "verify_cli/orphan_fk.json": {
+      "bytes": 15723,
+      "sha256": "497217c52da206300c3a96212e8b2e4578455e22c54f3298bd020bd1eda1ac9f"
+    },
+    "verify_cli/retyped.json": {
+      "bytes": 16147,
+      "sha256": "dff696177800849dfe0c0ce5b17f1a144a7cc6a76d4f04293ae40c76addfac68"
+    },
+    "verify_cli/statistical_drift.json": {
+      "bytes": 17976,
+      "sha256": "5a506e053f564b7cdc2e223011b3b9d3879de23f50d745d984af7a5792aec5cf"
+    }
+  },
+  "fixtures": {
+    "fixtures/composites/composite_campus.json": {
+      "sha256": "aac757f41d38dc4bcc4eb42c0b625fed024c70fb87073d16daad218ed4dac8db"
+    },
+    "fixtures/composites/composite_capital_markets-marketing-education.json": {
+      "sha256": "2d48a5d6d41d1607c979e7d299bb34f5e0ad92fa416f26a668769d02073d3302"
+    },
+    "fixtures/composites/composite_digital_commerce.json": {
+      "sha256": "d8ea5800c5ca6ab956bad636014c2e90902c4bca759fe2566eca05c2cea0b0f8"
+    },
+    "fixtures/composites/composite_enterprise.json": {
+      "sha256": "ef916b13774999978028daeff705793a6a963d262a07045b0eca973bcf11d7a4"
+    },
+    "fixtures/composites/composite_healthcare_system.json": {
+      "sha256": "104f8c79f3866c52acab20e6d0633b6ccfbef92da3851660dac213e66fa84520"
+    },
+    "fixtures/composites/composite_retail-hr-financial.json": {
+      "sha256": "9ee9267f70594f4086ac86ff756533caa9e43c2c7729d6da675727e1d4b86b1c"
+    },
+    "fixtures/composites/composite_smart_factory.json": {
+      "sha256": "51fdcc7c00820d5c4dc5f28d72acd7c9fb8942d32163bc778863bcb203440ae5"
+    },
+    "fixtures/composites/composite_supply_chain-real_estate-manufacturing.json": {
+      "sha256": "67ac027b81c466df9067f1837bbb3352453f5e1d0655771415d84340777607e0"
+    },
+    "fixtures/composites/composite_telecom_bundle.json": {
+      "sha256": "a742fc2be568d79c3e60de91a4b7d29cf872db2cb698bed882913203a4badca6"
+    },
+    "fixtures/learn/d2_20000.json": {
+      "sha256": "9164598ff08bbf1c71a2a8faa5eea6b9f16d5119c57e20bba4093f3dba73cd66"
+    },
+    "fixtures/plan.json": {
+      "sha256": "54e4078f21500da5945d5d80f8ad2544b946e5df24afeb90c64fa2a84593a43a"
+    },
+    "fixtures/schemas/capital_markets_3nf.json": {
+      "sha256": "41107a78b33990d4fdb65d29928faa659f0a46b1b402a663f166035a2fdc4a2d"
+    },
+    "fixtures/schemas/capital_markets_star.json": {
+      "sha256": "6fbd24a82aa68ca85a624ed46f23548a261c9158d421a16fc3b5808f41a03429"
+    },
+    "fixtures/schemas/education_3nf.json": {
+      "sha256": "9ae9b7261bb541c171bc611802f41afdeae28818edbbf25adb76498558b751c0"
+    },
+    "fixtures/schemas/education_star.json": {
+      "sha256": "629e9cad91247a20289bec310ff76115720442130f58a8a37b876f0ce23e2a86"
+    },
+    "fixtures/schemas/financial_3nf.json": {
+      "sha256": "0db0fb8cbde298eeb5130720bd0400b8ed82fc2ecd3f8fd54e3640a173b3492e"
+    },
+    "fixtures/schemas/financial_star.json": {
+      "sha256": "14859c8af5772bbc96ada25c211a82ee3148f844a137d74631a653eacd44e8d6"
+    },
+    "fixtures/schemas/healthcare_3nf.json": {
+      "sha256": "d3e293f8895b42da80c81c7e708c389108ea23a91f7d91a8f1d5db69c7471587"
+    },
+    "fixtures/schemas/healthcare_star.json": {
+      "sha256": "3fb0a4d5cf0cdaeff94d983bbfc3f6338e2a5b31c361bf7c412721023e328349"
+    },
+    "fixtures/schemas/hr_3nf.json": {
+      "sha256": "1e4a17e9b5d80b4daf930f0f70291233cac4b1b223b0bd07a2cb8545b9370b08"
+    },
+    "fixtures/schemas/hr_star.json": {
+      "sha256": "ab842e4c0cf4c2dffbdd49d336dafccd57ea8c2d011fb56c6c4f0cc931d8a6d1"
+    },
+    "fixtures/schemas/insurance_3nf.json": {
+      "sha256": "00ea14af7d85e46d55508d6e550de4140bd1b0816d5c2d182b2d20d0794ce91e"
+    },
+    "fixtures/schemas/insurance_star.json": {
+      "sha256": "82de2f7efb13c2511fc5e66d0bd50a5468c9aca6246cb6ed3ae3b8151578e7e3"
+    },
+    "fixtures/schemas/iot_3nf.json": {
+      "sha256": "9793db86b2be965c6806883969b6b4910ec6b3c55d89250ae0aa86c183e4eab0"
+    },
+    "fixtures/schemas/iot_star.json": {
+      "sha256": "4920ab474a0f2b3114539012542f7a68914b9a4305a955d9c045c5e0b6d2ea82"
+    },
+    "fixtures/schemas/manufacturing_3nf.json": {
+      "sha256": "aec8420436459ecdeeb16497fabc75bac993447f4547e25b1d07899bc961de9c"
+    },
+    "fixtures/schemas/manufacturing_star.json": {
+      "sha256": "30b10227be2f0e3cd53f566bfc3786ded336b823d58c36d094cc56f36a27ddc3"
+    },
+    "fixtures/schemas/marketing_3nf.json": {
+      "sha256": "ec4466f4eb1e43e717eea2e96c06918f823c643c66b8bef7d5e29f5efbff25e3"
+    },
+    "fixtures/schemas/marketing_star.json": {
+      "sha256": "7c38aed578e2834a36dcce15da73e8f1ee66db6db279341a7092d74e4fc84d2a"
+    },
+    "fixtures/schemas/pulse_3nf.json": {
+      "sha256": "c56989db3fbbdb37f9e470cdb8bc5b838930f50abc4172641e2b895abea952c7"
+    },
+    "fixtures/schemas/pulse_star.json": {
+      "sha256": "faa96cb1966ecb4707a25fb7b9b505426f4b89ab0f29f4abade1aae96c50a839"
+    },
+    "fixtures/schemas/real_estate_3nf.json": {
+      "sha256": "0f127c259eeb00e9e4eae25375773bc827e549cc0d19d843c2b27c377e600372"
+    },
+    "fixtures/schemas/real_estate_star.json": {
+      "sha256": "ee69d77355a4f4c043fdf27cc12e233e7c856b04cc681b730d1c677e468c6565"
+    },
+    "fixtures/schemas/retail_3nf.json": {
+      "sha256": "fe74ccb6fd079a1faa03ce2af2c856ada02ec8fb407dbcef846013e22164792b"
+    },
+    "fixtures/schemas/retail_star.json": {
+      "sha256": "c6dc1ba8f6ed2066b5b40322a2f7e2af3b46acd806d82b11ad2045cd5a11996a"
+    },
+    "fixtures/schemas/supply_chain_3nf.json": {
+      "sha256": "7bef5b73619b7823a07b17bc23bfd4f0d5064226ad844ed00fc3e9a12932d24c"
+    },
+    "fixtures/schemas/supply_chain_star.json": {
+      "sha256": "a1e103071dcd9bbbcfb50c1ea7ac184158eba31c107892cdc4cf3ca8d1bf5d28"
+    },
+    "fixtures/schemas/telecom_3nf.json": {
+      "sha256": "18304a32dd0bbf6f8da533205b0b6dd747340720d40c77ef2aafc49e6ad818e9"
+    },
+    "fixtures/schemas/telecom_star.json": {
+      "sha256": "3d26aaf667c0c367067c87d27a2e9d161e15eed65a6eaef4213a57154ac82066"
+    },
+    "fixtures/strategies/composite_foreign_key.json": {
+      "sha256": "45b1e79def1e6d403f2733f546692d5d28379555669d753a83959a89b143d7fc"
+    },
+    "fixtures/strategies/computed.json": {
+      "sha256": "6838ff9207ad3a626d20d79178c375497d422de462db0e596118218fff2bb550"
+    },
+    "fixtures/strategies/conditional.json": {
+      "sha256": "acaa7767e325ca338a894ff25de17d5a4c1d5fbcf828238d1a453afea0cda769"
+    },
+    "fixtures/strategies/correlated.json": {
+      "sha256": "2f34b5ec76970859c8de1f11cfd9be04e33b5e19bb468098cb4a0e53d56aaa57"
+    },
+    "fixtures/strategies/derived.json": {
+      "sha256": "567f1417fbbea80c624cd586847621561303c4e0f08c4bca3e50ac5f4f558585"
+    },
+    "fixtures/strategies/distribution.json": {
+      "sha256": "173bd4b8a90106e61af488f1f9b86fb36b0509a1d59c26e4267b61f941c04036"
+    },
+    "fixtures/strategies/empirical.json": {
+      "sha256": "98490a501b4a77f2ed4e9c2f14c339081beba1c25aae70d226e597c9cada2088"
+    },
+    "fixtures/strategies/faker.json": {
+      "sha256": "4bdeef2c21740a723eef19fffefaed5d134e8ac78b0bbe2dceeb647ee3ddd012"
+    },
+    "fixtures/strategies/first_per_parent.json": {
+      "sha256": "e9b6094e4d9c6dff584afdab8d7f429bc7799cd25fb900164c021b376dc70a7b"
+    },
+    "fixtures/strategies/foreign_key.json": {
+      "sha256": "80cf8ed250f083b9ad9ce5fe5bfa04189c64e119b3d4c154ae6fceff68b2c049"
+    },
+    "fixtures/strategies/formula.json": {
+      "sha256": "be7f6ac3bc94fe48d6123abfefe4b8f5bc76f43aacac9c2fd3448be69a0f93af"
+    },
+    "fixtures/strategies/lifecycle.json": {
+      "sha256": "4fad43a95ea0a1baa032f3f178cc3182fd281a625cb1966bc24cdac64292ba00"
+    },
+    "fixtures/strategies/lookup.json": {
+      "sha256": "e505abe7900b7e1cca0fa33104c53e8b994a492bfdf3f8df61d042e7bd93587d"
+    },
+    "fixtures/strategies/native.json": {
+      "sha256": "d41f6fccf176291b1e987540d1f56ddd9db6ec773029aaaf70671ad9693e3563"
+    },
+    "fixtures/strategies/pattern.json": {
+      "sha256": "0a2e60e0a41a5274388bddca7f4bc2739f3d475d595aed98be005ab502cb7e47"
+    },
+    "fixtures/strategies/record_field.json": {
+      "sha256": "be0fcd0f35188f9663b3a6ad7d7e049768f64b804a4e5a7a64d4b6cfaabd41a2"
+    },
+    "fixtures/strategies/record_sample.json": {
+      "sha256": "6dcb283f4d6e66cca294a485bbece7c0d75bf41f0beb9a40d3fba2de3a0b305f"
+    },
+    "fixtures/strategies/reference_data.json": {
+      "sha256": "05d9e8f2ec41247687a942583f842c7db31b02f3d80260619bf9b580713128ee"
+    },
+    "fixtures/strategies/scd2.json": {
+      "sha256": "7aa1c847dca1eabdcac935e80bb9375aa0876b49df82f7cc9800bdebae64676f"
+    },
+    "fixtures/strategies/self_referencing.json": {
+      "sha256": "1d2c0be902a932952abb0bdbca37b30e2f7560d11a3c1de8ad4764d4565135c0"
+    },
+    "fixtures/strategies/sequence.json": {
+      "sha256": "c3731a3b4b1f6dc8b68c6726294424f46eb88ba86ef3e4a698393880fa00fc75"
+    },
+    "fixtures/strategies/temporal.json": {
+      "sha256": "4e4bdd370b805765dfa99365ec0b53b9ba22878933f635c69ad1667d1ea9a07e"
+    },
+    "fixtures/strategies/uuid.json": {
+      "sha256": "7e2deccd6711f664f1531cdb98c54b18abeea19ef4f2d313b4c69664cf7c4fbc"
+    },
+    "fixtures/strategies/weighted_enum.json": {
+      "sha256": "122ad154d2878b9b74068e669bbe9f9438993cac072eb653c30fd6968c4bfafe"
+    }
+  },
+  "format": "shape-baseline-record",
+  "machine": {
+    "cores": 4,
+    "cpu": "AMD EPYC 9V45 96-Core Processor",
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.11.17",
+    "started": "2026-10-13 01:47:50"
+  },
+  "recorded_utc": "2026-10-13T01:47:50Z",
+  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_version": "0.9.1",
+  "source_release": {
+    "commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+    "version": "0.9.1"
+  },
+  "version": 1,
+  "workloads": [
+    "profile:d1.csv",
+    "profile:d1.parquet",
+    "profile:d2.csv",
+    "profile:d2.parquet",
+    "profile:d3.csv",
+    "profile:d3.parquet",
+    "profile:d4.csv",
+    "profile:d4.parquet",
+    "profile:mt",
+    "profile:mt.parquet",
+    "profile:edge/e3.csv",
+    "profile:edge/e3.parquet",
+    "profile:edge/e3_uuidpk.csv",
+    "profile:edge/e3_uuidpk.parquet",
+    "profile:edge/e15.csv",
+    "profile:edge/e15.parquet",
+    "profile:edge/e15_uuidpk.csv",
+    "profile:edge/e15_uuidpk.parquet",
+    "profile:edge/e60.csv",
+    "profile:edge/e60.parquet",
+    "profile:edge/e60_uuidpk.csv",
+    "profile:edge/e60_uuidpk.parquet",
+    "profile:edge/e130.csv",
+    "profile:edge/e130.parquet",
+    "profile:edge/e130_uuidpk.csv",
+    "profile:edge/e130_uuidpk.parquet",
+    "profile:edge/e3000.csv",
+    "profile:edge/e3000.parquet",
+    "profile:edge/e3000_uuidpk.csv",
+    "profile:edge/e3000_uuidpk.parquet",
+    "profile:edge/x_csv_inf.csv",
+    "profile:edge/x_csv_mixed_chunks.csv",
+    "profile:edge/x_csv_mixed_tail.csv",
+    "profile:edge/x_csv_nan_text.csv",
+    "profile:edge/x_csv_numbers.csv",
+    "profile:edge/x_dates_a.csv",
+    "profile:edge/x_dates_b.csv",
+    "profile:edge/x_dates_bad.csv",
+    "profile:edge/x_dates_c.csv",
+    "profile:edge/x_dates_d.csv",
+    "profile:edge/x_dates_mixed_fmt.csv",
+    "profile:edge/x_pq_duration.parquet",
+    "profile:edge/x_pq_list.parquet",
+    "profile:edge/x_pq_nested.parquet",
+    "profile:edge/x_pq_nulls.parquet",
+    "profile:edge/x_pq_types.parquet",
+    "profile:edge/x_pq_u64_big.parquet",
+    "profile:edge/x_time_ampm.csv",
+    "profile:edge/x_time_only.csv",
+    "generate:retail:small",
+    "generate:capital_markets:medium",
+    "generate:education:medium",
+    "generate:financial:medium",
+    "generate:healthcare:medium",
+    "generate:hr:medium",
+    "generate:insurance:medium",
+    "generate:iot:medium",
+    "generate:manufacturing:medium",
+    "generate:marketing:medium",
+    "generate:pulse:medium",
+    "generate:real_estate:medium",
+    "generate:retail:medium",
+    "generate:supply_chain:medium",
+    "generate:telecom:medium",
+    "generate:retail:large",
+    "stream:retail:order:small",
+    "stream:retail:order:medium",
+    "db:retail",
+    "db:retail:mssql",
+    "db:retail_no_sample",
+    "db:retail_no_sample:mssql",
+    "db:retail_small_sample",
+    "db:retail_small_sample:mssql",
+    "db:retail_subset",
+    "db:retail_subset:mssql",
+    "db:retail_unreadable",
+    "db:retail_unreadable:mssql",
+    "db:warehouse",
+    "db:warehouse:mssql",
+    "db:warehouse_empty",
+    "db:warehouse_empty:mssql",
+    "db:name_only",
+    "db:name_only:mssql",
+    "db:id_named",
+    "db:id_named:mssql",
+    "db:retail_one_row_sample",
+    "db:retail_one_row_sample:mssql",
+    "db:mixed_keys",
+    "db:mixed_keys:mssql",
+    "db:key_names",
+    "db:key_names:mssql",
+    "verify_cli:clean",
+    "verify_cli:clean_statistical",
+    "verify_cli:dup_pk",
+    "verify_cli:orphan_fk",
+    "verify_cli:null_in_required",
+    "verify_cli:missing_column",
+    "verify_cli:extra_column",
+    "verify_cli:retyped",
+    "verify_cli:missing_table",
+    "verify_cli:statistical_drift",
+    "plan:composites",
+    "timings:0.9.1"
+  ]
+}

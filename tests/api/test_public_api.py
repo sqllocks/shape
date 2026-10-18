@@ -40,7 +40,14 @@ def _bare_signature(obj: object) -> str:
 
 def _documented_signatures() -> dict[str, str]:
     """``{name: "(args)"}`` for every ``shape.name(args)`` line in the fenced blocks of API.md."""
-    text = API_DOC.read_text(encoding="utf-8")
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "docs_public_api", ROOT / "scripts/docs_public_api.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    text = module.reference_markdown()
     found: dict[str, str] = {}
     for block in re.findall(r"```python\n(.*?)```", text, flags=re.S):
         for line in block.splitlines():
@@ -117,7 +124,7 @@ def test_api_reference_lists_every_exported_name():
     documented = _documented_signatures()
     missing = [n for n in shape.__all__ if n not in documented and n != "Provenance"]
     assert not missing, f"docs/API.md has no signature line for {missing}"
-    assert "shape.Provenance" in API_DOC.read_text(encoding="utf-8")
+    assert "reference/api.md" in API_DOC.read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize("name", [n for n in shape.__all__ if n != "Provenance"])

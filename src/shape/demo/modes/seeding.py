@@ -376,6 +376,8 @@ class SeedingDemoMode:
             },
             "auth": conn.auth_settings(),
         }
+        if conn.lakehouse_schema:
+            request["fabric"]["lakehouse_schema"] = conn.lakehouse_schema
         result = scale_generate(
             request,
             jobs=self._rt.jobs or Jobs(),
@@ -390,12 +392,18 @@ class SeedingDemoMode:
         from shape.generation.engine import Engine
 
         engine = Engine(schema, scale=scale, seed=seed)
+        tables_root = f"onelake://{conn.workspace_id}/{conn.lakehouse_id}/Tables"
+        written_schema = fabric.get("lakehouse_schema") or conn.lakehouse_schema
+        if written_schema:  # the schema the worker was told to write under
+            from urllib.parse import quote
+
+            tables_root += "/" + quote(written_schema, safe="")
         for table in engine.order:
             self._manifest.add_artifact(
                 "lakehouse",
                 f"{prefix}{table}",
                 engine.row_counts.get(table, 0),
-                f"onelake://{conn.workspace_id}/{conn.lakehouse_id}/Tables/{prefix}{table}",
+                f"{tables_root}/{prefix}{table}",
             )
         return {
             "result": {

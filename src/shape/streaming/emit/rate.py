@@ -629,8 +629,9 @@ class VirtualClock:
     sent (out-of-order delivery) is due at once, and the clock waits for the next later one.
 
     With a daily ``curve`` the replay speed at an event is ``speed`` times the curve's multiplier
-    at that event's time of day (UTC, for a time without a zone): a busy hour replays faster than
-    a quiet night, so the events delivered per second of wall time follow the curve. The due time
+    at that event's time of day (UTC, for a time without a zone): a busy hour replays
+    at a higher rate than a quiet night, so the events delivered per second of wall time
+    follow the curve. The due time
     is the integral of ``1 / (speed x multiplier)`` over the event time, so it is still a
     function of the event time alone.
     """

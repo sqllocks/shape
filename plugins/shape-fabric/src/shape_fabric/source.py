@@ -1,6 +1,7 @@
 """The ``onelake://`` source: profile a lakehouse table or file straight from OneLake.
 
     onelake://<workspace>/<lakehouse>/Tables/<table>      a Delta table
+    onelake://<workspace>/<lakehouse>/Tables/<schema>/<table>  a schema-enabled Delta table
     onelake://<workspace>/<lakehouse>/Files/<path>        a file, a glob or a folder of files
 
 ``<workspace>`` and ``<lakehouse>`` are names or GUIDs (a lakehouse name may carry its type,

@@ -27,7 +27,8 @@ generated rows, and over the source above 50,000 rows); exact matching sees ever
 from __future__ import annotations
 
 import json
-from typing import Any
+from collections.abc import Callable
+from typing import Any, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -248,7 +249,7 @@ class MemorizationGate(ValidationGate):
             detail["nn_distance"] = {
                 "columns": used,
                 "rows_checked": int(len(g_idx)),
-                "min": float(dist.min()),
+                "min": float(cast(Callable[[], np.float64], dist.min)()),
                 "p05": float(np.percentile(dist, 5)),
                 "median": float(np.median(dist)),
             }

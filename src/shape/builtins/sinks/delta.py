@@ -43,16 +43,93 @@ def _deltalake() -> Any:
     return deltalake
 
 
+def _fabric_token(credential: Any) -> Callable[[], str] | None:
+    """A callable giving a Fabric-API bearer token for ``credential`` (or, in a Fabric notebook
+    with none given, the notebook identity); ``None`` when there is nothing to ask with."""
+    from shape.builtins.sources._azure_auth import NotebookUtilsCredential, _import_notebookutils
+    from shape.integrations.fabric.lakehouse_kind import FABRIC_SCOPE
+
+    if credential is None:
+        utils = _import_notebookutils()
+        has_identity = getattr(utils, "credentials", None) is not None  # a real notebook has it
+        credential = NotebookUtilsCredential(utils) if has_identity else None
+    if isinstance(credential, NotebookUtilsCredential):  # its storage token is the wrong audience
+        return lambda: str(credential._utils.credentials.getToken("pbi"))
+    if credential is None or not hasattr(credential, "get_token"):
+        return None
+    return lambda: str(credential.get_token(FABRIC_SCOPE).token)
+
+
+def _raw_storage_token(options: dict[str, Any]) -> bool:
+    """True when the caller gave a storage token (``token`` or one in ``storage_options``)."""
+    from shape.builtins.sources.delta import _TOKEN_KEYS
+
+    given = {str(k).lower() for k in dict(options.get("storage_options") or {})}
+    return bool(options.get("token")) or bool(_TOKEN_KEYS & given)
+
+
+def _lakehouse_tables(base: str, options: dict[str, Any]) -> str:
+    """``base``, with the schema folder added for a schema-enabled OneLake Lakehouse.
+
+    A OneLake ``.../Tables`` root is a classic Lakehouse's table folder, or a schema-enabled one's
+    parent of its schema folders. ``schema_enabled`` says which; unset, Fabric is asked (see
+    :mod:`shape.integrations.fabric.lakehouse_kind`) and an unknown kind is an error rather than a
+    guess. ``schema_name`` (default ``dbo``) picks the schema folder.
+    """
+    from shape.builtins.sinks.azure import is_onelake
+    from shape.builtins.sources.azure import parse
+    from shape.integrations.fabric.lakehouse_kind import resolve_layout
+
+    loc = parse(base)
+    root = loc.path.rstrip("/")
+    explicit = options.get("schema_enabled")
+    name = options.get("schema_name") or None
+    onelake_tables = (
+        bool(loc.host) and is_onelake(loc.host) and (root == "Tables" or root.endswith("/Tables"))
+    )
+    if not onelake_tables:
+        if explicit not in (None, "", False, "false", "False", "0", 0) or name:
+            raise ValueError(
+                "schema_enabled and schema_name need a OneLake Lakehouse target ending in /Tables"
+            )
+        return base
+    lakehouse = root.removesuffix("Tables").rstrip("/")
+    if not lakehouse or "/" in lakehouse:
+        raise ValueError("a Lakehouse target is abfss://<workspace>@<host>/<lakehouse>/Tables")
+    token = _fabric_token(options.get("credential"))
+    if explicit in (None, "") and not name and token is None and _raw_storage_token(options):
+        # The caller handed delta-rs its own storage token and there is no identity to ask Fabric
+        # with: the location is used as written (a schema-enabled Lakehouse then needs the schema
+        # in it, ``.../Tables/dbo``, or ``schema_enabled=true``). Nothing is guessed or looked up.
+        return base
+    layout = resolve_layout(
+        loc.container,
+        lakehouse,
+        schema_enabled=explicit,
+        schema_name=name,
+        token=token,
+    )
+    if layout.schema_enabled:
+        return base.rstrip("/") + "/" + str(layout.schema)
+    return base
+
+
 def _location(uri: str, table: str, options: dict[str, Any]) -> tuple[str, dict[str, str] | None]:
     """The table's location and delta-rs storage options."""
+    from shape.security.names import safe_name
+
+    prefix = options.get("table_prefix") or ""
+    if not isinstance(prefix, str):
+        raise ValueError("table_prefix must be a string")
+    table = safe_name(prefix + table)
     if uri.startswith(CLOUD_PREFIX):
         from shape.builtins.sinks.azure import _with_environment_keys
         from shape.builtins.sources.azure import parse
         from shape.builtins.sources.delta import _storage_options
-        from shape.security.names import safe_name
 
         base = uri[len(CLOUD_PREFIX) :]
         parse(base)  # validates the URI
+        base = _lakehouse_tables(base, options)
         # a key in AZURE_STORAGE_* is used when no credential is given, as for abfss://
         return f"{base.rstrip('/')}/{safe_name(table)}", _storage_options(
             base, _with_environment_keys(options)
@@ -154,8 +231,17 @@ def _utc_timestamps(schema: pa.Schema) -> pa.Schema:
 def _utc_type(t: pa.DataType) -> pa.DataType:
     if pa.types.is_timestamp(t) and t.tz is None:
         return pa.timestamp(t.unit, tz="UTC")
-    if pa.types.is_list(t) or pa.types.is_large_list(t):
-        return type(t)(t.value_field.with_type(_utc_type(t.value_type)))
+    if pa.types.is_list(t) or pa.types.is_large_list(t) or pa.types.is_fixed_size_list(t):
+        item = t.value_field.with_type(_utc_type(t.value_type))
+        if pa.types.is_large_list(t):
+            return pa.large_list(item)
+        return pa.list_(item, t.list_size) if pa.types.is_fixed_size_list(t) else pa.list_(item)
+    if pa.types.is_map(t):
+        return pa.map_(
+            t.key_field.with_type(_utc_type(t.key_type)),
+            t.item_field.with_type(_utc_type(t.item_type)),
+            keys_sorted=t.keys_sorted,
+        )
     if pa.types.is_struct(t):
         return pa.struct(
             [t.field(i).with_type(_utc_type(t.field(i).type)) for i in range(t.num_fields)]
@@ -164,6 +250,8 @@ def _utc_type(t: pa.DataType) -> pa.DataType:
 
 
 class DeltaSink:
+    """Write Arrow batches to a Delta table directory."""
+
     name = "delta"
     schemes = ("file", "delta+abfss", "delta+abfs")
     extension = ""  # no file extension: a directory per table

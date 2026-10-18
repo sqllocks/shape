@@ -219,5 +219,5 @@ def test_every_entry_has_a_reason_an_alternative_and_a_link_that_resolves() -> N
 
 
 def test_it_is_linked_from_contributing() -> None:
-    for path in ("CONTRIBUTING.md", "docs/CONTRIBUTING.md"):
+    for path in ("CONTRIBUTING.md",):
         assert "NOT_BUILDING.md" in (ROOT / path).read_text("utf-8"), path

@@ -1,0 +1,246 @@
+{
+  "format": "shape-db-record",
+  "inputs": {
+    "scenario/name_only/customer": "3113a3a83c7e81f627b4e2a58d77e047926bb62e4555975fe5cbddf604d3412b",
+    "scenario/name_only/orders": "cdd4236286c0e7cc22ac3726742612d62a904f0dec98e7f88701e98336ff2eb8"
+  },
+  "profile": {
+    "relationships": [
+      {
+        "child": "orders",
+        "child_columns": [
+          "customer_id"
+        ],
+        "evidence": "name",
+        "name": "fk_orders_customer_id",
+        "parent": "customer",
+        "parent_columns": [
+          "id"
+        ],
+        "type": "one_to_many"
+      }
+    ],
+    "table_order": [
+      "customer",
+      "orders"
+    ],
+    "tables": {
+      "customer": {
+        "column_order": [
+          "id",
+          "label"
+        ],
+        "columns": {
+          "id": {
+            "cardinality": 60,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": true,
+            "is_unique": true,
+            "max_value": [
+              "float",
+              60.0
+            ],
+            "mean": 30.5,
+            "min_value": [
+              "float",
+              1.0
+            ],
+            "name": "id",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 17.46424919657298,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "label": {
+            "cardinality": 60,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "string",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": true,
+            "max_value": null,
+            "mean": null,
+            "min_value": null,
+            "name": "label",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": null,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          }
+        },
+        "correlation_matrix": null,
+        "detected_fks": {},
+        "name": "customer",
+        "primary_key": [
+          "id"
+        ],
+        "row_count": 60
+      },
+      "orders": {
+        "column_order": [
+          "order_id",
+          "customer_id",
+          "amount"
+        ],
+        "columns": {
+          "amount": {
+            "cardinality": 198,
+            "cardinality_ratio": 0.99,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "float",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": [
+              "float",
+              89.97
+            ],
+            "mean": 44.38965,
+            "min_value": [
+              "float",
+              0.91
+            ],
+            "name": "amount",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 26.27547832454087,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "customer_id": {
+            "cardinality": 40,
+            "cardinality_ratio": 0.2,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": "customer",
+            "hour_histogram": null,
+            "is_enum": true,
+            "is_foreign_key": true,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": [
+              "float",
+              700039.0
+            ],
+            "mean": 700019.095,
+            "min_value": [
+              "float",
+              700000.0
+            ],
+            "name": "customer_id",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 11.989357718095757,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "order_id": {
+            "cardinality": 200,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": true,
+            "is_unique": true,
+            "max_value": [
+              "float",
+              500199.0
+            ],
+            "mean": 500099.5,
+            "min_value": [
+              "float",
+              500000.0
+            ],
+            "name": "order_id",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 57.879184513951124,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          }
+        },
+        "correlation_matrix": null,
+        "detected_fks": {
+          "customer_id": "customer"
+        },
+        "name": "orders",
+        "primary_key": [
+          "order_id"
+        ],
+        "row_count": 200
+      }
+    }
+  },
+  "recorded_utc": "2026-10-13T01:47:50Z",
+  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_version": "0.9.1",
+  "table_digests": {
+    "scenario/name_only/customer": "sha256:9192bf1a79d50cdde031d2e42ac66c8a4819e29e06d4f841da5499851785b9cb",
+    "scenario/name_only/orders": "sha256:369fabe624027e80b39aea1443a3b2bea13d3f595332e3cd0e8df4f68b12fe76"
+  },
+  "version": 1,
+  "workload": "db:name_only"
+}

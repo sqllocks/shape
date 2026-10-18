@@ -13,6 +13,8 @@ from typing import Any
 
 
 class Strategy:
+    """Base interface for a row-indexed generation strategy."""
+
     def generate(self, row: int, ctx: Mapping[str, Any], rng: random.Random) -> Any:
         raise NotImplementedError
 

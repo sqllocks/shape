@@ -121,7 +121,7 @@ def _json_safe(value):
     return value
 
 
-label = str(tableName) or str(sourcePath).rstrip("/").rsplit("/", 1)[-1]
+label = str(tableName) or str(sourcePath).replace(chr(92), "/").rstrip("/").rsplit("/", 1)[-1]
 safe_name = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in label) or "table"
 out_parent = f"{str(outputPath).rstrip('/')}/{safe_name}"  # one new folder per run below it
 MAX_LISTED = 100  # keep the exit value small (well under 1 MB)

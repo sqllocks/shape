@@ -1,0 +1,30 @@
+name: Platform request
+description: Request a read, write or export adapter.
+body:
+- type: markdown
+  attributes:
+    value: Do not include credentials, production rows or private profiles.
+- type: textarea
+  id: platform
+  attributes:
+    label: Platform and version
+  validations:
+    required: true
+- type: textarea
+  id: direction
+  attributes:
+    label: Read, write or export?
+  validations:
+    required: true
+- type: textarea
+  id: auth
+  attributes:
+    label: Authentication model
+  validations:
+    required: true
+- type: textarea
+  id: case
+  attributes:
+    label: Expected behavior and local test strategy
+  validations:
+    required: true

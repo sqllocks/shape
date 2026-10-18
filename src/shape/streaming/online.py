@@ -8,6 +8,8 @@ from shape.capture import capture_rows
 
 
 class OnlineShape:
+    """Maintain a bounded row buffer and accumulated stream count."""
+
     def __init__(self, max_buffer=10000):
         if max_buffer < 1:
             raise ValueError("max_buffer must be at least 1 (the number of rows kept)")

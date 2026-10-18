@@ -133,6 +133,8 @@ export BENCH_OUT_DIR="${BENCH_OUT_DIR:-$HOME/bench-out}"     # scratch output (n
 
 ### 1.2 Pinned RefEngine baseline (T-20)
 
+Historical from FRZ-01: the reference engine is not installed; see `benchmarks/vs_refengine/README.md`. The last published Shape release is the regression baseline.
+
 RefEngine is public at `https://github.com/sqllocks/refengine`, and an anonymous clone
 works. The pinned commit is 3.0.1, which is newer than the 3.0.0 on PyPI, so always
 use git.

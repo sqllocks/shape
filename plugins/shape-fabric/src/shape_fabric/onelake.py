@@ -223,11 +223,14 @@ def done_flag(base: str, domain: str, entity: str, dt: str) -> str:
     return join(control(base, domain, entity), f"_SUCCESS_{_dt(dt)}")
 
 
-def tables_folder(base: str, table: str) -> str:
-    """``<lakehouse>/Tables/<table>``: the sibling of the ``Files`` folder ``base`` names."""
+def tables_folder(base: str, table: str, *, schema_name: str | None = None) -> str:
+    """A sibling table of ``Files``; include ``schema_name`` for schema-enabled Lakehouses."""
     segment(table, "table")
     root = posixpath.normpath(base.replace("\\", "/")) if not is_remote(base) else base.rstrip("/")
     head, _, last = root.rpartition("/")
     if last != "Files":
         raise ShapeError(f"{base!r} is not a lakehouse Files folder (it must end in /Files)")
+    if schema_name is not None:
+        segment(schema_name, "schema")
+        return join(head, "Tables", schema_name, table)
     return join(head, "Tables", table)

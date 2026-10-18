@@ -6,11 +6,11 @@
 
 Each timed run is a fresh process of
 
-    $REFENGINE_VENV/bin/refengine generate DOMAIN --scale S --seed 42   --format parquet -o DIR
+    $BASELINE_VENV/bin/shape generate DOMAIN --scale S --seed 42   --format parquet -o DIR
     $SHAPE_VENV/bin/shape     generate DOMAIN --scale S --seed 1042 --format parquet -o DIR
 
 (wall clock around the whole process: interpreter start, imports, generation, writing). The output
-goes to the ``<impl>-cli`` layout directories (``refengine-cli``, ``shape-cli``), next to the API
+goes to the ``<impl>-cli`` layout directories (``baseline-cli``, ``shape-cli``), next to the API
 runs, so ``verify.py --impl shape --cli`` checks exactly what the CLI wrote (equivalence first:
 run it, require exit 0, then trust the timings). Default threading for both; ``--shape-threads 1``
 also times single-threaded Shape. The whole run holds the exclusive benchmark lock and each run
@@ -30,22 +30,22 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
-import _refpkg  # noqa: E402
 import generate  # noqa: E402
 from common import bench_lock, machine_meta, rusage, wait_for_quiet  # noqa: E402
-from paths import BENCH_OUT_DIR, REFENGINE_VENV, SHAPE_VENV  # noqa: E402
+from paths import BASELINE_VENV, BENCH_OUT_DIR, SHAPE_VENV  # noqa: E402
 
 REF_SEED = 42
 IMPL_SEED = 1042
 
 
 def command(tool: str, domain: str, scale: str, dest: Path) -> list[str]:
-    if tool == "refengine":
-        exe, seed = REFENGINE_VENV / "bin" / _refpkg.CONSOLE, REF_SEED
+    if tool == "baseline":
+        exe, seed = BASELINE_VENV / "bin" / "shape", REF_SEED
     else:
         exe, seed = SHAPE_VENV / "bin" / "shape", IMPL_SEED
     return [
@@ -63,10 +63,10 @@ def command(tool: str, domain: str, scale: str, dest: Path) -> list[str]:
     ]
 
 
-def run_once(tool: str, domain: str, scale: str, threads: int | None) -> dict:
+def run_once(tool: str, domain: str, scale: str, threads: int | None) -> dict[str, Any]:
     """One fresh-process run; the output replaces the tool's layout directory afterwards."""
-    impl = "refengine" if tool == "refengine" else "shape"
-    seed = REF_SEED if tool == "refengine" else IMPL_SEED
+    impl = "baseline" if tool == "baseline" else "shape"
+    seed = REF_SEED if tool == "baseline" else IMPL_SEED
     # CLI runs live next to the API runs (``<impl>-cli``), never in their place: the API reference
     # runs record the generation order of the tables, a CLI run only the files it wrote.
     final = generate.out_dir(f"{impl}-cli", domain, scale, seed)
@@ -74,7 +74,10 @@ def run_once(tool: str, domain: str, scale: str, threads: int | None) -> dict:
     shutil.rmtree(tmp, ignore_errors=True)  # no cache between runs
     load = wait_for_quiet()
     env = dict(os.environ)
-    if threads is not None and tool != "refengine":
+    if tool == "baseline":
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+    if threads is not None and tool != "baseline":
         env["SHAPE_THREADS"] = str(threads)
     cmd = command(tool, domain, scale, tmp)
     before = rusage(children=True)
@@ -83,8 +86,8 @@ def run_once(tool: str, domain: str, scale: str, threads: int | None) -> dict:
     wall = time.perf_counter() - t0
     after = rusage(children=True)
     if done.returncode != 0:
-        raise RuntimeError(f"{' '.join(cmd)} failed ({done.returncode}):\n{done.stderr[-2000:]}")
-    import pyarrow.parquet as pq  # noqa: PLC0415  (after the timed region)
+        raise RuntimeError(f"generation process failed (exit {done.returncode})")
+    import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
     rows = {p.stem: pq.read_metadata(p).num_rows for p in sorted(tmp.glob("*.parquet"))}
     (tmp / generate.SUCCESS).write_text(
@@ -110,8 +113,8 @@ def run_once(tool: str, domain: str, scale: str, threads: int | None) -> dict:
     }
 
 
-def median(runs: list[dict], key: str) -> float:
-    return statistics.median(r[key] for r in runs)
+def median(runs: list[dict[str, Any]], key: str) -> float:
+    return float(statistics.median(r[key] for r in runs))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -129,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
     report = (
         Path(a.report) if a.report else BENCH_OUT_DIR / "bench" / f"cli_{label}_{a.domain}.json"
     )
-    out: dict = {
+    out: dict[str, Any] = {
         "meta": {
             **machine_meta(),
             "domain": a.domain,
@@ -140,10 +143,10 @@ def main(argv: list[str] | None = None) -> int:
         },
         "scales": {},
     }
-    tools = ["refengine", "shape"]
+    tools = ["baseline", "shape"]
     with bench_lock():
         for scale in a.scales.split(","):
-            raw: dict[str, list[dict]] = {t: [] for t in tools}
+            raw: dict[str, list[dict[str, Any]]] = {t: [] for t in tools}
             for i in range(a.warmup):
                 for t in tools:
                     r = run_once(t, a.domain, scale, a.shape_threads)
@@ -157,16 +160,16 @@ def main(argv: list[str] | None = None) -> int:
                         f"load {r['loadavg_before']:.2f}",
                         flush=True,
                     )
-            sp, sh = median(raw["refengine"], "wall_s"), median(raw["shape"], "wall_s")
+            sp, sh = median(raw["baseline"], "wall_s"), median(raw["shape"], "wall_s")
             out["scales"][scale] = {
-                "refengine_median_s": sp,
+                "baseline_median_s": sp,
                 "shape_median_s": sh,
                 "ratio": sp / sh,
-                "refengine_runs_s": [round(r["wall_s"], 3) for r in raw["refengine"]],
+                "baseline_runs_s": [round(r["wall_s"], 3) for r in raw["baseline"]],
                 "shape_runs_s": [round(r["wall_s"], 3) for r in raw["shape"]],
                 "raw": raw,
             }
-            print(f"[{scale}] median refengine {sp:.3f}s, shape {sh:.3f}s => {sp / sh:.2f}x")
+            print(f"[{scale}] median baseline {sp:.3f}s, shape {sh:.3f}s => {sp / sh:.2f}x")
             report.parent.mkdir(parents=True, exist_ok=True)
             report.write_text(json.dumps(out, indent=1))
     return 0

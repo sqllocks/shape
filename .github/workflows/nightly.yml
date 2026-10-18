@@ -1,12 +1,13 @@
 name: Nightly
 on:
   schedule: [{cron: '17 3 * * *'}]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Lead-only recording: enter record-0.9.1'
+        required: false
+        type: string
 permissions: {contents: read}
-env:
-  # The reference engine's short name, set outside the repository (a repository variable); the
-  # comparison harness (benchmarks/vs_refengine) and its tests derive the engine's names from it.
-  REFENGINE_NAME: ${{ secrets.REFENGINE_NAME }}
 jobs:
   parity-suite:
     # P8-02: the nightly parity suite, `run.py --full` over every domain and every profiling
@@ -23,20 +24,29 @@ jobs:
     env: {BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"}
     steps:
       - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - name: Pinned RefEngine baseline and venv (plan section 1.2)
-        run: source scripts/env.sh && bash benchmarks/vs_refengine/setup_refengine.sh
-      - name: Shape venv (pyarrow pinned like the RefEngine venv, so timings share one pyarrow)
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - name: Shape 0.9.1 baseline venv
         run: |
           source scripts/env.sh
-          python -m venv "$SHAPE_VENV"
-          "$SHAPE_VENV/bin/pip" install -U pip
-          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains 'pyarrow==25.0.1'
-      - run: source scripts/env.sh && python benchmarks/vs_refengine/check_coverage.py
+          bash benchmarks/vs_refengine/setup_baseline.sh
+          "$BASELINE_PY" -m pip install 'pandas>=2' 'scipy>=1.11'
+          "$BASELINE_PY" -m pip freeze > "$BENCH_OUT_DIR/baseline_freeze.txt"
+      - name: Shape venv (same PyArrow as the release baseline)
+        run: |
+          source scripts/env.sh
+
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv sync --locked --group benchmark
+      - run: source scripts/env.sh && UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/recorded/check.py
       - run: >-
           source scripts/env.sh &&
-          python benchmarks/vs_refengine/nightly.py run --shard ${{ matrix.shard }}
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/nightly.py run --shard ${{ matrix.shard }}
           --out-dir "$BENCH_OUT_DIR/nightly"
       - uses: actions/upload-artifact@v4
         if: always()
@@ -45,7 +55,7 @@ jobs:
           path: |
             ${{ github.workspace }}/bench-out/nightly/
             ${{ github.workspace }}/bench-out/verify/
-            ${{ github.workspace }}/bench-out/refengine_freeze.txt
+            ${{ github.workspace }}/bench-out/baseline_freeze.txt
   parity-publish:
     # P8-02: merge the shards, judge the night (green only when every workload of the full
     # suite was recorded and its verifier exited 0), append to the nightly history and build
@@ -59,6 +69,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked
       - uses: actions/download-artifact@v4
         with: {pattern: 'parity-*', path: bench-out/download}
       - name: Collect the shard directories
@@ -75,16 +91,16 @@ jobs:
         id: merge
         run: |
           set +e
-          python benchmarks/vs_refengine/nightly.py merge --in-dir bench-out/shards \
+          uv run --locked --no-sync python benchmarks/vs_refengine/nightly.py merge --in-dir bench-out/shards \
             --out bench-out/parity/results.json --history bench-out/history/nightly.jsonl
           echo "rc=$?" >> "$GITHUB_OUTPUT"
       - name: Performance page (verified numbers only)
         run: |
           if [ -f bench-out/parity/results.json ]; then
-            python scripts/gen_performance_page.py --results bench-out/parity/results.json \
+            uv run --locked --no-sync python scripts/gen_performance_page.py --results bench-out/parity/results.json \
               --history bench-out/history/nightly.jsonl --out bench-out/parity/PERFORMANCE.md
           fi
-          python benchmarks/vs_refengine/nightly.py streak --history bench-out/history/nightly.jsonl \
+          uv run --locked --no-sync python benchmarks/vs_refengine/nightly.py streak --history bench-out/history/nightly.jsonl \
             --need 7 || true
       - uses: actions/cache/save@v4
         if: always()
@@ -108,10 +124,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install -e '.[dev]'
-      - run: python -m pytest -q tests/diff/test_drift_sweep.py
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run --locked --no-sync python -m pytest -q tests/diff/test_drift_sweep.py
         env: {SHAPE_KERNEL: rust, SHAPE_DRIFT_SWEEP: full}
-      - run: python -m pytest -q tests/diff/test_drift_sweep.py
+      - run: uv run --locked --no-sync python -m pytest -q tests/diff/test_drift_sweep.py
         env: {SHAPE_KERNEL: python, SHAPE_DRIFT_SWEEP: full}
   emit-rate-soak:
     # P5-01 / G5: the emitter's realtime rate holds within 5% at 10,000 events/s for one hour
@@ -122,8 +143,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install -e '.[dev]' -e plugins/shape-domains
-      - run: python -m pytest -q -s -m heavy tests/streaming/emit/test_soak.py
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run --locked --no-sync python -m pytest -q -s -m heavy tests/streaming/emit/test_soak.py
         env: {SHAPE_RATE_SOAK_SECONDS: "3600"}
   live-fidelity:
     # G5 / P5-03: the live score is within 0.5 points of `shape fidelity` on the same events
@@ -134,13 +160,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - name: Shape venv (the harness runs `shape fidelity` from $SHAPE_VENV)
         run: |
           source scripts/env.sh
-          python -m venv "$SHAPE_VENV"
-          "$SHAPE_VENV/bin/pip" install -U pip
-          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains
-      - run: source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/live_fidelity/run.py --evidence live_fidelity.json
+
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv sync --locked --group benchmark
+      - run: source scripts/env.sh && UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/live_fidelity/run.py --evidence live_fidelity.json
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: live-fidelity, path: live_fidelity.json}
@@ -157,10 +187,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install -e '.[dev]' -e plugins/shape-domains
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked
       # every scenario of library/index.json, from a suite file built out of the index
-      - run: python scripts/build_library_suite.py library-suite.json
-      - run: python -m shape suite run library-suite.json --scale small
+      - run: uv run --locked --no-sync python scripts/build_library_suite.py library-suite.json
+      - run: uv run --locked --no-sync python -m shape suite run library-suite.json --scale small
   emulator-compose:
     # The emulator-backed test jobs (Kafka, Event Hubs + Azurite, SQL Server) arrive with the
     # work packages that own those connectors; until then, keep the compose file valid.
@@ -177,9 +212,14 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       # the sink's CLI test generates the retail domain, which lives in shape-domains
-      - run: pip install -e '.[dev,azure]' -e plugins/shape-domains azure-storage-blob
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked --group azure
       - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait azurite
-      - run: python -m pytest -q -m emulator tests/builtins/test_cloud_sources_azurite.py tests/builtins/test_abfss_sink_azurite.py
+      - run: uv run --locked --no-sync python -m pytest -q -m emulator tests/builtins/test_cloud_sources_azurite.py tests/builtins/test_abfss_sink_azurite.py
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   kafka-e2e:
@@ -191,9 +231,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait kafka
-      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka
-      - run: python -m pytest -m emulator plugins/shape-kafka/tests -q
+      - run: uv sync --locked
+      - run: uv run --locked --no-sync python -m pytest -m emulator plugins/shape-kafka/tests -q
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   eventhubs-e2e:
@@ -205,9 +250,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait azurite eventhubs
-      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-eventhubs
-      - run: python -m pytest -m emulator plugins/shape-eventhubs/tests -q
+      - run: uv sync --locked
+      - run: uv run --locked --no-sync python -m pytest -m emulator plugins/shape-eventhubs/tests -q
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   fabric-emit-e2e:
@@ -219,12 +269,45 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait azurite eventhubs
       - run: docker compose -f ci/emulators/docker-compose.yml up -d kusto
-      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric
+      - run: uv sync --locked
       # the Kusto emulator tests: the emitter and the Eventhouse writer (the SQL writer's
       # emulator tests run in sqlserver-e2e)
-      - run: python -m pytest -m emulator plugins/shape-fabric/tests/test_emulator.py plugins/shape-fabric/tests/test_kusto_emulator.py -q
+      - run: uv run --locked --no-sync python -m pytest -m emulator plugins/shape-fabric/tests/test_emulator.py plugins/shape-fabric/tests/test_kusto_emulator.py -q
+      - name: Kusto diagnostics after a failed emulator test
+        if: failure()
+        run: |
+          docker compose -f ci/emulators/docker-compose.yml logs --no-color kusto
+          docker compose -f ci/emulators/docker-compose.yml ps -a
+          docker inspect --format '{{json .State}}' "$(docker compose -f ci/emulators/docker-compose.yml ps -a -q kusto)"
+          docker stats --no-stream
+          uv run --locked --no-sync python - <<'PY'
+          import json
+          import urllib.request
+
+          # Startup stdout does not show whether a table survived or its streaming policy.
+          for command in (
+              ".show tables",
+              ".show database NetDefaultDB schema as json",
+              ".show operations | take 50",
+              ".show commands-and-queries | take 50",
+              ".show journal | take 50",
+          ):
+              print(command, flush=True)
+              request = urllib.request.Request(
+                  "http://localhost:8080/v1/rest/mgmt",
+                  data=json.dumps({"db": "NetDefaultDB", "csl": command}).encode(),
+                  headers={"Content-Type": "application/json"},
+              )
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  print(response.status, response.read().decode())
+          PY
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   emit-live:
@@ -252,15 +335,21 @@ jobs:
         uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - if: env.HAVE_LIVE == 'true'
-        run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - if: env.HAVE_LIVE == 'true'
+        run: uv sync --locked
       - if: env.HAVE_LIVE == 'true' && env.KAFKA_SERVERS != ''
-        run: python -m pytest -m live plugins/shape-kafka/tests -q
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-kafka/tests -q
       - if: env.HAVE_LIVE == 'true' && env.EVENTHUBS_CONNECTION_STRING != ''
-        run: python -m pytest -m live plugins/shape-eventhubs/tests -q
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-eventhubs/tests -q
       - if: env.HAVE_LIVE == 'true' && env.FABRIC_EVENTSTREAM_CONNECTION_STRING != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live.py -q -k eventstream
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live.py -q -k eventstream
       - if: env.HAVE_LIVE == 'true' && env.FABRIC_EVENTHOUSE_URI != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live.py -q -k eventhouse
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live.py -q -k eventhouse
   fabric-live:
     # P6-07a: the Fabric writers (Lakehouse files, SQL database, Warehouse COPY INTO, Eventhouse,
     # Eventstream) against real items. Runs only where the owner's O-02 secrets exist: every step is
@@ -291,45 +380,51 @@ jobs:
       - if: env.HAVE_ANY == 'true'
         uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - if: env.HAVE_ANY == 'true'
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - name: Microsoft ODBC Driver 18
         if: env.HAVE_ANY == 'true'
         run: |
-          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
           echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
       - if: env.HAVE_ANY == 'true'
-        run: pip install -e '.[dev,azure]' -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e 'plugins/shape-fabric[entra]'
+        run: uv sync --locked --group azure
       - if: env.HAVE_ANY == 'true'
         run: mkdir -p "$SHAPE_RECORD_DIR"
       - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_STAGING_PATH != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k lakehouse
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k lakehouse
       - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_SQL_CONNECTION_STRING != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k sql_database
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k sql_database
       - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WAREHOUSE_CONNECTION_STRING != '' && env.FABRIC_STAGING_PATH != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k warehouse
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k warehouse
       - if: env.HAVE_ANY == 'true' && env.FABRIC_EVENTHOUSE_URI != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k eventhouse
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k eventhouse
       - if: env.HAVE_ANY == 'true' && env.FABRIC_EVENTSTREAM_CONNECTION_STRING != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k eventstream
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k eventstream
       # P6-13: the scale router's Fabric sinks and the fabric_spark mode, on the same secrets.
       - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_STAGING_PATH != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k lakehouse
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k lakehouse
       - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_SQL_CONNECTION_STRING != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k sql_database
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k sql_database
       - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WAREHOUSE_CONNECTION_STRING != '' && env.FABRIC_STAGING_PATH != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k warehouse
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k warehouse
       - if: env.HAVE_ANY == 'true' && env.FABRIC_EVENTHOUSE_URI != '' && env.FABRIC_EVENTHOUSE_TOKEN != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k kql
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k kql
       - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WORKSPACE_ID != '' && env.FABRIC_LAKEHOUSE_ID != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k fabric_spark
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k fabric_spark
       # P6-07c: the Fabric commands (deploy-notebook, setup-fabric, publish) against a real workspace.
       - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WORKSPACE_ID != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k "deploy_notebook or setup"
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k "deploy_notebook or setup"
       - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_STAGING_PATH != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k lakehouse
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k lakehouse
       - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_SQL_CONNECTION_STRING != ''
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k sql_database
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k sql_database
       - if: always() && env.HAVE_ANY == 'true'
         uses: actions/upload-artifact@v4
         with:
@@ -359,22 +454,30 @@ jobs:
         uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - if: env.HAVE_ABFSS == 'true'
-        run: pip install -e '.[dev,azure]'
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - if: env.HAVE_ABFSS == 'true'
-        run: python -m pytest -m live tests/builtins/test_abfss_sink_live.py -q
+        run: uv sync --locked --group azure
+      - if: env.HAVE_ABFSS == 'true'
+        run: uv run --locked --no-sync python -m pytest -m live tests/builtins/test_abfss_sink_live.py -q
   fabric-git-sync-live:
     # W7-01: a shape/ folder of .shape files next to Fabric items survives Fabric Git integration in
-    # both directions. Runs only where the owner's O-02 secrets and the Git remote exist; uploads the
-    # shape-live-check JSON result (no secret, tenant or workspace id).
+    # both directions. Runs against the Git-connected workspace (shape-git-test) with the values the
+    # fabric-live environment holds (variables for ids and the remote, secrets for the secrets);
+    # uploads the shape-live-check JSON result (no secret, tenant or workspace id).
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    environment: fabric-live
     env:
-      HAVE_GIT_SYNC: ${{ secrets.FABRIC_CLIENT_ID != '' && secrets.FABRIC_WORKSPACE_ID != '' && secrets.FABRIC_GIT_REMOTE != '' }}
-      FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
-      FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+      HAVE_GIT_SYNC: ${{ vars.FABRIC_CLIENT_ID != '' && vars.FABRIC_GIT_WORKSPACE_ID != '' && vars.FABRIC_GIT_REMOTE != '' }}
+      FABRIC_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
       FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
-      FABRIC_WORKSPACE_ID: ${{ secrets.FABRIC_WORKSPACE_ID }}
-      FABRIC_GIT_REMOTE: ${{ secrets.FABRIC_GIT_REMOTE }}
+      FABRIC_GIT_WORKSPACE_ID: ${{ vars.FABRIC_GIT_WORKSPACE_ID }}
+      FABRIC_GIT_REMOTE: ${{ vars.FABRIC_GIT_REMOTE }}
       FABRIC_GIT_TOKEN: ${{ secrets.FABRIC_GIT_TOKEN }}
       SHAPE_LIVE_RESULT: ${{ github.workspace }}/git-sync-result.json
     steps:
@@ -386,9 +489,15 @@ jobs:
         uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - if: env.HAVE_GIT_SYNC == 'true'
-        run: pip install -e '.[dev]' -e 'plugins/shape-fabric[entra]'
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - if: env.HAVE_GIT_SYNC == 'true'
-        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py -q
+        run: uv sync --locked --group azure
+      - if: env.HAVE_GIT_SYNC == 'true'
+        run: uv run --locked --no-sync python -m pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py -q
       - if: always() && env.HAVE_GIT_SYNC == 'true'
         uses: actions/upload-artifact@v4
         with:
@@ -407,6 +516,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - name: Microsoft ODBC Driver 18
         run: |
           curl -sSL -o "$RUNNER_TEMP/packages-microsoft-prod.deb" "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
@@ -417,23 +531,18 @@ jobs:
       - name: Shape venv with the plugin
         run: |
           source scripts/env.sh
-          python -m venv "$SHAPE_VENV"
-          "$SHAPE_VENV/bin/pip" install -U pip
-          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric
+
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv sync --locked --group benchmark
       - name: Emulator tests
-        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-sqlserver/tests -q
+        run: source scripts/env.sh && UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python -m pytest -m emulator plugins/shape-sqlserver/tests -q
       - name: Fabric SQL writer against the real server (P6-07a)
-        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-fabric/tests/test_sql_emulator.py -q
+        run: source scripts/env.sh && UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python -m pytest -m emulator plugins/shape-fabric/tests/test_sql_emulator.py -q
       - name: Fabric sqlserver sink (mssql:// URI, commit_rows) against the real server (ISS2-sinks)
-        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-fabric/tests/test_sqlserver_sink_emulator.py -q
+        run: source scripts/env.sh && UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python -m pytest -m emulator plugins/shape-fabric/tests/test_sqlserver_sink_emulator.py -q
       - name: shape seed against the real server (W5-05)
-        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-fabric/tests/test_seed_sqlserver_emulator.py -q
-      - name: Pinned baseline venv (plan section 1.2) with pyodbc
-        run: |
-          source scripts/env.sh && bash benchmarks/vs_refengine/setup_refengine.sh
-          "$REFENGINE_PY" -m pip install pyodbc
+        run: source scripts/env.sh && UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python -m pytest -m emulator plugins/shape-fabric/tests/test_seed_sqlserver_emulator.py -q
       - name: T-22 parity of database profiling on the real server
-        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/db_1to1/verify.py --mssql "$SHAPE_TEST_MSSQL;Database=tempdb"
+        run: source scripts/env.sh && UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/db_1to1/verify.py --mssql "$SHAPE_TEST_MSSQL;Database=tempdb"
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   databases-e2e:
@@ -450,9 +559,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait postgres mysql
-      - run: pip install -e '.[dev]' -e plugins/shape-domains -e 'plugins/shape-databases[postgres,mysql]'
-      - run: python -m pytest -m emulator plugins/shape-databases/tests -q
+      - run: uv sync --locked
+      - run: uv run --locked --no-sync python -m pytest -m emulator plugins/shape-databases/tests -q
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   artifact-fuzz:
@@ -465,8 +579,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install -e '.[dev]'
-      - run: python scripts/fuzz_artifacts.py --seed "$(date +%s)" --iterations 3000 --out fuzz-findings
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run --locked --no-sync python scripts/fuzz_artifacts.py --seed "$(date +%s)" --iterations 3000 --out fuzz-findings
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -483,9 +602,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: python -m pip install -U pip
-      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-dbt dbt-duckdb
-      - run: python -m pytest -q -m dbt plugins/shape-dbt/tests
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked --group dbt
+      - run: uv run --locked --no-sync python -m pytest -q -m dbt plugins/shape-dbt/tests
   healthcare-standards-validator:
     # HC-standards, PLUG-INT: the generated FHIR bundles pass the official HL7 validator
     # (about one minute; downloads validator_cli.jar and the US Core and CARIN BB packages).
@@ -495,16 +618,20 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '21'}
-      - run: python -m pip install -U pip
-      - run: pip install -e '.[dev]' -e plugins/shape-healthcare-codes -e 'plugins/shape-healthcare-standards[test]'
+      - run: uv sync --locked
       - run: |
           mkdir -p "$HOME/.cache/shape-hc"
           curl -sSL -o "$HOME/.cache/shape-hc/validator_cli.jar" https://github.com/hapifhir/org.hl7.fhir.core/releases/latest/download/validator_cli.jar
       - run: |
           export SHAPE_FHIR_VALIDATOR_JAR="$HOME/.cache/shape-hc/validator_cli.jar"
-          python -m pytest -q -m live plugins/shape-healthcare-standards/tests/fhir/test_official_validator.py
+          uv run --locked --no-sync python -m pytest -q -m live plugins/shape-healthcare-standards/tests/fhir/test_official_validator.py
   fabric-demo-windows:
     # W1-09: the Fabric demo tests (Spark with the Delta catalog) on Windows, to capture the
     # first Spark error the Windows helpers must fix. Linux runs them in ci.yml's fabric-demo job.
@@ -513,6 +640,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '17'}
       # W1-09: Spark's Hadoop client needs winutils.exe and hadoop.dll on Windows (HADOOP_HOME\bin).
@@ -536,19 +668,73 @@ jobs:
           }
           "HADOOP_HOME=$hadoop" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           (Join-Path $hadoop "bin") | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-      - run: python -m pip install -U pip
       # tests/demo/fabric/test_dbt.py needs shape-dbt, as in ci.yml's fabric-demo job
-      - run: pip install -e '.[dev]' -e plugins/shape-dbt -r tests/demo/fabric/requirements.txt
-      - run: python -m pytest -q tests/demo/fabric tests/demo/content
+      - run: uv sync --locked --group fabric-demo
+      - run: uv run --locked --no-sync python -m pytest -q tests/demo/fabric tests/demo/content
   plugin-template-install:
     # W6-01: the 12 `nightly`-marked cases (each rendered `shape plugins new` template is built,
-    # installed into a fresh virtual environment and checked with `python -m shape.plugins.kit`).
+    # installed into a fresh virtual environment and checked with `uv run --locked --no-sync python -m shape.plugins.kit`).
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install -e '.[dev]'
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked
       # the Fabric demo and content tests need their own requirements (fabric-demo job)
-      - run: python -m pytest -q -m nightly --ignore=tests/demo/fabric --ignore=tests/demo/content
+      - run: uv run --locked --no-sync python -m pytest -q -m nightly --ignore=tests/demo/fabric --ignore=tests/demo/content
+
+  record-baseline:
+    # Lead downloads and reviews this artifact; the workflow never commits it.
+    if: github.event_name == 'workflow_dispatch' && inputs.confirm == 'record-0.9.1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"
+      SHAPE_TEST_MSSQL: "Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;UID=sa;PWD=Shape_Emulator_1;Encrypt=yes;TrustServerCertificate=yes"
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - name: Microsoft ODBC Driver 18
+        run: |
+          curl -sSL -o "$RUNNER_TEMP/packages-microsoft-prod.deb" "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+          sudo dpkg -i "$RUNNER_TEMP/packages-microsoft-prod.deb"
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait mssql
+      - name: Baseline release and recording dependencies
+        run: |
+          source scripts/env.sh
+          bash benchmarks/vs_refengine/setup_baseline.sh
+          "$BASELINE_PY" -m pip install 'sqllocks-shape-sqlserver==0.9.1' 'pandas>=2' 'scipy>=1.11'
+          "$BASELINE_PY" -m pip freeze > "$BENCH_OUT_DIR/baseline_freeze.txt"
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv sync --locked --group benchmark
+      - name: Record every release workload, equivalence before timing
+        run: |
+          source scripts/env.sh
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/record_baseline.py --all --smoke \
+            --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" --out benchmarks/vs_refengine/recorded
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/profile_1to1/datasets.py
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/record_baseline.py --all \
+            --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" --out benchmarks/vs_refengine/recorded
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/recorded/check.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: recorded-baseline
+          path: |
+            benchmarks/vs_refengine/recorded/
+            bench-out/baseline_freeze.txt
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v

@@ -1,0 +1,39 @@
+{
+  "run_id": "38320894194",
+  "commit": "6eb065e8f7349613291e67678b05227ab1e002ff",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765374464,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/SCALE.md",
+  "example": "scale-jobs",
+  "command": "shape jobs list\nshape jobs status JOB          # asks Fabric for a fabric_spark job\nshape jobs cancel JOB\nshape jobs resume JOB          # a failed or cancelled job",
+  "executed_command": "shape jobs list\nshape jobs status \"$DOCS_JOB_ID\"          # asks Fabric for a fabric_spark job\nshape jobs cancel \"$DOCS_JOB_ID\"\nshape jobs resume \"$DOCS_JOB_ID\"          # a failed or cancelled job",
+  "exit_code": 125,
+  "status": "failed",
+  "elapsed_seconds": 0.00019131500005187263,
+  "stdout": "missing value: DOCS_JOB_ID\n"
+}

@@ -168,9 +168,7 @@ that could not be read under a licence this session.
 The reference data of the `capital_markets`, `education`, `financial`, `healthcare`, `hr`, `insurance`, `iot`, `manufacturing`,
 `marketing`, `real_estate`, `retail`, `supply_chain` and `telecom` domains in `plugins/shape-domains` (names, catalogs,
 exchange and sector lists, index memberships, constituents, code lists, and device, property, shipping and network lists)
-is copied from the reference data of release 3.0.1 (commit 422e78df2267e73bb2fa976267e48cb437861e2f)
-of an earlier SQLLocks data-generation library, which is released under the MIT license with the
-same copyright holder as Shape:
+is distributed under the MIT licence by SQLLocks. The reference-data attribution is:
 
 MIT License. Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). Permission is hereby granted, free
 of charge, to any person obtaining a copy of this software and associated documentation files (the
@@ -186,6 +184,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 The S&P 500 constituent list names public companies and their public attributes (ticker, sector,
 headquarters state, website); it is sample data and is not a current or complete index membership.
+
+## Synthetic healthcare and capital-markets reference replacements (0.9.3)
+
+The healthcare procedure catalog uses `SP-01` through `SP-49`, with descriptions
+`Synthetic procedure 01` through `Synthetic procedure 49`. The letters and hyphen
+make these five-character identifiers distinct from CPT code formats. They have
+no clinical meaning and are not an AMA code set. Charges and selection weights
+retain the original numeric distributions.
+
+The capital-markets taxonomy uses `SA` through `SK`, `Synthetic sector A` through
+`Synthetic sector K`, and synthetic industry labels. Company classification labels
+use that same synthetic naming. These classifications are not GICS and make no
+claim of MSCI or S&P endorsement. Schemas, identifiers and category counts remain
+compatible. The legacy dataset aliases `cpt_codes` and `gics_sectors` identify these
+synthetic tables for existing specifications; their names do not denote licensed content.
+
+These replacements were authored for Shape and are distributed under the SQLLocks
+MIT notice above. The CPT-shaped detector and user-supplied code-system adapters
+ship no CPT code list; their recognition of input supplied by a user is unchanged.
 
 ## Public dataset library
 
@@ -234,3 +251,44 @@ datasets below. No source data is shipped. Each profile was built from the file 
 - Licence: Creative Commons Attribution 4.0 International (CC-BY-4.0), https://creativecommons.org/licenses/by/4.0/
 - Retrieved: 2026-10-03
 - Attribution: Aeberhard, S. and Forina, M. (1992). Wine. UCI Machine Learning Repository. https://doi.org/10.24432/C5PC7J. Licensed under CC BY 4.0.
+
+
+## Per-domain reference-data attribution
+
+This table lists the evidence in these notices, not a claim of calibration or upstream research.
+Retain the full licence notices above when redistributing reference data. Domain code can reuse
+reference providers from other domains; those providers keep their own attribution requirements.
+
+| Domain | Source recorded here | Licence | Attribution / missing evidence |
+|---|---|---|---|
+| `capital_markets` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-12](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-capital_markets). No GICS codes or taxonomy names are bundled. |
+| `education` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-education). |
+| `financial` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-financial). |
+| `healthcare` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-12](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-healthcare). No AMA CPT code list or descriptors are bundled. |
+| `hr` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-hr). |
+| `insurance` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-insurance). |
+| `iot` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-iot). |
+| `manufacturing` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-manufacturing). |
+| `marketing` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-marketing). |
+| `real_estate` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-real_estate). |
+| `retail` | SQLLocks lists; GeoNames US postal locations | MIT; CC-BY-4.0 | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). Includes GeoNames data licensed under CC-BY-4.0. |
+| `supply_chain` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-supply_chain). |
+| `telecom` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). These reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-telecom). |
+| `pulse` | No bundled reference files in the domain data directory | MIT (schema) | SQLLocks; The name pools were authored by the Owner, by hand or with AI assistance, and were not copied from an external source; values are generated by the built-in seeded providers. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/DECISIONS.md#domain-pulse). |
+
+## Documentation diagrams
+
+The documentation site bundles Mermaid 11.17.2 from the npm distribution under MIT.
+Its bundle hash and source archive are in `docs/assets/javascripts/mermaid-provenance.json`.
+The Mermaid and installed dependency licence notices are preserved in
+`docs/assets/javascripts/MERMAID_NOTICES.txt`. `scripts/vendor_docs_diagrams.py` regenerates
+these assets from an install of the pinned package. No CDN request is needed to render diagrams.
+
+## Documentation fonts
+
+The documentation site bundles these fonts locally. It does not request fonts from an external service.
+
+| Font | Copyright | Licence | Bundled notice |
+|---|---|---|---|
+| Host Grotesk | Copyright 2023 The Host Grotesk Project Authors | SIL Open Font License 1.1 | `docs/assets/fonts/host-grotesk-OFL.txt` |
+| Fragment Mono | Copyright 2022 The Fragment-Mono Project Authors | SIL Open Font License 1.1 | `docs/assets/fonts/fragment-mono-OFL.txt` |

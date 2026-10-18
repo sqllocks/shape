@@ -18,7 +18,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
@@ -446,7 +446,10 @@ class RangeConstraintGate(ValidationGate):
                     "not checked"
                 )
                 continue
-            lo, hi = float(values.min()), float(values.max())
+            lo, hi = (
+                float(cast(Callable[[], np.float64], values.min)()),
+                float(cast(Callable[[], np.float64], values.max)()),
+            )
             info: dict[str, Any] = {"actual_min": lo, "actual_max": hi}
             min_bound = bounds.get("min")
             max_bound = bounds.get("max")

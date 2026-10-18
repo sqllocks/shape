@@ -1,4 +1,7 @@
 # Location as Code
+
+Status: experimental.
+
 Status: Canonical implementation contract
 
 `LocationScope` is reusable across capture, generation, validation, quality, scenarios, Policies, Packs, Reference Assets, ETL, streaming, diff and analysis.

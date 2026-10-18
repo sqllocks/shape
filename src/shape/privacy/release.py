@@ -57,6 +57,7 @@ def suppress_shape(
 def differencing_risk(
     before: Mapping[str, Any], after: Mapping[str, Any], min_delta: int = 5
 ) -> dict[str, Any]:
+    """Report whether the absolute row-count change is below the release threshold."""
     d = int(after.get("rows", 0)) - int(before.get("rows", 0))
     return {"risky": 0 < abs(d) < min_delta, "row_delta": d, "threshold": min_delta}
 

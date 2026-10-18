@@ -539,13 +539,15 @@ def _configure_setup(p: argparse.ArgumentParser) -> None:
 
 @_guarded
 def _run_setup(a: argparse.Namespace) -> int:
-    from .setup_env import library_spec, setup_snippet
+    from .setup_env import check_lakehouse_name, library_spec, setup_snippet
 
     if a.snippet:
         print(setup_snippet())
         return EXIT_OK
     if not a.workspace:
         raise ValueError("setup needs --workspace (or --snippet)")
+    if a.create_lakehouse:
+        check_lakehouse_name(a.lakehouse_name)
     api = _api(a)
     print(f"Shape v{_version()} — Fabric Environment Setup")
     print(f"  Workspace:   {a.workspace}")
@@ -576,7 +578,7 @@ def _run_setup(a: argparse.Namespace) -> int:
     for lib in library_spec()["customLibraries"]["pypi"]:
         print(f"     - {lib['name']} {lib['version']}")
     print("  3. Publish the environment")
-    print("  4. Attach to notebooks and run 'shape notebook' to generate data")
+    print("  4. Attach to notebooks and run 'shape fabric notebook' to generate data")
     return EXIT_OK
 
 

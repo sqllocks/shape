@@ -40,10 +40,10 @@ def _rec(kind: str, wid: str, verifier: dict | None = PASS, median: float | None
         "median_s": median,
         "runs_s": [] if median is None else [median],
         "verifier": verifier,
-        "speedup_vs_refengine": None if median is None else 10.0,
+        "ratio_vs_baseline": None if median is None else 10.0,
     }
     if median is not None:
-        rec["refengine_median_s"] = 10.0 * median
+        rec["baseline_median_s"] = 10.0 * median
     if kind == "profile":
         rec["dataset"] = wid.split(":", 1)[1]
     else:
@@ -62,16 +62,14 @@ def _shard_results(selection_args: list[str]) -> dict:
     gen = run.select_units(run.generate_plan(True, DOMAINS), shard) if only == "generate" else []
     exp = run.expected_ids(run.FULL_PROFILE_DATASETS, gen, run.FULL_STREAM_SCALES, only)
     out: dict[str, Any] = {
-        "schema_version": 1,
+        "schema_version": 2,
         "mode": "full",
         "runs": 5,
         "generated_utc": "2026-10-04T03:17:00Z",
         "machine": {"cores": 4},
-        "refengine_commit": "422e78d",
+        "baseline": {"kind": "shape", "version": "0.9.1", "commit": "422e78d", "workloads": {}},
         "shape_commit": "abc1234",
         "shape_tree_dirty": False,
-        "refengine": {"workloads": {}},
-        "reference_port": {"workloads": {}},
         "shape": {"workloads": {}},
         "selection": {
             "only": only,
@@ -86,8 +84,8 @@ def _shard_results(selection_args: list[str]) -> dict:
         for wid in ids:
             kind = wid.split(":", 1)[0]
             out[impl]["workloads"][wid] = _rec(kind, wid)
-            out["refengine"]["workloads"].setdefault(
-                wid, {**_rec(kind, wid, None, 10.0), "speedup_vs_refengine": None}
+            out["baseline"]["workloads"].setdefault(
+                wid, {**_rec(kind, wid, None, 10.0), "ratio_vs_baseline": None}
             )
     return out
 
@@ -114,11 +112,11 @@ def _write_night(tmp: Path, mutate: Any = None, skip: tuple[str, ...] = ()) -> P
 def test_full_plan_covers_every_domain_and_every_profiling_dataset() -> None:
     gen = run.generate_plan(True, DOMAINS)
     exp = run.expected_ids(run.FULL_PROFILE_DATASETS, gen, run.FULL_STREAM_SCALES, "all")
-    for impl in ("reference_port", "shape"):
+    for impl in ("shape",):
         assert {f"profile:{d}" for d in run.FULL_PROFILE_DATASETS} <= set(exp[impl])
     assert {f"generate:{d}:medium" for d in DOMAINS} <= set(exp["shape"])
     assert "generate:retail:large" in exp["shape"]
-    assert {"generate:retail:medium", "generate:retail:large"} <= set(exp["reference_port"])
+    assert {"generate:retail:medium", "generate:retail:large"} <= set(exp["shape"])
     assert "stream:retail:order:medium" in exp["shape"]
     for d in ("d1", "d2", "d3", "d4"):
         assert {f"{d}.csv", f"{d}.parquet"} <= set(run.FULL_PROFILE_DATASETS)
@@ -126,7 +124,7 @@ def test_full_plan_covers_every_domain_and_every_profiling_dataset() -> None:
 
 
 def test_quick_plan_is_unchanged() -> None:
-    assert run.generate_plan(False, None) == [("reference_port", "retail", ["small", "medium"])]
+    assert run.generate_plan(False, None) == [("shape", "retail", ["small", "medium"])]
 
 
 def test_generate_shards_partition_the_plan() -> None:
@@ -149,7 +147,7 @@ def test_bad_shard_is_rejected(text: str) -> None:
 def test_dry_run_selects_a_subset(capsys: pytest.CaptureFixture[str]) -> None:
     assert run.main(["--full", "--only", "profile", "--dataset", "d1.csv", "--dry-run"]) == 0
     out = capsys.readouterr().out
-    assert "profile: ['d1.csv']" in out and "generate: -" in out and "stream: -" in out
+    assert "profile: ['d1.csv']" in out and "generate: []" in out and "stream: -" in out
 
 
 def test_dataset_outside_the_mode_is_an_error() -> None:
@@ -218,10 +216,10 @@ def test_a_domain_left_out_makes_the_night_red(tmp_path: Path) -> None:
 
 def test_a_dataset_left_out_makes_the_night_red(tmp_path: Path) -> None:
     def mutate(name: str, res: dict) -> None:
-        res["reference_port"]["workloads"].pop("profile:mt", None)
+        res["shape"]["workloads"].pop("profile:mt", None)
 
     _, verdict = nightly.merge(_write_night(tmp_path, mutate), run=run)
-    assert verdict["missing"] == ["reference_port profile:mt"]
+    assert verdict["missing"] == ["shape profile:mt"]
 
 
 def test_a_dirty_tree_or_mixed_commits_make_the_night_red(tmp_path: Path) -> None:
@@ -234,10 +232,10 @@ def test_a_dirty_tree_or_mixed_commits_make_the_night_red(tmp_path: Path) -> Non
 
     def mixed(name: str, res: dict) -> None:
         if name == "stream":
-            res["shape_commit"] = "def5678"
+            res["baseline"]["commit"] = "def5678"
 
     _, verdict = nightly.merge(_write_night(tmp_path / "b", mixed), run=run)
-    assert any("shape_commit" in r for r in verdict["reasons"])
+    assert any("baseline.commit" in r for r in verdict["reasons"])
 
 
 def test_a_null_median_is_not_a_pass(tmp_path: Path) -> None:

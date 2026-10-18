@@ -157,11 +157,21 @@ class EventhouseEmitter:
         credential: Any,
         timeout: float,
         busy: int,
+        ready_timeout: float,
     ) -> KustoClient:
         # One client per connection and per sign-in and retry settings: an emit with another
         # token, credential, busy_retries or timeout gets a client with those.
         sign_in = token if isinstance(token, str) or token is None else id(token)
-        key = (target.host, target.database, target.tls, sign_in, id(credential), busy, timeout)
+        key = (
+            target.host,
+            target.database,
+            target.tls,
+            sign_in,
+            id(credential),
+            busy,
+            timeout,
+            ready_timeout,
+        )
         client = self._clients.get(key)
         if client is None:
             client = KustoClient(
@@ -171,6 +181,7 @@ class EventhouseEmitter:
                 busy_pause=self._busy_pause,
                 busy_retries=busy,
                 timeout=timeout,
+                ready_timeout=ready_timeout,
             )
             self._clients[key] = client
         return client
@@ -196,7 +207,7 @@ class EventhouseEmitter:
         if envelope != "flat":
             raise ShapeError("the eventhouse emitter sends flat events (a KQL table holds columns)")
         target = parse_uri(uri)
-        client = self._client(target, token, credential, timeout, busy_retries)
+        client = self._client(target, token, credential, timeout, busy_retries, ready_timeout)
         sent = 0
         for batch in batches:
             if batch.num_rows == 0:

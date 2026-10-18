@@ -20,6 +20,7 @@ class LeakageReport:
 
 
 def assess_summary(summary: dict, rare_threshold: int = 5) -> LeakageReport:
+    """Report retained rare-category findings in a summary."""
     out = []
     for item in summary.get("topk", []) or []:
         if len(item) >= 2 and item[1] <= rare_threshold:

@@ -21,7 +21,7 @@ and decides whether the night is green. A night is green only when:
 * every shard measured the same Shape commit (with a clean tree) and the same baseline commit;
 * the shards together recorded every workload of the full suite: both implementations on every
   profiling dataset (``run.FULL_PROFILE_DATASETS``), ``shape`` on every baseline domain at medium
-  and on retail at large, ``reference_port`` on retail medium and large, and the stream workload;
+  and on retail at small and large, and the stream workloads;
 * every one of those workloads has a verifier that exited 0 (and, where the timed output was
   verified again, that second run exited 0 too) and a recorded median.
 
@@ -57,7 +57,7 @@ SHARDS: dict[str, list[str]] = {
         for k in range(1, GENERATE_SHARDS + 1)
     },
 }
-IMPLS = ("reference_port", "shape")
+IMPLS = ("shape",)
 
 
 def _load_run() -> Any:
@@ -171,26 +171,30 @@ def merge(
             "runs": first["runs"],
             "generated_utc": max(p["generated_utc"] for p in parts.values()),
             "machine": {**first["machine"], "shards": {n: p["machine"] for n, p in parts.items()}},
-            "refengine_commit": first["refengine_commit"],
+            "baseline": {**first["baseline"], "workloads": {}},
             "shape_commit": first["shape_commit"],
             "shape_tree_dirty": any(p["shape_tree_dirty"] for p in parts.values()),
-            "refengine": {"workloads": {}},
-            "reference_port": {"workloads": {}},
             "shape": {"workloads": {}},
         }
-        for key in ("refengine_commit", "shape_commit", "mode", "runs"):
+        for key in ("shape_commit", "mode", "runs", "schema_version"):
             seen = sorted({str(p[key]) for p in parts.values()})
             if len(seen) > 1:
                 reasons.append(f"shards disagree on {key}: {seen}")
+        for key in ("version", "commit"):
+            seen = sorted({str(p["baseline"][key]) for p in parts.values()})
+            if len(seen) > 1:
+                reasons.append(f"shards disagree on baseline.{key}: {seen}")
+        if merged["schema_version"] != 2:
+            reasons.append("schema_version is not 2")
         if merged["mode"] != "full":
             reasons.append(f"mode is {merged['mode']!r}, not 'full'")
         if merged["shape_tree_dirty"]:
             reasons.append("measured from a modified Shape tree")
         for name, p in parts.items():
-            for tool in ("refengine", *IMPLS):
+            for tool in ("baseline", *IMPLS):
                 for wid, rec in ((p.get(tool) or {}).get("workloads") or {}).items():
                     dest = merged[tool]["workloads"]
-                    if tool == "refengine":
+                    if tool == "baseline":
                         if wid not in dest or dest[wid]["median_s"] is None:
                             dest[wid] = rec
                     elif wid in dest:

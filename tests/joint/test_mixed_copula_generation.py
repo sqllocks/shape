@@ -441,7 +441,7 @@ def test_the_flag_needs_a_profile_and_plan_takes_it(
 
     assert main(["generate", "retail", "--mixed-copula", "--dry-run"]) != 0
     shape.save(profile, str(tmp_path / "p.shape"), capture="full")
-    assert main(["plan", str(tmp_path / "p.shape"), "--mixed-copula"]) == 0
+    assert main(["plan", "--json", str(tmp_path / "p.shape"), "--mixed-copula"]) == 0
     out = capsys.readouterr().out
     plan = json.loads(out[out.index("{") :])
     status = {
@@ -450,7 +450,7 @@ def test_the_flag_needs_a_profile_and_plan_takes_it(
         if "joint." in i["evidence"]
     }
     assert status["copula"] == "approximate"
-    assert main(["plan", str(tmp_path / "p.shape")]) == 0
+    assert main(["plan", "--json", str(tmp_path / "p.shape")]) == 0
     out = capsys.readouterr().out
     plan = json.loads(out[out.index("{") :])
     status = {

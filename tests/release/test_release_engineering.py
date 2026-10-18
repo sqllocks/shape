@@ -658,6 +658,24 @@ def _publish_step(wfs: dict[str, dict[str, Any]]) -> dict[str, Any]:
             lambda w: w["publish.yml"]["jobs"]["installed"].update(needs=["build"]),
             ["release_smoke.py must install from the index after publishing"],
         ),
+        (
+            lambda w: w["publish.yml"]["jobs"]["publish"].pop("if"),
+            ["job publish must be skipped by a dry run"],
+        ),
+        (
+            lambda w: w["publish.yml"]["jobs"]["index-hashes"].pop("if"),
+            ["job index-hashes must be skipped by a dry run"],
+        ),
+        (
+            lambda w: w["publish.yml"]["jobs"]["installed-musllinux"].pop("if"),
+            ["job installed-musllinux must be skipped by a dry run"],
+        ),
+        (
+            lambda w: w["publish.yml"]["on"]["workflow_dispatch"]["inputs"]["repository"][
+                "options"
+            ].remove("dry-run"),
+            ["must choose repository testpypi, pypi or dry-run"],
+        ),
     ],
 )
 def test_each_t25_invariant_is_enforced(tmp_path: Path, mutate: Any, expected: list[str]) -> None:
@@ -746,6 +764,33 @@ def test_pypi_publishes_only_from_a_release_tag() -> None:
     assert "refs/tags/v*)" in step["run"] and "exit 1" in step["run"]
     assert jobs["build"]["needs"] == "guard"
     assert jobs["publish"]["needs"] == "build"
+
+
+def test_a_dry_run_builds_and_smokes_everything_but_uploads_and_reads_no_index() -> None:
+    """repository = dry-run: the guard, build (SBOM, attestations, install-from-archives smoke)
+    run as for testpypi; the upload and every index-reading job are skipped and listed."""
+    wf = _workflow("publish.yml")
+    inputs = wf["on"]["workflow_dispatch"]["inputs"]["repository"]
+    assert inputs["options"] == ["testpypi", "pypi", "dry-run"] and inputs["default"] == "testpypi"
+    jobs = wf["jobs"]
+    skip = "github.event_name != 'workflow_dispatch' || inputs.repository != 'dry-run'"
+    for name in ("publish", "index-hashes", "installed", "installed-musllinux"):
+        assert jobs[name]["if"] == skip, name
+    # the guard and the build carry no dry-run condition: they run exactly as for testpypi
+    assert "if" not in jobs["guard"] and "if" not in jobs["build"]
+    assert jobs["build"]["uses"] == "./.github/workflows/release.yml"
+    # the PyPI refusal is untouched: dry-run is not repository = pypi, and nothing else changed
+    assert (
+        jobs["guard"]["steps"][0]["if"]
+        == "github.event_name != 'workflow_dispatch' || inputs.repository == 'pypi'"
+    )
+    summary = jobs["dry-run-summary"]
+    assert (
+        summary["if"]
+        == "github.event_name == 'workflow_dispatch' && inputs.repository == 'dry-run'"
+    )
+    assert "id-token" not in str(summary) and summary["needs"] == "build"
+    assert str(summary["steps"][0]["run"]).count("| dry run |") == 4
 
 
 def test_every_project_publishes_from_its_own_environment() -> None:

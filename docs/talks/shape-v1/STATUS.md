@@ -1,7 +1,11 @@
 # Status: "Ship the Shape, Not the Data" — October 3, 2026 version
 
+Current Fabric setup is in the [runbook](../../../integrations/fabric/RUNBOOK.md).
+The later [live dry-run findings](../../plans/demo_status/DEMO-LIVE.md) record integration
+fixes and outstanding live checks; they are not a timing benchmark for this talk.
+
 Branch `talk/shape-v1-tech-talk`, with `origin/main` merged in (merge commit, no rebase).
-Changed: `docs/talks/shape-v1/`, the demo kit (`demo/TALK.md`, `demo/BENCHMARKS.md`,
+Changed: `docs/talks/shape-v1/`, the demo kit (`docs/talks/shape-v1/SCRIPT.md`, `demo/BENCHMARKS.md`,
 `demo/build_benchmark_sheet.py`), `tests/demo/content/test_talk_kit.py`, and two new files:
 `benchmarks/measure_product.py` and `benchmarks/baselines/2026-09-30-product/product_bench.json`.
 
@@ -70,11 +74,11 @@ What changed on the talk with that data (all re-measured 2026-09-30, sources in 
 
 1. **Fabric dry run (R11): the one pending item you can still do.** Follow
    `integrations/fabric/RUNBOOK.md` **§11 "Owner live dry-run checklist"** (sections 1–10
-   for setup), and record every timing as measured in `demo/LIVE_TIMINGS.md` (SKU, vCores,
+   for setup), and record every timing as measured in a committed Fabric dry-run timing record (SKU, vCores,
    runtime, row counts, seconds). Then either tell me or add the rows to `NUMBERS.md` as
    N-9x yourself, quoted exactly.
    - **If it's done by October 2:** Path A: C2 runs live in Fabric; slide 14 may quote
-     `LIVE_TIMINGS.md` rows exactly.
+     the committed Fabric dry-run timing record rows exactly.
    - **If it isn't:** Path B, the fallback, already written: C1, **C2-local** and C3, all
      on the laptop and offline; **no Fabric timings quoted anywhere**; slide 16 says "the
      same calls run in the Fabric notebook in the repo". `DEMO.md` → "Two paths".
@@ -126,7 +130,7 @@ another tool can't be backed by this talk any more; cut it from the abstract.
 - **F1: fixed** on `main` in `b2dd663`. Asserted.
 - **F2: resolved.** 0.9.0 was published to pypi.org on 2026-09-30; the lead verified a clean
   install. Slide 30 keeps `pip install sqllocks-shape`.
-- **F3 / R11: open.** No live Fabric timings; `demo/LIVE_TIMINGS.md` is a placeholder.
+- **F3 / R11: open.** No live Fabric timings; a committed Fabric dry-run timing record has not been recorded for this talk.
 - **F5: fixed on `main` in `1b4454d`:** `shape.generate` on a profile raises
   NotImplementedError; `shape plan`/`shape query` on a profile exit 2 with a message. Don't
   demo them.

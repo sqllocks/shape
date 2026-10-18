@@ -1,5 +1,8 @@
 # Joint distributions and plausibility
 
+Status: experimental.
+
+
 A value can be valid for its column and still be wrong **together with the other columns**: a ZIP
 of the right format that belongs to another city, `00000` in a ZIP column, a drug that is never
 given for the diagnosis. `shape profile` records what holds across columns, `shape diff` and
@@ -79,7 +82,7 @@ neither `joint` nor `placeholders`: both hold values (violating groups, conditio
 `shape profile --multivariate`, `shape.profile(..., multivariate=True)`. Without it a profile's
 `joint` holds every other entry and is otherwise the same: they add a fixed cost per table that
 the profiling benchmark gate of the default profile does not allow
-(`docs/plans/lane_status/INT-18.md`). The two-column determinants are always computed.
+(the implementation tests). The two-column determinants are always computed.
 
 Five analyses over several columns at once. Each is part of `joint`, so it follows the same rule:
 on for one table, off for a dataset unless `--joint`, off with `--no-joint` or

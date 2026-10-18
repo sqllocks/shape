@@ -4,7 +4,7 @@ build-backend="maturin"
 
 [project]
 name = "sqllocks-shape"
-version = "0.9.1"
+version = "0.9.3"
 description = "Shape by SQLLocks — Shape as Code: profile, check and compare how your data behaves. Early access."
 readme="README.md"
 requires-python=">=3.11"
@@ -38,21 +38,21 @@ scipy=["scipy>=1.11"]
 advanced=["scikit-learn>=1.5.1,<2"]
 faker=["faker>=24"]
 ctgan=["sdv>=1.0,<2"]
-kafka=["sqllocks-shape-kafka==0.9.1"]
-eventhubs=["sqllocks-shape-eventhubs==0.9.1"]
-fabric=["sqllocks-shape-fabric==0.9.1"]
-sqlserver=["sqllocks-shape-sqlserver==0.9.1"]
-domains=["sqllocks-shape-domains==0.9.1"]
-simulation=["sqllocks-shape-simulation==0.9.1"]
-dbt=["sqllocks-shape-dbt==0.9.1"]
-healthcare=["sqllocks-shape-behavior==0.9.1","sqllocks-shape-healthcare-codes==0.9.1","sqllocks-shape-healthcare-standards==0.9.1"]
-integrations=["sqllocks-shape-integrations==0.9.1"]
-all=["sqllocks-shape-kafka==0.9.1","sqllocks-shape-eventhubs==0.9.1","sqllocks-shape-fabric==0.9.1","sqllocks-shape-sqlserver==0.9.1","sqllocks-shape-databases==0.9.1","sqllocks-shape-domains==0.9.1","sqllocks-shape-simulation==0.9.1","sqllocks-shape-dbt==0.9.1","sqllocks-shape-behavior==0.9.1","sqllocks-shape-healthcare-codes==0.9.1","sqllocks-shape-healthcare-standards==0.9.1","sqllocks-shape-integrations==0.9.1","cryptography>=50,<51","scipy>=1.11","openpyxl>=3.1","deltalake>=0.17","faker>=24"]
-postgres=["sqllocks-shape-databases[postgres]==0.9.1"]
-mysql=["sqllocks-shape-databases[mysql]==0.9.1"]
-databases=["sqllocks-shape-databases[postgres,mysql]==0.9.1"]
-duckdb=["sqllocks-shape-databases[duckdb]==0.9.1"]
-docs=["mkdocs>=1.6,<2","mkdocs-material>=9.5,<10"]
+kafka=["sqllocks-shape-kafka==0.9.3"]
+eventhubs=["sqllocks-shape-eventhubs==0.9.3"]
+fabric=["sqllocks-shape-fabric==0.9.3"]
+sqlserver=["sqllocks-shape-sqlserver==0.9.3"]
+domains=["sqllocks-shape-domains==0.9.3"]
+simulation=["sqllocks-shape-simulation==0.9.3"]
+dbt=["sqllocks-shape-dbt==0.9.3"]
+healthcare=["sqllocks-shape-behavior==0.9.3","sqllocks-shape-healthcare-codes==0.9.3","sqllocks-shape-healthcare-standards==0.9.3"]
+integrations=["sqllocks-shape-integrations==0.9.3"]
+all=["sqllocks-shape-kafka==0.9.3","sqllocks-shape-eventhubs==0.9.3","sqllocks-shape-fabric==0.9.3","sqllocks-shape-sqlserver==0.9.3","sqllocks-shape-databases==0.9.3","sqllocks-shape-domains==0.9.3","sqllocks-shape-simulation==0.9.3","sqllocks-shape-dbt==0.9.3","sqllocks-shape-behavior==0.9.3","sqllocks-shape-healthcare-codes==0.9.3","sqllocks-shape-healthcare-standards==0.9.3","sqllocks-shape-integrations==0.9.3","cryptography>=50,<51","scipy>=1.11","openpyxl>=3.1","deltalake>=0.17","faker>=24"]
+postgres=["sqllocks-shape-databases[postgres]==0.9.3"]
+mysql=["sqllocks-shape-databases[mysql]==0.9.3"]
+databases=["sqllocks-shape-databases[postgres,mysql]==0.9.3"]
+duckdb=["sqllocks-shape-databases[duckdb]==0.9.3"]
+docs=["mkdocs>=1.6,<2","mkdocs-material>=9.5,<10","mkdocstrings[python]>=1,<2","mike>=2,<3"]
 streaming=["confluent-kafka>=2.5,<4","azure-eventhub>=5.12,<6"]
 dev=["setuptools>=68","pytest>=9.0.3","pytest-cov>=6","coverage>=7.10","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","openpyxl>=3.1","defusedxml>=0.7","scipy>=1.11","pyspark>=4.0,<5","faker>=24","duckdb>=1.2","fsspec>=2024.2","jsonschema>=4.18","fastavro>=1.9","protobuf>=5"]
 
@@ -367,3 +367,151 @@ allow_indirect_imports = true
 ignore_imports = [
     "shape.plugins.registry -> shape.builtins.catalog",
 ]
+
+# Development groups do not replace the published dev/docs extras.
+[dependency-groups]
+dev = [
+  "setuptools>=68",
+  "pytest>=9.0.3",
+  "pytest-cov>=6",
+  "coverage>=7.10",
+  "hypothesis>=6.115",
+  "ruff>=0.8",
+  "mypy>=1.13",
+  "pip-audit>=2.7",
+  "build>=1.2",
+  "pyyaml>=6",
+  "pandas>=2",
+  "deltalake>=0.17",
+  "twine>=5",
+  "cryptography>=50,<51",
+  "xxhash>=3.5",
+  "maturin>=1.15,<2",
+  "import-linter>=2",
+  "vulture>=2.11",
+  "bandit>=1.8",
+  "py-spy>=0.4",
+  "sqlglot>=25",
+  "openpyxl>=3.1",
+  "defusedxml>=0.7",
+  "scipy>=1.11",
+  "pyspark>=4.0,<5",
+  "faker>=24",
+  "duckdb>=1.2",
+  "fsspec>=2024.2",
+  "jsonschema>=4.18",
+  "fastavro>=1.9",
+  "protobuf>=5",
+  "mkdocs>=1.6,<2",
+  "mkdocs-material>=9.5,<10",
+  "mkdocstrings[python]>=1,<2",
+  "mike>=2,<3",
+  "confluent-kafka>=2.5,<4",
+  "azure-eventhub>=5.12,<6",
+  "scikit-learn>=1.5.1,<2",
+  "deltalake>=0.17",
+  "psycopg[binary]>=3.1,<4",
+  "pymysql>=1.1.1,<2",
+  "packaging",
+  "pip",
+  "wheel",
+  "sqllocks-shape-behavior==0.9.3",
+  "sqllocks-shape-databases==0.9.3",
+  "sqllocks-shape-dbt==0.9.3",
+  "sqllocks-shape-domains==0.9.3",
+  "sqllocks-shape-eventhubs==0.9.3",
+  "sqllocks-shape-fabric==0.9.3",
+  "sqllocks-shape-healthcare-codes==0.9.3",
+  "sqllocks-shape-healthcare-standards[test]==0.9.3",
+  "sqllocks-shape-integrations==0.9.3",
+  "sqllocks-shape-kafka==0.9.3",
+  "sqllocks-shape-simulation==0.9.3",
+  "sqllocks-shape-sqlserver==0.9.3"
+]
+docs = [
+  "mkdocs==1.6.1",
+  "mkdocs-material==9.7.7",
+  "mkdocstrings[python]==1.0.6",
+  "mkdocstrings-python==2.0.9",
+  "pymdown-extensions==12.1",
+  "mike==2.2.0",
+  "pytest==9.1.1",
+  "pytest-xdist==3.8.0",
+  "PyYAML==6.0.3",
+  "maturin>=1.15,<2",
+  "numpy==2.5.3",
+  "pyarrow==25.0.1",
+  "pandas==3.0.6",
+  "scipy==1.18.1",
+  "Faker==40.41.0",
+  "duckdb==1.5.6",
+  "playwright==1.63.0",
+  "cryptography>=50,<51",
+  "dbt-duckdb==1.11.0",
+  "dbt-core==1.12.5",
+  "setuptools==84.0.0",
+  "build==1.6.1",
+  "openpyxl==3.1.5",
+  "defusedxml==0.7.1",
+  "sqlglot==30.21.0",
+  "jsonschema==4.26.0",
+  "fastavro==1.13.0",
+  "protobuf==6.33.6",
+  "ruff==0.16.10",
+  "mypy==2.4.0",
+  "import-linter==2.15",
+  "vulture==2.16",
+  "pip-audit==2.10.1",
+  "pytest-cov==7.1.0",
+  "hypothesis==6.168.5",
+  "xxhash==4.0.1",
+  "deltalake==1.6.6",
+  "scikit-learn==1.9.1",
+  "tzdata==2026.3"
+]
+dbt = [
+  "dbt-core==1.12.5",
+  "dbt-duckdb==1.11.0"
+]
+fabric-demo = [
+  "nbformat",
+  "ipython",
+  "delta-spark>=4.0,<5",
+  "fabric-user-data-functions"
+]
+benchmark = [
+  "pyarrow==25.0.1"
+]
+azure = [
+  "adlfs>=2024.4.1",
+  "azure-identity>=1.16.1",
+  "azure-storage-blob"
+]
+
+[tool.uv]
+required-version = "==0.8.17"
+conflicts = [
+  [{ group = "docs" }, { group = "fabric-demo" }],
+  [{ group = "benchmark" }, { group = "fabric-demo" }],
+]
+
+[tool.uv.dependency-groups]
+docs = { requires-python = ">=3.12" }
+
+[tool.uv.workspace]
+members = ["plugins/*"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }
+sqllocks-shape-behavior = { workspace = true }
+sqllocks-shape-databases = { workspace = true }
+sqllocks-shape-dbt = { workspace = true }
+sqllocks-shape-domains = { workspace = true }
+sqllocks-shape-eventhubs = { workspace = true }
+sqllocks-shape-fabric = { workspace = true }
+sqllocks-shape-healthcare-codes = { workspace = true }
+sqllocks-shape-healthcare-standards = { workspace = true }
+sqllocks-shape-integrations = { workspace = true }
+sqllocks-shape-kafka = { workspace = true }
+sqllocks-shape-simulation = { workspace = true }
+sqllocks-shape-sqlserver = { workspace = true }

@@ -104,6 +104,7 @@ class LakehouseSink:
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
+        table = _prefixed_table(table, opts)
         writer = LakehouseWriter(
             uri,
             format=opts.pop("format", "parquet"),
@@ -135,6 +136,7 @@ class SqlDatabaseSink:
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
+        table = _prefixed_table(table, opts)
         conn = connection_string_for(uri, opts, "sql-database")
         with SqlDatabaseWriter(
             conn,
@@ -167,6 +169,7 @@ class WarehouseSink:
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
+        table = _prefixed_table(table, opts)
         conn = connection_string_for(uri, opts, "warehouse")
         with WarehouseWriter(
             conn,
@@ -218,6 +221,7 @@ class SynapseSink:
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
+        table = _prefixed_table(table, opts)
         secrets = [str(v) for k in ("connection_string",) if (v := opts.get(k))]
         secrets += _pwd_values(str(opts.get("connection_string") or ""))
         masked: BaseException | None = None
@@ -490,6 +494,7 @@ class SqlServerSink:
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
+        table = _prefixed_table(table, opts)
         secrets = [str(v) for k in ("password", "connection_string") if (v := opts.get(k))]
         secrets += _pwd_values(str(opts.get("connection_string") or ""))
         if (from_uri := _uri_password(uri)) is not None:
@@ -630,6 +635,7 @@ class EventhouseSink:
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
+        table = _prefixed_table(table, opts)
         writer = EventhouseWriter(
             uri, token=opts.pop("token", None), credential=opts.pop("credential", None)
         )
@@ -644,6 +650,7 @@ class EventstreamSink:
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
+        table = _prefixed_table(table, opts)
         writer = EventstreamWriter(
             uri,
             connection_string=opts.pop("connection_string", None),
@@ -655,3 +662,11 @@ class EventstreamSink:
             return writer.write_table(table, batches)
         finally:
             writer.close()
+
+
+def _prefixed_table(table: str, options: dict[str, Any]) -> str:
+    """All Fabric sink adapters honour the same physical table prefix."""
+    prefix = options.pop("table_prefix", "") or ""
+    if not isinstance(prefix, str):
+        raise ShapeError("table_prefix must be a string")
+    return prefix + table

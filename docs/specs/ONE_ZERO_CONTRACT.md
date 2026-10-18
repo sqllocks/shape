@@ -1,5 +1,8 @@
 # Shape 1.0 Compatibility Contract — Proposal
 
+Status: experimental.
+
+
 The 1.0 compatibility boundary consists of:
 - versioned Shape-as-Code contract documents;
 - `.shape` artifact safety and integrity semantics;

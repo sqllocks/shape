@@ -1,5 +1,24 @@
 # The `shape` command line
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" CLI
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for CLI
+    ```
+
+
 Run it as `shape ...`, or as `python -m shape ...` when the `shape` script is not on `PATH` (an
 environment that is not activated, a CI step, a notebook). Both start the same program.
 
@@ -29,23 +48,23 @@ prints what would be written or sent (`format: "shape-dry-run"` with `--json`), 
 exits 0, or 2 for invalid input. `--junit FILE` and `--sarif FILE` on `diff`, `check`, `verify`,
 `fidelity` and `profile validate --safe` write CI reports. See `docs/CI.md`.
 
+`shape validate FILE` also accepts v1 profile contracts (including dataset contracts).
+It exits 1 for structural errors and 2 for unknown rules or malformed rule values.
+`shape check --dry-run` validates the contract using the same rules as a real check.
+
 ## Errors
 
 An expected error is one line on stderr and exit code 2:
 
-```
-$ shape registry reg checkout orders nope
-shape: error: orders@nope is not recorded in the registry
-```
+[Run this example](#local-example-0).
+
 
 The same wording is used for the same problem everywhere (`shape: error: file not found: PATH`
 for a missing file). A bug in Shape is not hidden: it keeps its Python traceback. To see the
 traceback of an expected error as well, put `--debug` before the command, or set `SHAPE_DEBUG=1`:
 
-```bash
-shape --debug registry reg checkout orders nope
-SHAPE_DEBUG=1 shape check missing.shape contract.json
-```
+[Run this example](#local-example-1).
+
 
 ## `shape vault`
 
@@ -72,11 +91,8 @@ also adds `*.shapevault` to `.gitignore`.
 file, offline: a `.shape` artifact, or a safe profile, model, run manifest, contract or any other
 JSON kind in [the state and compatibility policy](specs/STATE_AND_COMPATIBILITY.md).
 
-```bash
-shape migrate old.shape new.shape --dry-run   # print the plan, write nothing
-shape migrate old.shape new.shape             # new file + new.shape.receipt.json; old.shape kept
-shape migrate old.shape new.shape --verify old.pub --sign-key release.key   # a signed source
-```
+[Run this example](#local-example-2).
+
 
 It never rewrites in place or overwrites a file, records `migrated_from` and `source_content_id`,
 refuses a downgrade (`--to N` below the file's version), reads its result back and checks the
@@ -126,6 +142,7 @@ the policy.
   0 with no findings, 1 with findings, 2 for bad input; `--json` prints the findings as a list
   (the same as `shape.types_report(profile, contract, min_confidence)`). See
   [PROFILING_NOTES.md](PROFILING_NOTES.md#type-inference).
+- `shape plan` prints a human-readable plan by default; `--json` prints the structured result.
 - `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles, safe captures
   included. `shape diff` lists a comparison a safe capture makes impossible under
   `not_evaluable` and does not count it as drift. `shape check` exits 0 when every rule passes, 1
@@ -217,11 +234,8 @@ the policy.
   for schema changes, capture it each day and compare with the baseline; a renamed or dropped
   column is reported as `removed` and a changed type as `type_changed` (exit 5):
 
-  ```bash
-  shape capture orders.parquet -o orders-base.shape
-  shape capture orders-today.parquet -o orders-today.shape
-  shape compatibility orders-base.shape orders-today.shape --mode backward
-  ```
+[Run this example](#local-example-3).
+
 - `shape fidelity REFERENCE SYNTHETIC` compares data with data: CSV, Parquet, JSONL or a folder
   of one file per table. Given a captured evidence document (`REFERENCE.json`) it certifies the
   CSV against it instead. A `.shape` file (a profile or a model) is not data and is refused with a one-line message; profile the synthetic data and
@@ -280,6 +294,20 @@ the policy.
   golden records; `shape resolve synth FILE -o OUT` plants seeded duplicates and writes the true
   clusters. See [RESOLVE.md](RESOLVE.md). Bad options or an unreadable file exit 2.
 
+## Cloud and Fabric options
+
+Three options reach cloud destinations and sources. Their help text, as `shape --help` prints it:
+
+| Option | Where | Help text |
+|---|---|---|
+| `--source-config KEY=REF` | before or after any command; repeatable | Azure readers: `token`, `account_key`, `sas_token` or `connection_string` from `env://`, `file://` or `kv://` |
+| `--lakehouse-schema NAME` | `shape generate` (with `--scale-mode fabric_spark`) and `shape demo init` | fabric_spark: schema-enabled Lakehouse schema (for example `dbo`); omitted for classic Lakehouses |
+| `--table-prefix P` | `shape generate` | prefix of the physical destination tables (Delta, database and Fabric sinks); with `--scale-mode` it needs `fabric_spark` |
+
+`--source-config` takes only `env://`, `file://` or `kv://` references, never a literal secret, and
+each key at most once. `--lakehouse-schema` must name a schema that already exists. See
+[Fabric platform notes](FABRIC_PLATFORM.md) and [scaling](SCALE.md).
+
 ## Non-local targets and chaos input
 
 - Commands that write to a non-local target (`generate --to`, `emit`, `stream`,
@@ -330,22 +358,8 @@ the policy.
 
 ## `shape doctor`
 
-```
-$ shape doctor
-Shape 0.9.0
-  python    3.12.10  (Linux-6.8.0-x86_64-with-glibc2.39)
-  kernel    rust  (compiled)
+[Run this example](#local-example-4).
 
-Required
-  OK      numpy         2.4.6
-  OK      pyarrow       25.0.1
-
-Optional
-  OK      cryptography  50.0.2
-  missing yaml          needed for YAML generation schemas and scenario packs
-  ...
-Result: OK
-```
 
 It shows the Shape version, the Python, which kernel is in use (`rust` is the compiled kernel;
 `python` is the pure-Python fallback, selected with `SHAPE_KERNEL`), and each package with what it
@@ -360,12 +374,49 @@ it, so plain `shape doctor` stays offline. Every check is one line with a status
 `FAIL`, and a `Next:` step for a warning or failure. A warning never changes the exit code; a
 failure exits 1. A malformed target is an input error (exit 2).
 
+<!-- example: 5 -->
+
+This connectivity example uses the workflow's disposable Kafka broker. Fabric and Event Hubs checks require their own accounts; the option table below describes those checks.
+
+<!-- owner-example: kafka-doctor -->
+
+```bash {.runnable-owner}
+shape doctor --broker kafka://localhost:9092/orders
 ```
-shape doctor --fabric onelake://WORKSPACE/ITEM [--auth cli|msi|spn|device-code|fabric ...]
-shape doctor --broker kafka://host:9092[,host2:9092]/topic
-shape doctor --broker eventhubs://NAMESPACE/HUB [--auth ...]
-shape doctor --delta-table PATH
-```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape 0.9.1
+      python    3.12.15  (Linux-6.17.0-1022-azure-x86_64-with-glibc2.39)
+      kernel    rust  (compiled)
+    
+    Required
+      OK      numpy         2.5.3
+      OK      pyarrow       25.0.1
+    
+    Optional
+      OK      cryptography  50.0.2
+      OK      yaml          6.0.3
+      OK      pandas        3.0.6
+      OK      scipy         1.18.1
+      OK      deltalake     1.6.6
+      OK      openpyxl      3.1.5
+      OK      sklearn       1.9.1
+      OK      tzdata        2026.3
+    
+    Checks
+      PASS  broker.dns    localhost resolves to ::1, 127.0.0.1
+      PASS  broker.tcp    connected to localhost:9092 (::1)
+      PASS  broker.auth   the broker answered a metadata request
+    
+    Result: OK
+    ```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-kafka-doctor.json).
+
+Receipts: the [Owner-run Fabric, Kafka and Event Hubs checks](evidence/doctor-additional-environments.md) and the [replayed local Delta check](evidence/local-delta-doctor.md) cover all four command shapes above. The service checks ran on Windows on 2026-10-11; the local Delta check ran on Linux on 2026-10-12 UTC. Each returned exit 0; the Delta check reports `PASS delta.limits` on a readable table.
+
 
 | Option | Checks |
 |---|---|
@@ -482,6 +533,10 @@ date, an unknown name, a bad `--keep-last`, a held `prune.lock`). See
 
 ## History: `shape bisect` and `shape timelapse`
 
+<!-- example: 6 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```
 shape bisect REGISTRY NAME --good REF --bad REF [--column COL] [--kind KIND] [--contract FILE]
              [--verify-all] [--coarse week|month] [--json] [--source NAME] [threshold flags]
@@ -491,8 +546,225 @@ shape timelapse REGISTRY NAME --column COL [--table T] [--since DATE] [--until D
              [--window day|week|month] [-o OUT.json|OUT.html] [--format json|text]
 ```
 
+
 `bisect` finds the first committed version of `NAME` that changed (exit 0; exit 2 when `--good`
 tests bad, `--bad` tests good, or a version cannot be tested, for example a share-safe profile).
 `bisect layers` finds the layer of a pipeline where a change appears (exit 0 a layer shows it, 1
 none does, 2 unusable input). `timelapse` follows one column across the versions (`-o OUT.html` is
 one offline page). See `docs/HISTORY.md`.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape registry reg checkout orders nope
+```
+
+??? info "Output (exit 2)"
+
+    ```text {.expected}
+    shape: error: orders@nope is not recorded in the registry
+    ```
+
+This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape --debug registry reg checkout orders nope
+SHAPE_DEBUG=1 shape check missing.shape contract.json
+```
+
+??? info "Output (exit 1)"
+
+    ```text {.expected}
+    Traceback (most recent call last):
+      File "<checkout>/.venv/bin/shape", line 6, in <module>
+        sys.exit(main())
+                 ^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2281, in main
+        code = _main(argv)
+               ^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2318, in _main
+        return errors.guarded(lambda: _logged(opts, argv))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/errors.py", line 149, in guarded
+        return fn()
+               ^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2318, in <lambda>
+        return errors.guarded(lambda: _logged(opts, argv))
+                                      ^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2338, in _logged
+        return _dispatch(argv)
+               ^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2440, in _dispatch
+        return _dispatch_command(argv)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2507, in _dispatch_command
+        return machine.run(machine.command_path(used, a), a, lambda: _route(a))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/machine.py", line 403, in run
+        return fn()
+               ^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2507, in <lambda>
+        return machine.run(machine.command_path(used, a), a, lambda: _route(a))
+                                                                     ^^^^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2813, in _route
+        return run_registry(a)
+               ^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/registry.py", line 359, in run
+        return _checkout(r, a)
+               ^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/registry.py", line 284, in _checkout
+        data = r.checkout(a.name, a.ref)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/registry/local.py", line 297, in checkout
+        h = self.resolve(name, ref)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/registry/local.py", line 294, in resolve
+        raise RegistryError(f"{name}@{ref} is not recorded in the registry")
+    shape.registry.local.RegistryError: orders@nope is not recorded in the registry
+    Traceback (most recent call last):
+      File "<checkout>/.venv/bin/shape", line 6, in <module>
+        sys.exit(main())
+                 ^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2281, in main
+        code = _main(argv)
+               ^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2318, in _main
+        return errors.guarded(lambda: _logged(opts, argv))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/errors.py", line 149, in guarded
+        return fn()
+               ^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2318, in <lambda>
+        return errors.guarded(lambda: _logged(opts, argv))
+                                      ^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2338, in _logged
+        return _dispatch(argv)
+               ^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2440, in _dispatch
+        return _dispatch_command(argv)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2507, in _dispatch_command
+        return machine.run(machine.command_path(used, a), a, lambda: _route(a))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/machine.py", line 403, in run
+        return fn()
+               ^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2507, in <lambda>
+        return machine.run(machine.command_path(used, a), a, lambda: _route(a))
+                                                                     ^^^^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 2700, in _route
+        return _run(_cmd_check, a)
+               ^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 93, in _run
+        return fn(a)
+               ^^^^^
+      File "<checkout>/src/shape/cli/main.py", line 670, in _cmd_check
+        profile = shape.load(a.shape)
+                  ^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/profile/reference/profile.py", line 920, in load
+        manifest, parts = read_artifact(str(path))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/artifact/io.py", line 168, in read_artifact
+        result = _read_artifact(path, *args, **kwargs)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      File "<checkout>/src/shape/artifact/io.py", line 209, in _read_artifact
+        with zipfile.ZipFile(path) as z:
+             ^^^^^^^^^^^^^^^^^^^^^
+      File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/zipfile/__init__.py", line 1353, in __init__
+        self.fp = io.open(file, filemode)
+                  ^^^^^^^^^^^^^^^^^^^^^^^
+    FileNotFoundError: [Errno 2] No such file or directory: 'missing.shape'
+    ```
+
+This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape migrate old.shape new.shape --dry-run   # print the plan, write nothing
+shape migrate old.shape new.shape             # new file + new.shape.receipt.json; old.shape kept
+shape migrate old.shape new-signed.shape --verify old.pub --sign-key release.key   # a signed source
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {"destination": null, "dry_run": true, "plan": {"kind": "artifact", "noop": true, "result_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_version": 2, "steps": [], "target_version": 2}, "receipt": null, "written": false}
+    {"destination": null, "dry_run": false, "plan": {"kind": "artifact", "noop": true, "result_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_version": 2, "steps": [], "target_version": 2}, "receipt": null, "written": false}
+    {"destination": null, "dry_run": false, "plan": {"kind": "artifact", "noop": true, "result_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_version": 2, "steps": [], "target_version": 2}, "receipt": null, "written": false}
+    ```
+
+<a id="local-example-3"></a>
+
+### Example 4
+
+<!-- example: 3 -->
+
+```bash {.runnable-reference}
+shape capture orders.parquet -o orders-base.shape
+  shape capture orders-today.parquet -o orders-today.shape
+  shape compatibility orders-base.shape orders-today.shape --mode backward
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {"shape_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "written": "orders-base.shape"}
+    {"shape_content_id": "3db012279effb591c5c20f9d053c296849287d97ee137090352b73fc28f0a667", "written": "orders-today.shape"}
+    shape: note: orders-base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: orders-today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"compatible": true, "issues": [], "mode": "backward"}
+    ```
+
+<a id="local-example-4"></a>
+
+### Example 5
+
+<!-- example: 4 -->
+
+```bash {.runnable-reference}
+shape doctor
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape 0.9.3
+      python    3.12.14  (Linux-6.18.44-x86_64-with-glibc2.41)
+      kernel    python  (pure Python; set SHAPE_KERNEL=rust)
+
+    Required
+      OK      numpy         2.5.3
+      OK      pyarrow       25.0.1
+
+    Optional
+      OK      cryptography  50.0.2
+      OK      yaml          6.0.3
+      OK      pandas        3.0.6
+      OK      scipy         1.18.1
+      OK      deltalake     1.6.6
+      OK      openpyxl      3.1.5
+      OK      sklearn       1.9.1
+      OK      tzdata        2026.3
+
+    Result: OK
+    ```

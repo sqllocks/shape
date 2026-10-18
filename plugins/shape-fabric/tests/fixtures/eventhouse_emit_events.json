@@ -60,6 +60,23 @@
     },
     {
       "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".clear table ['customer'] cache streamingingestion schema\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{\"Tables\": [{\"Columns\": [{\"ColumnName\": \"NodeId\"}, {\"ColumnName\": \"Status\"}], \"Rows\": [[\"fake-node\", \"Succeeded\"]]}]}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
         "body": "{\"id\":0,\"name\":\"O'Brien; DROP TABLE x;--\",\"segment\":\"a\",\"balance\":\"0.00\",\"score\":null,\"active\":true,\"born\":\"2000-01-01\",\"seen\":\"2026-01-01T12:00:00.123456000\",\"seen_tz\":\"2026-01-01T12:00:00.123456Z\",\"_shape_table\":\"customer\",\"_shape_seq\":0,\"_shape_event_time\":\"2000-01-01\"}\n{\"id\":1,\"name\":\"name 1\",\"segment\":\"b\",\"balance\":\"0.25\",\"score\":0.3333333333333333,\"active\":false,\"born\":\"2000-01-02\",\"seen\":\"2026-01-02T12:00:00.123456000\",\"seen_tz\":\"2026-01-02T12:00:00.123456Z\",\"_shape_table\":\"customer\",\"_shape_seq\":1,\"_shape_event_time\":\"2000-01-02\"}\n{\"id\":2,\"name\":\"name 2\",\"segment\":\"a\",\"balance\":\"0.50\",\"score\":0.6666666666666666,\"active\":true,\"born\":\"2000-01-03\",\"seen\":\"2026-01-03T12:00:00.123456000\",\"seen_tz\":\"2026-01-03T12:00:00.123456Z\",\"_shape_table\":\"customer\",\"_shape_seq\":2,\"_shape_event_time\":\"2000-01-03\"}\n",
         "headers": {
           "accept": "application/json",

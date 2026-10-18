@@ -52,7 +52,7 @@ fabric_targets: {x: 1}
 streaming:
   cadence: {rate_per_sec: 5}
   topics:
-    - {name: order, event_type: order_placed, payload_fields: [order_id]}
+    - {name: order, event_type: order_placed, payload_fields: [order_id, order_date]}
     - {name: nothing_like_it, event_type: e, payload_fields: [a]}
 validation:
   required_gates: [row_count]

@@ -1,18 +1,31 @@
-# Shape Tutorial
+# Starter tutorials
 
-1. `shape capture data.csv -o baseline.json` writes a model of the data (evidence, no rows).
-2. `shape show baseline.json` prints it.
-3. `shape key data.csv id` checks that `id` is a key.
-4. `shape fd data.csv --determinant postal_code --dependent state` measures a functional dependency.
-5. `shape quality data.csv --reference baseline.json` checks the data against rules inferred from the model.
-6. Capture a later extract (`shape capture later.csv -o later.json`) and run
-   `shape compatibility baseline.json later.json` to find removed and retyped columns (exit 5).
-7. For drift in the values, profile both extracts and compare the profiles:
-   `shape profile data.csv -o baseline.shape`, `shape profile later.csv -o later.shape`, then
-   `shape diff baseline.shape later.shape --fail-on-drift` (exit 1 when drift is found;
-   thresholds in `docs/DRIFT.md`).
-8. Run `shape fidelity baseline.json synthetic.csv --tolerance 0.10` to certify a synthetic CSV
-   against the captured model (exit 3 when it fails).
-9. Store versioned contracts in source control and use non-zero CLI exit codes as CI/ETL gates.
+Learn the profile → check → diff → generate workflow with local data.
 
-A Shape is evidence about behavior, not a copy of source rows. Sensitive evidence still requires governance because aggregates and distributions can leak information.
+Status: available.
+
+Complete these tutorials in order. Each page also runs from an empty working directory, so you
+can repeat one without depending on files from another. The runnable blocks and their complete
+outputs are checked in CI. Installation is a prerequisite; see [Install](INSTALL.md).
+
+1. [Your first profile](tutorials/01-first-profile.md).
+2. [Read the report](tutorials/02-read-report.md).
+3. [Commit a shape and catch drift](tutorials/03-drift.md).
+4. [Write a contract and check it](tutorials/04-contract.md).
+5. [Generate dev data from a profile](tutorials/05-generate-profile.md).
+6. [Generate a domain and load it into DuckDB](tutorials/06-domain-duckdb.md).
+
+After the first profile, check its requirements with a contract. Keep the reviewed profile as a
+baseline. Compare a later extract before replacing it. Then generate development rows from the
+profile with an explicit output format. Generation without a format writes nothing.
+
+The capture, show, query and compatibility commands operate on models. They are a separate
+reference surface described in [Models](MODELS.md), not prerequisites for these tutorials.
+
+## What's next
+
+Choose [your role's learning path](LEARNING_PATHS.md).
+
+## Related
+
+[Quickstart](QUICKSTART.md) · [Concepts](CONCEPTS.md) · [Troubleshooting](TROUBLESHOOTING.md)

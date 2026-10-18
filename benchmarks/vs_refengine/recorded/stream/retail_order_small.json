@@ -1,0 +1,203 @@
+{
+  "format": "shape-stream-record",
+  "inputs": {
+    "fixtures/schemas/retail_3nf.json": "fe74ccb6fd079a1faa03ce2af2c856ada02ec8fb407dbcef846013e22164792b"
+  },
+  "recorded_utc": "2026-10-13T01:47:50Z",
+  "seeds": {
+    "42": {
+      "prefix": {
+        "dataset_id": "sha256:4cbfd450d3fff443685816cec5d1bde43ab8709f2590a844013fe027a15e7dba",
+        "events": 3000,
+        "field_names": [
+          "order_id",
+          "customer_id",
+          "store_id",
+          "shipping_address_id",
+          "promotion_id",
+          "order_date",
+          "status",
+          "order_total",
+          "_shape_table",
+          "_shape_seq",
+          "_shape_event_time"
+        ],
+        "jsonl_sha256": "d00c816eedcd991a9b3046eeeb9c394096d276bfe284e1dbd4ebae6ed57107bd"
+      },
+      "whole": {
+        "dataset_id": "sha256:a9fbdf49de5473c287ed21509db9299fdb367cc6aac9382a18d2db1171b9a7d5",
+        "events": 5000,
+        "field_names": [
+          "order_id",
+          "customer_id",
+          "store_id",
+          "shipping_address_id",
+          "promotion_id",
+          "order_date",
+          "status",
+          "order_total",
+          "_shape_table",
+          "_shape_seq",
+          "_shape_event_time"
+        ],
+        "jsonl_sha256": "47f25ea4d52fa1d756c90dd93ae8e59ae4d76b226b94a1a0f5ac8580b10e0bb5"
+      }
+    },
+    "43": {
+      "prefix": {
+        "dataset_id": "sha256:3d8ebdba1cb9f60e941414279f1817bace71b33e712eb04513d95a31618f47f9",
+        "events": 3000,
+        "field_names": [
+          "order_id",
+          "customer_id",
+          "store_id",
+          "shipping_address_id",
+          "promotion_id",
+          "order_date",
+          "status",
+          "order_total",
+          "_shape_table",
+          "_shape_seq",
+          "_shape_event_time"
+        ],
+        "jsonl_sha256": "536389228c862376c14dd29b5a30c4a8132616516954b664afbb927d420283d0"
+      },
+      "whole": {
+        "dataset_id": "sha256:26d29cd2841aa53681ebfd8cd3f6a1aaf33bfcfa09779cd66e18772ba2411ca2",
+        "events": 5000,
+        "field_names": [
+          "order_id",
+          "customer_id",
+          "store_id",
+          "shipping_address_id",
+          "promotion_id",
+          "order_date",
+          "status",
+          "order_total",
+          "_shape_table",
+          "_shape_seq",
+          "_shape_event_time"
+        ],
+        "jsonl_sha256": "66d9e553d6a2f3339ac656261de4fb46fa3ff5f4938cc7d663dd96d325391fb6"
+      }
+    },
+    "44": {
+      "prefix": {
+        "dataset_id": "sha256:4bc3faf251662cef75ee7f3e06806c1534343b46e1dc6980d97d9a0c9d8ded88",
+        "events": 3000,
+        "field_names": [
+          "order_id",
+          "customer_id",
+          "store_id",
+          "shipping_address_id",
+          "promotion_id",
+          "order_date",
+          "status",
+          "order_total",
+          "_shape_table",
+          "_shape_seq",
+          "_shape_event_time"
+        ],
+        "jsonl_sha256": "4ad51a82ffdf03f4762a7c4c48a6619c93dd6fd0602cf8b66be3bee6972045ad"
+      },
+      "whole": {
+        "dataset_id": "sha256:34627fddd4eeaa7c6669ca8d860a6b675aa8cafc67a959980e876ea1714a3f38",
+        "events": 5000,
+        "field_names": [
+          "order_id",
+          "customer_id",
+          "store_id",
+          "shipping_address_id",
+          "promotion_id",
+          "order_date",
+          "status",
+          "order_total",
+          "_shape_table",
+          "_shape_seq",
+          "_shape_event_time"
+        ],
+        "jsonl_sha256": "d685e804ef4db8c00f19f74b355ecbb6b84ef604420b084bd17ec81e7a638ee0"
+      }
+    },
+    "45": {
+      "prefix": {
+        "dataset_id": "sha256:8305ef97c07e35b4ca2c19c6d4a6e85472dd423da56eff6b303627c1f0b96a14",
+        "events": 3000,
+        "field_names": [
+          "order_id",
+          "customer_id",
+          "store_id",
+          "shipping_address_id",
+          "promotion_id",
+          "order_date",
+          "status",
+          "order_total",
+          "_shape_table",
+          "_shape_seq",
+          "_shape_event_time"
+        ],
+        "jsonl_sha256": "fab969f12d62a9e6f7c78367b5789c12ac49caaf837e814ee24a29da17ba070d"
+      },
+      "whole": {
+        "dataset_id": "sha256:b685bd330e939f5fda4a605d0977c0b1ffe712f8709734f9ace4abae3e957b66",
+        "events": 5000,
+        "field_names": [
+          "order_id",
+          "customer_id",
+          "store_id",
+          "shipping_address_id",
+          "promotion_id",
+          "order_date",
+          "status",
+          "order_total",
+          "_shape_table",
+          "_shape_seq",
+          "_shape_event_time"
+        ],
+        "jsonl_sha256": "bc8f3a4be6714b9d03ab1af266fdc38293972d0f44407213e918c7caa49990a7"
+      }
+    },
+    "46": {
+      "prefix": {
+        "dataset_id": "sha256:4db572d2df90216ceb1f91ffbaaf3c435672f2615539d1cf0203157330546065",
+        "events": 3000,
+        "field_names": [
+          "order_id",
+          "customer_id",
+          "store_id",
+          "shipping_address_id",
+          "promotion_id",
+          "order_date",
+          "status",
+          "order_total",
+          "_shape_table",
+          "_shape_seq",
+          "_shape_event_time"
+        ],
+        "jsonl_sha256": "4224740b854216be8ad042a25301bd0694509e380ff8d4fe8fd08bebfe3d18da"
+      },
+      "whole": {
+        "dataset_id": "sha256:c1ebea3ae4837635a9e48aa24207315065bc2427b8ab62bdf9759f1936415c9b",
+        "events": 5000,
+        "field_names": [
+          "order_id",
+          "customer_id",
+          "store_id",
+          "shipping_address_id",
+          "promotion_id",
+          "order_date",
+          "status",
+          "order_total",
+          "_shape_table",
+          "_shape_seq",
+          "_shape_event_time"
+        ],
+        "jsonl_sha256": "3adc3248f529dd0b48de5c37d156ebb9a0d427b24718c554f7c32d3f73fd2a89"
+      }
+    }
+  },
+  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_version": "0.9.1",
+  "version": 1,
+  "workload": "stream:retail:order:small"
+}

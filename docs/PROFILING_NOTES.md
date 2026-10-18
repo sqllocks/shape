@@ -1,5 +1,24 @@
 # Profiling notes: inputs, odd values and size
 
+Status: available.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" PROFILING_NOTES
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for PROFILING_NOTES
+    ```
+
+
 What `shape profile` (and `shape.profile`) does with CSV files, non-finite numbers, decimals, time zones, large
 inputs, sampling and column types. Each statement here has a test in `tests/profile/test_profile_issues.py` or
 `tests/profile/test_audit_profile.py`; the sections on sampling and type inference are tested in
@@ -12,10 +31,8 @@ The delimiter is sniffed from the first 100 rows: comma, semicolon, tab or pipe,
 same number (two or more) of fields (quotes are respected, and a comma wins when it qualifies). Set it when sniffing
 guesses wrong, along with the other reader options:
 
-```bash
-shape profile export.csv -o export.shape --delimiter ';' --encoding latin-1
-shape profile raw.csv -o raw.shape --no-header          # columns are f0, f1, ...
-```
+[Run this example](#local-example-0).
+
 
 ```python
 shape.profile("export.csv", delimiter=";", encoding="latin-1", quotechar="'", header=True)
@@ -53,11 +70,8 @@ A column that only looks like an identifier (a fixed width of five or more digit
 `zip` or `phone` over values of mixed width) stays an integer and `shape profile` warns, naming the columns and the option
 that keeps them as text. The options:
 
-```bash
-shape profile members.csv -o members.shape --string-columns zip,npi        # keep these as text
-shape profile members.csv -o members.shape --types types.json              # {"zip": "string", "amount": "float"}
-shape profile members.csv -o members.shape --infer-types off               # read every column as text
-```
+[Run this example](#local-example-2).
+
 
 `shape.profile(path, string_columns=["zip"], types={"amount": "float"}, infer_types="off")` is the same from Python, and
 `shape.io.CsvOptions(string_columns=, column_types=, infer_types=)` for the readers. Types are `string`, `integer`, `float`,
@@ -90,6 +104,16 @@ keys. UTC and fixed offsets (`+05:30`) need no time-zone database. A named zone 
 without one (Windows without the `tzdata` package) the profile stops with an error that names the zone and says
 `pip install tzdata`. A zone name the database does not know (`Mars/Base`) is reported as an unknown time zone.
 
+### Time zones and dateless text
+
+Text that is a time of day or a range of hours, such as an hour bucket `18:00-18:59`, has no date and
+is **plain text**, not a timestamp: it is not parsed, and its trailing `-18:59` is not read as a
+UTC offset. Text that carries a date and a zone or offset (`2026-10-12 18:00-04:00`) is zone-bearing
+date text. A database profile (`shape profile-db`) keeps the column's SQL type and sampled
+statistics and records a `profiling_note` on that column when the data-based relationship inference
+cannot model it; a file or DataFrame profile stops with an error naming the column until it is
+converted to a timestamp.
+
 ## Personal-data patterns
 
 For every text column the profile records `pattern_rates` (the share of non-null values that are wholly an SSN, email
@@ -112,9 +136,8 @@ reaches 0.1% (`SafeConfig.pii_pattern_floor`). See [PRIVACY_MODEL.md](PRIVACY_MO
 For a profile kept per run, write the safe form with `--compact` (one line, no null fields; it reads back the same) and
 pick the columns with `--columns A,B,*_id` or `--exclude 'raw_*'`:
 
-```bash
-shape profile safe daily.shape -o daily.safe.json --compact --exclude 'notes,raw_*'
-```
+[Run this example](#local-example-3).
+
 
 ### Input budget for untrusted files
 
@@ -150,7 +173,7 @@ that columns hold real combinations against a reference file.
 The fields below are **opt-in**: `shape profile --univariate` (`shape.profile(...,
 univariate=True)`) computes them; without it a profile carries none of them and is otherwise the
 same. They add Python work for every numeric column, more than the benchmark gate of the default
-profile allows, so they are not computed by default (`docs/plans/lane_status/INT-18.md`).
+profile allows, so they are not computed by default (the implementation tests).
 
 With it, every numeric column with at least **20 finite values** (integers, floats, and decimals
 read as numbers) gains the fields below, each only where it applies; a text, boolean or date column gains
@@ -381,11 +404,8 @@ states them in each column's card as `mixture: k=2 ...` and `seasonality: period
 A profile says how much of the data it saw. Nothing is sampled unless you ask, and every table's profile records what was
 done, whether you asked or not.
 
-```bash
-shape profile orders.csv -o orders.shape --sample 100000                       # 100,000 rows
-shape profile orders.csv -o orders.shape --sample 10% --sample-method systematic --sample-seed 7
-shape profile data/ --dataset -o shop.shape --sample 20%                       # each table
-```
+[Run this example](#local-example-10).
+
 
 ```python
 shape.profile("orders.csv", sample=100_000)                       # an int is a number of rows
@@ -467,7 +487,7 @@ Some statistics sample inside themselves, whatever you asked for. The record lis
 | `multivariate_outliers` | the joint analysis's multivariate outliers over more than 600 rows | 600 rows for FAST-MCD's starts, `random`, seed 20260327 (the fit and the rate read every analysed row) |
 | `cohorts` | cohorts over more than 2,000 analysed rows | 2,000, `random`, seed 20260328 |
 
-Each entry has `analysis`, `rows`, `method`, `seed` and, for the column analyses, the `columns` it applied to. The
+Each entry has `analysis`, `rows`, `method`, `seed` and, for the column analyses, `column_indexes`: the positions, in the table's `columns` object, of the columns it applied to. Profiles written by 0.9.1 keep the column names in a `columns` list instead; Shape reads both forms. The
 statistics of a sampled table sample inside the rows that were kept. A test fails when a code path draws a sample that is not
 registered here (`shape.profile.sampling.INTERNAL`).
 
@@ -515,3 +535,168 @@ min_confidence=0.99)` returns the same as a list of dicts. The findings:
 
 A profile written before type inference was recorded has no `type_inference`: `shape types` says so on stderr and compares
 only the contract. The findings become `type` proposals with `shape proposals propose --kinds type` (`docs/PROPOSALS.md`).
+
+
+## Nested columns
+
+A Parquet file, a Delta table or a JSON Lines file can hold list, struct and map columns, and lists and structs inside
+them. `shape profile` reads them (Shape 0.9.1 stopped with `unhashable type: nested Arrow column`). A nested column is
+recorded as a whole. Nothing inside its values is profiled: a struct's fields, a list's elements and a map's keys and
+values have no statistics of their own.
+
+The column has `dtype` `nested` and the usual `null_count` and `null_rate`; the table's `row_count` is the number of rows.
+It has no `cardinality`, `min_value`, `max_value`, `mean`, `pattern` or value counts, and it is never a key. Three keys
+only a nested column has:
+
+| Key | Meaning |
+|---|---|
+| `arrow_type` | the Arrow type as text, as the reader gave it (`list<element: int64>`) |
+| `arrow_type_spec` | the same type exactly, as JSON: field names, nullability, units, time zones and nesting. A leaf is its Arrow name (`"int64"`) or, when the name does not read back as the same type, an Arrow IPC schema in base64. Field metadata is not kept |
+| `nested` | `kind` (`list`, `large_list`, `fixed_size_list`, `list_view`, `large_list_view`, `map`, `struct` or `union`), `rows`, `non_null`, and for a list or a map `length` and `element_null_rate` |
+
+`length` is the distribution of the lengths of the non-null lists or maps: `min`, `max`, `mean`, `std` (population), `p50`,
+`p95` and `hist` (length to count, up to 256 distinct lengths; a column with more has no `hist`). It is absent when no
+value is non-null. `element_null_rate` is the share of null list elements, or of null map values, among all elements; it
+is absent without an element. A struct has no `length`.
+
+```json
+"tags": {
+  "dtype": "nested", "null_count": 12, "null_rate": 0.2,
+  "arrow_type": "list<element: string>",
+  "arrow_type_spec": {"type": {"list": "list", "item": {"name": "element", "nullable": true, "type": "string"}}},
+  "nested": {"kind": "list", "rows": 60, "non_null": 48, "element_null_rate": 0.0,
+             "length": {"min": 1, "max": 4, "mean": 2.5, "std": 1.118034, "p50": 2.5, "p95": 4.0,
+                        "hist": {"1": 12, "2": 12, "3": 12, "4": 12}}}
+}
+```
+
+A table without a nested column has none of these keys, and the statistics of its other columns do not depend on a
+nested column being there. Both kernels (`SHAPE_KERNEL=rust` and `python`) give the same record.
+
+What the other commands do with a nested column:
+
+* `shape diff` compares the type by its structure and leaf types (`list<int64>`): the names Arrow writers give a list's item
+  or a map's entries do not count, a struct's field names do. A different type is a `dtype_change`, a different null rate is
+  a `null_rate_change`, and a shift in the mean length is a `length_change`.
+* `shape check` evaluates the contract rules that apply: `dtype` (`nested`), `nullable` and `max_null_rate`. A rule about
+  values (`pattern`, `distribution`) does not hold for a nested column.
+* `shape generate` writes the column with the recorded Arrow type, the recorded null rate and, for a list or a map, lengths
+  drawn from `length.hist` (from `mean`, `std`, `min` and `max` without a `hist`). The values inside come from the
+  generator of each leaf type, as for a column about which the profile says nothing, so a nested value has the right shape
+  and types but not the distribution of the original values:
+  * a nested value inside a nested value has 1 to 3 elements when the profile records no lengths for it, so it is
+    never empty;
+  * a struct field is never null;
+  * numbers, booleans, text, dates, times, timestamps, decimals and dictionaries use the defaults of a column without
+    statistics (integers and floats are uniform from 0 to 1);
+  * the keys of a map are distinct (a text key gets its position appended, an integer key is the first key plus its
+    position; any other key type drops a repeated key, so that map is shorter);
+  * a binary child is 1 to 16 random bytes (a fixed-size binary has its width) and a duration is uniform over one day, in
+    the type's unit;
+  * a union, extension, run-end encoded or view type inside a nested column is not generated: `generate` stops with one
+    `shape: error:` line that names the table, the column and the type (exit 2). The refusal stops the whole table: there is no option yet to leave a column out.
+
+  CSV, TSV and SQL hold flat values only, so `generate` refuses a nested column for them by name; use Parquet, JSON Lines,
+  IPC or Delta. `shape fidelity` compares flat columns and also refuses a nested column by name (exit 2).
+* The bounded profile engine behind `shape capture` and `shape stream-profile` records a nested column as kind `other`,
+  with its Arrow type, counts and nulls but no lengths.
+* `shape profile --validate` refuses a nested column by name.
+* Profiles of the parts of one table merge when each part holds the same type; the lengths combine exactly when each part
+  kept its `hist`.
+
+Profiling the fields inside nested values is not done yet.
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape profile export.csv -o export.shape --delimiter ';' --encoding latin-1
+shape profile raw.csv -o raw.shape --no-header          # columns are f0, f1, ...
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: export.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "6d093e05eddaf930c70203ffa852139c4007a26df4b083236be3515bb40f059d", "written": "export.shape"}
+    {"shape_content_id": "a605edae085e7c45531e83ad09147e7ab2b5b8237d5c8494cc8b0ecc15dc112a", "written": "raw.shape"}
+    ```
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape profile members.csv -o members.shape --string-columns zip,npi        # keep these as text
+shape profile members.csv -o members.shape --types types.json              # {"zip": "string", "amount": "float"}
+shape profile members.csv -o members.shape --infer-types off               # read every column as text
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "d3fd1943d642e07d8b12312432fc4bd78c95d3f2d4575d052ddb8f9c1623f6ca", "written": "members.shape"}
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "0f819d1eb8d21d6e3383a0d2333bcf76bf04dc31291fe1f27d6adcde7913cc30", "written": "members.shape"}
+    {"shape_content_id": "5983c8d28223c591e9620e2bc7f9bea100abbf66e0dfa41361f50d888c66a4f9", "written": "members.shape"}
+    ```
+
+<a id="local-example-3"></a>
+
+### Example 4
+
+<!-- example: 3 -->
+
+```bash {.runnable-reference}
+shape profile safe daily.shape -o daily.safe.json --compact --exclude 'notes,raw_*'
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: daily.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"unsafe": false, "written": "daily.safe.json"}
+    ```
+
+<a id="local-example-10"></a>
+
+### Example 11
+
+<!-- example: 10 -->
+
+```bash {.runnable-reference}
+shape profile orders.csv -o orders.shape --sample 100000                       # 100,000 rows
+shape profile orders.csv -o orders.shape --sample 10% --sample-method systematic --sample-seed 7
+shape profile data/ --dataset -o shop.shape --sample 20%                       # each table
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    shape: note: profiled a random sample of 100 of 100 rows (seed 42)
+    {"shape_content_id": "2dfcbd3536f3d02c1b30242e1c213f718f9793e9ee16ea6e17ab38776e25ba09", "written": "orders.shape"}
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    shape: note: profiled a systematic sample of 10 of 100 rows (seed 7)
+    {"shape_content_id": "b5e327e3c20efdddc04d35b81ea4c6a5a57549389a1580eb139d571f2d904aef", "written": "orders.shape"}
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    shape: note: profiled a random sample of 4 of 20 rows (seed 42), table customers
+    shape: note: profiled a random sample of 20 of 100 rows (seed 42), table orders
+    {"shape_content_id": "e61f01b12dfbf067d390c120e7e78ec5a08e94c833ebdabb71f70c57ce96baf3", "written": "shop.shape"}
+    ```

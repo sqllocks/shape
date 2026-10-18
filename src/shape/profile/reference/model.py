@@ -59,6 +59,11 @@ class ColumnProfile:
         None  # values seen, null-rate error, rarest share seen (W2-07)
     )
     type_inference: dict[str, Any] | None = None  # source and confidence of the type (W2-07)
+    # a nested column (list, struct, map, union; ``dtype`` is ``nested``): its Arrow type, as text
+    # and exactly, and its record (``shape.profile.nested``); ``None`` for every other column
+    arrow_type: str | None = None
+    arrow_type_spec: dict[str, Any] | None = None
+    nested: dict[str, Any] | None = None
     # the analyses whose statistics of this column drew a sample (``sampling.INTERNAL``); read by
     # the table's sampling record, never stored in the profile
     samples: list[str] = field(default_factory=list)

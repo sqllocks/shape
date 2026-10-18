@@ -40,7 +40,7 @@ def nth_weekday(year: int, month: int, weekday: int, n: int) -> date:
 
 
 def easter(year: int) -> date:
-    """Easter Sunday (anonymous Gregorian computus)."""
+    """Easter Sunday from the Gregorian computus."""
     a, b, c = year % 19, year // 100, year % 100
     d, e = b // 4, b % 4
     f = (b + 8) // 25

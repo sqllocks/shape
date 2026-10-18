@@ -1,5 +1,24 @@
 # Landing layout: one file per table per business date
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" LANDING
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for LANDING
+    ```
+
+
 A source system drops files: one per table per day, in a folder named for the date, each table in
 its own format. `shape generate`, `shape continue` and `shape chaos` write that layout with three
 options, and the file sinks take the same two path options.
@@ -11,10 +30,8 @@ landing/customers/ingest_date=2026-08-04/customers_20260804.csv
 
 ## How-to
 
-```
-shape generate retail --scale small --format parquet --table-format customer=csv \
-    --batch-date 2026-08-04 -o landing/
-```
+[Run this example](#local-example-1).
+
 
 writes `landing/customer/ingest_date=2026-08-04/customer_20260804.csv` and
 `landing/order/ingest_date=2026-08-04/order_20260804.parquet` (and one file for every other table,
@@ -59,6 +76,13 @@ ParquetSink().write("landing/", "orders", batches,
                     batch_date="2026-08-04")
 ```
 
+`shape chaos --input landing/` reads the standard `<table>/ingest_date=YYYY-MM-DD/<file>`
+layout for CSV, Parquet and JSON Lines. Table names come from the table directories;
+several dates are concatenated in path order and must have matching schemas. The root's
+`_shape_provenance.json` must list each input file with its matching hash, or each Parquet
+file must carry the synthetic marker (see [chaos input checks](CHAOS.md#chaos-only-corrupts-data-shape-wrote)).
+Other custom path templates are not inferred by this reader.
+
 ## What this does not do
 
 - **Cloud targets** (ADLS Gen2, OneLake Files) are not written by the local file sinks above:
@@ -67,3 +91,25 @@ ParquetSink().write("landing/", "orders", batches,
 - Tables are written whole (a landing run generates them first), not streamed chunk by chunk.
 - One date per run, one file per table: late arrivals, repeated drops, `_done` flags and manifests
   over a date range belong to scenario packs (`docs/SCENARIO_PACKS.md`).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape generate retail --scale small --format parquet --table-format customer=csv \
+    --batch-date 2026-08-04 -o landing/
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Landed 9 files under landing/: 21,750 rows in 9 tables (0.46s)
+    ```

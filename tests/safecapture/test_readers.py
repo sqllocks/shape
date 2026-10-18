@@ -322,7 +322,7 @@ def test_folded_categories_are_approximate_in_the_plan(files: dict[str, Path]) -
 def test_the_plan_command_marks_them_too(
     files: dict[str, Path], capsys: pytest.CaptureFixture[str]
 ) -> None:
-    code, out, _ = run(capsys, "plan", str(files["safe"]))
+    code, out, _ = run(capsys, "plan", "--json", str(files["safe"]))
     assert code == 0
     items = json.loads(out)["items"]
     assert any(i["status"] == "approximate" and "captured safe" in i["reason"] for i in items)

@@ -59,12 +59,21 @@ def add_arguments(ge: argparse.ArgumentParser) -> None:
     g.add_argument("--fabric-workspace", metavar="GUID", help="fabric_spark: the workspace id")
     g.add_argument("--fabric-lakehouse", metavar="GUID", help="fabric_spark: the Lakehouse id")
     g.add_argument(
+        "--lakehouse-schema",
+        metavar="NAME",
+        help="fabric_spark: the schema of a schema-enabled Lakehouse (default dbo; the "
+        "Lakehouse kind is looked up in Fabric; an error for a classic Lakehouse)",
+    )
+    g.add_argument(
         "--fabric-notebook",
         metavar="NAME",
         help="fabric_spark: the worker notebook (default shape_spark_worker; created if absent)",
     )
     g.add_argument(
-        "--table-prefix", default="", metavar="P", help="fabric_spark: prefix of the Delta tables"
+        "--table-prefix",
+        default="",
+        metavar="P",
+        help="prefix of the physical destination tables (Delta, database and Fabric sinks)",
     )
     g.add_argument(
         "--jobs-dir",
@@ -110,6 +119,11 @@ def _check_secret_setting(name: str, value: str) -> None:
 
 def build_request(a: argparse.Namespace) -> dict[str, Any]:
     """The scale request an invocation describes."""
+    if getattr(a, "table_prefix", "") and a.scale_mode != "fabric_spark":
+        raise ValueError(
+            "--table-prefix with --scale-mode needs fabric_spark; "
+            "use a supported --to destination for other prefixed writes"
+        )
     if a.target is None:
         raise ValueError("--scale-mode needs a domain or a generation schema file")
     if a.format != "summary":
@@ -168,6 +182,8 @@ def build_request(a: argparse.Namespace) -> dict[str, Any]:
             "table_prefix": a.table_prefix,
         }
         request["sinks"] = ["lakehouse"] if sinks == ["memory"] else sinks
+        if getattr(a, "lakehouse_schema", None):
+            request["fabric"]["lakehouse_schema"] = a.lakehouse_schema
     return request
 
 

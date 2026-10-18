@@ -63,6 +63,7 @@ def _check_capture(reference_shape):
 
 
 def certify(reference_shape, generated_rows, level="gold", tolerance=0.10, correlations=()):
+    """Capture generated rows and score them against the requested evidence target."""
     _check_capture(reference_shape)
     if correlations:
         rows = list(generated_rows)

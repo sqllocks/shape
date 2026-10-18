@@ -4,6 +4,8 @@ from __future__ import annotations
 
 
 class DBAPISource:
+    """Read a parameterized DB-API query in bounded batches."""
+
     def __init__(self, connection, query: str, params=(), batch_size: int = 10000):
         if batch_size < 1:
             raise ValueError("batch_size must be positive")
@@ -38,6 +40,8 @@ class DBAPISource:
 
 
 class DBAPISink:
+    """Write rows through a parameterized DB-API statement."""
+
     def __init__(
         self, connection, statement: str, fields: tuple[str, ...], commit_every_batch: bool = True
     ):

@@ -8,7 +8,9 @@ and is dropped pairwise) or as float arrays (NaN marks a missing value), so a pa
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
 import numpy as np
 import numpy.typing as npt
@@ -195,7 +197,7 @@ def fd_stats(a: np.ndarray, b: np.ndarray, ka: int, kb: int) -> FdStats | None:
         mode = t.argmax(axis=1)
         mode_full = np.full(ka, -1, dtype=np.int64)
         mode_full[groups_ix] = mode[groups_ix]
-        bmode = float(np.bincount(bb, minlength=kb).max()) / n
+        bmode = float(cast(Callable[[], np.intp], np.bincount(bb, minlength=kb).max)()) / n
     else:
         uk, cnt = np.unique(key, return_counts=True)
         ga = uk // kb
@@ -214,7 +216,7 @@ def fd_stats(a: np.ndarray, b: np.ndarray, ka: int, kb: int) -> FdStats | None:
         pick[group_of_entry[first_best[::-1]]] = first_best[::-1]
         mode_full = np.full(ka, -1, dtype=np.int64)
         mode_full[groups_ix] = gb[pick]
-        bmode = float(np.bincount(bb, minlength=kb).max()) / n
+        bmode = float(cast(Callable[[], np.intp], np.bincount(bb, minlength=kb).max)()) / n
     in_repeats = tot >= 2
     return FdStats(
         rows=n,

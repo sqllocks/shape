@@ -1,0 +1,65 @@
+- topic: Profiling and the report
+  related_page: READ_REPORT.md
+  post_url:
+  video_url:
+  status: coming
+- topic: Drift in CI
+  related_page: GITHUB_ACTION.md
+  post_url:
+  video_url:
+  status: coming
+- topic: Microsoft Fabric
+  related_page: plugins/fabric-writers.md
+  post_url:
+  video_url:
+  status: coming
+- topic: Snowflake
+  related_page: databases/snowflake.md
+  post_url:
+  video_url:
+  status: coming
+- topic: Databricks
+  related_page: databases/databricks.md
+  post_url:
+  video_url:
+  status: coming
+- topic: PostgreSQL
+  related_page: databases/postgresql.md
+  post_url:
+  video_url:
+  status: coming
+- topic: MySQL
+  related_page: databases/mysql.md
+  post_url:
+  video_url:
+  status: coming
+- topic: DuckDB
+  related_page: databases/duckdb.md
+  post_url:
+  video_url:
+  status: coming
+- topic: Power BI
+  related_page: DESIGN.md
+  post_url:
+  video_url:
+  status: coming
+- topic: Synapse
+  related_page: plugins/fabric-writers.md
+  post_url:
+  video_url:
+  status: coming
+- topic: ADF
+  related_page: CI.md
+  post_url:
+  video_url:
+  status: coming
+- topic: Kafka
+  related_page: plugins/streaming.md
+  post_url:
+  video_url:
+  status: coming
+- topic: Event Hubs
+  related_page: plugins/streaming.md
+  post_url:
+  video_url:
+  status: coming

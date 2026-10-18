@@ -34,6 +34,7 @@ def _within(v: Any, expect: dict[str, Any]) -> bool:
 
 
 def evaluate(summary: dict[str, Any], rules: dict[str, Any]) -> QualityReport:
+    """Evaluate quality rules against a summary and return their findings."""
     out = []
     for key, spec in rules.items():
         severity = "error"

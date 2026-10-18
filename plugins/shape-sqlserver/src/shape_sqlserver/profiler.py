@@ -224,14 +224,40 @@ def _arrow_table(sample: dict[str, list[Any]]) -> Any:
 
 def _links_from_data(
     samples: dict[str, dict[str, list[Any]] | None],
+    notes: dict[tuple[str, str], str],
 ) -> dict[str, dict[str, Any]]:
     """Foreign keys that profiling the sampled tables together finds between them."""
     from shape.api import profile as shape_profile
+    from shape.profile.reference.dtparse import ZonedTextError
 
     tables = {name: _arrow_table(s) for name, s in samples.items() if s is not None}
     if not tables:
         return {}
-    found = shape_profile(tables).to_dict()
+    while tables:
+        try:
+            found = shape_profile(tables).to_dict()
+            break
+        except ZonedTextError as exc:
+            # SQL's declared type remains authoritative for the column statistics. Only
+            # this column's optional data-based relationship inference is unavailable.
+            removed = False
+            for name, table in list(tables.items()):
+                if exc.column in table.column_names and exc.text in table[exc.column].to_pylist():
+                    notes[(name, exc.column)] = (
+                        "Sampled date text has a time zone or UTC offset; data-based relationship "
+                        "inference is unavailable for this column. SQL type and sampled statistics "
+                        "are retained. Convert it to a timestamp before inferring relationships."
+                    )
+                    rest = table.drop([exc.column])
+                    if rest.num_columns:
+                        tables[name] = rest
+                    else:
+                        del tables[name]
+                    removed = True
+            if not removed:
+                raise
+    else:
+        return {}
     return {
         rel["name"]: {
             "child_table": rel["child"],
@@ -281,7 +307,9 @@ def _infer_keys_from_names(
 
 def _profile_tables(
     cursor: Any, catalog: Catalog, sample_rows: int
-) -> tuple[Any, dict[str, int], dict[str, str], dict[tuple[str, str], str]]:
+) -> tuple[
+    Any, dict[str, int], dict[str, str], dict[tuple[str, str], str], dict[tuple[str, str], str]
+]:
     from shape.profile.reference.model import DatasetProfile, TableProfile
 
     samples, methods = _sample_all(cursor, catalog, sample_rows)
@@ -300,7 +328,8 @@ def _profile_tables(
         for name, fk in catalog.foreign_keys.items()
     }
     covered = {(lk["child_table"], c) for lk in links.values() for c in lk["child_columns"]}
-    for name, lk in _links_from_data(samples).items():
+    notes: dict[tuple[str, str], str] = {}
+    for name, lk in _links_from_data(samples, notes).items():
         if any((lk["child_table"], c) in covered for c in lk["child_columns"]):
             continue
         links[name] = {**lk, "evidence": DATA}
@@ -360,7 +389,13 @@ def _profile_tables(
                 "evidence": lk["evidence"],
             }
         )
-    return DatasetProfile(tables=profiles, relationships=relationships), sampled, methods, evidence
+    return (
+        DatasetProfile(tables=profiles, relationships=relationships),
+        sampled,
+        methods,
+        evidence,
+        notes,
+    )
 
 
 def _check_found(cursor: Any, catalog: Catalog, tables: list[str] | None) -> None:
@@ -417,7 +452,7 @@ def profile_database(
     try:
         catalog = read_catalog(cursor, schema, tables)
         _check_found(cursor, catalog, tables)
-        dataset, sampled, methods, evidence = _profile_tables(cursor, catalog, sample_rows)
+        dataset, sampled, methods, evidence, notes = _profile_tables(cursor, catalog, sample_rows)
     finally:
         cursor.close()
         if connection is None:
@@ -432,6 +467,8 @@ def profile_database(
         table["sample_method"] = methods[table_name]
         for col_name, column in table["columns"].items():
             column["fk_evidence"] = evidence.get((table_name, col_name))
+            if note := notes.get((table_name, col_name)):
+                column["profiling_note"] = note
     data["sampling"] = {
         "method": (
             "spread over the table: SELECT TOP n ... ORDER BY a scrambled CHECKSUM(primary key, "

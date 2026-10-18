@@ -22,6 +22,7 @@ class ParentChildSpec:
 
 
 def generate_children(parents: Iterable[Mapping[str, Any]], spec: ParentChildSpec, seed: int = 0):
+    """Yield seeded child rows referencing each parent key."""
     for i, p in enumerate(parents):
         rng = random.Random((seed << 64) ^ i)
         n = rng.randint(spec.min_children, spec.max_children)
@@ -30,6 +31,7 @@ def generate_children(parents: Iterable[Mapping[str, Any]], spec: ParentChildSpe
 
 
 def scd2_versions(entity_id: Any, start: datetime, changes: int, interval: timedelta):
+    """Yield dated SCD2 versions for one entity with an open-ended final version."""
     if changes < 1:
         raise ValueError("changes must be >=1")
     for i in range(changes):

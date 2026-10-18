@@ -163,9 +163,9 @@ works" plus `domain`, `tables` (rows per table) and `contractUrl`.
    (installed: none installed)`. Build a derived image and use it as the `image` parameter:
 
    ```dockerfile
-   FROM ghcr.io/sqllocks/shape:0.9.1
+   FROM ghcr.io/sqllocks/shape:0.9.3
    USER root
-   RUN pip install --no-cache-dir "sqllocks-shape-domains==0.9.1"
+   RUN pip install --no-cache-dir "sqllocks-shape-domains==0.9.3"
    USER shape
    ```
 

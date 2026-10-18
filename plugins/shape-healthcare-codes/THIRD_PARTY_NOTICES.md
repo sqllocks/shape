@@ -14,7 +14,7 @@ Modes:
 
 A statement the source's page does not make is not assumed: the asset is then fetch-only (when it
 is a US federal government work) or BYO, and marked `[VERIFY]` where a person should confirm.
-Sizes, checksums and counts are in `docs/plans/lane_status/HC-codes.md` and in each built
+Sizes, checksums and counts are in the implementation tests and in each built
 asset's manifest (`<asset>.json`).
 
 ## ICD-10-CM (CDC/NCHS)

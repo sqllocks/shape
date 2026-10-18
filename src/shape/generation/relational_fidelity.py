@@ -16,6 +16,7 @@ class RelationalFidelity:
 
 
 def relational_fidelity(parents, children, parent_key, child_fk, max_orphan_rate=0.0):
+    """Measure parent coverage and child orphan rate against the requested limit."""
     keys = {p.get(parent_key) for p in parents}
     counts = {k: 0 for k in keys}
     orphans = 0

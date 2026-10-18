@@ -14,7 +14,8 @@ pip install 'sqllocks-shape-fabric[sqlserver,eventhubs]'  # + SQL targets and th
 `[sqlserver]` brings the SQL Server plugin (and `pyodbc`) for the `sqlserver`, `warehouse` and
 `synapse` sinks and the SQL database writer; `[eventhubs]` brings the Event Hubs plugin for the
 `eventstream` emitter and writer. Without one, that part says which extra to install. The plugins
-are not on PyPI yet: install from the release's wheels with `--find-links` (docs/INSTALL.md).
+are published on PyPI: install the extras above, or install `sqllocks-shape-fabric` directly
+(see [installation](../../docs/INSTALL.md)).
 
 ## `eventstream://`: a Fabric Eventstream
 
@@ -72,14 +73,29 @@ lists the tables completed before it. Nothing is reported written unless the des
 | `EventstreamWriter(uri)` | Eventstream | the emitter's transport, flat events with the `_shape_table`/`_shape_seq` key |
 
 `write_mode` (SQL, Warehouse, Eventhouse): `create` (default: an existing table is an error), `append`,
-`truncate`, `replace` (drops the old table). In a SQL database and a Warehouse the `TRUNCATE` or
+`truncate`, `replace`. In a SQL database and a Warehouse, `replace` drops the old table. The `TRUNCATE` or
 `DROP TABLE` commits together with the new rows, so a failed write keeps the old rows. Names are quoted and checked, values are parameters; the
 one literal that cannot be a parameter (the `COPY INTO` location) is validated against a strict
 character set. `shape_fabric.sinks` has `Sink`-protocol adapters; `shape_fabric.onelake` builds
 OneLake paths.
 
+In Eventhouse, `replace` clears the rows and rebuilds the column schema in the existing table,
+retaining its identity and permissions. Streaming ingestion is enabled as for the other write
+modes. It removes old columns and supports changed
+column types. The management steps and streaming writes are not atomic: a failed replacement
+can leave the table empty with an intermediate schema, or with only the rows already accepted.
+`management_timeout` defaults to 600 seconds to allow streamed rows to be sealed before clearing;
+ingestion and queries retain the 100-second `timeout` default.
+
 Profile a lakehouse straight from OneLake: `shape profile onelake://<workspace>/<lakehouse>/Tables/<table>`
 (Delta) or `.../Files/<path>`; authentication and `adlfs` handling are core's `abfss://` source.
+
+Schema-enabled Lakehouses are read at `.../Tables/<schema>/<table>`, usually `dbo`.
+The core Delta sink takes `schema_enabled=true` (CLI: `--sink-config delta.schema_enabled=true`),
+with `schema_name=dbo` by default, and honours `--table-prefix`. The Spark worker takes
+`--lakehouse-schema dbo`. Files writers and `shape publish -t lakehouse` remain Files landing zones.
+Warehouse and Synapse keys use a separate `ALTER TABLE ... NONCLUSTERED ... NOT ENFORCED`
+statement after creation. See [the live-test variables](../../docs/plugins/fabric-writers.md#unattended-live-tests).
 
 ## `mssql://`: a live SQL Server, Azure SQL or Fabric SQL sink
 

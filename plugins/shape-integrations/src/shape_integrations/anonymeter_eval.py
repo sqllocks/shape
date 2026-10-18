@@ -1,4 +1,4 @@
-"""Anonymeter privacy-risk report (imports Anonymeter: needs the ``anonymeter`` extra).
+"""Anonymeter privacy-risk report (imports an independently installed Anonymeter).
 
 Per table: singling out (multivariate queries of up to three columns, fixed seed),
 linkability (the columns split in two halves in table order, ten neighbours at most) and

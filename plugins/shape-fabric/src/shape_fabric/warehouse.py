@@ -1,7 +1,9 @@
 """Warehouse bulk writer: stage Parquet in OneLake, then ``COPY INTO``.
 
     writer = WarehouseWriter(
-        connection_string, staging_path="onelake://MyWorkspace/MyLakehouse/Files", credential=cred
+        connection_string,
+        staging_path="onelake://<workspace-guid>/<lakehouse-guid>/Files",
+        credential=cred,
     )
     writer.write_table("customer", batches, write_mode="create")
 
@@ -20,14 +22,25 @@ The number of rows ``COPY INTO`` loaded must equal the number staged; if it diff
 fails (and a table this call created is dropped). The count is the statement's own; where the
 driver does not report one, rows are counted before and after.
 
-``staging_path`` is the ``Files`` folder of a lakehouse in the same workspace as the Warehouse,
-or a folder in it (``abfss://`` or ``onelake://``). ``credential`` signs in both to the Warehouse
-and to OneLake.
+``staging_path`` is the ``Files`` folder of a lakehouse, or a folder in it
+(``abfss://`` or ``onelake://``). COPY uses workspace and item GUIDs; cross-workspace
+OneLake sources must be in the same tenant. ``credential`` signs in both to the Warehouse
+and to OneLake. That client credential does not control the Warehouse's server-side
+OneLake token exchange. If the server rejects that exchange with SQL error 13840,
+the writer rolls back the failed statement, reapplies any uncommitted truncate or
+replace, and loads the staged Parquet through parameterized SQL inserts in batches
+of 5,000 rows. It warns about this slower path, verifies the resulting row count,
+and retains the same transaction, key and staging-cleanup behavior. Other COPY
+errors remain errors; the writer never silently changes the server's identity.
 """
 
 from __future__ import annotations
 
+import contextlib
+import os
 import re
+import sys
+import time
 import uuid
 import warnings
 import zlib
@@ -35,6 +48,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Any, BinaryIO
 
 import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
 
@@ -45,6 +59,10 @@ from .lakehouse import write_batches
 from .sqldb import SqlConnection, check_mode, prepare_table, undo, write_many
 
 DEFAULT_CHUNK_ROWS = 1_000_000
+#: the most seconds one table may spend in the INSERT fallback (``SHAPE_WAREHOUSE_INSERT_SECONDS``
+#: overrides it): row-by-row loading into a Warehouse is far slower than COPY INTO, so a large
+#: table fails here with the cause instead of running for hours
+INSERT_FALLBACK_SECONDS = 600
 _SAFE_URL = re.compile(r"https://[A-Za-z0-9.\-]+/[A-Za-z0-9._~%@:/ \-]+")
 
 
@@ -118,6 +136,13 @@ class WarehouseWriter:
         self.storage = storage or Storage(credential=credential, filesystem=filesystem)
         self.schema_name = schema_name
         self.run_id = run_id or uuid.uuid4().hex[:12]
+        #: one line per table loaded by the INSERT fallback; also in ``WriteResult.notes``
+        self.notes: list[str] = []
+
+    def drain_notes(self) -> list[str]:
+        """The fallback notes since the last call (``write_many`` puts them in the result)."""
+        notes, self.notes = self.notes, []
+        return notes
 
     @property
     def destination(self) -> str:
@@ -168,7 +193,34 @@ class WarehouseWriter:
             if first is None:
                 return 0
             staged = self._stage(table, folder, first, stream, chunk_rows)
-            loaded = self._copy(sname, table, folder, mode, created, staged)
+            try:
+                loaded = self._copy(sname, table, folder, mode, created, staged)
+            except Exception as exc:
+                # 13840 is a server-side OneLake token exchange failure, not a bad row.
+                # The client's storage token cannot be supplied to COPY INTO. Do not
+                # switch identities or replay any other COPY error automatically.
+                if (
+                    not isinstance(folder, onelake.OneLakePath)
+                    or not re.search(r"\b13840\b", str(exc))
+                    or "access token couldn't be fetched for storage path" not in str(exc).lower()
+                ):
+                    raise
+                note = (
+                    f"{sname}.{table}: COPY INTO failed with SQL error 13840 "
+                    f"({_tsql.redact(str(exc))[:300]}); loading {staged:,} rows with "
+                    "parameterized INSERT in 5,000-row batches instead, which is much slower "
+                    "than COPY INTO (see docs/KNOWN_LIMITATIONS.md, Fabric Warehouse COPY INTO)"
+                )
+                self.notes.append(note)
+                print(f"WARNING: {note}", file=sys.stderr, flush=True)
+                warnings.warn(note, RuntimeWarning, stacklevel=2)
+                db.rollback()
+                # Reapply an uncommitted truncate/replace after rollback. A table this
+                # call created was committed by prepare_table and is still present.
+                self._prepare(
+                    sname, table, "append" if created else mode, use_schema, columns, primary_key
+                )
+                loaded = self._insert_staged(sname, table, folder)
             if loaded != staged:
                 raise ShapeError(
                     f"COPY INTO loaded {loaded:,} of the {staged:,} staged rows of {sname}.{table}"
@@ -201,6 +253,8 @@ class WarehouseWriter:
     def _copy_statement(self, schema_name: str, table: str, folder: Any) -> str:
         return copy_into_sql(schema_name, table, folder.https() + "/")
 
+    int96_timestamps = False  # staged Parquet timestamps as INT96 (a Synapse dedicated pool)
+
     def _stage(
         self,
         table: str,
@@ -221,7 +275,7 @@ class WarehouseWriter:
             path = folder.join(f"chunk_{index:06d}.parquet").abfss()
 
             def put(handle: BinaryIO, g: list[pa.RecordBatch] = group) -> None:
-                write_batches(handle, "parquet", g, schema)
+                write_batches(handle, "parquet", g, schema, int96_timestamps=self.int96_timestamps)
 
             self.storage.write(path, put)
             staged += sum(b.num_rows for b in group)
@@ -247,9 +301,70 @@ class WarehouseWriter:
         count = int(db.execute(_tsql.count_sql(schema_name, table)).fetchone()[0])
         return count - (before or 0)
 
+    def _insert_staged(self, schema_name: str, table: str, folder: onelake.OneLakePath) -> int:
+        """Recover server token failure through the existing authenticated SQL connection.
+
+        Read staged Parquet a batch at a time. Neither the whole table nor a whole
+        staging chunk is materialized, and every file/Parquet/SQL handle is closed.
+        The caller verifies the row count and commits or undoes the entire write.
+        """
+        count_sql = _tsql.count_sql(schema_name, table)
+        raw = os.environ.get("SHAPE_WAREHOUSE_INSERT_SECONDS", "")
+        limit = int(raw) if raw.strip().isdigit() else INSERT_FALLBACK_SECONDS
+        deadline = time.monotonic() + limit
+        cursor = self.db.get().cursor()
+        total = 0
+        try:
+            before = int(cursor.execute(count_sql).fetchone()[0])
+            index = 0
+            while True:
+                path = folder.join(f"chunk_{index:06d}.parquet").abfss()
+                if not self.storage.exists(path):
+                    break
+                fs, fs_path = self.storage._remote(path)  # noqa: SLF001
+                with fs.open(fs_path, "rb") as handle:
+                    parquet = pq.ParquetFile(handle)
+                    try:
+                        for batch in parquet.iter_batches(batch_size=5000):
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise ShapeError(
+                                    f"the parameterized INSERT fallback for {schema_name}.{table} "
+                                    f"stopped after {limit} s with {total:,} rows sent: COPY INTO "
+                                    "failed with SQL error 13840 and row-by-row loading is too "
+                                    "slow for this table. Fix the OneLake credential COPY INTO "
+                                    "uses (docs/KNOWN_LIMITATIONS.md); the write was rolled back"
+                                )
+                            with contextlib.suppress(AttributeError):
+                                cursor.timeout = max(1, int(remaining))
+                            sql = _tsql.insert_sql(schema_name, table, batch.schema.names)
+                            _tsql.use_fast_executemany(cursor, batch)
+                            cursor.executemany(sql, _tsql.rows_as_params(batch))
+                            total += batch.num_rows
+                    finally:
+                        parquet.close()
+                index += 1
+            after = int(cursor.execute(count_sql).fetchone()[0])
+            loaded = after - before
+            if loaded != total:
+                raise ShapeError(
+                    f"parameterized INSERT loaded {loaded:,} of the {total:,} sent rows "
+                    f"of {schema_name}.{table}"
+                )
+            return loaded
+        finally:
+            close = getattr(cursor, "close", None)
+            if close is not None:
+                close()
+
     def _cleanup(self, folder: onelake.OneLakePath) -> None:
         try:
             self.storage.remove(folder.abfss(), recursive=True)
+            # OneLake keeps the emptied run folder and the shared ``staging`` folder above it:
+            # take them away too once nothing is in them (another run's files keep them)
+            run_folder = folder.abfss().rsplit("/", 1)[0]
+            self.storage.remove_if_empty(run_folder)
+            self.storage.remove_if_empty(run_folder.rsplit("/", 1)[0])
         except Exception as exc:  # the write's own outcome matters more than the leftovers
             warnings.warn(
                 f"could not remove the staged files at {folder.abfss()}: {exc}",

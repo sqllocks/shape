@@ -1,5 +1,9 @@
 # Readiness for October 3, 2026
 
+Current Fabric setup is in the [runbook](../../../integrations/fabric/RUNBOOK.md).
+The later [live dry-run findings](../../plans/demo_status/DEMO-LIVE.md) record integration
+fixes and outstanding live checks; they are not a timing benchmark for this talk.
+
 **Delivery date: October 3, 2026** (owner, 2026-09-30). On that date the planned items
 R1–R9 won't be ready, so the talk presents them only as **"how it will work"** (slides
 25–27): the plan's design, labelled *planned* or *being built*, with no output, numbers,
@@ -45,7 +49,7 @@ no `TBD` or PENDING marker is left in the talk files and slide 22's live profile
 | R8 | Distributed Spark profiling | PF-02 | **NOT READY** (planned) | slide 14 one line; slide 27 |
 | R9 | Generation pipelines | PF-06 | **NOT READY** (planned) | slide 27 |
 | R10 | Missing `.shape` exits 2 (finding F1) | — | **READY**: fixed on `main` in `b2dd663`; asserted | slide 19 shows it |
-| R11 | **Owner's Fabric dry run**, `demo/LIVE_TIMINGS.md` | runbook §11 | **NOT DONE** on 2026-09-30. The owner's to-do (`STATUS.md`) | Done → Path A (C2 in Fabric; timings quoted exactly). Not done → **Path B**: C2-local, no Fabric timings (`DEMO.md`) |
+| R11 | **Owner's Fabric dry run**, a committed Fabric dry-run timing record | runbook §11 | **NOT DONE** on 2026-09-30. The owner's to-do (`STATUS.md`) | Done → Path A (C2 in Fabric; timings quoted exactly). Not done → **Path B**: C2-local, no Fabric timings (`DEMO.md`) |
 | F2 | `sqllocks-shape` on pypi.org | owner | **not on pypi.org** at 2026-09-30 16:59 UTC (HTTP 404; TestPyPI has 0.9.0) | slide 30 install line decided on Oct 2 |
 
 The Rust engine (P1-01a to P1-06 done on `build/main-plan` @ `bc40cc3`, not merged, not

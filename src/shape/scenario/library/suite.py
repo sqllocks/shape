@@ -47,6 +47,7 @@ class SuiteResult:
 
 
 def list_suites(root: Path | None = None) -> list[str]:
+    """Return sorted suite names from the selected local scenario library."""
     return sorted(p.stem for p in ((root or formats.ROOT) / "suites").glob("*.json"))
 
 

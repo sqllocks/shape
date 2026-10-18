@@ -1,5 +1,8 @@
 # Streaming Semantics — Draft 2
 
+Status: experimental.
+
+
 Shape distinguishes event time from processing time. Stateful operators declare windowing, allowed lateness and checkpoint semantics. Watermarks determine closable windows; events older than the watermark are handled by an explicit late-data policy. State MUST be bounded or externally checkpointed. Replay MUST be deterministic for deterministic sources/operators. Source delivery guarantees and sink commit guarantees are reported separately; Shape does not claim exactly-once when an underlying connector cannot provide it.
 
 This draft makes those rules precise for the stream runtime (`shape.streaming.runtime`). Sections 1 to 4 are implemented by P3-01, section 5 by P3-02, section 6 by P3-03 and section 7 by P3-04 and P3-05.

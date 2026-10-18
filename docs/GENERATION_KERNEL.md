@@ -1,5 +1,8 @@
 # Generation kernel
 
+Status: experimental.
+
+
 The native kernel (`rust/shape-kernel/src/gen/`, exposed as `shape._kernel`) does the
 per-row work of generation: random streams, categorical sampling, string assembly and temporal
 sampling. Every function has a pure-Python twin in `shape.kernel.reference.gen`; `SHAPE_KERNEL`

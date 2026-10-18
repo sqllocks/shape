@@ -1,0 +1,39 @@
+{
+  "run_id": "38320894194",
+  "commit": "6eb065e8f7349613291e67678b05227ab1e002ff",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765374464,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/plugins/sqlserver.md",
+  "example": "profile-db-warehouse",
+  "command": "shape profile-db --server myserver.database.windows.net --database shop \\\n    --schema dbo --sample-rows 1000 -o shop.shape --json shop-summary.json",
+  "executed_command": "shape profile-db --server \"$DOCS_SAMPLE_SERVER\" --database \"$DOCS_SAMPLE_DB\" \\\n    --schema dbo --sample-rows 1000 -o shop.shape --json shop-summary.json",
+  "exit_code": 1,
+  "status": "failed",
+  "elapsed_seconds": 7.877463105000061,
+  "stdout": "shape: plugin command 'profile-db' failed: ZonedTextError: column 'HourlyBucket' holds date text with a time zone or UTC offset ('18:00-18:59'), which the profiler does not model; parse it into a timestamp column first, for example df['HourlyBucket'] = pandas.to_datetime(df['HourlyBucket'], utc=True), and profile the DataFrame (run with --debug for the traceback)\n"
+}

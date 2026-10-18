@@ -1,5 +1,12 @@
 # CLI stability: the promise for 1.x
 
+Status: available (early-access surface); coming (1.x policy).
+
+**Early access 0.9.3.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+
+The compatibility promises below apply to the future 1.x line, not the current early-access release.
+
+
 This page is the promise Shape makes to people who call `shape` from scripts and CI pipelines.
 The exit codes are in [CLI.md](CLI.md); the promises for the `.shape` format and for plugins are
 in [API_STABILITY.md](API_STABILITY.md) and [plugins/stability.md](plugins/stability.md). What
@@ -40,6 +47,14 @@ a stable command that covers:
 What is not covered: the wording of messages (except the deprecation warning below), the layout of
 human-readable output, the order of keys in JSON, the exact exit code within "3 and above" for a
 verdict a command did not document, and timing.
+
+## Flags added since the 1.0 surface snapshot
+
+These flags are additions, which a minor release may make (see below), and each is in the
+[cloud and Fabric options](CLI.md#cloud-and-fabric-options) table of `CLI.md`: the global
+`--source-config KEY=REF`, `--lakehouse-schema NAME` on `shape generate` (with
+`--scale-mode fabric_spark`) and `shape demo init`, and `--table-prefix P` on `shape generate`.
+A script written without them is unaffected; an option you do not pass keeps its former behaviour.
 
 ## What may change in a minor release
 

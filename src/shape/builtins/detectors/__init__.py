@@ -28,21 +28,29 @@ class _Detector:
 
 
 class EmailDetector(_Detector):
+    """Detect email patterns using the privacy layer sample matcher."""
+
     name = "email"
     kind = "email"
 
 
 class UsSsnDetector(_Detector):
+    """Detect US SSN patterns using the privacy layer sample matcher."""
+
     name = "us_ssn"
     kind = "us_ssn"
 
 
 class PhoneDetector(_Detector):
+    """Detect phone patterns using the privacy layer sample matcher."""
+
     name = "phone"
     kind = "phone"
 
 
 class Ipv4Detector(_Detector):
+    """Detect IPv4 patterns using the privacy layer sample matcher."""
+
     name = "ipv4"
     kind = "ipv4"
 

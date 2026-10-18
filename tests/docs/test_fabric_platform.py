@@ -298,7 +298,7 @@ def test_the_page_documents_git_sync_and_its_secrets():
         "FABRIC_TENANT_ID",
         "FABRIC_CLIENT_ID",
         "FABRIC_CLIENT_SECRET",
-        "FABRIC_WORKSPACE_ID",
+        "FABRIC_GIT_WORKSPACE_ID",
         "FABRIC_GIT_REMOTE",
         "FABRIC_GIT_TOKEN",
     ):
@@ -306,6 +306,6 @@ def test_the_page_documents_git_sync_and_its_secrets():
 
 
 def test_contributing_and_the_plugin_readme_point_at_the_inventory():
-    assert "FABRIC_PLATFORM.md" in (ROOT / "docs/CONTRIBUTING.md").read_text(encoding="utf-8")
+    assert "FABRIC_PLATFORM.md" in (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
     readme = (ROOT / "plugins/shape-fabric/README.md").read_text(encoding="utf-8")
     assert "../../docs/FABRIC_PLATFORM.md" in readme

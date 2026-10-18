@@ -9,6 +9,8 @@ from ._columns import rows_to_columns
 
 
 class KafkaBatchAdapter:
+    """Decode Kafka message values into column batches."""
+
     def __init__(self, decoder):
         self.decoder = decoder
 

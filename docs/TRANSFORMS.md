@@ -1,14 +1,30 @@
 # Transforms: star schema and CDM
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" TRANSFORMS
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for TRANSFORMS
+    ```
+
+
 `shape transform` reshapes a set of related tables. The source is an installed domain (generated
 first, with `--scale` and `--seed`) or a directory of CSV, Parquet or JSON Lines files, one per
 table.
 
-```bash
-shape transform star retail -o star/ --format parquet
-shape transform cdm retail -o cdm/
-shape transform star data/ --map star-map.json -o star/      # a directory needs a map
-```
+[Run this example](#local-example-0).
+
 
 Both commands exit 0, or 2 for bad input (a missing table or column in the map, an unreadable
 map, an unknown domain). `--json` prints the summary as JSON.
@@ -87,3 +103,38 @@ The same transforms are plugins: `host.get("shape.transforms", "star").apply(tab
 `shape generate DOMAIN --mode star` selects a domain's *generation* schema for the star layout;
 `transform star` is post-processing of existing tables. They share no code: one decides which
 values to generate, the other how to join and key values that already exist.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape transform star retail -o star/ --format parquet
+shape transform cdm retail -o cdm/
+shape transform star data/ --map star-map.json -o star/      # a directory needs a map
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    star schema written to star// (parquet)
+      dim_customer                  1,000 rows  9 cols
+      dim_product                     500 rows  10 cols
+      dim_store                       150 rows  6 cols
+      dim_promotion                   200 rows  7 cols
+      dim_date                      1,468 rows  14 cols
+      fact_sale                    12,500 rows  20 cols
+      fact_return                     850 rows  15 cols
+    CDM folder 'ShapeRetail' written to cdm// (csv)
+      9 entities + model.json
+    star schema written to star// (csv)
+      dim_customer                     20 rows  11 cols
+      fact_order                      100 rows  24 cols
+    ```

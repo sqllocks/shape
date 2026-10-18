@@ -1,37 +1,10 @@
-"""One command for the whole comparison against the pinned RefEngine: verifiers, then benchmarks.
-
-    source scripts/env.sh && python benchmarks/vs_refengine/run.py --quick  # D1, D2, retail; 3 runs
-    source scripts/env.sh && python benchmarks/vs_refengine/run.py --full  # all of 3.4; 5 runs
-
-Order, per workload (equivalence before timing, section 6.4):
-
-1. run the equivalence verifier for the implementation (exit 0 required);
-2. run the benchmark, which writes the same output the verifier checks;
-3. domain workloads only: run the verifier again on the timed output (``--no-generate``).
-
-A workload's numbers are recorded only when every verifier run for it exited 0; otherwise the
-record keeps the verifier status and ``median_s`` is ``null``. The result is written to
-``benchmarks/vs_refengine/results.json`` (schema: ``results.schema.json``) with verifier status and
-numbers for ``refengine``, ``reference_port`` and ``shape`` (the product: ``shape.profile`` for the
-profiling workloads, ``shape generate``'s engine for the generation workloads, ``shape stream``).
-``--quick`` times generation for ``reference_port`` only; ``--full`` (P8-02, the nightly parity
-suite) also runs ``shape`` on every baseline domain at medium and on retail at large (GEN-IN).
-The exit code is 1 if any verifier or timed run failed, else 0. ``--only profile|generate|stream``
-measures one family and keeps the records of the other families that ``--out`` already holds.
-
-``--shard K/N`` and ``--domain``/``--dataset`` select a part of a mode's workloads, so the
-nightly suite can spread ``--full`` over several jobs (``nightly.py`` merges the parts). The
-selection is recorded in ``results.json`` under ``selection``, with every workload id the part
-was expected to produce.
-
-Everything runs under the exclusive benchmark lock (``$BENCH_OUT_DIR/bench.lock``).
-"""
+"""Recorded-release verifiers first, then fresh-process candidate/baseline timings."""
 
 from __future__ import annotations
 
 import argparse
-import contextlib
 import datetime as dt
+import importlib.util
 import json
 import os
 import subprocess
@@ -41,55 +14,37 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-import _refpkg  # noqa: E402
-from common import bench_lock, machine_meta  # noqa: E402
-from paths import BENCH_OUT_DIR, REFENGINE_PY, REFENGINE_ROOT, SHAPE_PY, SHAPE_ROOT  # noqa: E402
+from common import bench_lock, machine_meta  # noqa: E402 (harness path bootstrap)
+from paths import (  # noqa: E402 (harness path bootstrap)
+    BASELINE_PY,
+    BASELINE_VERSION,
+    BENCH_OUT_DIR,
+    SHAPE_PY,
+    SHAPE_ROOT,
+)
+from recorded_store import RecordingError  # noqa: E402 (harness path bootstrap)
+from recorded_store import manifest as recording_manifest  # noqa: E402 (harness path bootstrap)
 
-SCHEMA_VERSION = 1
-DEFAULT_OUT = HERE / "results.json"
-SCHEMA_FILE = HERE / "results.schema.json"
 PROFILE = HERE / "profile_1to1"
 DOMAIN = HERE / "domain_1to1"
 STREAM = HERE / "stream_1to1"
-IMPL = "reference_port"
-
-# Workloads (section 3.4). Later work packages add their own (CLI gates, streaming, START).
+SCHEMA_VERSION = 2
+SCHEMA_FILE = HERE / "results.schema.json"
+DEFAULT_OUT = HERE / "results.json"
+IMPL = "shape"
 QUICK_PROFILE_DATASETS = ["d1.csv", "d1.parquet", "d2.csv", "d2.parquet"]
-FULL_PROFILE_DATASETS = [
-    "d1.csv",
-    "d1.parquet",
-    "d2.csv",
-    "d2.parquet",
-    "d3.csv",
-    "d3.parquet",
-    "d4.csv",
-    "d4.parquet",
-    "mt",
-]
+spec = importlib.util.spec_from_file_location("full_recorded_profile_plan", PROFILE / "verify.py")
+assert spec and spec.loader
+plan_profile = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(plan_profile)
+FULL_PROFILE_DATASETS = plan_profile.ALL
 QUICK_DOMAINS = [("retail", ["small", "medium"])]
+FULL_DOMAINS = [("retail", ["small", "medium", "large"])]
 QUICK_STREAM_SCALES = ["small", "medium"]
-FULL_STREAM_SCALES = ["medium"]  # STREAM-EMIT: retail order, medium
-FULL_DOMAINS = [("retail", ["medium", "large"])]  # reference_port: retail only
-# GEN-IN for the product: retail medium and large, then every baseline domain at medium (P6-01)
-FULL_SHAPE_EXTRA_SCALES = {"retail": ["large"]}
+FULL_STREAM_SCALES = ["small", "medium"]
+FULL_SHAPE_EXTRA_SCALES = {"retail": ["small", "large"]}
 FULL_SHAPE_SCALE = "medium"
-DATASET_IDS = {
-    "d1.csv": "D1",
-    "d1.parquet": "D1",
-    "d2.csv": "D2",
-    "d2.parquet": "D2",
-    "d3.csv": "D3",
-    "d3.parquet": "D3",
-    "d4.csv": "D4",
-    "d4.parquet": "D4",
-    "mt": "MT",
-}
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# minimal JSON-schema validation (type, enum, const, required, properties,
-# additionalProperties, items, minimum, anyOf), so the check needs no extra dependency
-# ─────────────────────────────────────────────────────────────────────────────
+BASELINE_ONLY = False
 
 _TYPES = {"object": dict, "array": list, "string": str, "boolean": bool, "null": type(None)}
 
@@ -102,7 +57,9 @@ def _is_type(v: Any, t: str) -> bool:
     return isinstance(v, _TYPES[t])
 
 
-def validate(value: Any, schema: dict, path: str = "$", root: dict | None = None) -> list[str]:
+def validate(
+    value: Any, schema: dict[str, Any], path: str = "$", root: dict[str, Any] | None = None
+) -> list[str]:
     """Return the list of schema violations (empty when valid)."""
     root = root or schema
     if "$ref" in schema:
@@ -147,11 +104,6 @@ def validate(value: Any, schema: dict, path: str = "$", root: dict | None = None
     return out
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# steps
-# ─────────────────────────────────────────────────────────────────────────────
-
-
 def sh(cmd: list[str], log: Path | None = None) -> tuple[int, str]:
     """Run a command, stream its output to the console and return (exit code, output)."""
     print("+", " ".join(cmd), flush=True)
@@ -166,6 +118,9 @@ def sh(cmd: list[str], log: Path | None = None) -> tuple[int, str]:
             sys.stdout.write(ln)
     rc = p.wait()
     text = "".join(lines)
+    if rc:
+        print(f"command failed: {display_command(cmd)}; exit {rc}", flush=True)
+        sys.stdout.write("".join(lines[-200:]))
     if log is not None:
         log.parent.mkdir(parents=True, exist_ok=True)
         log.write_text(text)
@@ -178,7 +133,7 @@ def display_command(cmd: list[str]) -> str:
     text = " ".join(cmd)
     for path, var in (
         (str(SHAPE_PY), "$SHAPE_VENV/bin/python"),
-        (str(REFENGINE_PY), "$REFENGINE_PY"),
+        (str(BASELINE_PY), "$BASELINE_PY"),
         (str(BENCH_OUT_DIR), "$BENCH_OUT_DIR"),
         (str(SHAPE_ROOT), "$SHAPE_ROOT"),
     ):
@@ -223,270 +178,13 @@ def py_version(py: Path, pkg: str) -> str | None:
         if pkg == "python"
         else f"import importlib.metadata as m; print(m.version('{pkg}'))"
     )
-    r = subprocess.run([str(py), "-c", code], capture_output=True, text=True)
-    return r.stdout.strip() if r.returncode == 0 else None
-
-
-def profile_workloads(datasets: list[str], reps: int, out: dict, impl: str = IMPL) -> bool:
-    """Profiling workloads for ``impl`` (``reference_port`` or ``shape``). Returns True if every
-    verifier passed. Each implementation is timed against its own RefEngine runs in the same job
-    (T-19); the ``refengine`` record is the first one written, and every implementation's record
-    also carries the RefEngine median it was compared with."""
-    ok = True
-    dpy = str(SHAPE_PY)
-    rc, _ = sh([dpy, str(PROFILE / "datasets.py"), *sorted({DATASET_IDS[d] for d in datasets})])
-    if rc != 0:
-        raise SystemExit(f"datasets.py failed ({rc})")
-    vcmd = [dpy, str(PROFILE / "verify.py"), "--impl", impl, *datasets]
-    rc, _ = sh(vcmd, BENCH_OUT_DIR / "verify" / f"profile_{impl}.txt")
-    ver = verifier_record(vcmd, rc)
-    bench_json = BENCH_OUT_DIR / "profile" / f"bench_results_{impl}.json"
-    numbers: dict[str, Any] = {}
-    if rc == 0:
-        bcmd = [
-            dpy,
-            str(PROFILE / "bench.py"),
-            "--impl",
-            impl,
-            "--reps",
-            str(reps),
-            "--out",
-            str(bench_json),
-            *datasets,
-        ]
-        brc, _ = sh(bcmd)
-        if brc != 0:
-            raise SystemExit(f"profile bench failed ({brc})")
-        numbers = json.loads(bench_json.read_text())
-    else:
-        ok = False
-    for ds in datasets:
-        rec_sp: dict[str, Any] = {
-            "kind": "profile",
-            "dataset": ds,
-            "median_s": None,
-            "runs_s": [],
-            "verifier": None,
-        }
-        rec_im: dict[str, Any] = {
-            "kind": "profile",
-            "dataset": ds,
-            "verifier": ver,
-            "median_s": None,
-            "median_s_1t": None,
-            "runs_s": [],
-            "speedup_vs_refengine": None,
-        }
-        if ds in numbers:
-            n = numbers[ds]
-            rec_sp.update(
-                median_s=n["refengine"]["median_s"],
-                runs_s=n["refengine"]["runs"],
-                peak_rss_mb=n["refengine"]["peak_rss_mb"],
-            )
-            rec_im.update(
-                median_s=n["impl_mt"]["median_s"],
-                median_s_1t=n["impl_st"]["median_s"],
-                runs_s=n["impl_mt"]["runs"],
-                peak_rss_mb=n["impl_mt"]["peak_rss_mb"],
-                refengine_median_s=n["refengine"]["median_s"],
-                speedup_vs_refengine=n["refengine"]["median_s"] / n["impl_mt"]["median_s"],
-            )
-        out["refengine"]["workloads"].setdefault(f"profile:{ds}", rec_sp)
-        out[impl]["workloads"][f"profile:{ds}"] = rec_im
-    return ok
-
-
-def domain_workloads(
-    domain: str, scales: list[str], runs: int, out: dict, impl: str = IMPL
-) -> bool:
-    """Generation workloads for one domain and ``impl`` (``reference_port`` or ``shape``).
-    Returns True if every verifier and timed run passed. As for profiling, each implementation is
-    timed against its own baseline runs in the same job; its record carries that baseline median."""
-    ok = True
-    for scale in scales:
-        wid = f"generate:{domain}:{scale}"
-        vcmd = [
-            str(REFENGINE_PY),
-            str(DOMAIN / "verify.py"),
-            "--domain",
-            domain,
-            "--scale",
-            scale,
-            "--impl",
-            impl,
-        ]
-        rc, _ = sh(vcmd, BENCH_OUT_DIR / "verify" / f"generate_{impl}_{domain}_{scale}.txt")
-        ver = verifier_record(vcmd, rc)
-        rec_sp: dict[str, Any] = {
-            "kind": "generate",
-            "domain": domain,
-            "scale": scale,
-            "median_s": None,
-            "runs_s": [],
-            "verifier": None,
-        }
-        rec_im: dict[str, Any] = {
-            "kind": "generate",
-            "domain": domain,
-            "scale": scale,
-            "verifier": ver,
-            "median_s": None,
-            "runs_s": [],
-            "speedup_vs_refengine": None,
-        }
-        if rc == 0:
-            report = BENCH_OUT_DIR / "bench" / f"{impl}_{domain}_{scale}.json"
-            bcmd = [
-                str(SHAPE_PY),
-                str(DOMAIN / "bench.py"),
-                "--impl",
-                impl,
-                "--domain",
-                domain,
-                "--scales",
-                scale,
-                "--runs",
-                str(runs),
-                "--report",
-                str(report),
-            ]
-            brc, _ = sh(bcmd)
-            if brc != 0:
-                # a failing timed run (either side) leaves this record without numbers and the
-                # job goes on with the other workloads, as for a failing first run (#359)
-                print(f"{wid}: a timed run failed (exit {brc}); no numbers", file=sys.stderr)
-                ok = False
-            else:
-                # the timed runs wrote the directories the verifier reads: verify that output too
-                v2 = [*vcmd, "--no-generate"]
-                rc2, _ = sh(
-                    v2, BENCH_OUT_DIR / "verify" / f"generate_{impl}_{domain}_{scale}_timed.txt"
-                )
-                rec_im["verifier"] = {**verifier_record(v2, rc2), "first_run": ver}
-                if rc2 == 0:
-                    s = json.loads(report.read_text())["scales"][scale]["summary"]
-                    rec_sp.update(
-                        median_s=s["refengine"]["total_s"],
-                        runs_s=s["refengine"]["runs_total_s"],
-                        gen_s=s["refengine"]["gen_s"],
-                        write_s=s["refengine"]["write_s"],
-                        rows=s["refengine"]["rows"],
-                        peak_rss_mb=s["refengine"]["peak_rss_mb"],
-                    )
-                    rec_im.update(
-                        median_s=s[impl]["total_s"],
-                        runs_s=s[impl]["runs_total_s"],
-                        gen_s=s[impl]["gen_s"],
-                        write_s=s[impl]["write_s"],
-                        rows=s[impl]["rows"],
-                        peak_rss_mb=s[impl]["peak_rss_mb"],
-                        refengine_median_s=s["refengine"]["total_s"],
-                        speedup_vs_refengine=s["refengine"]["total_s"] / s[impl]["total_s"],
-                    )
-                else:
-                    ok = False
-        else:
-            ok = False
-        prev = out["refengine"]["workloads"].get(wid)
-        if prev is None or prev["median_s"] is None:
-            out["refengine"]["workloads"][wid] = rec_sp
-        out[impl]["workloads"][wid] = rec_im
-    return ok
-
-
-def stream_workloads(scales: list[str], runs: int, out: dict) -> bool:
-    """STREAM-EMIT (section 3.4): ``shape stream`` against the baseline's stream command, one
-    table to a file. Verify (exit 0 required), time, then verify the timed output again.
-    Returns True if every verifier passed. Only ``refengine`` and ``shape`` have a record."""
-    ok = True
-    for scale in scales:
-        wid = f"stream:retail:order:{scale}"
-        vcmd = [str(REFENGINE_PY), str(STREAM / "verify.py"), "--scale", scale]
-        rc, _ = sh(vcmd, BENCH_OUT_DIR / "verify" / f"stream_{scale}.txt")
-        ver = verifier_record(vcmd, rc)
-        rec_sp: dict[str, Any] = {
-            "kind": "stream",
-            "domain": "retail",
-            "scale": scale,
-            "median_s": None,
-            "runs_s": [],
-            "verifier": None,
-        }
-        rec_im: dict[str, Any] = {
-            "kind": "stream",
-            "domain": "retail",
-            "scale": scale,
-            "verifier": ver,
-            "median_s": None,
-            "runs_s": [],
-            "speedup_vs_refengine": None,
-        }
-        if rc == 0:
-            report = BENCH_OUT_DIR / "bench" / f"stream_{scale}.json"
-            bcmd = [
-                str(SHAPE_PY),
-                str(STREAM / "bench.py"),
-                "--scale",
-                scale,
-                "--runs",
-                str(runs),
-                "--report",
-                str(report),
-            ]
-            brc, _ = sh(bcmd)
-            if brc != 0:
-                raise SystemExit(f"stream bench failed ({brc})")
-            v2 = [*vcmd, "--no-generate"]
-            rc2, _ = sh(v2, BENCH_OUT_DIR / "verify" / f"stream_{scale}_timed.txt")
-            rec_im["verifier"] = {**verifier_record(v2, rc2), "first_run": ver}
-            if rc2 == 0:
-                b = json.loads(report.read_text())
-                sp, sh_ = b["summary"]["refengine"], b["summary"]["shape"]
-                rec_sp.update(
-                    median_s=sp["total_s"],
-                    runs_s=sp["runs_total_s"],
-                    events=sp["events"],
-                    peak_rss_mb=sp["peak_rss_mb"],
-                )
-                rec_im.update(
-                    median_s=sh_["total_s"],
-                    runs_s=sh_["runs_total_s"],
-                    events=sh_["events"],
-                    peak_rss_mb=sh_["peak_rss_mb"],
-                    speedup_vs_refengine=sp["total_s"] / sh_["total_s"],
-                    cli_end_to_end_s=b.get("cli_end_to_end_s"),
-                    cli_speedup_vs_refengine=b.get("cli_speedup"),
-                )
-            else:
-                ok = False
-        else:
-            ok = False
-        out["refengine"]["workloads"][wid] = rec_sp
-        out["shape"]["workloads"][wid] = rec_im
-    return ok
-
-
-def baseline_domains() -> list[str]:
-    """Every domain of the pinned baseline (``dump_schema.py`` also writes their schemas, which
-    the domain verifier reads)."""
     r = subprocess.run(
-        [str(REFENGINE_PY), str(HERE / "dump_schema.py")], capture_output=True, text=True
+        [str(py), "-c", code],
+        env=baseline_environment() if py == BASELINE_PY else None,
+        capture_output=True,
+        text=True,
     )
-    if r.returncode != 0:
-        raise SystemExit(f"dump_schema.py failed:\n{r.stderr}")
-    return sorted({Path(p).name.rsplit("_", 1)[0] for p in r.stdout.split()})
-
-
-def generate_plan(full: bool, domains: list[str] | None) -> list[tuple[str, str, list[str]]]:
-    """(impl, domain, scales) for the generation workloads of a mode. ``domains`` is the
-    baseline's domain list, needed for ``--full`` only."""
-    plan = [(IMPL, d, sc) for d, sc in (FULL_DOMAINS if full else QUICK_DOMAINS)]
-    if full:
-        assert domains is not None
-        for d in domains:
-            plan.append(("shape", d, [FULL_SHAPE_SCALE, *FULL_SHAPE_EXTRA_SCALES.get(d, [])]))
-    return plan
+    return r.stdout.strip() if r.returncode == 0 else None
 
 
 def parse_shard(text: str) -> tuple[int, int]:
@@ -508,142 +206,352 @@ def select_units(units: list[Any], shard: tuple[int, int] | None) -> list[Any]:
     return [u for i, u in enumerate(units) if i % n == k - 1]
 
 
+def py_kernel(py: Path) -> str | None:
+    try:
+        p = subprocess.run(
+            [str(py), "-c", "from shape.kernel import kernel_name; print(kernel_name())"],
+            env=baseline_environment() if py == BASELINE_PY else None,
+            capture_output=True,
+            text=True,
+        )
+        return p.stdout.strip() if p.returncode == 0 else None
+    except OSError:
+        return None
+
+
+def baseline_environment() -> dict[str, str]:
+    env = dict(os.environ)
+    env.pop("PYTHONPATH", None)
+    env.pop("PYTHONHOME", None)
+    return env
+
+
+def baseline_domains() -> list[str]:
+    return sorted(
+        p.stem.removesuffix("_3nf") for p in (HERE / "fixtures" / "schemas").glob("*_3nf.json")
+    )
+
+
+def generate_plan(full: bool, domains: list[str] | None) -> list[tuple[str, str, list[str]]]:
+    if not full:
+        return [("shape", d, list(sc)) for d, sc in QUICK_DOMAINS]
+    assert domains is not None
+    return [
+        ("shape", d, ["small", "medium", "large"] if d == "retail" else ["medium"]) for d in domains
+    ]
+
+
 def expected_ids(
-    datasets: list[str],
-    gen: list[tuple[str, str, list[str]]],
-    stream_scales: list[str],
-    only: str,
+    datasets: list[str], gen: list[tuple[str, str, list[str]]], stream_scales: list[str], only: str
 ) -> dict[str, list[str]]:
-    """Every workload id, per implementation, that a run with this selection must record."""
-    exp: dict[str, list[str]] = {IMPL: [], "shape": []}
+    ids = []
     if only in ("all", "profile"):
-        for impl in (IMPL, "shape"):
-            exp[impl] += [f"profile:{d}" for d in datasets]
+        ids += ["profile:" + d for d in datasets]
     if only in ("all", "generate"):
-        for impl, dom, scales in gen:
-            exp[impl] += [f"generate:{dom}:{sc}" for sc in scales]
+        ids += ["generate:" + d + ":" + sc for _, d, scales in gen for sc in scales]
     if only in ("all", "stream"):
-        exp["shape"] += [f"stream:retail:order:{sc}" for sc in stream_scales]
-    return exp
+        ids += ["stream:retail:order:" + sc for sc in stream_scales]
+    return {"shape": ids}
 
 
-def keep_other_families(path: Path, only: str, out: dict) -> None:
-    """``--only`` measures one family of workloads: keep every record of the other families from
-    the results file being replaced (the section 6.2(4) reference), so they are not dropped.
-    A file that cannot be read, or has another schema version, has nothing to keep."""
+def blank(kind: str, verifier: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+    return {
+        "kind": kind,
+        "median_s": None,
+        "runs_s": [],
+        "verifier": verifier,
+        "ratio_vs_baseline": None,
+        **kwargs,
+    }
+
+
+def put_numbers(
+    base: dict[str, Any],
+    current: dict[str, Any],
+    baseline: dict[str, Any],
+    candidate: dict[str, Any],
+) -> None:
+    base.update(median_s=baseline["median_s"], runs_s=baseline["runs_s"])
+    current.update(
+        median_s=candidate["median_s"],
+        runs_s=candidate["runs_s"],
+        baseline_median_s=baseline["median_s"],
+        ratio_vs_baseline=baseline["median_s"] / candidate["median_s"],
+    )
+
+
+def profile_group(ds: str) -> str:
+    if ds.startswith("edge/x_"):
+        return "EDGE2"
+    if ds.startswith("edge/"):
+        return "EDGE"
+    if ds.startswith("mt"):
+        return "MT"
+    return ds.split(".")[0].upper()
+
+
+def profile_workloads(
+    datasets: list[str], reps: int, out: dict[str, Any], impl: str = "shape"
+) -> bool:
+    py = BASELINE_PY if BASELINE_ONLY else SHAPE_PY
+    rc, _ = sh(
+        [str(py), str(PROFILE / "datasets.py"), *sorted({profile_group(ds) for ds in datasets})]
+    )
+    if rc:
+        return False
+    ok = True
+    for ds in datasets:
+        vcmd = [str(py), str(PROFILE / "verify.py"), "--impl", "shape", ds]
+        rc, _ = sh(vcmd)
+        ver = verifier_record(vcmd, rc)
+        base = blank("profile", ver, dataset=ds)
+        current = blank("profile", ver, dataset=ds)
+        out["baseline"]["workloads"]["profile:" + ds] = base
+        if not BASELINE_ONLY:
+            out["shape"]["workloads"]["profile:" + ds] = current
+        if rc:
+            ok = False
+            continue
+        report = BENCH_OUT_DIR / "profile" / ("bench_" + ds.replace("/", "_") + ".json")
+        cmd = [
+            str(py),
+            str(PROFILE / "bench.py"),
+            "--impl",
+            "shape",
+            "--reps",
+            str(reps),
+            "--out",
+            str(report),
+            ds,
+        ]
+        if BASELINE_ONLY:
+            cmd.append("--baseline-only")
+        brc, _ = sh(cmd)
+        if brc:
+            if BASELINE_ONLY:
+                raise RecordingError(f"profile:{ds}: timing worker failed (exit {brc})")
+            ok = False
+            continue
+        values = json.loads(report.read_text())[ds]
+        b = values["baseline"]
+        base.update(median_s=b["median_s"], runs_s=b["runs"])
+        if not BASELINE_ONLY:
+            c = values["impl_mt"]
+            put_numbers(
+                base,
+                current,
+                {"median_s": b["median_s"], "runs_s": b["runs"]},
+                {"median_s": c["median_s"], "runs_s": c["runs"]},
+            )
+            current["median_s_1t"] = values["impl_st"]["median_s"]
+    return ok
+
+
+def domain_workloads(
+    domain: str, scales: list[str], runs: int, out: dict[str, Any], impl: str = "shape"
+) -> bool:
+    ok = True
+    py = BASELINE_PY if BASELINE_ONLY else SHAPE_PY
+    for scale in scales:
+        wid = "generate:" + domain + ":" + scale
+        vcmd = [
+            str(py),
+            str(DOMAIN / "verify.py"),
+            "--impl",
+            "shape",
+            "--domain",
+            domain,
+            "--scale",
+            scale,
+        ]
+        rc, _ = sh(vcmd)
+        ver = verifier_record(vcmd, rc)
+        base = blank("generate", ver, domain=domain, scale=scale)
+        current = blank("generate", ver, domain=domain, scale=scale)
+        out["baseline"]["workloads"][wid] = base
+        if not BASELINE_ONLY:
+            out["shape"]["workloads"][wid] = current
+        if rc:
+            ok = False
+            continue
+        report = BENCH_OUT_DIR / "bench" / (domain + "_" + scale + ".json")
+        cmd = [
+            str(py),
+            str(DOMAIN / "bench.py"),
+            "--impl",
+            "shape",
+            "--domain",
+            domain,
+            "--scales",
+            scale,
+            "--runs",
+            str(runs),
+            "--report",
+            str(report),
+        ]
+        if BASELINE_ONLY:
+            cmd.append("--baseline-only")
+        brc, _ = sh(cmd)
+        if brc:
+            if BASELINE_ONLY:
+                raise RecordingError(f"{wid}: timing worker failed (exit {brc})")
+            print(wid + ": a timed run failed; no numbers", file=sys.stderr)
+            ok = False
+            continue
+        second = [*vcmd, "--no-generate"]
+        rc2, _ = sh(second)
+        base["verifier"] = {**verifier_record(second, rc2), "first_run": ver}
+        current["verifier"] = base["verifier"]
+        if rc2:
+            ok = False
+            continue
+        values = json.loads(report.read_text())["scales"][scale]["summary"]
+        b = values["baseline"]
+        base.update(median_s=b["total_s"], runs_s=b["runs_total_s"])
+        if not BASELINE_ONLY:
+            c = values["shape"]
+            put_numbers(
+                base,
+                current,
+                {"median_s": b["total_s"], "runs_s": b["runs_total_s"]},
+                {"median_s": c["total_s"], "runs_s": c["runs_total_s"]},
+            )
+    return ok
+
+
+def stream_workloads(scales: list[str], runs: int, out: dict[str, Any]) -> bool:
+    ok = True
+    py = BASELINE_PY if BASELINE_ONLY else SHAPE_PY
+    for scale in scales:
+        wid = "stream:retail:order:" + scale
+        cmd = [str(py), str(STREAM / "verify.py"), "--scale", scale]
+        rc, _ = sh(cmd)
+        ver = verifier_record(cmd, rc)
+        base = blank("stream", ver, domain="retail", scale=scale)
+        current = blank("stream", ver, domain="retail", scale=scale)
+        out["baseline"]["workloads"][wid] = base
+        if not BASELINE_ONLY:
+            out["shape"]["workloads"][wid] = current
+        if rc:
+            ok = False
+            continue
+        report = BENCH_OUT_DIR / "bench" / ("stream_" + scale + ".json")
+        bcmd = [
+            str(py),
+            str(STREAM / "bench.py"),
+            "--scale",
+            scale,
+            "--runs",
+            str(runs),
+            "--report",
+            str(report),
+        ]
+        if BASELINE_ONLY:
+            bcmd.append("--baseline-only")
+        brc, _ = sh(bcmd)
+        if brc:
+            if BASELINE_ONLY:
+                raise RecordingError(f"{wid}: timing worker failed (exit {brc})")
+            ok = False
+            continue
+        second = [*cmd, "--no-generate"]
+        rc2, _ = sh(second)
+        base["verifier"] = {**verifier_record(second, rc2), "first_run": ver}
+        current["verifier"] = base["verifier"]
+        if rc2:
+            ok = False
+            continue
+        values = json.loads(report.read_text())
+        b = values["summary"]["baseline"]
+        base.update(median_s=b["total_s"], runs_s=b["runs_total_s"])
+        if not BASELINE_ONLY:
+            c = values["summary"]["shape"]
+            put_numbers(
+                base,
+                current,
+                {"median_s": b["total_s"], "runs_s": b["runs_total_s"]},
+                {"median_s": c["total_s"], "runs_s": c["runs_total_s"]},
+            )
+            current["cli_end_to_end_s"] = values.get("cli_end_to_end_s")
+            current["cli_ratio_vs_baseline"] = values.get("cli_ratio_vs_baseline")
+    return ok
+
+
+def keep_other_families(path: Path, only: str, out: dict[str, Any]) -> None:
     try:
         old = json.loads(path.read_text())
     except (OSError, ValueError):
         return
-    if not isinstance(old, dict) or old.get("schema_version") != SCHEMA_VERSION:
+    if (
+        old.get("schema_version") != SCHEMA_VERSION
+        or old.get("baseline", {}).get("commit") != out["baseline"]["commit"]
+    ):
         return
-    for tool in ("refengine", IMPL, "shape"):
-        previous = (old.get(tool) or {}).get("workloads") or {}
-        for wid, rec in previous.items():
-            if isinstance(rec, dict) and rec.get("kind") != only:
+    for tool in ("baseline", "shape"):
+        for wid, rec in old.get(tool, {}).get("workloads", {}).items():
+            if rec.get("kind") != only:
                 out[tool]["workloads"].setdefault(wid, rec)
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    global BASELINE_ONLY
+    ap = argparse.ArgumentParser(description=__doc__)
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--quick", action="store_true", help="D1, D2, retail small+medium; 3 runs")
-    g.add_argument("--full", action="store_true", help="every workload in section 3.4; 5 runs")
-    ap.add_argument("--out", default=str(DEFAULT_OUT), help="results JSON to write")
-    ap.add_argument("--dry-run", action="store_true", help="print the workloads and exit")
-    ap.add_argument(
-        "--only",
-        choices=("all", "profile", "generate", "stream"),
-        default="all",
-        help="run one family of workloads (the gate for a phase needs only its own); the "
-        "records of the other families already in --out are kept",
-    )
-    ap.add_argument(
-        "--shard",
-        type=parse_shard,
-        default=None,
-        metavar="K/N",
-        help="generation workloads only: run part K of N (round-robin over (impl, domain))",
-    )
-    ap.add_argument(
-        "--domain",
-        action="append",
-        default=None,
-        help="generation workloads only: keep these domains (repeatable)",
-    )
-    ap.add_argument(
-        "--dataset",
-        action="append",
-        default=None,
-        help="profiling workloads only: keep these datasets of the mode (repeatable)",
-    )
+    g.add_argument("--quick", action="store_true")
+    g.add_argument("--full", action="store_true")
+    ap.add_argument("--out", default=str(DEFAULT_OUT))
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--only", choices=("all", "profile", "generate", "stream"), default="all")
+    ap.add_argument("--shard", type=parse_shard)
+    ap.add_argument("--domain", action="append")
+    ap.add_argument("--dataset", action="append")
+    ap.add_argument("--baseline-only", action="store_true")
     a = ap.parse_args(argv)
-
-    mode = "quick" if a.quick else "full"
-    runs = 3 if a.quick else 5
-    datasets = QUICK_PROFILE_DATASETS if a.quick else FULL_PROFILE_DATASETS
+    BASELINE_ONLY = a.baseline_only
+    datasets = list(QUICK_PROFILE_DATASETS if a.quick else FULL_PROFILE_DATASETS)
     if a.dataset:
-        unknown = sorted(set(a.dataset) - set(datasets))
-        if unknown:
-            ap.error(f"--dataset {unknown} not in the {mode} datasets {datasets}")
+        if set(a.dataset) - set(datasets):
+            ap.error("dataset outside the selected mode")
         datasets = [d for d in datasets if d in a.dataset]
+    domains = baseline_domains()
+    gen = generate_plan(a.full, domains) if a.only in ("all", "generate") else []
+    if a.domain:
+        gen = [u for u in gen if u[1] in a.domain]
+    gen = select_units(gen, a.shard)
     stream_scales = QUICK_STREAM_SCALES if a.quick else FULL_STREAM_SCALES
-    needs_domains = a.full and a.only in ("all", "generate")
-    gen: list[tuple[str, str, list[str]]] = []
-    domains: list[str] | None = None
-    gen_text = "-"
-    if a.only in ("all", "generate"):
-        if needs_domains and not REFENGINE_PY.exists():
-            if not a.dry_run:
-                print(f"ERROR: RefEngine venv not found at {REFENGINE_PY}; run setup_refengine.sh")
-                return 2
-            gen_text = "reference_port retail medium+large; shape every baseline domain at medium"
-        else:
-            domains = baseline_domains() if needs_domains else None
-            gen = generate_plan(a.full, domains)
-            if a.domain:
-                gen = [u for u in gen if u[1] in a.domain]
-            gen = select_units(gen, a.shard)
-            gen_text = ", ".join(f"{i}:{d}:{'+'.join(sc)}" for i, d, sc in gen) or "-"
     if a.dry_run:
         print(
-            f"mode={mode} runs={runs} only={a.only}"
-            f"\nprofile: {datasets if a.only in ('all', 'profile') else '-'}"
-            f"\ngenerate: {gen_text}"
-            f"\nstream: {stream_scales if a.only in ('all', 'stream') else '-'}"
+            f"mode={'quick' if a.quick else 'full'} runs={3 if a.quick else 5} "
+            "implementations=shape,baseline"
         )
+        print(f"profile: {datasets if a.only in ('all', 'profile') else '-'}")
+        print(f"generate: {gen}")
+        print(f"stream: {stream_scales if a.only in ('all', 'stream') else '-'}")
         return 0
-    for req, what in (
-        (REFENGINE_PY, "RefEngine venv"),
-        (REFENGINE_ROOT / _refpkg.PACKAGE, "RefEngine checkout"),
-        (SHAPE_PY, "Shape venv"),
-    ):
-        if not Path(req).exists():
-            print(
-                f"ERROR: {what} not found at {req}; run setup_refengine.sh (section 1)",
-                file=sys.stderr,
-            )
-            return 2
-
-    machine = {
-        **machine_meta(),
-        "loadavg_start": os.getloadavg()[0] if hasattr(os, "getloadavg") else 0.0,
-        "refengine_venv": {
-            p: py_version(REFENGINE_PY, p) for p in ("python", "pandas", "numpy", "pyarrow")
-        },
-        "shape_venv": {p: py_version(SHAPE_PY, p) for p in ("python", "numpy", "pyarrow")},
-    }
+    expected = expected_ids(datasets, gen, stream_scales, a.only)
+    commit = (
+        subprocess.run(
+            ["git", "rev-parse", "v" + BASELINE_VERSION + "^{commit}"],
+            cwd=SHAPE_ROOT,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        or "unknown"
+    )
     out: dict[str, Any] = {
-        "schema_version": SCHEMA_VERSION,
-        "mode": mode,
-        "runs": runs,
+        "schema_version": 2,
+        "mode": "quick" if a.quick else "full",
+        "runs": 3 if a.quick else 5,
         "generated_utc": dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "machine": machine,
-        "refengine_commit": git_rev(REFENGINE_ROOT),
+        "machine": machine_meta(),
+        "baseline": {
+            "kind": "shape",
+            "version": BASELINE_VERSION,
+            "commit": commit,
+            "workloads": {},
+        },
         "shape_commit": git_rev(SHAPE_ROOT),
         "shape_tree_dirty": git_dirty(SHAPE_ROOT),
-        "refengine": {"workloads": {}},
-        IMPL: {"workloads": {}},
         "shape": {"workloads": {}},
         "selection": {
             "only": a.only,
@@ -651,52 +559,75 @@ def main(argv: list[str] | None = None) -> int:
             "domains": a.domain,
             "datasets": a.dataset,
             "baseline_domains": domains,
-            "expected": expected_ids(datasets, gen, stream_scales, a.only),
+            "expected": expected,
         },
     }
-    ok = True
-    with bench_lock():
-        if a.only in ("all", "profile") and datasets:
-            ok &= profile_workloads(datasets, runs, out, IMPL)
-            ok &= profile_workloads(datasets, runs, out, "shape")
-        if a.only in ("all", "generate"):
-            for impl, dom, scales in gen:
-                ok &= domain_workloads(dom, scales, runs, out, impl)
-        if a.only in ("all", "stream"):
-            ok &= stream_workloads(stream_scales, runs, out)
-    # kernel_microbench is written by kernel_bench.py; a full run must not drop it
-    with contextlib.suppress(OSError, ValueError, KeyError):
-        out["kernel_microbench"] = json.loads(Path(a.out).read_text())["kernel_microbench"]
+    unavailable = None
+    try:
+        metadata = recording_manifest()
+        out["baseline"]["commit"] = metadata["shape_commit"]
+        if not BASELINE_PY.is_file() or not SHAPE_PY.is_file():
+            raise RecordingError("baseline or candidate interpreter is unavailable")
+        if py_version(BASELINE_PY, "sqllocks-shape") != BASELINE_VERSION:
+            raise RecordingError("baseline version is not " + BASELINE_VERSION)
+        if py_version(BASELINE_PY, "pyarrow") != py_version(SHAPE_PY, "pyarrow"):
+            raise RecordingError("candidate and baseline PyArrow versions differ")
+        if py_kernel(BASELINE_PY) != py_kernel(SHAPE_PY) or py_kernel(BASELINE_PY) not in (
+            "rust",
+            "python",
+        ):
+            raise RecordingError("candidate and baseline kernels differ")
+    except (RecordingError, OSError) as exc:
+        unavailable = str(exc)
+    if unavailable:
+        for wid in expected["shape"]:
+            parts = wid.split(":")
+            labels = (
+                {"dataset": parts[1]}
+                if parts[0] == "profile"
+                else {"domain": parts[1], "scale": parts[-1]}
+            )
+            rec = blank(
+                wid.split(":")[0],
+                {"status": "unavailable", "exit_code": 2, "command": "recorded_store.load"},
+                **labels,
+            )
+            out["baseline"]["workloads"][wid] = dict(rec)
+            if not BASELINE_ONLY:
+                out["shape"]["workloads"][wid] = dict(rec)
+        print(unavailable, file=sys.stderr)
+        rc = 2
+    else:
+        out["machine"]["baseline_venv"] = {
+            pkg: py_version(BASELINE_PY, pkg) for pkg in ("python", "numpy", "pyarrow")
+        }
+        out["machine"]["shape_venv"] = {
+            pkg: py_version(SHAPE_PY, pkg) for pkg in ("python", "numpy", "pyarrow")
+        }
+        ok = True
+        with bench_lock():
+            if a.only in ("all", "profile"):
+                ok &= profile_workloads(datasets, out["runs"], out)
+            if a.only in ("all", "generate"):
+                for impl, domain, scales in gen:
+                    ok &= domain_workloads(domain, scales, out["runs"], out, impl)
+            if a.only in ("all", "stream"):
+                ok &= stream_workloads(stream_scales, out["runs"], out)
+        rc = 0 if ok else 1
     if a.only != "all":
         keep_other_families(Path(a.out), a.only, out)
-    schema = json.loads(SCHEMA_FILE.read_text())
-    errs = validate(out, schema)
-    if errs:
-        print(
-            "results.json does not match results.schema.json:\n  " + "\n  ".join(errs),
-            file=sys.stderr,
-        )
+    try:
+        out["kernel_microbench"] = json.loads(Path(a.out).read_text())["kernel_microbench"]
+    except (OSError, ValueError, KeyError):
+        pass
+    errors = validate(out, json.loads(SCHEMA_FILE.read_text()))
+    if errors:
+        print("\n".join(errors), file=sys.stderr)
         return 3
-    Path(a.out).write_text(json.dumps(out, indent=1) + "\n")
-    print(f"\nwrote {a.out}")
-    for impl in (IMPL, "shape"):
-        for wid, rec in out[impl]["workloads"].items():
-            sp = rec.get(
-                "refengine_median_s", out["refengine"]["workloads"].get(wid, {}).get("median_s")
-            )
-            print(
-                f"  {impl:14s} {wid:26s} verifier={rec['verifier']['status']:11s} "
-                f"refengine={sp if sp is None else round(sp, 2)} "
-                f"impl={rec['median_s'] and round(rec['median_s'], 2)} "
-                f"speedup={rec['speedup_vs_refengine'] and round(rec['speedup_vs_refengine'], 2)}"
-            )
-    if not ok:
-        print(
-            "FAIL: at least one verifier or timed run did not pass; its numbers are not recorded",
-            file=sys.stderr,
-        )
-        return 1
-    return 0
+    dest = Path(a.out)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(json.dumps(out, sort_keys=True, indent=2) + "\n")
+    return rc
 
 
 if __name__ == "__main__":

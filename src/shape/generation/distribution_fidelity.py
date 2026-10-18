@@ -10,6 +10,7 @@ class DistributionFidelity:
 
 
 def categorical_fidelity(reference, values, tolerance=0.1):
+    """Compare categorical proportions with a total variation threshold."""
     c = Counter(values)
     n = sum(c.values()) or 1
     obs = {k: v / n for k, v in c.items()}

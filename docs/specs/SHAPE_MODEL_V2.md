@@ -1,5 +1,8 @@
 # Shape model v2 and the .shape format v2
 
+Status: experimental.
+
+
 Status: P1-09/P1-10. The normative statements are in `SHAPE_2.md`; this note describes the
 model and the file.
 

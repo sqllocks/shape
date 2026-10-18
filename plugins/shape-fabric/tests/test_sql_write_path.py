@@ -217,7 +217,7 @@ def test_the_ddl_without_identity_is_what_it_was_before_this_package():
 
 
 def test_a_warehouse_ignores_identity():
-    server = FakeSqlServer()
+    server = FakeSqlServer(warehouse=True)
     writer = SqlDatabaseWriter(CS, connect=server.connect, warehouse=True)
     writer.write_table("customer", [batch()], columns=IDENTITY_COLS, primary_key=["customer_id"])
     assert not statements(server, "SET IDENTITY_INSERT")

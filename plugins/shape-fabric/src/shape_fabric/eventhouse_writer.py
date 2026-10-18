@@ -10,7 +10,11 @@ columns); the writer sends a table's own columns, as they are.
 
 **Write modes** (``write_mode``): ``create`` (the default; an existing KQL table is an error),
 ``append`` (the table is created when missing and new columns are merged in), ``truncate``
-(``.clear table ... data``, then add) and ``replace`` (drop and create again).
+(``.clear table ... data``, then add) and ``replace`` (clear rows and reset the schema while
+retaining the table's identity and permissions).
+Truncate and replace can wait for the service to seal streamed rows before clearing them.
+``management_timeout`` defaults to 600 seconds; ingestion and queries use
+``timeout`` (100 seconds).
 
 Streaming ingestion has no transactions: when a write fails part way, the rows of the requests
 that were accepted stay in the table, and the error says how many requests had been made. It
@@ -31,7 +35,7 @@ from shape.streaming.emit.formats import rows_of
 
 from .errors import WriteError, WriteResult
 from .eventhouse import EventhouseTarget, parse_uri, token_source
-from .kusto import KustoClient, Transport, drop_table_command, q
+from .kusto import KustoClient, Transport, alter_table_command, column_names, q
 from .sqldb import check_mode
 
 DEFAULT_REQUEST_BYTES = 3_000_000  # the service limit is 4 MB
@@ -57,6 +61,7 @@ class EventhouseWriter:
         busy_retries: int = 6,
         timeout: float = 100.0,
         ready_timeout: float = 120.0,
+        management_timeout: float = 600.0,
     ) -> None:
         self.target: EventhouseTarget = parse_uri(uri)
         self.client = KustoClient(
@@ -67,6 +72,7 @@ class EventhouseWriter:
             busy_retries=busy_retries,
             timeout=timeout,
             ready_timeout=ready_timeout,
+            management_timeout=management_timeout,
         )
 
     @property
@@ -126,9 +132,21 @@ class EventhouseWriter:
                 "replace to write into it"
             )
         if mode == "replace" and exists:
-            client.mgmt(drop_table_command(name))
-            client.forget(name)
-            exists = False
+            # A streaming route can keep targeting the old table after drop/recreate.
+            # Retain the identity and remove all old columns before adding the new
+            # schema: .alter alone cannot change an existing column's type.
+            taken = set(client.table_column_names(name)) | set(column_names(schema))
+            placeholder = "_shape_replace"
+            suffix = 0
+            while placeholder in taken:
+                suffix += 1
+                placeholder = f"_shape_replace_{suffix}"
+            # Validate both commands and the service's schema response before clearing.
+            temporary = alter_table_command(name, pa.schema([(placeholder, pa.string())]))
+            replacement = alter_table_command(name, schema)
+            client.mgmt(f".clear table {q(name)} data")
+            client.mgmt(temporary)
+            client.mgmt(replacement)
         if mode == "truncate" and exists:
             client.mgmt(f".clear table {q(name)} data")
         client.prepare(

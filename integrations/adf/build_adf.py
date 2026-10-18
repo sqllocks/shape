@@ -73,7 +73,7 @@ PARAMETERS = {
     "storageAccount": ("string", "<<STORAGE_ACCOUNT>>"),
     "outputFileSystem": ("string", "shape"),
     "outputFolder": ("string", "gates/orders"),
-    "image": ("string", "ghcr.io/sqllocks/shape:0.9.1"),
+    "image": ("string", "ghcr.io/sqllocks/shape:0.9.3"),
     "scriptsFolder": ("string", "shape-batch"),
     "managedIdentityClientId": ("string", ""),
 }
@@ -213,7 +213,7 @@ GENERATE_PARAMETERS = {
     "storageAccount": ("string", "<<STORAGE_ACCOUNT>>"),
     "outputFileSystem": ("string", "shape"),
     "outputFolder": ("string", "generated/retail"),
-    "image": ("string", "ghcr.io/sqllocks/shape:0.9.1"),
+    "image": ("string", "ghcr.io/sqllocks/shape:0.9.3"),
     "scriptsFolder": ("string", "shape-batch"),
     "managedIdentityClientId": ("string", ""),
 }

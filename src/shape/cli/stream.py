@@ -29,6 +29,7 @@ BULK_BATCH = 32768
 
 
 def add_arguments(sub: Any) -> None:
+    """Add the stream command options to an argparse parser."""
     st = sub.add_parser(
         "stream",
         help="stream one table's rows as events in event-time order",
@@ -44,6 +45,7 @@ def add_arguments(sub: Any) -> None:
 
 
 def run(a: argparse.Namespace) -> int:
+    """Dispatch parsed stream arguments and return the command exit code."""
     from shape.cli.emit import run as run_emit
     from shape.errors import ShapeError
 

@@ -1,5 +1,24 @@
 # Generating at scale
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" SCALE
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for SCALE
+    ```
+
+
 `shape generate DOMAIN --scale-mode MODE` runs a generation through the **scale router**, into one
 or more **sinks**, as a **job** that can be inspected, cancelled and resumed.
 
@@ -9,13 +28,8 @@ or more **sinks**, as a **job** that can be inspected, cancelled and resumed.
 | `local_mp` | generation on every core (`--max-workers N` or `SHAPE_THREADS` limits them); the output is the same as `local_single`'s |
 | `fabric_spark` | submits the run to a Fabric Spark notebook that writes Delta tables to a Lakehouse |
 
-```bash
-shape generate retail --scale medium --scale-mode local_mp -o out        # Parquet part files in out/
-shape generate retail --scale medium --scale-mode local_mp \
-    --sink parquet --sink lakehouse \
-    --sink-config parquet.output_dir=out --sink-config lakehouse.base_path=lake/Files/landing
-shape jobs list
-```
+[Run this example](#local-example-0).
+
 
 Row counts are exact in every mode: a table has the rows of the scale preset, and every foreign key
 points at a key that exists in the full parent table, whichever chunk it is in. Seed for seed, the
@@ -26,10 +40,15 @@ two local modes write the same rows.
 A scale test with uniform keys misses the hot keys production has. `shape skew-rehearsal` generates
 a schema at scale with the key skew a profile measured, and says whether the generated data kept it:
 
+<!-- example: 1 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```bash
 shape skew-rehearsal PROFILE.shape --schema SCHEMA --scale S [--seed N] -o DIR \
     [--columns TABLE.COLUMN,...] [--tolerance 0.02]
 ```
+
 
 `SCHEMA` is a domain or generation schema file, `S` one of its scale presets (local generation; Spark
 and Fabric modes are not offered). The tables are written to `DIR` as Parquet files, with
@@ -100,12 +119,30 @@ Every scale run is a job in the job store (`$SHAPE_JOBS_DIR`, default `~/.shape/
 per job, readable only by its owner, declaring `format: shape-job` and an integer `version`; a record from a newer release fails naming the release that reads it, and its unknown fields are kept on rewrite). A record holds what was asked, with secrets masked (sink settings, and the secrets of the `auth` block unless they are credential references), local output folders as absolute paths, and never
 a token.
 
+<!-- example: 2 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```bash
 shape jobs list
 shape jobs status JOB          # asks Fabric for a fabric_spark job
 shape jobs cancel JOB
 shape jobs resume JOB          # a failed or cancelled job
 ```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    <job-id>  fabric_spark submitted 
+    <job-id>  fabric_spark submitted 
+    <job-id>  fabric_spark cancelled 
+    <job-id>  fabric_spark submitted 
+    ```
+
+Evidence: [run 38332340250, ubuntu-latest, `00dd1429675b`](evidence/transcripts/docs-transcripts-38332340250-00dd1429675b-ubuntu-latest-scale-jobs.json).
+
 
 * **Local jobs.** `cancel` stops the run between chunks, also when the run is in another process
   (it reads its record as it reports progress). `resume` runs the stored request again and
@@ -119,11 +156,33 @@ shape jobs resume JOB          # a failed or cancelled job
 
 ## `fabric_spark`
 
+Creating the worker notebook is a long-running Fabric operation. Fabric answers with a `Location`
+that is on the Fabric API or on a regional `*.analysis.windows.net` redirect host
+(`.../v1/operations/<id>`). Shape never sends the token to that host: it takes the operation id
+from the path and polls `https://api.fabric.microsoft.com/v1/operations/<id>`. Any other host or
+path is refused ("the Items API names an operation URL off the Fabric API").
+
+<!-- example: 3 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers. A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable.
+
 ```bash
 export SHAPE_FABRIC_TOKEN=...   # an Entra token for the Fabric API
 shape generate retail --scale large --scale-mode fabric_spark \
     --fabric-workspace WORKSPACE_GUID --fabric-lakehouse LAKEHOUSE_GUID --table-prefix demo_
 ```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    submitted spark-def26b56 (Fabric run <guid>); 19,625,400 rows queued
+      status: shape jobs status spark-def26b56   cancel: shape jobs cancel spark-def26b56
+    ```
+
+Evidence: [run 38332340250, ubuntu-latest, `00dd1429675b`](evidence/transcripts/docs-transcripts-38332340250-00dd1429675b-ubuntu-latest-scale-fabric-spark.json).
+
 
 The command writes the job spec (the schema, seed, row counts and chunk size; no credentials) to
 OneLake `Files/shape_jobs/<run>.json`, finds the `shape_spark_worker` notebook in the workspace or
@@ -133,6 +192,18 @@ than a chunk and no post-pass is generated by the executors, one partition per c
 are generated on the driver (table by table, so the driver never makes the executors' tables, unless
 the schema has a post-pass). A run fails (and records no success) unless every table has exactly
 the rows the spec asked for, counted by reading each Delta table back once it is written.
+
+The worker needs to know whether the Lakehouse is schema-enabled, so `fabric_spark` asks Fabric
+before it uploads anything (`GET /v1/workspaces/<workspace>/lakehouses/<lakehouse>`). A
+schema-enabled Lakehouse gets `Tables/<schema>/<prefix><table>`, with schema `dbo` unless you pass
+`--lakehouse-schema sales` (an existing schema); a classic one gets `Tables/<prefix><table>`.
+`--lakehouse-schema` on a classic Lakehouse is an error, and a lookup that fails stops the run with
+`cannot tell whether Lakehouse ... is schema-enabled` (see
+[Troubleshooting](TROUBLESHOOTING.md#cannot-tell-whether-the-lakehouse-is-schema-enabled)); a 401 or
+403 stays an authentication error. The Files area used for job specs is the same for both kinds.
+Demo Spark runs use the same lookup: `--lakehouse-schema` in `shape demo init` is optional, and the
+session manifest records the schema the worker was told to use in each table's read-back and cleanup
+path.
 
 ## Library
 
@@ -148,3 +219,31 @@ result = scale_generate({"domain": "retail", "scale": "medium", "scale_mode": "l
 `shape.scale.router.ScaleRouter(engine, sinks, mode=...)` runs an engine into sink objects;
 `shape.scale.chunked.ChunkedGenerator` streams the large tables of a schema chunk by chunk; and
 `shape.io.multi_store.MultiStoreWriter` writes finished tables to several writers at once.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape generate retail --scale medium --scale-mode local_mp -o out        # Parquet part files in out/
+shape generate retail --scale medium --scale-mode local_mp \
+    --sink parquet --sink lakehouse \
+    --sink-config parquet.output_dir=out --sink-config lakehouse.base_path=lake/Files/landing
+shape jobs list
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    local_mp: 1,965,400 rows in 9 tables to parquet (9.62s, 204,332 rows/s, 5 thread(s)); job local-7a88c3b2
+    local_mp: 1,965,400 rows in 9 tables to lakehouse, parquet (10.61s, 185,205 rows/s, 5 thread(s)); job local-3c9f54b2
+    local-7a88c3b2  local        succeeded  1,965,400/1,965,400 rows
+    local-3c9f54b2  local        succeeded  1,965,400/1,965,400 rows
+    ```

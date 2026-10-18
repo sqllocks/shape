@@ -198,13 +198,26 @@ def _leaks(doc: Any, label: str) -> list[str]:
 
 
 def _safe_document(data: bytes) -> dict[str, Any] | None:
-    """The parsed JSON when ``data`` claims to be a safe profile, else None."""
+    """The parsed JSON when ``data`` may be a safe profile, else None.
+
+    Any document with ``tables`` is one unless it declares another format: deleting
+    ``redaction_manifest`` (or any other marker) must not take a profile past the scan that
+    ``shape profile validate --safe`` would fail. A document of another declared format
+    (a gate schema, say) is not a profile."""
     from shape.registry.local import json_object
 
     doc = json_object(data)
-    if doc is not None and "tables" in doc and "redaction_manifest" in doc:
+    if doc is None or "tables" not in doc:
+        return None
+    if doc.get("format", "shape-safe-profile") == "shape-safe-profile":
+        return doc
+    if SAFE_MARKERS & doc.keys():  # a safe profile with its format renamed is still scanned
         return doc
     return None
+
+
+# The keys only a safe profile writes (``schema_version`` is its legacy version key).
+SAFE_MARKERS = frozenset({"schema_version", "redaction_manifest", "unsafe"})
 
 
 def _refuse_leaks(found: list[str], label: str) -> int:

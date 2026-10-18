@@ -38,7 +38,14 @@ def _issues(report: dict[str, Any]) -> list[tuple[str, str, str]]:
     out = []
     for entry in report["entry"]:
         outcome = entry["resource"]
-        name = outcome["extension"][0]["valueString"]
+        names = [
+            ext["valueString"]
+            for ext in outcome.get("extension", [])
+            if ext.get("url") == "http://hl7.org/fhir/StructureDefinition/operationoutcome-file"
+        ]
+        if len(names) != 1:
+            raise ValueError("validator outcome must identify exactly one source file")
+        name = names[0]
         for issue in outcome["issue"]:
             out.append((name, issue["severity"], issue["details"]["text"]))
     return out

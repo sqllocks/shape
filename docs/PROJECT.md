@@ -1,15 +1,31 @@
 # The project file: `shape.yml`
 
+Status: available.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" PROJECT
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for PROJECT
+    ```
+
+
 A Shape setup, in git. `shape.yml` holds what is otherwise spread over command-line flags: the
 named **sources**, a **baseline** for each, **thresholds** and **ignore** lists per column,
 **gates** with their **mode** (observe or enforce), and column **owners** and **annotations**.
 `shape init` writes a starting project; `shape project validate` checks one.
 
-```bash
-pip install "sqllocks-shape[yaml]"     # the file is YAML; PyYAML is an optional extra
-shape init my-feed --source orders     # shape.yml, folders, .gitattributes, a CI workflow
-cd my-feed && shape project validate
-```
+[Run this example](#local-example-0).
+
 
 ## An example
 
@@ -63,7 +79,7 @@ gates:
 | `…columns.COLUMN` | A column name, `table.column` or glob. `thresholds`, `ignore: true`, `owner`, `annotations` (strings, numbers, booleans). |
 | `ci.junit`, `ci.sarif`, `ci.json` | Optional default paths of the reports of `shape diff`, `check`, `verify`, `fidelity` and `profile validate --safe` (`--junit`, `--sarif`; the `shape-result` document). Each may contain `{command}`; no other braces. A flag overrides it; relative paths are relative to the folder holding `shape.yml`. See `docs/CI.md`. |
 | `notifications` | Optional list of webhook targets, each `{url, on, secret, commands}`: `url` and `secret` are `env://` or `file://` references (never the address itself), `on` is a list of `fail`, `drift` and `always`, `commands` an optional subset of `diff`, `check`, `verify` and `fidelity`. A file without the key behaves as before (an additive key of version 1). See `docs/NOTIFICATIONS.md`. |
-| `gates.NAME.mode` | `observe` or `enforce`. NAME is a gate of `shape verify` (`schema_conformance`, `referential_integrity`, …). A gate that is not listed is enforced. |
+| `gates.NAME.mode` | `observe` or `enforce`. NAME is a gate of `shape verify` (`schema_conformance`, `referential_integrity`, …, including `reconciliation`, `timeseries_quality`, `memorization` and `utility`). A gate that is not listed is enforced. |
 | `gates.NAME.fail_on` | Optional, only for a gate that compares with a baseline (`schema_drift`): `breaking` (default), `additive` or `cosmetic`. The gate fails on a change of that class or a stricter one. On any other gate it is a validation error naming the gate. |
 
 The JSON Schema is `src/shape/schemas/shape-project-v1.schema.json` (also `shape.project.schema()`).
@@ -130,9 +146,14 @@ is the raw result, `enforced_passed` is what decided the exit code.
 
 ## `shape init`
 
+<!-- example: 2 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```
 shape init [DIR] [--name NAME] [--source NAME[=PATH]]... [--force]
 ```
+
 
 Writes `shape.yml` (valid, with the optional settings as comments), `data/`, `shapes/`,
 `contracts/` and `contracts/consumers/` (where consuming teams commit their contracts, see
@@ -149,3 +170,28 @@ raises the version. A key that is only added (the `ci` block) keeps version 1: a
 reads as before, and a file with it needs a Shape that knows it (an older Shape reports the key as
 unknown, because unknown keys are errors). `tests/fixtures/project/v1/shape.yml` is a frozen version 1 file that every later Shape
 must still load (`tests/project/test_compat.py`).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO"
+shape init my-feed --source orders
+cd my-feed && shape project validate
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    next: put data under data/, run `shape project validate`, and `shape git-setup` in the repository to make `git diff` readable for .shape files
+    {"created": ["shape.yml", "data/.gitkeep", "shapes/.gitkeep", "contracts/.gitkeep", "contracts/consumers/.gitkeep", ".gitattributes", ".github/workflows/shape.yml"], "project": "my-feed/shape.yml", "skipped": [], "updated": []}
+    {"file": "/tmp/docs-reference-runs/PROJECT/my-feed/shape.yml", "format": "shape-project", "gates": {"schema_conformance": "observe"}, "sources": ["orders"], "valid": true, "version": 1}
+    ```

@@ -28,6 +28,8 @@ class WindowResult:
 
 
 class TumblingWindow:
+    """Group timestamped events into fixed windows with configured lateness."""
+
     def __init__(self, size: timedelta, allowed_lateness: timedelta = timedelta(0)) -> None:
         if size.total_seconds() <= 0:
             raise ValueError("size must be positive")

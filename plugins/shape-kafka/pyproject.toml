@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sqllocks-shape-kafka"
 # Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
-version = "0.9.1"
+version = "0.9.3"
 description = "Shape plugin: Kafka stream source and event emitter"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,7 +21,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Database",
 ]
-dependencies = ["sqllocks-shape==0.9.1", "confluent-kafka>=2.5,<4"]
+dependencies = ["sqllocks-shape==0.9.3", "confluent-kafka>=2.5,<4"]
 
 [project.urls]
 Homepage = "https://github.com/sqllocks/shape"
@@ -41,3 +41,6 @@ kafka = "shape_kafka:KafkaEmitter"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }

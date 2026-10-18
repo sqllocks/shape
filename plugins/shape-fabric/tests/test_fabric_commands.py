@@ -259,8 +259,16 @@ def test_setup_replays_the_recorded_conversation(world):
     assert (code, err) == (0, "")
     tape.assert_done()
     assert "Created Environment: shape-env" in out
-    assert "Created Lakehouse:   shape-lakehouse" in out
+    assert "Created Lakehouse:   shape_lakehouse" in out
     assert "sqllocks-shape 0.0.0" in out and "Publish the environment" in out
+
+
+def test_setup_next_steps_name_the_shape_fabric_notebook_command(world):
+    world.serve(FakeFabricItems())
+    code, out, _ = world.run("fabric", "setup", "--workspace", "Demo")
+    assert code == 0
+    assert "run 'shape fabric notebook' to generate data" in out
+    assert "'shape notebook'" not in out
 
 
 def test_setup_without_a_lakehouse_creates_only_the_environment(world):
@@ -326,3 +334,28 @@ def test_a_changed_request_does_not_pass_a_replay(world):
         "--notebook-name", "Shape_retail_small",
     )  # fmt: skip
     assert code == 1 and "differs from the recording" in err and "Notebook created" not in out
+
+
+def test_the_default_lakehouse_name_is_one_fabric_accepts(world):
+    """Fabric answered HTTP 400 InvalidInput to 'shape-lakehouse': a Lakehouse name begins with a
+    letter and has only letters, digits and underscores."""
+    import re
+
+    from shape_fabric.setup_env import DEFAULT_LAKEHOUSE
+
+    assert re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,122}", DEFAULT_LAKEHOUSE)
+    fake = world.serve(FakeFabricItems())
+    code, out, err = world.run("setup-fabric", "--workspace", "Demo", "--create-lakehouse")
+    assert (code, err) == (0, "")
+    assert [c["displayName"] for c in fake.created if c["type"] == "Lakehouse"] == [
+        DEFAULT_LAKEHOUSE
+    ]
+
+
+def test_an_invalid_lakehouse_name_is_refused_before_any_request(world):
+    fake = world.serve(FakeFabricItems())
+    code, out, err = world.run(
+        "setup-fabric", "--workspace", "Demo", "--create-lakehouse", "--lakehouse-name", "my-lake"
+    )
+    assert code != 0 and "my-lake" in err and "letters, digits and underscores" in err
+    assert fake.calls == [] and fake.created == []

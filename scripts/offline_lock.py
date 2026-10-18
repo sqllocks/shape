@@ -5,8 +5,9 @@
 needs a network, so CI runs it. ``python scripts/offline_lock.py check OUTDIR`` needs none: it
 fails when a lock file is missing, holds an entry that is not pinned to one version and hashed, or
 does not satisfy every dependency the project declares. The lock is universal, so a dependency
-whose marker holds on any supported platform or Python (a Windows-only ``tzdata``) must be in it. First-party extras (``kafka`` and the
-like) are expanded to their plugin's third-party dependencies; the first-party wheels themselves
+whose marker holds on any supported platform or Python (a Windows-only ``tzdata``) must be in it.
+First-party extras (``kafka`` and the like) are expanded to their plugin's third-party
+dependencies; the first-party wheels themselves
 are built in the connected enclave and carried across with the wheelhouse (docs/INSTALL.md).
 """
 

@@ -24,6 +24,9 @@ on:
         options:
           - testpypi
           - pypi
+          # a rehearsal: the guard, build, SBOM, attest and install-from-archives smoke jobs run
+          # as for testpypi; every upload job and every job that reads an index is skipped
+          - dry-run
   push:
     tags:
       - "v*"
@@ -70,6 +73,7 @@ jobs:
     # 0.9.0 (O-01). Each job uploads only its project's archives from the one build.
     name: Publish ${{ matrix.project }} to ${{ (github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi') && 'TestPyPI' || 'PyPI' }}
     needs: build
+    if: github.event_name != 'workflow_dispatch' || inputs.repository != 'dry-run'
     runs-on: ubuntu-latest
     environment: ${{ (github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi') && 'testpypi' || 'pypi' }}${{ matrix.env }}
     strategy:
@@ -128,6 +132,7 @@ jobs:
   index-hashes:
     name: The index serves exactly the archives this run built
     needs: [build, publish]
+    if: github.event_name != 'workflow_dispatch' || inputs.repository != 'dry-run'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -143,6 +148,7 @@ jobs:
   installed:
     name: sqllocks-shape[all] from the index (${{ matrix.os }}, Python ${{ matrix.python }})
     needs: [build, publish]
+    if: github.event_name != 'workflow_dispatch' || inputs.repository != 'dry-run'
     strategy:
       fail-fast: false
       matrix:
@@ -167,6 +173,7 @@ jobs:
   installed-musllinux:
     name: sqllocks-shape[all] from the index (Alpine, ${{ matrix.platform }})
     needs: [build, publish]
+    if: github.event_name != 'workflow_dispatch' || inputs.repository != 'dry-run'
     strategy:
       fail-fast: false
       matrix:
@@ -182,7 +189,28 @@ jobs:
           INDEX: ${{ (github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi') && 'testpypi' || 'pypi' }}
         run: |
           for py in 3.11 3.14; do
-            docker run --rm --platform ${{ matrix.platform }} -e VERSION -e INDEX -v "$PWD:/src" -w /src "python:${py}-alpine" sh -c '
-              apk add --no-cache libstdc++ build-base unixodbc-dev librdkafka-dev >/dev/null &&
-              python scripts/release_smoke.py --version "$VERSION" --source "$INDEX" --kernel rust'
+            docker run --rm --platform ${{ matrix.platform }} -e VERSION -e SMOKE_SOURCE="$INDEX" -e SMOKE_ATTEMPTS=5 \
+              -v "$PWD:/src" -w /src "python:${py}-alpine" sh scripts/release_smoke_alpine.sh
           done
+
+  dry-run-summary:
+    # A dry run uploads nothing and reads no index; say which jobs it skipped, and why.
+    name: Dry run - jobs skipped
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && inputs.repository == 'dry-run'
+    runs-on: ubuntu-latest
+    steps:
+      - name: List the skipped jobs
+        run: |
+          {
+            echo "## Dry run: nothing was uploaded and no index was read"
+            echo
+            echo "The guard, build, SBOM, attestation and install-from-archives smoke jobs ran as for testpypi."
+            echo
+            echo "| Skipped job | Reason |"
+            echo "| --- | --- |"
+            echo "| Publish <project> to TestPyPI/PyPI (13 projects; upload) | dry run |"
+            echo "| The index serves exactly the archives this run built (index-hash check) | dry run |"
+            echo "| sqllocks-shape[all] from the index (install-from-index smoke) | dry run |"
+            echo "| sqllocks-shape[all] from the index (Alpine, install-from-index smoke) | dry run |"
+          } >> "$GITHUB_STEP_SUMMARY"

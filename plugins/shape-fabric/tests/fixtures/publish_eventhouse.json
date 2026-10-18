@@ -81,6 +81,23 @@
     },
     {
       "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".clear table ['customer'] cache streamingingestion schema\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{\"Tables\": [{\"Columns\": [{\"ColumnName\": \"NodeId\"}, {\"ColumnName\": \"Status\"}], \"Rows\": [[\"fake-node\", \"Succeeded\"]]}]}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
         "body": "{\"customer_id\":1}\n{\"customer_id\":2}\n{\"customer_id\":3}\n",
         "headers": {
           "accept": "application/json",
@@ -160,6 +177,23 @@
       },
       "response": {
         "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".clear table ['order'] cache streamingingestion schema\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{\"Tables\": [{\"Columns\": [{\"ColumnName\": \"NodeId\"}, {\"ColumnName\": \"Status\"}], \"Rows\": [[\"fake-node\", \"Succeeded\"]]}]}",
         "headers": {},
         "status": 200
       }

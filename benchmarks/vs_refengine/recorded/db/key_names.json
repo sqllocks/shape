@@ -1,0 +1,587 @@
+{
+  "format": "shape-db-record",
+  "inputs": {
+    "scenario/key_names/customer": "04436945e5948ae4a5873188ed7dba61dfa7ea416d06bed399122999cb132522",
+    "scenario/key_names/invoices": "153af39f3a02968d07e775fce87883cbb096c2e2f9715b35b0e7f967c28b4b14",
+    "scenario/key_names/notes": "b20ec9611defbe4096ea72e5fdd9ef79fa5bf8e7bec5bc96a694d815e714cbff",
+    "scenario/key_names/pa": "b6b9f582e860322ff479ea928117b60489f16ca4c640cd7cdb0c8722fe34f0a7",
+    "scenario/key_names/val": "6ac84d930af81e401bb122017e4a52d1217e51832a0185d416f648a934357189"
+  },
+  "profile": {
+    "relationships": [
+      {
+        "child": "invoices",
+        "child_columns": [
+          "customer_id"
+        ],
+        "evidence": "name",
+        "name": "fk_invoices_customer_id",
+        "parent": "customer",
+        "parent_columns": [
+          "customer_id"
+        ],
+        "type": "one_to_many"
+      },
+      {
+        "child": "notes",
+        "child_columns": [
+          "customer_id"
+        ],
+        "evidence": "name",
+        "name": "fk_notes_customer_id",
+        "parent": "customer",
+        "parent_columns": [
+          "customer_id"
+        ],
+        "type": "one_to_many"
+      }
+    ],
+    "table_order": [
+      "customer",
+      "invoices",
+      "notes",
+      "pa",
+      "val"
+    ],
+    "tables": {
+      "customer": {
+        "column_order": [
+          "customer_id",
+          "label"
+        ],
+        "columns": {
+          "customer_id": {
+            "cardinality": 40,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": true,
+            "is_unique": true,
+            "max_value": [
+              "float",
+              40.0
+            ],
+            "mean": 20.5,
+            "min_value": [
+              "float",
+              1.0
+            ],
+            "name": "customer_id",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 11.69045194450012,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "label": {
+            "cardinality": 40,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "string",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": true,
+            "max_value": null,
+            "mean": null,
+            "min_value": null,
+            "name": "label",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": null,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          }
+        },
+        "correlation_matrix": null,
+        "detected_fks": {},
+        "name": "customer",
+        "primary_key": [
+          "customer_id"
+        ],
+        "row_count": 40
+      },
+      "invoices": {
+        "column_order": [
+          "customer_id",
+          "invoice_id",
+          "valid",
+          "paid",
+          "memo"
+        ],
+        "columns": {
+          "customer_id": {
+            "cardinality": 38,
+            "cardinality_ratio": 0.25333333333333335,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": "customer",
+            "hour_histogram": null,
+            "is_enum": true,
+            "is_foreign_key": true,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": [
+              "float",
+              9039.0
+            ],
+            "mean": 9019.113333333333,
+            "min_value": [
+              "float",
+              9000.0
+            ],
+            "name": "customer_id",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 11.905972031815434,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "invoice_id": {
+            "cardinality": 150,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": true,
+            "is_unique": true,
+            "max_value": [
+              "float",
+              150.0
+            ],
+            "mean": 75.5,
+            "min_value": [
+              "float",
+              1.0
+            ],
+            "name": "invoice_id",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 43.445367992456916,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "memo": {
+            "cardinality": 150,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "string",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": true,
+            "max_value": null,
+            "mean": null,
+            "min_value": null,
+            "name": "memo",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": null,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "paid": {
+            "cardinality": 2,
+            "cardinality_ratio": 0.013333333333333334,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": true,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": [
+              "float",
+              1.0
+            ],
+            "mean": 0.5266666666666666,
+            "min_value": [
+              "float",
+              0.0
+            ],
+            "name": "paid",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 0.5009610450724582,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "valid": {
+            "cardinality": 2,
+            "cardinality_ratio": 0.013333333333333334,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": true,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": [
+              "float",
+              1.0
+            ],
+            "mean": 0.4866666666666667,
+            "min_value": [
+              "float",
+              0.0
+            ],
+            "name": "valid",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 0.5014966414959997,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          }
+        },
+        "correlation_matrix": null,
+        "detected_fks": {
+          "customer_id": "customer"
+        },
+        "name": "invoices",
+        "primary_key": [
+          "invoice_id"
+        ],
+        "row_count": 150
+      },
+      "notes": {
+        "column_order": [
+          "note",
+          "customer_id"
+        ],
+        "columns": {
+          "customer_id": {
+            "cardinality": 21,
+            "cardinality_ratio": 0.7,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": "customer",
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": true,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": [
+              "float",
+              9038.0
+            ],
+            "mean": 9018.766666666666,
+            "min_value": [
+              "float",
+              9000.0
+            ],
+            "name": "customer_id",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 12.153283459648865,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "note": {
+            "cardinality": 7,
+            "cardinality_ratio": 0.23333333333333334,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "string",
+            "enum_values": {
+              "note 0": 0.16666666666666666,
+              "note 1": 0.16666666666666666,
+              "note 2": 0.13333333333333333,
+              "note 3": 0.13333333333333333,
+              "note 4": 0.13333333333333333,
+              "note 5": 0.13333333333333333,
+              "note 6": 0.13333333333333333
+            },
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": true,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": null,
+            "mean": null,
+            "min_value": null,
+            "name": "note",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": null,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          }
+        },
+        "correlation_matrix": null,
+        "detected_fks": {
+          "customer_id": "customer"
+        },
+        "name": "notes",
+        "primary_key": [],
+        "row_count": 30
+      },
+      "pa": {
+        "column_order": [
+          "id",
+          "label"
+        ],
+        "columns": {
+          "id": {
+            "cardinality": 2,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": true,
+            "is_unique": true,
+            "max_value": [
+              "float",
+              1.0
+            ],
+            "mean": 0.5,
+            "min_value": [
+              "float",
+              0.0
+            ],
+            "name": "id",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 0.7071067811865476,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "label": {
+            "cardinality": 2,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "string",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": true,
+            "max_value": null,
+            "mean": null,
+            "min_value": null,
+            "name": "label",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": null,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          }
+        },
+        "correlation_matrix": null,
+        "detected_fks": {},
+        "name": "pa",
+        "primary_key": [
+          "id"
+        ],
+        "row_count": 2
+      },
+      "val": {
+        "column_order": [
+          "id",
+          "label"
+        ],
+        "columns": {
+          "id": {
+            "cardinality": 2,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": true,
+            "is_unique": true,
+            "max_value": [
+              "float",
+              1.0
+            ],
+            "mean": 0.5,
+            "min_value": [
+              "float",
+              0.0
+            ],
+            "name": "id",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 0.7071067811865476,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "label": {
+            "cardinality": 2,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "string",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": true,
+            "max_value": null,
+            "mean": null,
+            "min_value": null,
+            "name": "label",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": null,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          }
+        },
+        "correlation_matrix": null,
+        "detected_fks": {},
+        "name": "val",
+        "primary_key": [
+          "id"
+        ],
+        "row_count": 2
+      }
+    }
+  },
+  "recorded_utc": "2026-10-13T01:47:50Z",
+  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_version": "0.9.1",
+  "table_digests": {
+    "scenario/key_names/customer": "sha256:b729a2979b88edf1c0551b783ea43ae19ab8ed9ba2ce160cca463a3a955dc90e",
+    "scenario/key_names/invoices": "sha256:e51988e98051a6a15a1235bccdf22487473253c85baef8021bb49760e8511132",
+    "scenario/key_names/notes": "sha256:a76aad879c80dab60f5b47579ff6c1d7de5aecaf2c5bfba1e68203a7968080f9",
+    "scenario/key_names/pa": "sha256:adc6d27a16e800488429311ee030273185754fe17d7106b94b49880507976b8f",
+    "scenario/key_names/val": "sha256:051a8e3db6711c1583dc55bcf70aa1b36ba099d4c95f4e5894b8cff230f321f2"
+  },
+  "version": 1,
+  "workload": "db:key_names"
+}

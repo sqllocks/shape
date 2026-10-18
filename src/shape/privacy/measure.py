@@ -20,6 +20,7 @@ class KAnonymityResult:
 def k_anonymity(
     rows: Iterable[Mapping[str, Any]], quasi_identifiers: tuple[str, ...]
 ) -> KAnonymityResult:
+    """Measure equivalence-group counts for the selected fields; this is not a sharing approval."""
     if not quasi_identifiers:
         raise ValueError("quasi_identifiers cannot be empty")
     counts = Counter(tuple(r.get(k) for k in quasi_identifiers) for r in rows)
@@ -49,6 +50,7 @@ def l_diversity(
     sensitive_field: str,
     required_l: int = 2,
 ) -> LDiversityResult:
+    """Measure distinct sensitive values within each selected equivalence group."""
     groups = defaultdict(set)
     for r in rows:
         groups[tuple(r.get(k) for k in quasi_identifiers)].add(r.get(sensitive_field))

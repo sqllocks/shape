@@ -3,7 +3,7 @@
   "format": 1,
   "result": {
     "error": "FabricApiError",
-    "message": "creating the Notebook 'Shape_retail_small' failed: no capacity"
+    "message": "creating the Notebook 'Shape_retail_small' failed (HTTP 200): Boom: no capacity"
   },
   "scenario": "fabric_deploy_notebook_operation_fails",
   "source": "in-repo fake service",

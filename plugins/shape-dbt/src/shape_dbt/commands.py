@@ -113,7 +113,7 @@ class FromDbt(_Guarded):
         print(f"  Metadata: {meta_path}")
         print(f"  Tables: {len(schema.tables)}")
         print(f"  Relationships: {len(schema.relationships)}")
-        for name, table in schema.tables.items():
+        for name, table in sorted(schema.tables.items()):
             pk = f" (PK: {', '.join(table.primary_key)})" if table.primary_key else ""
             print(f"  {name}: {len(table.columns)} columns{pk}")
         text_notes = [n for n in notes if isinstance(n, str)]

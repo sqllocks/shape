@@ -375,12 +375,23 @@ def test_emit_to_console_and_file_never_ask(
     assert code == 0, err
 
 
-def test_emit_with_yes_gets_past_the_confirmation(capsys: Any, schema_file: Path) -> None:
+def test_emit_with_yes_gets_past_the_confirmation(
+    capsys: Any, schema_file: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    opened = []
+
+    def refuse(a, target, *args, **kwargs):
+        opened.append(target)
+        raise ShapeError("stand-in sink refused delivery")
+
+    monkeypatch.setattr("shape.cli.emit._open_target", refuse)
     code, _, err = run(
         capsys, "emit", schema_file, "--max-events", "5", "--sink", "kafka://broker.example:9092/o",
         "--yes",
     )  # fmt: skip
-    # No Kafka plugin or broker here: the command gets past the confirmation and fails later.
+    # Reach sink setup independently of installed plugins, without contacting a broker.
+    assert code == 2 and "stand-in sink refused delivery" in err
+    assert opened == ["kafka://broker.example:9092/o"]
     assert "refusing to write to non-local" not in err
 
 

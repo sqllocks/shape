@@ -2,6 +2,67 @@ import pytest
 from shape_fabric.testing import sample_batches
 
 
+@pytest.fixture(autouse=True)
+def emulator_transport_diagnostics(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep management replies and failed ingestion replies in failed emulator test logs."""
+    if request.node.get_closest_marker("emulator") is None:
+        return
+
+    import json
+    import sys
+    import time
+    from datetime import UTC, datetime
+    from urllib.parse import urlsplit
+
+    from shape_fabric import kusto
+
+    original = kusto.urllib_transport
+
+    def traced(method, url, headers, body, timeout):
+        path = urlsplit(url).path
+        started = time.monotonic()
+        command = body.decode("utf-8", "replace") if path == "/v1/rest/mgmt" else None
+        if command is not None:
+            print(
+                "emulator management started: "
+                + json.dumps({"time": datetime.now(UTC).isoformat(), "command": command}),
+                file=sys.stderr,
+                flush=True,
+            )
+        try:
+            result = original(method, url, headers, body, timeout)
+        except Exception as exc:
+            record = {
+                "time": datetime.now(UTC).isoformat(),
+                "path": path,
+                "elapsed": time.monotonic() - started,
+                "exception_type": type(exc).__name__,
+            }
+            if command is not None:
+                record["command"] = command
+            print(
+                "emulator transport exception: " + json.dumps(record), file=sys.stderr, flush=True
+            )
+            raise
+        status, _, data = result
+        if path == "/v1/rest/mgmt" or (path.startswith("/v1/rest/ingest/") and status >= 300):
+            record = {
+                "time": datetime.now(UTC).isoformat(),
+                "path": path,
+                "status": status,
+                "response": data.decode("utf-8", "replace"),
+                "elapsed": time.monotonic() - started,
+            }
+            if path == "/v1/rest/mgmt":
+                record["command"] = body.decode("utf-8", "replace")
+            print("emulator transport: " + json.dumps(record), file=sys.stderr, flush=True)
+        return result
+
+    monkeypatch.setattr(kusto, "urllib_transport", traced)
+
+
 @pytest.fixture
 def batches():
     return sample_batches()
@@ -40,3 +101,17 @@ def windows_text_io(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_pyio.TextIOWrapper, "_get_locale_encoding", lambda self: "cp1252")
     monkeypatch.setattr(io, "open", _pyio.open)
     monkeypatch.setattr(builtins, "open", _pyio.open)
+
+
+def pytest_runtest_logreport(report: pytest.TestReport) -> None:
+    """A failed live test prints its failure the moment it fails. pytest otherwise prints every
+    failure at the very end, so a run that is stopped (a hang, the job timeout) shows none."""
+    if report.failed and "live" in report.keywords:
+        import sys
+
+        text = report.longreprtext[-6000:]
+        print(
+            f"\n--- live failure: {report.nodeid} ({report.when}) ---\n{text}",
+            file=sys.stderr,
+            flush=True,
+        )

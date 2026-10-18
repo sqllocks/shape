@@ -251,6 +251,7 @@ def event_from_spec(spec: Mapping[str, Any]) -> Event:
 
 
 def payday_from_spec(spec: Mapping[str, Any]) -> Payday:
+    """Build a payday effect from its configuration mapping."""
     days = spec.get("days")
     kwargs: dict[str, Any] = {}
     if days is not None:
@@ -268,6 +269,8 @@ def payday_from_spec(spec: Mapping[str, Any]) -> Payday:
 
 
 def trend_from_spec(spec: Mapping[str, Any]) -> Trend:
+    """Build a trend effect from its configuration mapping."""
+
     def day(v: Any) -> date:
         return date.fromisoformat(str(v))
 

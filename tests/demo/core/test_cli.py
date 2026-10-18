@@ -147,7 +147,7 @@ def test_plan_reads_a_profile_and_query_exits_2_with_a_message(tmp_path: Path, d
     out = tmp_path / "p.shape"
     assert main(["profile", str(day1), "-o", str(out)]) == 0
     capsys.readouterr()
-    assert main(["plan", str(out)]) == 0
+    assert main(["plan", str(out), "--json"]) == 0
     assert json.loads(capsys.readouterr().out)["executable"] is True
     assert main(["query", str(out), "rows"]) == 2
     assert "not read profiles" in capsys.readouterr().err

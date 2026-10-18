@@ -352,8 +352,8 @@ def test_procedures_from_lines_and_icd10pcs(loaded: Loaded):
         "FROM procedure_occurrence"
     )
     by_code = {r[0]: r for r in rows}
-    assert by_code["83036"][1] == "QW"
-    assert by_code["97110"][2] == 2
+    assert by_code["SP-25"][1] == "QW"
+    assert by_code["SP-50"][2] == 2
     assert by_code["0BH17EZ"][3] == dt.date(2024, 6, 11)
 
 
@@ -457,7 +457,7 @@ def test_csv_has_header_iso_dates_and_empty_nulls(tmp_path: Path):
 
 
 def test_concept_map_supplies_standard_concepts(tmp_path: Path):
-    fake = {"condition:E11.9": 111, "I10": 222, "procedure:99213": 333, "drug:00093726001": 444}
+    fake = {"condition:E11.9": 111, "I10": 222, "procedure:SP-01": 333, "drug:00093726001": 444}
     fake["route:ORAL"] = 555
     write_omop(sample_tables(), tmp_path, concept_map=fake)
     con = new_database()
@@ -474,7 +474,7 @@ def test_concept_map_supplies_standard_concepts(tmp_path: Path):
             "SELECT procedure_source_value, procedure_concept_id FROM procedure_occurrence"
         ).fetchall()
     )
-    assert proc["99213"] == 333 and proc["83036"] == 0
+    assert proc["SP-01"] == 333 and proc["SP-25"] == 0
     load_table(con, tmp_path, "csv", "drug_exposure")
     assert con.execute(
         "SELECT drug_concept_id, route_concept_id FROM drug_exposure"

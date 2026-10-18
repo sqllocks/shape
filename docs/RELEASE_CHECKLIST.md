@@ -1,5 +1,24 @@
 # Release checklist
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" RELEASE_CHECKLIST
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for RELEASE_CHECKLIST
+    ```
+
+
 How a Shape release is made, from the owner's approval to the checks after it is on PyPI, and
 how to recover when something goes wrong. It covers the core distribution `sqllocks-shape` and
 every first-party plugin `sqllocks-shape-<plugin>`: they share one version and are released
@@ -36,9 +55,9 @@ These are owner actions O-08 and O-01 of the build plan. They are done once, not
    configuration (owner, repository, workflow, environment), which is why every project has its
    own environment. On pypi.org and on test.pypi.org: owner `sqllocks`, repository `shape`,
    workflow `publish.yml`, and the environment of the table.
-   - `sqllocks-shape` already exists (0.9.0): its publisher is in the project's
+   - The core and plugin projects are published at 0.9.1. The core publisher is in the project's
      Settings → Publishing, environment `pypi` (TestPyPI: `testpypi`).
-   - Each plugin project is new: add a **pending publisher** under Your account → Publishing,
+   - For each plugin project, configure its own publisher under Settings → Publishing,
      with the project name and its environment:
 
      | Project | PyPI environment | TestPyPI environment |
@@ -69,10 +88,8 @@ through a pull request like any other change.
    review done.
 2. **Set the version everywhere** (owner-approved change):
 
-   ```bash
-   python scripts/set_version.py 1.0.0 --dry-run   # the 16 files it will change
-   python scripts/set_version.py 1.0.0
-   ```
+[Run this example](#local-example-0).
+
 
    It rewrites exactly the places the release version lives (core and plugin `pyproject.toml`
    versions and first-party `==` pins, `__version__`, the kernel's `Cargo.toml` and
@@ -88,11 +105,8 @@ through a pull request like any other change.
    words; from 1.0 it neither requires nor forbids them.
 5. **Check the tree is releasable:**
 
-   ```bash
-   python scripts/check_versions.py --release --expect 1.0.0
-   python scripts/check_plugin_skeletons.py
-   make check
-   ```
+[Run this example](#local-example-1).
+
 
    `--release` requires a final version (no `.dev`, `a`, `b` or `rc`: Fabric's library pickers
    may hide pre-releases), a `## 1.0.0` changelog section and, below 1.0, the words "early access"
@@ -132,12 +146,27 @@ TestPyPI round needs a new version.
 
 ## 5. Tag and publish to PyPI (owner)
 
-1. Tag the release commit on `main` (the same commit the TestPyPI run built) and push the tag:
+1. Tag the release commit on `main` (the same commit the TestPyPI run built) with an annotated
+   tag, `git tag -a v<version> -m "Shape <version>" <release-commit>`, and push it with
+   `git push origin v<version>`. Then check what the remote holds. This is the check for Shape
+   0.9.1: it lists the tag object, and the commit it points to on the second line.
 
-   ```bash
-   git tag -a v1.0.0 -m "Shape 1.0.0" <release-commit>
-   git push origin v1.0.0
-   ```
+<!-- example: 2 -->
+
+**Needs a GitHub account. Not run in CI.**
+
+```bash
+git ls-remote --tags origin v0.9.1 'v0.9.1^{}'
+```
+
+Output, exit 0:
+
+```text
+55c34315d24dd5f06fecd8902fa22391118a3bf9	refs/tags/v0.9.1
+d09731e59b630fac11b7127c812c47ccca8ab64f	refs/tags/v0.9.1^{}
+```
+
+Evidence: [Shape 0.9.1 tag and Publish run](evidence/release-0.9.1-verify.md).
 
    The tag must be `v` plus the version: `check_versions.py --tag` fails the build otherwise.
 2. The tag starts **Publish** (to PyPI) and **Container**. Approve the `pypi` deployment.
@@ -149,12 +178,39 @@ TestPyPI round needs a new version.
    the seven platform wheels, the `py3-none-any` wheel and the sdist; each plugin project shows
    its wheel and sdist at 1.0.0. `index-hashes` already compared every file's SHA-256.
 2. **Provenance:** each file on PyPI shows its provenance (PEP 740) in the file's details. For a
-   downloaded archive:
+   downloaded archive, check its digest against `SHA256SUMS` from the `release-sbom` artifact,
+   then run `gh attestation verify <archive> --repo sqllocks/shape`. `sha256sum -c SHA256SUMS`
+   checks every archive in the set; the example below checks one, Shape 0.9.1's `py3-none-any`
+   wheel downloaded from PyPI, against the `SHA256SUMS` of Publish run 38168312038, and then
+   verifies its attestation:
 
-   ```bash
-   sha256sum -c SHA256SUMS                      # from the release-sbom artifact
-   gh attestation verify sqllocks_shape-1.0.0-py3-none-any.whl --repo sqllocks/shape
-   ```
+<!-- example: 3 -->
+
+**Needs a GitHub account. Not run in CI.**
+
+```bash
+grep ' sqllocks_shape-0.9.1-py3-none-any.whl$' SHA256SUMS | sha256sum -c -
+gh attestation verify sqllocks_shape-0.9.1-py3-none-any.whl --repo sqllocks/shape
+```
+
+Output, exit 0 for both. The attestation list is shortened to the lines that do not change
+between runs; the evidence page has the full output, including how many attestations matched:
+
+```text
+sqllocks_shape-0.9.1-py3-none-any.whl: OK
+Loaded digest sha256:dc2b1866ee1f7f0de9b1c59dc549eb6295b874dde42f10a012f1c794e85d4a77 for file://sqllocks_shape-0.9.1-py3-none-any.whl
+
+The following policy criteria will be enforced:
+- Predicate type must match:................ https://slsa.dev/provenance/v1
+- Source Repository Owner URI must match:... https://github.com/sqllocks
+- Source Repository URI must match:......... https://github.com/sqllocks/shape
+- Subject Alternative Name must match regex: (?i)^https://github.com/sqllocks/shape/
+- OIDC Issuer must match:................... https://token.actions.githubusercontent.com
+
+✓ Verification succeeded!
+```
+
+Evidence: [Shape 0.9.1 digest check](evidence/release-0.9.1-verify.md).
 
    The attestation names `.github/workflows/release.yml` as the signer workflow.
 3. **A clean install:** in a fresh Python 3.11 environment, `pip install "sqllocks-shape[all]==1.0.0"`,
@@ -193,3 +249,85 @@ after the file or the release is deleted. Recovery is always forward.
   mark the package version as deprecated in GitHub Packages rather than deleting it.
 - **TestPyPI** is a rehearsal index: a bad TestPyPI upload needs no rollback, only a new version
   for the next TestPyPI round.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+python scripts/set_version.py 1.0.0 --dry-run   # the 16 files it will change
+   python scripts/set_version.py 1.0.0
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    plugins/shape-behavior/pyproject.toml
+    plugins/shape-databases/pyproject.toml
+    plugins/shape-dbt/pyproject.toml
+    plugins/shape-domains/pyproject.toml
+    plugins/shape-eventhubs/pyproject.toml
+    plugins/shape-fabric/pyproject.toml
+    plugins/shape-healthcare-codes/pyproject.toml
+    plugins/shape-healthcare-standards/pyproject.toml
+    plugins/shape-integrations/pyproject.toml
+    plugins/shape-kafka/pyproject.toml
+    plugins/shape-simulation/pyproject.toml
+    plugins/shape-sqlserver/pyproject.toml
+    pyproject.toml
+    rust/shape-kernel/Cargo.lock
+    rust/shape-kernel/Cargo.toml
+    src/shape/__init__.py
+    would change 16 files to version 1.0.0
+    plugins/shape-behavior/pyproject.toml
+    plugins/shape-databases/pyproject.toml
+    plugins/shape-dbt/pyproject.toml
+    plugins/shape-domains/pyproject.toml
+    plugins/shape-eventhubs/pyproject.toml
+    plugins/shape-fabric/pyproject.toml
+    plugins/shape-healthcare-codes/pyproject.toml
+    plugins/shape-healthcare-standards/pyproject.toml
+    plugins/shape-integrations/pyproject.toml
+    plugins/shape-kafka/pyproject.toml
+    plugins/shape-simulation/pyproject.toml
+    plugins/shape-sqlserver/pyproject.toml
+    pyproject.toml
+    rust/shape-kernel/Cargo.lock
+    rust/shape-kernel/Cargo.toml
+    src/shape/__init__.py
+    changed 16 files to version 1.0.0
+    ```
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+This fixture intentionally bumps the source version without adding release notes,
+so the version check reports the missing heading. The final command previews the
+local test target; run `make check` for the actual release validation outside this
+documentation fixture, and require every gate to pass.
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+python scripts/check_versions.py --release --expect 1.0.0
+   python scripts/check_plugin_skeletons.py
+   make --silent --dry-run test UV=uv
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    FAIL CHANGELOG.md has no '## 1.0.0' section
+    plugin skeletons OK (12 distributions, version 1.0.0)
+    uv run --locked --group docs --group dbt --group benchmark pytest -m "not emulator and not live"
+    ```
+
+This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.

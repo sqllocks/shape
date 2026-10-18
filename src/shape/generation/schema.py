@@ -798,6 +798,8 @@ class GenSchema:
             for cname, c in t.columns.items():
                 if not c.generator or not c.strategy:
                     continue
+                if c.strategy == "nested":
+                    continue  # the engine's own strategy for a nested column (generation.nested)
                 where = f"tables.{tname}.columns.{cname}.generator"
                 required = STRATEGY_REQUIRED_KEYS.get(c.strategy)
                 if required is None:

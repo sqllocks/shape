@@ -1,5 +1,8 @@
 # State and compatibility policy
 
+Status: experimental.
+
+
 Shape writes files that outlive the release that wrote them: `.shape` artifacts, safe profiles,
 models, generation schemas and specs, scenario packs, registries, run manifests, contracts and
 signatures. This is the one policy for all of them. It is enforced by tests (see
@@ -128,6 +131,12 @@ A newer release may add an optional field without a new version. A reader of thi
   profiles at the top, table and column levels, run manifests, contract models, generation
   schemas (`x_` fields) and the layout markers keep what they did not understand;
 - in **strict mode** ([Deprecation](#9-deprecation)) refuses it, naming the field.
+
+**Example: sampled columns.** A profile's `sampling.internal[]` entries name the columns an
+analysis sampled. Shape 0.9.1 wrote them as a `columns` list of names; later releases write
+`column_indexes`, positions in the table's own `columns` object, so the list is not a list of
+raw strings to the leak scanner. Readers accept both forms and no format version changed, because
+the field is optional and nothing read the old one.
 
 A kind that users author by hand keeps its typo protection: a contract, a verify configuration
 and a generation schema refuse an unknown field unless its name starts with `x_`, which is the

@@ -1,0 +1,39 @@
+{
+  "run_id": "38337418136",
+  "commit": "de4c1fb128851ab5f56220981fd1b54ca57dc2c2",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765370368,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/plugins/fabric-commands.md",
+  "example": "publish-targets",
+  "command": "shape publish retail -t lakehouse --base-path onelake://MyWorkspace/MyLakehouse/Files\nshape publish retail -t sql-database --connection-string env://SHAPE_SQL_CONNECTION\nshape publish retail -t warehouse --connection-string env://WH --staging-path onelake://W/L/Files\nshape publish retail -t eventhouse --connection-string https://<query-uri-host> --database mydb",
+  "executed_command": "shape publish retail -t lakehouse --base-path onelake://$FABRIC_WORKSPACE_ID/$FABRIC_LAKEHOUSE_ID/Files\nshape publish retail -t sql-database --connection-string env://SHAPE_SQL_CONNECTION\nshape publish retail -t warehouse --connection-string env://WH --staging-path onelake://$FABRIC_WORKSPACE_ID/$FABRIC_LAKEHOUSE_ID/Files/shape_staging\nshape publish retail -t eventhouse --connection-string https://$DOCS_KQL_HOST --database \"$FABRIC_KQL_DB\"",
+  "exit_code": 1,
+  "status": "failed",
+  "elapsed_seconds": 6.893332966000003,
+  "stdout": "Shape v0.9.1 \u2014 Publishing retail \u2192 lakehouse\nScale: small | Seed: 42 | Format: parquet\n\nGenerating data...\ntable                                 rows  columns\n---------------------------------------------------\ncustomer                             1,000        8\nproduct_category                        50        4\npromotion                              200        6\nstore                                  150        5\naddress                              1,500       10\nproduct                                500        6\norder                                5,000        8\norder_line                          12,500        8\nreturn                                 850        5\n---------------------------------------------------\nTOTAL                               21,750\n\nPublishing to Lakehouse (parquet)...\n  customer: 1,000 rows \u2192 onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/customer/dt=latest/part-0001.parquet\n  product_category: 50 rows \u2192 onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/product_category/dt=latest/part-0001.parquet\n  promotion: 200 rows \u2192 onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/promotion/dt=latest/part-0001.parquet\n  store: 150 rows \u2192 onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/store/dt=latest/part-0001.parquet\n  address: 1,500 rows \u2192 onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/address/dt=latest/part-0001.parquet\n  product: 500 rows \u2192 onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/product/dt=latest/part-0001.parquet\n  order: 5,000 rows \u2192 onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/order/dt=latest/part-0001.parquet\n  order_line: 12,500 rows \u2192 onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/order_line/dt=latest/part-0001.parquet\n  return: 850 rows \u2192 onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/return/dt=latest/part-0001.parquet\n\nPublished 9 tables to lakehouse.\nManifest: onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/manifest/_control/run_manifest.json\n\nPublish complete.\nshape: error: table dbo.customer already exists; set write_mode to append, truncate or replace to write into it\nShape v0.9.1 \u2014 Publishing retail \u2192 sql-database\nScale: small | Seed: 42 | Format: parquet\n\nGenerating data...\ntable                                 rows  columns\n---------------------------------------------------\ncustomer                             1,000        8\nproduct_category                        50        4\npromotion                              200        6\nstore                                  150        5\naddress                              1,500       10\nproduct                                500        6\norder                                5,000        8\norder_line                          12,500        8\nreturn                                 850        5\n---------------------------------------------------\nTOTAL                               21,750\n\nPublishing to SQL Database (auth=cli)...\n"
+}

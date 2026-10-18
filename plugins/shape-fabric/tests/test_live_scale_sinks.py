@@ -2,8 +2,8 @@
 (nightly ``fabric-live``, only where the owner's O-02 secrets exist).
 
 Gated like ``test_live_writers.py``: the workflow runs each step only when its secrets are set (a
-job-level check; nothing here is skipped by a decorator) and a missing variable fails its test by
-name. The variables are the ones of ``test_live_writers.py``, plus for ``fabric_spark``:
+job-level check); a missing variable fails its test by name, and service failures also fail.
+The variables are the ones of ``test_live_writers.py``, plus for ``fabric_spark``:
 
     FABRIC_WORKSPACE_ID / FABRIC_LAKEHOUSE_ID   GUIDs of the workspace and the lakehouse
 
@@ -37,16 +37,18 @@ ROWS = {"customer": 30, "order": 200}
 
 def need(name: str) -> str:
     value = os.environ.get(name)
-    assert value, f"{name} is not set (live tests need it)"
+    if not value:
+        pytest.fail(f"live test needs {name}")
     return value
 
 
 def credential():
+    tenant, client, secret = (
+        need(name) for name in ("FABRIC_TENANT_ID", "FABRIC_CLIENT_ID", "FABRIC_CLIENT_SECRET")
+    )
     from azure.identity import ClientSecretCredential
 
-    return ClientSecretCredential(
-        need("FABRIC_TENANT_ID"), need("FABRIC_CLIENT_ID"), need("FABRIC_CLIENT_SECRET")
-    )
+    return ClientSecretCredential(tenant, client, secret)
 
 
 def unique(prefix: str) -> str:
@@ -100,6 +102,20 @@ def schema_doc(prefix: str) -> dict:
             "scales": {"small": {f"{prefix}_customer": 30, f"{prefix}_order": 200}},
         },
     }
+
+
+def remove_spark_tables(storage, workspace, lakehouse, schema_folder, prefix, tables) -> list[str]:
+    """Remove the Delta tables the Spark worker wrote: ``Tables/[<schema>/]<prefix>_<table>``.
+    Returns the folders it removed (a test of this function is in ``test_live_cleanup.py``)."""
+    root = f"onelake://{workspace}/{lakehouse}/Tables" + (
+        f"/{schema_folder}" if schema_folder else ""
+    )
+    removed = []
+    for table in tables:
+        folder = f"{root}/{prefix}_{table}"
+        storage.remove(folder, recursive=True)
+        removed.append(folder)
+    return removed
 
 
 def run(sink, prefix: str) -> None:
@@ -197,17 +213,40 @@ def test_fabric_spark_runs_the_worker_notebook_to_success(tmp_path):
                 "workspace_id": workspace,
                 "lakehouse_id": lakehouse,
                 "table_prefix": f"{prefix}_",
+                **(
+                    {"lakehouse_schema": os.environ["FABRIC_LAKEHOUSE_SCHEMA"]}
+                    if os.environ.get("FABRIC_LAKEHOUSE_SCHEMA")
+                    else {}
+                ),
             },
         },
         jobs=jobs,
         token=fabric_token,
         storage_token=storage_token,
     )
-    deadline = time.monotonic() + 25 * 60
-    status = job["status"]
-    while status not in ("succeeded", "failed", "cancelled") and time.monotonic() < deadline:
-        time.sleep(20)
-        status = jobs.status(job["job_id"], fabric_token)["status"]
-    if status not in ("succeeded", "failed", "cancelled"):
-        jobs.cancel(job["job_id"], fabric_token)
-    assert status == "succeeded", jobs.status(job["job_id"], fabric_token)
+    final = None
+    try:
+        deadline = time.monotonic() + 25 * 60
+        status = job["status"]
+        while status not in ("succeeded", "failed", "cancelled") and time.monotonic() < deadline:
+            time.sleep(20)
+            status = jobs.status(job["job_id"], fabric_token)["status"]
+        if status not in ("succeeded", "failed", "cancelled"):
+            jobs.cancel(job["job_id"], fabric_token)
+        final = jobs.status(job["job_id"], fabric_token)
+        assert status == "succeeded", (
+            f"Fabric worker {final['fabric'].get('fabric_run_id')}: "
+            f"status={status}; error={final.get('error')}; progress={final.get('progress')}"
+        )
+    finally:
+        # The router records the schema it resolved from the Lakehouse; remove the worker's tables
+        # whatever the outcome.
+        fabric = (final or job).get("fabric") or {}
+        remove_spark_tables(
+            Storage(credential=cred),
+            workspace,
+            lakehouse,
+            fabric.get("lakehouse_schema"),
+            prefix,
+            list(schema_doc(prefix)["tables"]),
+        )

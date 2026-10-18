@@ -1,5 +1,24 @@
 # Simulation patterns (`shape-simulation`)
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](../contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" simulation
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for simulation
+    ```
+
+
 `sqllocks-shape-simulation` also holds the file-drop, stream and workflow simulators, described in
 [SIMULATION_FILES_EVENTS.md](../SIMULATION_FILES_EVENTS.md). This page covers the pattern
 simulators: it generates the kinds of data a plain table generator does not: web
@@ -7,9 +26,10 @@ sessions, financial anomalies, IoT telemetry, service logs and traces, and a rid
 telemetry and finance marts. Each simulator takes a configuration (and, where it layers
 anomalies on existing data, Arrow tables) and returns Arrow tables and summary statistics.
 
-```bash
-pip install 'sqllocks-shape[simulation]'
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-0).
+
 
 Nothing is imported until a simulator runs. `shape plugins list` shows
 `shape.commands:simulate`; the command has one sub-command per simulator.
@@ -115,11 +135,10 @@ geography, lifecycle timestamps and ETAs), `trip_events`, `surge_signals`, `driv
 
 ## The command
 
-```bash
-shape simulate clickstream --set users=500 --set duration_hours=12 -o out/
-shape simulate iot --domain iot --scale small --seed 7 -o out/ --format csv
-shape simulate financial --domain my-schema.json --events settlements
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-2).
+
 
 `PATTERN` is `clickstream`, `financial`, `iot`, `operational-log` or `pulse`. `--set KEY=VALUE`
 sets a field of the configuration (values are Python literals); `--seed` sets the seed of the
@@ -138,3 +157,49 @@ than 1 to 8) is refused when the configuration is made, with a message that name
 `_shape_event_time`; `(_shape_table, _shape_seq)` is the idempotency key. Send it through any
 `shape.streaming.emit` sink or emitter (`FileSink`, `MemorySink`, `EmitterSink`), and corrupt it
 with `shape.chaos.inject_anomalies` (protect the three `_shape_*` fields so the key survives).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO/plugins/shape-simulation"
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    (no output)
+    ```
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape simulate clickstream --set users=500 --set duration_hours=12 -o out/
+shape simulate iot --domain iot --scale small --seed 7 -o out/ --format csv
+SHAPE_REFERENCE_PATH="$PWD/financial-references" shape simulate financial --domain schema.json --events settlements > settlements.jsonl
+python -c 'print("Settlement events:", sum(1 for _ in open("settlements.jsonl")))'
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    sessions: 1538 rows
+    page_views: 16256 rows
+    funnels: 1963 rows
+    readings: 25000 rows
+    alerts: 1526 rows
+    fleet_status: 500 rows
+    Settlement events: 8766
+    ```

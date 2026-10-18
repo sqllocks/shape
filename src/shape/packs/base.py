@@ -31,5 +31,7 @@ class PackManifest:
 
 
 class DomainPack:
+    """A domain pack associated with its manifest."""
+
     def __init__(self, manifest: PackManifest):
         self.manifest = manifest

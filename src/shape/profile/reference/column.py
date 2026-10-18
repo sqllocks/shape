@@ -21,6 +21,7 @@ from shape.kernel.reference.exact import PCTS as _PCTS
 from shape.kernel.reference.exact import all_whole
 from shape.kernel.reference.exact import lerp as _lerp
 from shape.kernel.reference.exact import linear_index as _linear_index
+from shape.profile import nested
 from shape.profile.fitting import detect_distribution as _kernel_detect_distribution
 from shape.profile.mixture import mixture as fit_mixture
 from shape.profile.sampling import UNIVARIATE_MODEL_ROWS
@@ -752,9 +753,9 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
         pattern = detect_pattern(pa.array(text, pa.string()), cardinality)
         lens = np.array([len(t) for t in text], dtype=np.float64)
         string_length = {
-            "min": float(lens.min()),
+            "min": float(cast(Callable[[], np.float64], lens.min)()),
             "mean": round(float(lens.sum(dtype=np.float64) / len(lens)), 2),
-            "max": float(lens.max()),
+            "max": float(cast(Callable[[], np.float64], lens.max)()),
             "p95": float(np.percentile(lens, 95)),
         }
     null_rate = null_count / n_total if n_total and row_count else 0.0
@@ -812,8 +813,44 @@ def _profile_column(
         raise dtparse.ZonedTextError(exc.text, c.name) from exc  # say which column, and what to do
 
 
+def _profile_nested_column(c: _Col, row_count: int) -> _Work:
+    """A list, struct, map or union column, recorded whole: Arrow type, row and null counts and
+    the lengths of lists and maps (``shape.profile.nested``). Nothing inside the values is
+    profiled, so the column has no value statistics, categories or key candidates."""
+    typ = c.arr.type
+    null_count = c.arr.null_count
+    null_rate = null_count / row_count if row_count else 0.0
+    prof = ColumnProfile(
+        name=c.name,
+        dtype="nested",
+        null_count=null_count,
+        null_rate=round(null_rate, 6),
+        cardinality=0,
+        cardinality_ratio=None,
+        is_unique=None,
+        is_enum=False,
+        enum_values=None,
+        min_value=None,
+        max_value=None,
+        mean=None,
+        std=None,
+        distribution=None,
+        distribution_params=None,
+        pattern=None,
+        is_primary_key=False,
+        is_foreign_key=False,
+        fk_ref_table=None,
+        arrow_type=str(typ),
+        arrow_type_spec=nested.arrow_type_to_spec(typ),
+        nested=nested.nested_stats(c.arr, row_count),
+    )
+    return _Work(c, prof)
+
+
 def _profile_one_column(c: _Col, row_count: int, top_n: int, keep_uniques: bool) -> _Work:
     kind = c.kind
+    if kind == "nested":
+        return _profile_nested_column(c, row_count)
     if kind in _OBJECT_KINDS:
         return _profile_object_column(c, row_count, top_n)
     arr = c.arr

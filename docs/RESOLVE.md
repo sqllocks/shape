@@ -1,5 +1,24 @@
 # Duplicate detection and entity resolution
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" RESOLVE
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for RESOLVE
+    ```
+
+
 `shape.resolve` finds rows that describe the same real-world entity, collapses each group into one
 golden record, and measures how well it did against **known** answers: the synthetic duplicates
 generator records the true clusters, so precision, recall and F1 are exact, not estimated.
@@ -95,19 +114,8 @@ The chaos `duplicates` corruption records the same truth: see `duplicate_cluster
 
 ## Command line
 
-```bash
-# plant duplicates in a clean file; write the table and the true clusters
-shape resolve synth people.csv -o people_dup.csv --truth truth.json \
-    --rate 0.25 --fuzz 0.5 --seed 21 --id-column id
+[Run this example](#local-example-1).
 
-# resolve them and score against the truth
-shape resolve run people_dup.csv \
-    --block name:ngram:5 --block name:phonetic \
-    --match name:text:3 --match city:exact:0.5 \
-    --match income:numeric:1:0.05:relative --match born:date:1:5 \
-    --threshold 0.85 --truth truth.json \
-    --golden golden.csv --clusters clusters.json --report report.json
-```
 
 `--block` is `COL[+COL]:METHOD[:SIZE]`; `--match` is `COL:KIND[:WEIGHT[:TOLERANCE[:relative]]]`;
 `--survive` is `COL=RULE[:BY[:A,B,...]]` (for example `--survive phone=most_recent:updated`).
@@ -123,3 +131,36 @@ code 0 on success, 2 for bad input.
 - String distances are implemented with numpy (Levenshtein, vectorized over pairs) and pure Python
   (Jaro-Winkler, n-grams); there is no kernel twin, so both kernel modes behave identically.
 - Cost is dominated by the number of candidate pairs; tighten blocking before raising `max_block`.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+# plant duplicates in a clean file; write the table and the true clusters
+shape resolve synth people.csv -o people_dup.csv --truth truth.json \
+    --rate 0.25 --fuzz 0.5 --seed 21 --id-column id
+
+# resolve them and score against the truth
+shape resolve run people_dup.csv \
+    --block name:ngram:5 --block name:phonetic \
+    --match name:text:3 --match city:exact:0.5 \
+    --match income:numeric:1:0.05:relative --match born:date:1:5 \
+    --threshold 0.85 --truth truth.json \
+    --golden golden.csv --clusters clusters.json --report report.json
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Wrote 28 rows to people_dup.csv (5 duplicate clusters, 11 true pairs)
+    28 rows -> 2 entities (26 merged, 89 matched pairs of 351 candidates)
+    precision 0.026  recall 0.818  f1 0.050  (blocking recall 0.818)
+    ```

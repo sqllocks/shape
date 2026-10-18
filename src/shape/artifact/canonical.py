@@ -11,6 +11,8 @@ import json
 
 
 def canonical_json(value) -> bytes:
+    """Encode canonical JSON bytes, rejecting untyped floats and non-string object keys."""
+
     def reject_float(x):
         if isinstance(x, float):
             raise TypeError("floats require typed canonical representation")

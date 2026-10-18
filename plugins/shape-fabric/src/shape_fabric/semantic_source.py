@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import logging
 import sys
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -118,12 +119,23 @@ def _sempy_failed(workspace: str, model: str, exc: BaseException) -> ShapeError:
     )
 
 
-def _frame(fab: Any, name: str, ws: str, model: str, **kw: Any) -> Any:
+def _table_unreadable(workspace: str, model: str, table: str, exc: BaseException) -> ShapeError:
+    return ShapeError(
+        f"semantic model {model} in workspace {workspace}: cannot read table {table}: "
+        f"{_one_line(exc)[:300]}; the semantic model may need a refresh"
+    )
+
+
+def _frame(
+    fab: Any, name: str, ws: str, model: str, *, table_read: str | None = None, **kw: Any
+) -> Any:
     try:
         return getattr(fab, name)(**kw)
     except ShapeError:
         raise
     except Exception as exc:  # noqa: BLE001 - sempy raises its own and HTTP errors
+        if table_read is not None:
+            raise _table_unreadable(ws, model, table_read, exc) from exc
         raise _sempy_failed(ws, model, exc) from exc
 
 
@@ -141,7 +153,28 @@ def check_model(workspace: str, model: str) -> Any:
     if workspace not in (*_values(workspaces, "Name"), *_values(workspaces, "Id")):
         raise ShapeError(f"semantic-model workspace {workspace} not found")
     datasets = _frame(fab, "list_datasets", workspace, model, workspace=workspace)
-    if model not in (*_values(datasets, "Dataset Name"), *_values(datasets, "Dataset Id")):
+    found = (*_values(datasets, "Dataset Name"), *_values(datasets, "Dataset Id"))
+    if model not in found:
+        # A service principal may not see XMLA-listed models; Microsoft documents the REST listing
+        # for it (semantic link service principal support), so it is tried before refusing.
+        try:
+            rest = fab.list_datasets(workspace=workspace, mode="rest")
+        except Exception as exc:  # noqa: BLE001 - older sempy, or no REST access: report below
+            rest, rest_error = None, _one_line(exc)
+        else:
+            rest_error = ""
+            found_rest = (*_values(rest, "Dataset Name"), *_values(rest, "Dataset Id"))
+            if model in found_rest:
+                return fab
+        seen = [str(v) for v in _values(datasets, "Dataset Name")][:20]
+        seen_rest = [str(v) for v in _values(rest, "Dataset Name")][:20] if rest is not None else []
+        logging.getLogger(__name__).warning(
+            "semantic model %s not listed in workspace %s (default listing: %s; REST listing: %s)",
+            model,
+            workspace,
+            seen,
+            seen_rest or rest_error or "none",
+        )
         raise ShapeError(f"workspace {workspace} has no semantic model {model}")
     return fab
 
@@ -345,6 +378,7 @@ def read_table(
             "evaluate_dax",
             workspace,
             model,
+            table_read=table,
             dataset=model,
             dax_string=topn_dax(table, [c.name for c in infos], max_rows),
             workspace=workspace,
@@ -355,7 +389,8 @@ def read_table(
         if "mode" not in inspect.signature(fab.read_table).parameters:
             raise ShapeError("this sempy has no read mode; leave mode out")
         kw["mode"] = mode
-    return _to_table(_frame(fab, "read_table", workspace, model, **kw), schema, table)
+    frame = _frame(fab, "read_table", workspace, model, table_read=table, **kw)
+    return _to_table(frame, schema, table)
 
 
 class SemanticModelSource:

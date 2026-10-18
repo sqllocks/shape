@@ -36,7 +36,7 @@ def _artifact_kind(path):
         return None
 
 
-def _is_profile_or_missing(path):
+def _is_profile_or_missing(path: str) -> bool:
     """Route to the section 12.2 check/diff (exit 2 on input errors) for profile artifacts,
     and for a path that does not exist, which no legacy command can read either."""
     return _artifact_kind(path) == "profile" or not os.path.exists(path)
@@ -621,8 +621,19 @@ def _cmd_plan_profile(a):
     out = plan.to_dict()
     if a.status:
         out["items"] = [x for x in out["items"] if x["status"] in a.status]
-    _dump(out)
+    _print_reconstruction_plan(a, out)
     return 0
+
+
+def _print_reconstruction_plan(a, out):
+    if a.json:
+        _dump(out)
+        return
+    print("Executable: " + ("yes" if out["executable"] else "no"))
+    print("Summary: " + ", ".join(f"{status}: {count}" for status, count in out["counts"].items()))
+    print(f"{'Status':<16} {'Evidence':<48} Reason")
+    for item in out["items"]:
+        print(f"{item['status']:<16} {item['evidence']:<48} {item['reason']}")
 
 
 def _cmd_stream_profile(a):
@@ -748,8 +759,12 @@ def _cmd_fidelity(a):
     from shape.quality import load_tables
 
     t0 = ci.started()
+    from shape.quality.verify import refuse_nested
+
     real = load_tables(a.reference, a.input_format)
     synth = load_tables(a.csv, a.input_format)
+    refuse_nested(real, "fidelity")
+    refuse_nested(synth, "fidelity")
     if not real:
         raise ValueError(f"no data files found in {a.reference}")
     if len(real) == 1 and len(synth) == 1:  # two single files compare whatever they are called
@@ -1458,6 +1473,13 @@ def _build_parser(plugin_commands=()):
 
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
+    p.add_argument(
+        "--source-config",
+        action="append",
+        metavar="KEY=REF",
+        help="Azure readers: token, account_key, sas_token or connection_string from env://, "
+        "file:// or kv:// (may appear before or after the command)",
+    )
     g = p.add_argument_group("run logging and metrics (before the command)")
     g.add_argument("--log-json", action="store_true", help="log JSON lines to stderr")
     g.add_argument("--log-level", default="INFO", metavar="LEVEL", help="log level (default INFO)")
@@ -2085,9 +2107,7 @@ def _build_parser(plugin_commands=()):
     f.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
     f.add_argument("--determinant", nargs="+", required=True, metavar="COLUMN")
     f.add_argument("--dependent", required=True, metavar="COLUMN")
-    q = sub.add_parser(
-        "privacy-k", help="the k-anonymity of DATA over the quasi-identifiers FIELDS"
-    )
+    q = sub.add_parser("privacy-k", help="the equivalence-group sizes of DATA over FIELDS")
     q.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
     q.add_argument("fields", nargs="+", metavar="FIELD")
     cq = sub.add_parser(
@@ -2151,7 +2171,8 @@ def _build_parser(plugin_commands=()):
         description="Fit the generation schema of a profile (`shape generate --from`) and list, "
         "for every field of the profile, whether generated data keeps it: preserved, "
         "approximate, or not_modelled (with the reason). Evidence documents are checked "
-        "against what the generator can build from them.",
+        "against what the generator can build from them. Prints human-readable text by default; "
+        "use --json for a structured result.",
     )
     gp.add_argument("shape", metavar="PROFILE.shape")
     gp.add_argument(
@@ -2279,6 +2300,9 @@ def main(argv=None):
 
     lifecycle.quick_exit_allowed = argv is None
     lifecycle.exit_on_return = False
+    stale = sys.modules.get("shape.io.deltafs")
+    if stale is not None:
+        stale.bridge_in_use = False  # per command: a library user may have run a command before
     try:
         code = _main(argv)
     finally:
@@ -2294,6 +2318,14 @@ def main(argv=None):
             if not errors.reader_gone(exc):
                 raise
             code = errors.pipe_closed()
+    bridge = sys.modules.get("shape.io.deltafs")
+    if bridge is not None and bridge.bridge_in_use:
+        # A table behind an object store reaches Arrow through a Python file system that an
+        # Arrow pool thread frees: tearing the interpreter down around it can hang or abort
+        # (GitHub issue #1). End the process once all is flushed.
+        lifecycle.exit_on_return = True
+        # the log line and the metrics file (the reason quick exit was off) are written by now
+        lifecycle.quick_exit_allowed = argv is None
     if lifecycle.exit_on_return:
         lifecycle.exit_now(code)
     return code
@@ -2327,7 +2359,7 @@ def _main(argv):
         from shape.security.redact import redact_text
 
         # The text of a driver, broker or auth error can echo a connection string or a token.
-        detail = redact_text(str(exc)) or "no detail"
+        detail = errors.one_line(redact_text(str(exc))) or "no detail"
         print(
             f"shape: error: {type(exc).__name__}: {detail} (run with --debug for the traceback)",
             file=sys.stderr,
@@ -2413,11 +2445,15 @@ def _cmd_evidence(a):
             from shape.generation.engine import Engine
             from shape.generation.schema import GenSchema
 
-            _dump(Engine(GenSchema.from_dict(s)).dry_run().to_dict())
+            plan = Engine(GenSchema.from_dict(s)).dry_run()
+            if a.json:
+                _dump(plan.to_dict())
+            else:
+                print(plan.render())
             return 0
         from shape.generation.fidelity import plan_reconstruction
 
-        _dump(plan_reconstruction(s).to_dict())
+        _print_reconstruction_plan(a, plan_reconstruction(s).to_dict())
         return 0
     from shape.contracts import evaluate_contract
 
@@ -2439,6 +2475,14 @@ def _dispatch(argv):
     line, whichever command reads the artifact (docs/SIGNING.md)."""
     restore = _notices_to_stderr()
     try:
+        from shape.cli.source_credentials import extract
+
+        argv, options = extract(argv)
+        if options:
+            from shape.security.azure_credentials import source_credentials
+
+            with source_credentials(options):
+                return _dispatch_command(argv)
         return _dispatch_command(argv)
     finally:
         import warnings
@@ -2700,6 +2744,12 @@ def _route(a):
         return _run(_cmd_stream_profile, a)
     if a.cmd == "check" and _is_profile_or_missing(a.shape):
         return _run(_cmd_check, a)
+    if a.cmd == "diff":
+        from shape.diff._inputs import refuse_safe_profile
+
+        for path in (a.before, a.after):
+            if path is not None and not _is_profile_or_missing(path):
+                refuse_safe_profile(_load_document(path), path)
     if a.cmd == "diff" and _is_profile_or_missing(a.before):
         return _run(_cmd_diff, a)
     if a.cmd == "explain":

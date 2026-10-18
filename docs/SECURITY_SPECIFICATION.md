@@ -1,4 +1,7 @@
 # Shape Sensitive & Classified Data Security Specification
+
+Status: available.
+
 Status: Draft 0.1 — Normative implementation specification under baselined Product Architecture
 
 ## 1. Security thesis
