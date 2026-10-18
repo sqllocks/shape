@@ -85,6 +85,7 @@ nav:
 - Profiling:
   - File sources: SOURCES.md
   - Profiling notes: PROFILING_NOTES.md
+  - Semantic model profiles: SEMANTIC_MODEL.md
   - Mergeable profiles: PROFILE_MERGE.md
   - Profile registry: PROFILE_REGISTRY.md
   - Fingerprint: FINGERPRINT.md

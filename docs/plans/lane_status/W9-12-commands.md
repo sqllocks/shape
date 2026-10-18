@@ -52,3 +52,19 @@
 - `PATH=/tmp/w9-10-bin:$PATH uv run --locked --no-sync python scripts/check_dco.py origin/main HEAD` — exit 0; zombies 29 → 29.
 
 - `umask 022; PATH=/tmp/w9-10-bin:$PATH uv run --locked --with-requirements tests/demo/fabric/requirements.txt pytest --collect-only -q -m "not emulator and not live" > /tmp/w9-12-collection-prepared.log 2>&1` — exit 0; zombies 30 → 30.
+
+- `git add docs/plans/lane_status/W9-12.md docs/plans/lane_status/W9-12-commands.md && git commit -s -m "W9-12: record current kernel and independent review evidence"` — exit 0; zombies 31 → 32.
+
+- `git push origin HEAD` — exit 0; zombies 32 → 32.
+
+- `gh pr create --draft --base main --head lane/W9-12-finish --title "Preserve semantic-model measures and roles across profile and export" --body-file /tmp/w9-12-pr.md` — exit 0; zombies 32 → 32.
+
+- `PATH=/tmp/w9-10-bin:$PATH uv run --locked --with-requirements tests/demo/fabric/requirements.txt python -c "import pyarrow,numpy,pandas; print(pyarrow.__version__,numpy.__version__,pandas.__version__)"` — exit 0; zombies 33 → 33.
+
+- `PATH=/tmp/w9-10-bin:$PATH uv run --locked python -c "import pyarrow,numpy,pandas; print(pyarrow.__version__,numpy.__version__,pandas.__version__)"` — exit 0; zombies 33 → 33.
+
+- `. /tmp/public-b-test-env.sh; uv run --locked --no-sync pytest -q "tests/docs/test_reference_examples.py::test_reference_page[CONTAINER]" > /tmp/public-b-container-prepared.log 2>&1` — exit 0; zombies 40 → 45.
+
+- `. /tmp/public-b-test-env.sh; uv run --locked pytest -q tests/docs_site/test_docs_site.py::test_every_site_page_is_in_the_nav_exactly_once tests/project/test_semver_cli.py::test_project_schema_lists_every_change_kind > /tmp/w9-12-ci-integration-red.log 2>&1` — exit 1; zombies 85 → 85.
+
+- `. /tmp/public-b-test-env.sh; uv run --locked pytest -q tests/docs_site tests/project/test_semver_cli.py tests/project/test_compat.py tests/editors/test_vscode_extension.py > /tmp/w9-12-ci-integration-green.log 2>&1` — exit 0; zombies 85 → 85.
