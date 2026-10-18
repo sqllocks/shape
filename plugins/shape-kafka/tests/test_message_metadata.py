@@ -9,6 +9,9 @@ from shape_kafka.testing import EmitterHarness as KafkaHarness
 from shape.errors import ShapeError
 from shape.streaming.emit.formats import with_event_fields
 
+# Traceability: SHAPE-STREAM-METADATA-001.
+pytestmark = pytest.mark.conformance
+
 
 def batch():
     return with_event_fields(

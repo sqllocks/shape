@@ -4,7 +4,7 @@
     [KAFKA_CONFIG='{"security.protocol": "SASL_SSL", ...}'] \\
     pytest -m live plugins/shape-kafka/tests/test_live.py
 
-A missing variable skips the live test with the missing setting named. Events
+A missing variable fails the test with the variable's name (nothing is silently skipped). Events
 are read back from the topic's end as it was before the test.
 """
 
@@ -25,8 +25,7 @@ pytestmark = pytest.mark.live
 
 def need(name):
     value = os.environ.get(name)
-    if not value:
-        pytest.skip(f"missing live setting: {name}")
+    assert value, f"{name} is not set (live tests need it)"
     return value
 
 

@@ -3,7 +3,7 @@
     EVENTHUBS_CONNECTION_STRING='Endpoint=sb://...' EVENTHUBS_HUB=<hub> \\
     [EVENTHUBS_GROUP=<consumer group>] pytest -m live plugins/shape-eventhubs/tests
 
-A missing variable skips the live test with the missing setting named.
+A missing variable fails the test with the variable's name (nothing is silently skipped).
 """
 
 import os
@@ -19,8 +19,7 @@ pytestmark = pytest.mark.live
 
 def need(name, default=None):
     value = os.environ.get(name, default)
-    if not value:
-        pytest.skip(f"missing live setting: {name}")
+    assert value, f"{name} is not set (live tests need it)"
     return value
 
 

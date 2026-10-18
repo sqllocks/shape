@@ -8,6 +8,9 @@ import pytest
 from shape.streaming.emit.formats import with_event_fields
 from shape.streaming.messages import StreamMessage, decode_messages
 
+# Traceability: SHAPE-STREAM-METADATA-001.
+pytestmark = pytest.mark.conformance
+
 
 def batch():
     return with_event_fields(

@@ -9,6 +9,9 @@ from shape_eventhubs.testing import EmitterHarness as HubHarness
 from shape.errors import ShapeError
 from shape.streaming.emit.formats import with_event_fields
 
+# Traceability: SHAPE-STREAM-METADATA-001.
+pytestmark = pytest.mark.conformance
+
 
 def batch():
     return with_event_fields(
@@ -36,6 +39,10 @@ def test_wanted1_column_keys_and_static_column_headers(harness):
         assert ("customer", b"a") in h.store.log[0][3]
     else:
         e = h.hub.batches[0].events[0]
+        assert [event.properties["shape_key"] for event in h.hub.batches[0].events] == [
+            b"a|1",
+            b"b|2",
+        ]
         assert e.properties["shape-key"] == "orders/0"
         assert e.properties["customer"] == b"a"
 

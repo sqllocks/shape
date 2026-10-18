@@ -491,5 +491,3 @@ def test_emit_metadata_flags_reach_fake_transport(
         o["key"] == "_shape_table" and o["headers"] == ["test=yes"] and o["partition"] == "0"
         for o in received_options
     )
-
-
