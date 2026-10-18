@@ -410,6 +410,7 @@ class Compiled:
         self.doc = doc
         self.notes = notes
         self.packages = packages
+        self.singular_tests: dict[str, str] = {}
 
     def yaml(self) -> str:
         return render_yaml(self.doc, self.packages)
@@ -427,6 +428,7 @@ def compile_tests(
     bounds: Mapping[str, Any] | None = None,
     tests_key: str = "data_tests",
     args_style: str = "arguments",
+    dialect: str | None = None,
 ) -> Compiled:
     """A contract (one table: give ``model``; several: its ``tables`` object) as a ``schema.yml``
     document.
@@ -466,7 +468,25 @@ def compile_tests(
         doc["sources"] = [{"name": source_name, "tables": entries}]
     else:
         doc[kind] = entries
-    return Compiled(doc, notes, packages)
+    compiled = Compiled(doc, notes, packages)
+    if dialect is not None:
+        from .singular import compile_singular
+
+        compiled.singular_tests = compile_singular(
+            per_table, dialect=dialect, kind=kind, source_name=source_name
+        )
+        compiled.notes = [
+            note
+            for note in notes
+            if not any(
+                note.startswith(f"{table}.{column}.{rule}:")
+                for table, sub in per_table.items()
+                for column, rules in (sub.get("columns") or {}).items()
+                for rule in rules
+                if f"{table}__{column}__{rule}.sql" in compiled.singular_tests
+            )
+        ]
+    return compiled
 
 
 def _test_key(test: Any) -> tuple[str, str]:

@@ -171,9 +171,10 @@ def test_the_seeds_carry_a_block_of_column_types(built):
 def test_dbt_build_passes_every_seed_model_and_test(built):
     results = run_results(built["project"])["results"]
     statuses = [r["status"] for r in results]
-    assert len(results) == 31  # 3 seeds, 3 views, 2 tables, 23 tests
+    assert len(results) == 32  # 3 seeds, 3 views, 2 tables, 24 tests
     assert set(statuses) <= {"success", "pass"}, statuses
-    assert statuses.count("pass") == 23
+    assert statuses.count("pass") == 24
+    assert any("orders__amount__min" in r["unique_id"] for r in results)
     assert "Completed successfully" in built["build"].stdout
 
 
@@ -262,3 +263,28 @@ def test_a_failed_dbt_test_and_a_shape_drift_finding_appear_in_one_report(built)
     assert parts["dbt"] and parts["contract"] and parts["drift"]
     text = (work / "report.md").read_text(encoding="utf-8")
     assert "orders.amount" in text and "mean_shift" in text and "accepted_range" in text
+
+
+def test_w9_10_written_singular_tests_run_in_dbt(built):
+    project = built["project"]
+    (project / "models" / "w9_rules.sql").write_text(
+        "select 'USD' as code, true as active, cast('2025-01-01' as date) as day\n",
+        encoding="utf-8",
+    )
+    contract = {
+        "columns": {
+            "code": {"pattern": "currency_code", "min": "AAA", "max": "ZZZ"},
+            "active": {"min_true_rate": 1, "max_true_rate": 1},
+            "day": {"min": "2025-01-01", "max": "2025-01-01"},
+        }
+    }
+    compiled = compile_tests(contract, model="w9_rules", dialect="duckdb")
+    tests = project / "tests"
+    tests.mkdir(exist_ok=True)
+    for name, sql in compiled.singular_tests.items():
+        (tests / name).write_text(sql, encoding="utf-8")
+    dbt(project, "run", "--select", "w9_rules")
+    dbt(project, "test", "--select", "w9_rules")
+    results = run_results(project)["results"]
+    assert len(results) == len(compiled.singular_tests) == 7
+    assert {r["status"] for r in results} == {"pass"}
