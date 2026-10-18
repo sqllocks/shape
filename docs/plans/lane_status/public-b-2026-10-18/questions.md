@@ -26,3 +26,8 @@ The preserved journal at origin/lane/W9-13 (1249af9) additionally documents deci
 ## #20 updated disposition: artifacts retrieved, comparison contract blocked
 
 Artifact access is resolved through the GitHub connector. FRZ-01-evidence.md names all six exact failing workloads, their verifiers and observed/recorded values. Four profile mismatches arise from newly supported nested inputs and capture-date-dependent weekday statistics; two generation workloads reject intentionally replaced synthetic reference labels mandated by Owner904d5d2. Neither a real Shape regression nor an authorized no-rule-change fix was found. Preserve recordings/gates and request an explicit comparison contract for these cases. Options and recommendation are in the evidence file. #20 remains parked and open; no dispatch or merge.
+
+
+## #6: nested unsupported-baseline clause
+
+Wanted5 explicitly asks to report nested baseline inputs as unsupported rather than differences, while the current recorded-error equivalence pass rule rejects candidate success. Main already intentionally supports those inputs via the merged dependency. Options: defer Wanted5 and retain strict exception matching, or explicitly authorize/test unsupported-baseline classification after the #20 comparison-contract decision. Recommendation: explicit authorized classification; preserve recordings and numeric thresholds. No child-feature implementation is shipped until this conflict is resolved. Evidence branch lane/W9-05 afbf4c5 and FRZ-01-evidence.md reproduce it with exact input hashes.

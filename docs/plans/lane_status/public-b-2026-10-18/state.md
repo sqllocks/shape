@@ -18,3 +18,8 @@ Original own remote branches contain unsigned historical commits. Clean `-finish
 Draft PR#34 formats (661cd61d) also open. Draft PRs now open: #29 dbt (63e4e55), #30 Eventhouse (5265080), #31 Iceberg (df426e9), #32 metadata (91ef620), #33 semantic models (3b3852a). All target main; no merges. All five have independent code approval; exact-head CI and common acceptance are pending. Full suites serialize under /tmp/public-b-full-check.lock. All tests through $HOME/bin/reap.py. Last zombie observation30, below hard stop1000. Separate reviewer spawn blocked by platform thread cap; existing independent lane agents cross-review.
 
 After context restart reread attachment and this state; inspect worktrees/ledgers before repeating work. Logs/status live per lane and /tmp. No passing CI or live result claimed.
+
+
+Current environment preparation: source /tmp/public-b-test-env.sh INSIDE acquired /tmp/public-b-full-check.lock; pins uv0.8.17/onboardingRust, process-local umask022, documented DockerproxyIP/CA and /tmp/docs-dbt-packages. Full core/content use lockedArrow25; Fabric demos use separateArrow19 env. Original metadata make diagnostic stopped as invalid prep after4failed4738passed,18existing skips; it is INCOMPLETE, not a common gate pass. Corrected full/check commands remain queued/running.
+
+Required CI repairs underway: #29 exact DBT resource-count transcripts after new sample; #30 DBT/authoring plugin inventory179→180; #31 inventory179→181 plus pure URL-to-path conversion replacing unnecessary urllib.request (wheel scanner unchanged). #34 reviewed followup7c384775 fixes binary logical type/Protobuf5 compatibility. No gates/assertions loosened.

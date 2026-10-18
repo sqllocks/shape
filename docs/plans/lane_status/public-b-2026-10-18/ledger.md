@@ -75,3 +75,11 @@ Sub-agent command ledgers live in their lane records/worktrees; their commands a
 - `PATH=/tmp/w9-10-bin:$PATH PROFILE_DATA_DIR=/tmp/frz-evidence-profile python "$HOME/bin/reap.py" uv run --locked python benchmarks/vs_refengine/profile_1to1/verify.py edge/x_time_only.csv edge/x_time_ampm.csv > /tmp/frz-time-verifier.log 2>&1` — exit 1.
 
 - `PATH=/tmp/w9-10-bin:$PATH PROFILE_DATA_DIR=/tmp/frz-evidence-profile python "$HOME/bin/reap.py" uv run --locked python benchmarks/vs_refengine/profile_1to1/verify.py edge/x_pq_list.parquet edge/x_pq_nested.parquet edge/x_time_only.csv edge/x_time_ampm.csv > /tmp/frz-profile-all-four.log 2>&1` — exit 1.
+
+- `git add docs/plans/lane_status/public-b-2026-10-18 && git commit -s -m "FRZ-01: record exact Nightly failures and baseline contract blockers"` — exit 0.
+
+- `git push origin HEAD` — exit 0.
+
+- `gh issue comment 20 --body-file /tmp/frz-owner-comment.md` — exit 0.
+
+- `gh api repos/sqllocks/shape/issues/20/comments --jq ".[-3:][] | {created_at,user:.user.login,body}"` — exit 0.
