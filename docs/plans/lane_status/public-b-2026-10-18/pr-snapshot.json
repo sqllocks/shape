@@ -176,12 +176,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:49:57Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147911536/job/117735422721",
         "name": "zero-network",
         "startedAt": "2026-10-18T17:28:57Z",
-        "status": "IN_PROGRESS",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -236,12 +236,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:52:09Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147911536/job/117735422922",
         "name": "stream-plugins (ubuntu-latest)",
         "startedAt": "2026-10-18T17:47:52Z",
-        "status": "IN_PROGRESS",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -306,12 +306,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:50:22Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147911536/job/117735422790",
         "name": "pure-wheel",
         "startedAt": "2026-10-18T17:43:37Z",
-        "status": "IN_PROGRESS",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -326,12 +326,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:51:35Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147911536/job/117735422887",
         "name": "build",
         "startedAt": "2026-10-18T17:46:31Z",
-        "status": "IN_PROGRESS",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -367,18 +367,18 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39150888899/job/117744124473",
         "name": "verify",
-        "startedAt": "2026-10-18T17:43:25Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:51:40Z",
+        "status": "IN_PROGRESS",
         "workflowName": "Documentation"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:50:45Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39150888911/job/117744124564",
         "name": "build",
         "startedAt": "2026-10-18T17:46:50Z",
-        "status": "IN_PROGRESS",
+        "status": "COMPLETED",
         "workflowName": "Container"
       },
       {
@@ -420,6 +420,16 @@
         "startedAt": "2026-10-18T17:45:00Z",
         "status": "QUEUED",
         "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-18T17:50:45Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39150888911/job/117745729707",
+        "name": "publish",
+        "startedAt": "2026-10-18T17:50:45Z",
+        "status": "COMPLETED",
+        "workflowName": "Container"
       },
       {
         "__typename": "CheckRun",
@@ -477,8 +487,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39150888883/job/117744464489",
         "name": "test (windows-latest, 3.11)",
-        "startedAt": "2026-10-18T17:45:00Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:50:59Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -497,8 +507,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39150888883/job/117744464412",
         "name": "min-versions",
-        "startedAt": "2026-10-18T17:45:00Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:51:12Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -523,12 +533,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:52:03Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39150888883/job/117744464422",
         "name": "offline-lock",
-        "startedAt": "2026-10-18T17:45:00Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:50:15Z",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -557,8 +567,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39150888883/job/117744464501",
         "name": "plugin-skeletons (windows-latest)",
-        "startedAt": "2026-10-18T17:45:00Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:50:11Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -577,18 +587,18 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39150888883/job/117744464477",
         "name": "stream-plugins (windows-latest)",
-        "startedAt": "2026-10-18T17:45:00Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:54:50Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:54:28Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39150888883/job/117744464465",
         "name": "database-plugins (ubuntu-latest)",
-        "startedAt": "2026-10-18T17:45:00Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:52:11Z",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -613,12 +623,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:54:56Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39150888883/job/117744464425",
         "name": "audit",
-        "startedAt": "2026-10-18T17:45:00Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:52:48Z",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -657,8 +667,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39150888883/job/117744464438",
         "name": "build",
-        "startedAt": "2026-10-18T17:45:00Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:52:39Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -764,8 +774,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149762496/job/117740981954",
         "name": "test (ubuntu-latest, 3.14)",
-        "startedAt": "2026-10-18T17:29:31Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:54:23Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -804,8 +814,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149762496/job/117740982131",
         "name": "test (windows-latest, 3.14)",
-        "startedAt": "2026-10-18T17:29:31Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:49:25Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -830,12 +840,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:54:21Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149762496/job/117740981931",
         "name": "docs-test",
         "startedAt": "2026-10-18T17:43:44Z",
-        "status": "IN_PROGRESS",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -874,8 +884,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149762496/job/117740982077",
         "name": "plugin-skeletons (windows-latest)",
-        "startedAt": "2026-10-18T17:29:31Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:52:38Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -890,12 +900,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:54:46Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149762496/job/117740982014",
         "name": "stream-plugins (windows-latest)",
         "startedAt": "2026-10-18T17:44:45Z",
-        "status": "IN_PROGRESS",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -910,12 +920,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:49:58Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149762496/job/117740981999",
         "name": "database-plugins (windows-latest)",
         "startedAt": "2026-10-18T17:43:39Z",
-        "status": "IN_PROGRESS",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -934,8 +944,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149762496/job/117740982070",
         "name": "audit",
-        "startedAt": "2026-10-18T17:29:31Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:54:51Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -960,12 +970,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:50:09Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149762496/job/117740981909",
         "name": "bench-quick",
         "startedAt": "2026-10-18T17:37:05Z",
-        "status": "IN_PROGRESS",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -1101,8 +1111,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149692188/job/117740949699",
         "name": "test (ubuntu-latest, 3.13)",
-        "startedAt": "2026-10-18T17:29:22Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:50:10Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -1217,12 +1227,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:48:52Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149692188/job/117740949703",
         "name": "plugin-skeletons (windows-latest)",
         "startedAt": "2026-10-18T17:43:21Z",
-        "status": "IN_PROGRESS",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -1340,65 +1350,65 @@
   {
     "issue": 13,
     "pr": 33,
-    "headRefOid": "3b3852a97dc5994684380e0bf1e95db85cf1f3e8",
+    "headRefOid": "5e583f2e0b71798943d947fbb017374ce801d015",
     "statusCheckRollup": [
-      {
-        "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:32:56Z",
-        "conclusion": "FAILURE",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928714/job/117735473874",
-        "name": "verify",
-        "startedAt": "2026-10-18T17:23:12Z",
-        "status": "COMPLETED",
-        "workflowName": "Documentation"
-      },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474371",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824836",
         "name": "lock-check",
-        "startedAt": "2026-10-18T17:04:58Z",
+        "startedAt": "2026-10-18T17:51:11Z",
         "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:11:53Z",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366172/job/117745525023",
+        "name": "verify",
+        "startedAt": "2026-10-18T17:52:05Z",
+        "status": "IN_PROGRESS",
+        "workflowName": "Documentation"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-18T17:54:50Z",
         "conclusion": "SUCCESS",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928637/job/117735473648",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366164/job/117745524865",
         "name": "build",
-        "startedAt": "2026-10-18T17:07:19Z",
+        "startedAt": "2026-10-18T17:50:26Z",
         "status": "COMPLETED",
         "workflowName": "Container"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:09:49Z",
+        "completedAt": "2026-10-18T17:50:09Z",
         "conclusion": "SUCCESS",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928756/job/117735473951",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366255/job/117745525355",
         "name": "signoff",
-        "startedAt": "2026-10-18T17:09:43Z",
+        "startedAt": "2026-10-18T17:50:00Z",
         "status": "COMPLETED",
         "workflowName": "DCO"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:13:10Z",
+        "completedAt": "2026-10-18T17:54:48Z",
         "conclusion": "SUCCESS",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928578/job/117735473727",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366189/job/117745525241",
         "name": "security",
-        "startedAt": "2026-10-18T17:09:16Z",
+        "startedAt": "2026-10-18T17:50:47Z",
         "status": "COMPLETED",
         "workflowName": "Security"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:10:43Z",
+        "completedAt": "2026-10-18T17:52:36Z",
         "conclusion": "SUCCESS",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928598/job/117735473614",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366175/job/117745525081",
         "name": "selftest",
-        "startedAt": "2026-10-18T17:08:56Z",
+        "startedAt": "2026-10-18T17:49:59Z",
         "status": "COMPLETED",
         "workflowName": "action-selftest"
       },
@@ -1406,49 +1416,39 @@
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474263",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824761",
         "name": "test (ubuntu-latest, 3.11)",
-        "startedAt": "2026-10-18T17:13:22Z",
-        "status": "IN_PROGRESS",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:11:53Z",
+        "completedAt": "2026-10-18T17:54:50Z",
         "conclusion": "SKIPPED",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928637/job/117737032495",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366164/job/117746626269",
         "name": "publish",
-        "startedAt": "2026-10-18T17:11:54Z",
+        "startedAt": "2026-10-18T17:54:50Z",
         "status": "COMPLETED",
         "workflowName": "Container"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:32:56Z",
-        "conclusion": "SKIPPED",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928714/job/117741775962",
-        "name": "publish",
-        "startedAt": "2026-10-18T17:32:56Z",
-        "status": "COMPLETED",
-        "workflowName": "Documentation"
-      },
-      {
-        "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474288",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824774",
         "name": "test (ubuntu-latest, 3.12)",
-        "startedAt": "2026-10-18T17:13:53Z",
-        "status": "IN_PROGRESS",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474453",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824751",
         "name": "test (ubuntu-latest, 3.13)",
-        "startedAt": "2026-10-18T17:04:58Z",
+        "startedAt": "2026-10-18T17:51:11Z",
         "status": "QUEUED",
         "workflowName": "CI"
       },
@@ -1456,9 +1456,9 @@
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474425",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824858",
         "name": "test (ubuntu-latest, 3.14)",
-        "startedAt": "2026-10-18T17:04:58Z",
+        "startedAt": "2026-10-18T17:51:11Z",
         "status": "QUEUED",
         "workflowName": "CI"
       },
@@ -1466,89 +1466,89 @@
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474427",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824729",
         "name": "test (macos-latest, 3.11)",
-        "startedAt": "2026-10-18T17:04:58Z",
+        "startedAt": "2026-10-18T17:51:11Z",
         "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:40:46Z",
-        "conclusion": "FAILURE",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474382",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824920",
         "name": "test (macos-latest, 3.14)",
-        "startedAt": "2026-10-18T17:11:43Z",
-        "status": "COMPLETED",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474444",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824962",
         "name": "test (windows-latest, 3.11)",
-        "startedAt": "2026-10-18T17:19:26Z",
-        "status": "IN_PROGRESS",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474370",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824923",
         "name": "test (windows-latest, 3.14)",
-        "startedAt": "2026-10-18T17:12:26Z",
-        "status": "IN_PROGRESS",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:43:19Z",
-        "conclusion": "FAILURE",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474067",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824809",
         "name": "min-versions",
-        "startedAt": "2026-10-18T17:10:11Z",
-        "status": "COMPLETED",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474293",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824672",
         "name": "zero-network",
-        "startedAt": "2026-10-18T17:24:02Z",
-        "status": "IN_PROGRESS",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:43:37Z",
-        "conclusion": "FAILURE",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474280",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824927",
         "name": "docs-test",
-        "startedAt": "2026-10-18T17:31:22Z",
-        "status": "COMPLETED",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:34:00Z",
-        "conclusion": "SUCCESS",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474327",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824859",
         "name": "offline-lock",
-        "startedAt": "2026-10-18T17:32:07Z",
-        "status": "COMPLETED",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474591",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824787",
         "name": "plugin-skeletons (ubuntu-latest)",
-        "startedAt": "2026-10-18T17:04:58Z",
+        "startedAt": "2026-10-18T17:51:11Z",
         "status": "QUEUED",
         "workflowName": "CI"
       },
@@ -1556,99 +1556,99 @@
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474484",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824851",
         "name": "plugin-skeletons (macos-latest)",
-        "startedAt": "2026-10-18T17:04:58Z",
+        "startedAt": "2026-10-18T17:51:11Z",
         "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:36:15Z",
-        "conclusion": "SUCCESS",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474506",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824968",
         "name": "plugin-skeletons (windows-latest)",
-        "startedAt": "2026-10-18T17:29:21Z",
-        "status": "COMPLETED",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474543",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824745",
         "name": "stream-plugins (ubuntu-latest)",
-        "startedAt": "2026-10-18T17:04:58Z",
+        "startedAt": "2026-10-18T17:51:11Z",
         "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:22:51Z",
-        "conclusion": "SUCCESS",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474348",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824846",
         "name": "stream-plugins (windows-latest)",
-        "startedAt": "2026-10-18T17:14:56Z",
-        "status": "COMPLETED",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474489",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824760",
         "name": "database-plugins (ubuntu-latest)",
-        "startedAt": "2026-10-18T17:04:58Z",
+        "startedAt": "2026-10-18T17:51:11Z",
         "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:20:53Z",
-        "conclusion": "SUCCESS",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474354",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824827",
         "name": "database-plugins (windows-latest)",
-        "startedAt": "2026-10-18T17:14:48Z",
-        "status": "COMPLETED",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474429",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824784",
         "name": "rust",
-        "startedAt": "2026-10-18T17:48:20Z",
+        "startedAt": "2026-10-18T17:54:30Z",
         "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:25:21Z",
-        "conclusion": "SUCCESS",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474352",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824832",
         "name": "audit",
-        "startedAt": "2026-10-18T17:22:53Z",
-        "status": "COMPLETED",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474457",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824900",
         "name": "fabric-demo",
-        "startedAt": "2026-10-18T17:41:21Z",
-        "status": "IN_PROGRESS",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474493",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824908",
         "name": "pure-wheel",
-        "startedAt": "2026-10-18T17:04:58Z",
+        "startedAt": "2026-10-18T17:51:11Z",
         "status": "QUEUED",
         "workflowName": "CI"
       },
@@ -1656,29 +1656,29 @@
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474383",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824911",
         "name": "bench-quick",
-        "startedAt": "2026-10-18T17:04:58Z",
+        "startedAt": "2026-10-18T17:51:11Z",
         "status": "QUEUED",
-        "workflowName": "CI"
-      },
-      {
-        "__typename": "CheckRun",
-        "completedAt": "2026-10-18T17:35:05Z",
-        "conclusion": "SUCCESS",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474443",
-        "name": "build",
-        "startedAt": "2026-10-18T17:31:16Z",
-        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
         "completedAt": "0001-01-01T00:00:00Z",
         "conclusion": "",
-        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39147928661/job/117735474471",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824878",
+        "name": "build",
+        "startedAt": "2026-10-18T17:51:11Z",
+        "status": "QUEUED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39151366158/job/117745824891",
         "name": "vscode-extension",
-        "startedAt": "2026-10-18T17:04:58Z",
+        "startedAt": "2026-10-18T17:51:11Z",
         "status": "QUEUED",
         "workflowName": "CI"
       }
@@ -1825,8 +1825,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149555775/job/117740425979",
         "name": "test (ubuntu-latest, 3.11)",
-        "startedAt": "2026-10-18T17:26:59Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:48:53Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -1885,8 +1885,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149555775/job/117740426097",
         "name": "test (ubuntu-latest, 3.14)",
-        "startedAt": "2026-10-18T17:26:59Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:54:58Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -1935,8 +1935,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149555775/job/117740425904",
         "name": "min-versions",
-        "startedAt": "2026-10-18T17:26:59Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:50:29Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -2061,12 +2061,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:52:46Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149555775/job/117740426082",
         "name": "rust",
-        "startedAt": "2026-10-18T17:26:59Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:51:23Z",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -2091,12 +2091,12 @@
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:52:37Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149555775/job/117740425964",
         "name": "pure-wheel",
         "startedAt": "2026-10-18T17:48:11Z",
-        "status": "IN_PROGRESS",
+        "status": "COMPLETED",
         "workflowName": "CI"
       },
       {
@@ -2105,8 +2105,8 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149555775/job/117740425930",
         "name": "bench-quick",
-        "startedAt": "2026-10-18T17:26:59Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:50:24Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
@@ -2115,18 +2115,18 @@
         "conclusion": "",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149555775/job/117740425843",
         "name": "build",
-        "startedAt": "2026-10-18T17:26:59Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:54:47Z",
+        "status": "IN_PROGRESS",
         "workflowName": "CI"
       },
       {
         "__typename": "CheckRun",
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-10-18T17:51:22Z",
+        "conclusion": "SUCCESS",
         "detailsUrl": "https://github.com/sqllocks/shape/actions/runs/39149555775/job/117740425953",
         "name": "vscode-extension",
-        "startedAt": "2026-10-18T17:26:59Z",
-        "status": "QUEUED",
+        "startedAt": "2026-10-18T17:50:36Z",
+        "status": "COMPLETED",
         "workflowName": "CI"
       }
     ]

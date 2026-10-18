@@ -99,3 +99,31 @@ Sub-agent command ledgers live in their lane records/worktrees; their commands a
 ## Recovery cycle 2026-10-18T17:48:54.156502+00:00
 
 Re-read attached prompt and scratchstate: exit0. Root queue/status/git reads: exit0. Parallel own PR snapshots29–34: exit0 each. GitHub connector fetched all4 semantic failedjoblogs: success; diagnosed only nav/schema/transcript omissions. Root two unchanged coverage tests: exit1 (expectedred); additive fix and87 focused tests: exit0. Two exact transcript pages running. W9-05 Owneractions correction, signedcommit3de70e3 and originpush: exit0 each. `git ls-remote origin refs/heads/main`: exit0, unchanged d0e64d5. Detached workers remain alive; no interrupted result counted passed. No gate/tolerance/assertion changes.
+
+- `git add docs/plans/lane_status/public-b-2026-10-18 && git commit -s -m "Public B: save durable validation queues and current PR heads" && git push origin lead/public-b-2026-10-18` — exit 0.
+
+- `gh pr view 33 --json headRefOid,statusCheckRollup` — exit 0.
+
+- `gh api repos/sqllocks/shape/actions/runs/39147928661 --jq "{head_sha,status,conclusion}"` — exit 0.
+
+- `gh api --method POST repos/sqllocks/shape/actions/runs/39147928661/cancel` — exit 0.
+
+- `rm -rf /tmp/w9-05-diagnostic-env && df -h /workspace` — exit 0.
+
+- `/tmp/w9-10-bin/uv cache clean pyspark && df -h /workspace` — exit 0.
+
+- `/tmp/w9-10-bin/uv cache clean --cache-dir /workspace/.onboarding/uv-cache pyspark && df -h /workspace` — exit 0.
+
+- `gh pr view 31 --json headRefOid,statusCheckRollup` — exit 0.
+
+- `git status --short && git log -1 --format="%H %s"` — exit 0.
+
+- `env -u DOCKER_CONTEXT -u DOCKER_HOST docker builder prune --force && df -h /workspace` — exit 102.
+
+- `rm -rf /workspace/shape-w9-05/rust/shape-kernel/target && df -h /workspace` — exit 0.
+
+## Recovery cycle 2026-10-18T17:55:26.875883+00:00
+
+Re-read attached prompt and scratchstate: exit0. Root queue/status/git reads: exit0. Parallel own PR snapshots29–34: exit0 each. GitHub connector fetched all4 semantic failedjoblogs: success; diagnosed only nav/schema/transcript omissions. Root two unchanged coverage tests: exit1 (expectedred); additive fix and87 focused tests: exit0. Two exact transcript pages running. W9-05 Owneractions correction, signedcommit3de70e3 and originpush: exit0 each. `git ls-remote origin refs/heads/main`: exit0, unchanged d0e64d5. Detached workers remain alive; no interrupted result counted passed. No gate/tolerance/assertion changes.
+
+Storage/review cycle: semantic existing nav/schema tests red exit1;87targetedpass exit0; two transcriptpages exit1 (DRIFTpass, CONTRIBUTING stale temporaryexpected); final corrected CONTRIBUTING rerun exit0 (1pass169.92s). Semantic signedcommit5e583f2+originpush exit0 and independent exactheadAPPROVED. Wording exit0; first stable-api invocation exit2 missing --check corrected, --check exit0 no breaking. Own old semantic CIcancel API exit0. Diskdu/df reads exit0, unused parked diagnostic/env cleanup exit0; uv cacheclean pyspark both locations exit0; uv cacheprune exit0. Initial Dockerbuilderprune exit102 due diskfull configmkdir; process-local DOCKER_CONFIG=/tmp/public-b-docker-clean prune exit0 removedunusedcache2.935GB reported/~15GB actualVFS, restored15GBfree. Rootwaitingworker113846 SIGTERM before anytest, statepreserved and relaunched141454 with logged cachecleanup. Agent owned duplicate Icebergrelease/wheel cleanup exit0. No live/test/gate success fabricated. Current6PRsnapshot reads exit0 each, all nofailedcurrentchecks; zombies90.
