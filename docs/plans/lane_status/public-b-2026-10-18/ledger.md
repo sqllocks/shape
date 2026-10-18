@@ -47,3 +47,11 @@ Sub-agent command ledgers live in their lane records/worktrees; their commands a
 - `gh run download 39110102198 -n parity-profile -n parity-generate-1 -D /tmp/public-b-nightly` — exit 1.
 
 - `PATH=/tmp/w9-10-bin:$PATH make bootstrap` — exit 0.
+
+- `git add docs/plans/lane_status/public-b-2026-10-18 && git commit -s -m "Public B: persist recovered lanes and review progress"` — exit 0.
+
+- `git push origin HEAD` — exit 0.
+
+- `gh issue comment 20 --body-file docs/plans/lane_status/public-b2026-nonexistent.md` — exit 1.
+
+- `gh issue comment 20 --body-file /tmp/public-b-20-local.md` — exit 0.
