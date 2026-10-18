@@ -21,3 +21,8 @@ Owner decision needed: retain strict recorded exception equivalence, or explicit
 ## #14: prior lane's decimal boundary question
 
 The preserved journal at origin/lane/W9-13 (1249af9) additionally documents decimal128(10,-1) and decimal128(2,3). These satisfy the issue's literal NUMERIC inequalities but BigQuery rejects negative scale and precision below scale. Options: authorize native 0<=s<=p refusal, authorize a specified widening/rescaling policy, or retain an unimplementable literal mapping. Recommendation: native-boundary refusal naming the column, with unchanged precision/scale for accepted types. No implementation is shipped while its W9-01 dependency remains unmerged.
+
+
+## #20 updated disposition: artifacts retrieved, comparison contract blocked
+
+Artifact access is resolved through the GitHub connector. FRZ-01-evidence.md names all six exact failing workloads, their verifiers and observed/recorded values. Four profile mismatches arise from newly supported nested inputs and capture-date-dependent weekday statistics; two generation workloads reject intentionally replaced synthetic reference labels mandated by Owner904d5d2. Neither a real Shape regression nor an authorized no-rule-change fix was found. Preserve recordings/gates and request an explicit comparison contract for these cases. Options and recommendation are in the evidence file. #20 remains parked and open; no dispatch or merge.

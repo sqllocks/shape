@@ -63,3 +63,15 @@ Sub-agent command ledgers live in their lane records/worktrees; their commands a
 - `gh pr list --state open --json number,headRefName,headRefOid,url,isDraft --jq ".[] | select(.headRefName|test(\"^lane/W9-(08|09|10|11|12|16)(-finish)?$\"))"` — exit 0.
 
 - `gh run list --limit 25 --json databaseId,headBranch,headSha,name,status,conclusion,url --jq ".[] | select(.headBranch|test(\"^lane/W9-(08|09|10|11|12|16)(-finish)?$\"))"` — exit 0.
+
+- `git add docs/plans/lane_status/public-b-2026-10-18 && git commit -s -m "Public B: record draft PRs and independent reviews"` — exit 0.
+
+- `git push origin HEAD` — exit 0.
+
+- `gh api repos/sqllocks/shape/actions/runs/39110102198/artifacts --jq ".artifacts[] | select(.name == \"parity-profile\" or .name == \"parity-generate-1\") | {id,name}"` — exit 0.
+
+- `PATH=/tmp/w9-10-bin:$PATH PROFILE_DATA_DIR=/tmp/frz-evidence-profile python "$HOME/bin/reap.py" uv run --locked python -c "import runpy; m=runpy.run_path(\"benchmarks/vs_refengine/profile_1to1/datasets.py\"); m[\"edge_deviations\"]()"` — exit 0.
+
+- `PATH=/tmp/w9-10-bin:$PATH PROFILE_DATA_DIR=/tmp/frz-evidence-profile python "$HOME/bin/reap.py" uv run --locked python benchmarks/vs_refengine/profile_1to1/verify.py edge/x_time_only.csv edge/x_time_ampm.csv > /tmp/frz-time-verifier.log 2>&1` — exit 1.
+
+- `PATH=/tmp/w9-10-bin:$PATH PROFILE_DATA_DIR=/tmp/frz-evidence-profile python "$HOME/bin/reap.py" uv run --locked python benchmarks/vs_refengine/profile_1to1/verify.py edge/x_pq_list.parquet edge/x_pq_nested.parquet edge/x_time_only.csv edge/x_time_ampm.csv > /tmp/frz-profile-all-four.log 2>&1` — exit 1.
