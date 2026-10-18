@@ -49,3 +49,56 @@ Subsequent commands use /tmp/public-a-run.py and append per-command records.
 - 2026-10-18T16:27:16.607582+00:00 | `du -sh /workspace/shape/.venv /root/.cache/uv` | exit 1
 
 - 2026-10-18T16:27:29.772470+00:00 | `ps -eo pid,ppid,stat,etime,comm` | exit 0
+
+- 2026-10-18T16:27:43.903998+00:00 | `git add docs/plans/lane_status/public-a-2026-10-18` | exit 0
+
+- 2026-10-18T16:27:44.172784+00:00 | `git commit -s -m 'chore: record recovered lane work and execution state'` | exit 0
+
+- 2026-10-18T16:27:45.494489+00:00 | `git push origin HEAD` | exit 0
+
+- 2026-10-18T16:28:05.772019+00:00 | `/tmp/public-a-uv/bin/uv run --locked --no-sync python -c 'import shape, shape_databases, pytest; print("core, database plugin, pytest import successfully")'` | exit 1
+
+- 2026-10-18T16:28:25.009471+00:00 | `cat docs/API_STABILITY.md docs/NOT_BUILDING.md GOVERNANCE.md` | exit 0
+
+- 2026-10-18T16:28:50.187689+00:00 | `sed -n 1,300p plugins/shape-databases/src/shape_databases/_sql.py` | exit 0
+
+- 2026-10-18T16:28:50.461377+00:00 | `sed -n 1,260p plugins/shape-databases/src/shape_databases/duckdb_sink.py` | exit 0
+
+- 2026-10-18T16:29:07.281432+00:00 | `python3 -c 'from pathlib import Path; import subprocess; z=sum(s.startswith("Z") for s in subprocess.check_output(["ps","-eo","stat"],text=True).splitlines()); print("zombies before baseline:",z); assert z<=1000'` | exit 0
+
+- 2026-10-18T16:29:12.077426+00:00 | `sed -n 1,200p Makefile` | exit 0
+
+- 2026-10-18T16:29:26.412899+00:00 | `env PYTHONPATH=src:plugins/shape-databases/src python3 /home/agent/bin/reap.py /tmp/public-a-uv/bin/uv run --locked --no-sync pytest -q plugins/shape-databases/tests/test_names_and_types.py` | exit 0
+
+- 2026-10-18T16:29:27.124744+00:00 | `python3 -c 'import subprocess; z=sum(s.startswith("Z") for s in subprocess.check_output(["ps","-eo","stat"],text=True).splitlines()); print("zombies after baseline:",z); assert z<=1000'` | exit 0
+
+- 2026-10-18T16:29:59.325368+00:00 | `git status --short` | exit 0
+
+- 2026-10-18T16:29:59.570021+00:00 | `ps -eo pid,ppid,stat,etime,comm` | exit 0
+
+## Initial setup commands (expanded)
+
+| Command | Exit | Result |
+|---|---:|---|
+| `pwd` | 0 | `/workspace` |
+| `rg --files -g AGENTS.md -g CLAUDE.md -g CONTRIBUTING.md -g GOVERNANCE.md -g network-policy.json /workspace /etc/codex` | 0 | Located public checkout instructions and policy; no other checkout files read. |
+| `cat /etc/codex/network-policy.json /workspace/shape/AGENTS.md /workspace/shape/CLAUDE.md` | 0 | Runtime policy and public instructions read. |
+| `git ls-remote origin refs/heads/main` | 0 | Credential gate passed, main d0e64d5. |
+| `cat CONTRIBUTING.md GOVERNANCE.md docs/NOT_BUILDING.md docs/API_STABILITY.md docs/CLI_STABILITY.md docs/plans/lane_status/W-cli-polish-1.md` | 0 | Output truncated; subsequent smaller reads cover policies. |
+| `rg -n '^##? ' docs/plans/COMPLETION_PLAN.md` | 0 | Located requested sections. |
+| `git status --short --branch` | 0 | Clean initial branch work. |
+| `sed -n '36,103p;567,648p;2672,2746p' docs/plans/COMPLETION_PLAN.md` | 0 | Requested plan sections read. |
+| `gh issue view 4 --repo sqllocks/shape --json number,title,body,state` | 0 | Issue specification read. |
+| `gh api user --jq .login` | 0 | Authenticated identity confirmed. |
+| `git fetch origin` | 0 | main updated to d0e64d5. |
+| `git switch -c lead/public-a-2026-10-18 origin/main` | 0 | Isolated session scratch branch created. |
+| `cat docs/CLI_STABILITY.md` | 0 | Complete stability policy read. |
+| `sed -n '1,85p' docs/plans/lane_status/W-cli-polish-1.md` | 0 | Lane model read. |
+| `mkdir -p "$HOME/bin" docs/plans/lane_status/public-a-2026-10-18` | 0 | Wrapper and state destinations prepared. |
+| Python setup of reap.py, ledger.md, state.md, questions.md | 0 | Exact requested subreaper installed outside repository. |
+| `git add docs/plans/lane_status/public-a-2026-10-18` | 0 | Initial state staged. |
+| `git commit -s -m 'chore: initialize public A run state'` | 0 | bc94835. |
+| `git push origin HEAD` | 0 | Scratch published. |
+| Python setup of `/tmp/public-a-run.py` | 0 | Per-command exit ledger installed outside repository. |
+
+Tools used before shell access: download_file initially failed because workspace was starting; wait_for_environment completed ready; subsequent download_file succeeded. Runtime status/tool-discovery/skill-read calls succeeded. The attachment was read with `cat`, exit 0. These are setup observations, not test results.
