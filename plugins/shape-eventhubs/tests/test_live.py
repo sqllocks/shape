@@ -3,7 +3,7 @@
     EVENTHUBS_CONNECTION_STRING='Endpoint=sb://...' EVENTHUBS_HUB=<hub> \\
     [EVENTHUBS_GROUP=<consumer group>] pytest -m live plugins/shape-eventhubs/tests
 
-A missing variable fails the test with the variable's name (nothing is silently skipped).
+A missing variable skips the live test with the missing setting named.
 """
 
 import os
@@ -19,7 +19,8 @@ pytestmark = pytest.mark.live
 
 def need(name, default=None):
     value = os.environ.get(name, default)
-    assert value, f"{name} is not set (live tests need it)"
+    if not value:
+        pytest.skip(f"missing live setting: {name}")
     return value
 
 
@@ -44,3 +45,14 @@ def test_at_least_once():
 
 def test_checkpoint(tmp_path):
     contract.check_checkpoint(new_harness, directory=tmp_path)
+
+
+def test_keyed_metadata_round_trip_live():
+    h = new_harness()
+    batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 3)
+    emitter = h.make()
+    emitter.emit(
+        h.uri, [batch], key="_shape_table", partition_key="_shape_table", headers=["rehearsal=yes"]
+    )
+    emitter.close()
+    assert [key for key, _ in h.delivered()] == ["order_line"] * 3

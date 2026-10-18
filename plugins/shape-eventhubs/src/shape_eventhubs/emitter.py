@@ -2,9 +2,10 @@
 
 ``eventhubs://<namespace>/<hub>`` sends each event as one Event Hubs message: the body is the
 event's JSON (flat, or the CloudEvents envelope), the **idempotency key** ``<table>/<seq>`` is the
-message property ``shape_key`` (with ``shape_table`` and ``shape_seq``), and the content type is
+default message property ``shape_key`` (with ``shape_table`` and ``shape_seq``). The content type is
 ``application/json`` (``application/cloudevents+json`` for the envelope). Event Hubs does not
-deduplicate: a consumer keeps the first message of each ``shape_key``.
+deduplicate: a consumer keeps the first message of each replay key. With a column key,
+``shape_key`` carries that selected key and ``shape-key`` retains the replay key.
 
 Delivery is at-least-once. ``emit`` returns after the service has accepted every batch it sent
 (``send_batch`` returns on the acknowledgement); a failed send raises ``ConnectionError``, which
@@ -41,7 +42,8 @@ from urllib.parse import unquote, urlsplit
 import pyarrow as pa
 
 from shape.errors import ShapeError
-from shape.streaming.emit.formats import ENVELOPES, EncodedEvent, encode_events
+from shape.streaming.emit.formats import ENVELOPES, FIELD_DEAD_REASON, EncodedEvent, encode_events
+from shape.streaming.emit.metadata import metadata
 
 from .source import ENV_CONNECTION_STRING
 
@@ -60,11 +62,13 @@ class HubTarget(NamedTuple):
 def parse_uri(uri: str) -> HubTarget:
     """The namespace and event hub of an ``eventhubs://`` URI."""
     parts = urlsplit(uri)
+    if parts.username is not None or parts.password is not None:
+        raise ShapeError("credentials must be supplied outside the URI")
     if parts.scheme != "eventhubs" or not parts.netloc:
-        raise ShapeError(f"not an eventhubs URI: {uri!r} (eventhubs://<namespace>/<hub>)")
+        raise ShapeError("not an eventhubs URI: the supplied URI (eventhubs://<namespace>/<hub>)")
     hub = unquote(parts.path.lstrip("/"))
     if not hub or "/" in hub:
-        raise ShapeError(f"the eventhubs URI needs one event hub name: {uri!r}")
+        raise ShapeError("the eventhubs URI needs one event hub name: the supplied URI")
     return HubTarget(parts.netloc, hub)
 
 
@@ -89,6 +93,8 @@ def _sdk_producer(target: HubTarget, options: dict[str, Any], env: str) -> Any:
                 "azure-identity for Microsoft Entra sign-in"
             ) from exc
         credential = DefaultAzureCredential()
+    if target.hub is None:
+        raise ShapeError("Microsoft Entra sign-in needs an event hub name")
     return EventHubProducerClient(
         fully_qualified_namespace=target.namespace,
         eventhub_name=target.hub,
@@ -101,7 +107,9 @@ def _is_busy(exc: BaseException) -> bool:
     return "server-busy" in text or "serverbusy" in text or "throttl" in text
 
 
-def _groups(events: list[EncodedEvent], by_table: bool) -> Iterator[tuple[str | None, list]]:
+def _groups(
+    events: list[EncodedEvent], by_table: bool
+) -> Iterator[tuple[str | None, list[EncodedEvent]]]:
     """Consecutive events of one table (or all of them), each group sent with one partition key."""
     if not by_table:
         yield None, events
@@ -159,25 +167,49 @@ class EventHubsEmitter:
         partition_key: str = "table",
         busy_retries: int = 6,
         synthetic: bool = False,
+        key: str | None = None,
+        headers: dict[str, Any] | list[str] | None = None,
+        timestamp: str = "broker",
         **options: Any,
     ) -> int:
         """Send every batch; return the number of events, after the service accepted them."""
-        connect = {k: options.pop(k) for k in ("connection_string", "credential") if k in options}
+        connect: dict[str, Any] = {
+            k: options.pop(k) for k in ("connection_string", "credential") if k in options
+        }
         if options:
             raise ShapeError(f"unknown {self.name} emitter options: {sorted(options)}")
         if envelope not in ENVELOPES:
             raise ShapeError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
-        if partition_key not in ("table", "none"):
-            raise ShapeError("partition_key must be 'table' or 'none'")
         target = self.parse(uri)
         client = self._client(target, connect)
         content_type = "application/json" if envelope == "flat" else "application/cloudevents+json"
         sent = 0
+        saw_batch = False
         for batch in batches:
+            saw_batch = True
+            meta = metadata(
+                batch, key=key, headers=headers, timestamp=timestamp, partition_key=partition_key
+            )
             events = encode_events(batch, envelope)
-            for key, group in _groups(events, partition_key == "table"):
-                self._send_group(client, key, group, content_type, busy_retries, synthetic)
+            by_event = {e.key: m for e, m in zip(events, meta, strict=True)}
+            if FIELD_DEAD_REASON in batch.schema.names:
+                for event, reason in zip(
+                    events, batch.column(FIELD_DEAD_REASON).to_pylist(), strict=True
+                ):
+                    by_event[event.key][1].append(
+                        ("shape-dead-letter-reason", str(reason).encode())
+                    )
+            if partition_key not in ("table", "none"):
+                groups = [(m[3], [e]) for e, m in zip(events, meta, strict=True)]
+            else:
+                groups = list(_groups(events, partition_key == "table"))
+            for route, group in groups:
+                self._send_group(
+                    client, route, group, content_type, busy_retries, synthetic, by_event
+                )
             sent += len(events)
+        if not saw_batch and partition_key not in ("table", "none"):
+            raise ShapeError("partition_key column cannot be validated without a batch")
         return sent
 
     # ---------------------------------------------------------------- sending
@@ -189,6 +221,7 @@ class EventHubsEmitter:
         content_type: str,
         busy: int,
         synthetic: bool = False,
+        message_metadata: dict[str, Any] | None = None,
     ) -> None:
         from azure.eventhub import EventData
 
@@ -199,6 +232,16 @@ class EventHubsEmitter:
             data = EventData(ev.body)
             data.content_type = content_type
             data.properties = {PROP_KEY: ev.key, PROP_TABLE: ev.table, PROP_SEQ: ev.seq}
+            if message_metadata is not None:
+                message_key, user_headers, when, _ = message_metadata[ev.key]
+                data.properties.update(dict(user_headers))
+                if message_key is not None:
+                    data.properties["shape-key"] = ev.key
+                    data.properties[PROP_KEY] = message_key
+                if when is not None:
+                    properties = data.raw_amqp_message.properties
+                    assert properties is not None
+                    properties.creation_time = when
             if synthetic:
                 data.properties[PROP_SYNTHETIC] = True
             return data

@@ -4,7 +4,7 @@
     [KAFKA_CONFIG='{"security.protocol": "SASL_SSL", ...}'] \\
     pytest -m live plugins/shape-kafka/tests/test_live.py
 
-A missing variable fails the test with the variable's name (nothing is silently skipped). Events
+A missing variable skips the live test with the missing setting named. Events
 are read back from the topic's end as it was before the test.
 """
 
@@ -25,7 +25,8 @@ pytestmark = pytest.mark.live
 
 def need(name):
     value = os.environ.get(name)
-    assert value, f"{name} is not set (live tests need it)"
+    if not value:
+        pytest.skip(f"missing live setting: {name}")
     return value
 
 
@@ -55,5 +56,39 @@ def test_a_run_is_delivered_with_the_idempotency_key():
                 assert m.error() is None, m.error()
                 seen[m.key().decode()] = json.loads(m.value())[FIELD_SEQ]
         assert seen == {f"order_line/{i}": i for i in range(1000)}
+    finally:
+        consumer.close()
+
+
+def test_keyed_metadata_round_trip_live():
+    servers, topic = need("KAFKA_SERVERS"), need("KAFKA_TOPIC")
+    extra = json.loads(os.environ.get("KAFKA_CONFIG", "{}"))
+    consumer = Consumer(
+        {**extra, "bootstrap.servers": servers, "group.id": f"shape-keyed-{uuid.uuid4().hex}"}
+    )
+    try:
+        start = consumer.get_watermark_offsets(TopicPartition(topic, 0), timeout=30)[1]
+        batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 3)
+        emitter = KafkaEmitter()
+        emitter.emit(
+            f"kafka://{servers}/{topic}",
+            [batch],
+            key="_shape_table",
+            partition=0,
+            headers=["rehearsal=yes"],
+            config=extra,
+        )
+        emitter.close()
+        consumer.assign([TopicPartition(topic, 0, start)])
+        messages = []
+        deadline = time.monotonic() + 60
+        while len(messages) < 3 and time.monotonic() < deadline:
+            messages.extend(consumer.consume(3 - len(messages), timeout=2))
+        assert len(messages) == 3
+        assert [m.key() for m in messages] == [b"order_line"] * 3
+        assert all(("rehearsal", b"yes") in m.headers() for m in messages)
+        assert [dict(m.headers())["shape-key"] for m in messages] == [
+            f"order_line/{i}".encode() for i in range(3)
+        ]
     finally:
         consumer.close()
