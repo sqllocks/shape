@@ -717,3 +717,12 @@ requirements:
   text: "Security claims distinguish technical capability from external certification/accreditation."
   verify: [specification-review]
   status: registered-not-independently-certified
+
+- id: SHAPE-DBT-001
+  title: File-based dbt semantic resources and singular rules
+  level: L1
+  milestone: W9-10
+  priority: MUST
+  text: dbt imports preserve semantic resources and singular metadata; generated singular rules treat contract values as data and retain exact contract round trips; impact reports carry format and integer version.
+  verify: [conformance, plugins/shape-dbt/tests/test_w9_10.py]
+  owner: integrations
