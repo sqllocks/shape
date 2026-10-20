@@ -726,3 +726,12 @@ requirements:
   text: dbt imports preserve semantic resources and singular metadata; generated singular rules treat contract values as data and retain exact contract round trips; impact reports carry format and integer version.
   verify: [conformance, plugins/shape-dbt/tests/test_w9_10.py]
   owner: integrations
+
+- id: SHAPE-STREAM-METADATA-001
+  title: Broker message metadata
+  level: L1
+  milestone: W9-08
+  priority: MUST
+  text: Kafka and Event Hubs support column keys and headers, preserve replay identity, refuse reserved header names and unknown metadata columns before sending, and optionally decode broker metadata outside default drift comparisons.
+  verify: [conformance]
+  owner: streaming

@@ -44,3 +44,14 @@ def test_at_least_once():
 
 def test_checkpoint(tmp_path):
     contract.check_checkpoint(new_harness, directory=tmp_path)
+
+
+def test_keyed_metadata_round_trip_live():
+    h = new_harness()
+    batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 3)
+    emitter = h.make()
+    emitter.emit(
+        h.uri, [batch], key="_shape_table", partition_key="_shape_table", headers=["rehearsal=yes"]
+    )
+    emitter.close()
+    assert [key for key, _ in h.delivered()] == ["order_line"] * 3

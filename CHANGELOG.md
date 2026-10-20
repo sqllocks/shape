@@ -2062,3 +2062,9 @@ Converting a full capture to the safe form now gives a different content ID when
   in DuckDB, PostgreSQL, Snowflake and BigQuery SQL.
 - Report metric and exposure impact for failing or drifted columns, and optionally
   emit semantic models beside generated dbt seeds.
+### W9-08: broker message metadata
+
+- Kafka and Event Hubs support column/composite keys, user headers, partition
+  controls and event-time message timestamps; replay keys remain available.
+- Stream sources expose message metadata on request and drift ignores it by
+  default. The CLI exposes both write and read metadata options.
