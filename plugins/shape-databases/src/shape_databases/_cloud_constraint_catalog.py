@@ -10,6 +10,7 @@ from shape.generation.sql_constraints import render_expression
 from shape.generation.write_constraints import literal
 
 from . import _sql
+from ._constraint_catalog import _expression as _outer_expression
 from ._constraint_catalog import _tokens
 
 if TYPE_CHECKING:
@@ -81,16 +82,16 @@ def _clauses(ddl: str) -> list[list[str]]:
 
 def _expression(sql: str, columns: Sequence[str]) -> tuple[str, ...]:
     result: list[str] = []
-    for token in _tokens(sql):
-        if token in ("(", ")"):
-            continue
+    keywords = {"TRUE", "FALSE", "NULL", "AND", "OR", "NOT", "IS", "IN", "CAST", "AS"}
+    for token in _outer_expression(sql):
         name = _name(token)
-        if (
-            token.startswith(('"', "`")) or token[:1].isalpha() or token.startswith("_")
-        ) and name in columns:
+        quoted = token.startswith(('"', "`"))
+        if name in columns and (
+            quoted or (token.upper() not in keywords and token[:1].isidentifier())
+        ):
             result.append("column:" + name)
         else:
-            result.append(token)
+            result.append(token.upper() if token.upper() in keywords else token)
     return tuple(result)
 
 

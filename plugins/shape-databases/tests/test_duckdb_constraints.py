@@ -153,3 +153,16 @@ def test_duckdb_unique_failure_names_generated_constraint_and_prior_commits(tmp_
     with pytest.raises(WriteError, match="uq_t_0") as info:
         DuckDbSink().write(uri, "t", [first, second], unique=[["code"]], commit_rows=1)
     assert info.value.rows_committed == 1
+
+
+@pytest.mark.parametrize("actual,wanted", [([], ["id"]), (["id", "code"], ["code", "id"])])
+def test_existing_duckdb_requested_primary_key_must_match_order(tmp_path, actual, wanted):
+    uri = "duckdb:///" + (tmp_path / "pk.duckdb").as_posix()
+    sink = DuckDbSink()
+    first = pa.RecordBatch.from_pydict({"id": [1], "code": [2]})
+    sink.write(uri, "t", [first], primary_key=actual, unique=[["id"]])
+    second = pa.RecordBatch.from_pydict({"id": [3], "code": [4]})
+    with pytest.raises(ShapeError, match="PRIMARY KEY"):
+        sink.write(uri, "t", [second], write_mode="append", primary_key=wanted, unique=[["id"]])
+    with duckdb.connect(str(tmp_path / "pk.duckdb")) as con:
+        assert con.execute("SELECT * FROM t").fetchall() == [(1, 2)]

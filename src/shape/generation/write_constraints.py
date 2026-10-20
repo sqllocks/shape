@@ -40,7 +40,10 @@ class _PreparedTransaction:
                     try:
                         self.connection.commit()
                     except BaseException:
-                        self.connection.rollback()
+                        try:
+                            self.connection.rollback()
+                        except Exception:  # noqa: S110  # nosec B110
+                            pass  # preserve the original commit failure
                         raise
                 else:
                     try:

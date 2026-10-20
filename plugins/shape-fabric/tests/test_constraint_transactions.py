@@ -68,3 +68,30 @@ def test_owned_truncate_transaction(monkeypatch, fail, mode):
     with pytest.raises(ShapeError, match="fk_child_parent"):
         write_targets(engine(20), [uri], TargetOptions(write_mode=mode, commit_rows=1))
     assert {name: list(server.rows("dbo", name)) for name in before} == current
+
+
+def test_mixed_existing_new_preflights_external_references_before_mutation():
+    server = FakeSqlServer()
+    sink = SqlServerSink(connect=server.connect)
+    uri = "mssql://db.example/tx"
+    data = pa.RecordBatch.from_pydict({"id": [2]})
+    for name in ("a", "b"):
+        sink.write(uri, name, [data], primary_key=["id"])
+    sink.write(
+        uri,
+        "external",
+        [data],
+        foreign_keys=[
+            {"name": "fk_external_ref", "columns": ["id"], "ref_table": "b", "ref_columns": ["id"]}
+        ],
+    )
+    options = {"schema": data.schema, "write_mode": "truncate"}
+    count = len(server.statements)
+    with pytest.raises(ShapeError, match="fk_external_ref"):
+        sink.prepare_constraints(uri, {"a": options, "b": options, "missing": options})
+    assert server.rows("dbo", "a") == server.rows("dbo", "b") == [(2,)]
+    assert not [
+        sql
+        for sql in server.statements[count:]
+        if sql.startswith(("TRUNCATE", "DELETE", "DROP", "CREATE"))
+    ]

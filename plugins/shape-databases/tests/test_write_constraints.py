@@ -172,3 +172,21 @@ def test_caller_cannot_spoof_prepared_constraints(flavour):
     with pytest.raises(ShapeError, match="internal"):
         sink.write(uri, "child", [batch()], prepared_constraints=True)
     assert server.events == []
+
+
+def test_mixed_existing_and_new_rerun_refuses_before_any_table_mutation(flavour):
+    sink, uri, server = flavour
+    for name, value in [("a", 1), ("b", 2)]:
+        server.seed(name, [("id", "bigint", False)], [(value,)], primary_key=["id"])
+    server.seed(
+        "external", [("b_id", "bigint", False)], [(2,)], foreign_keys=[("b", ["id"], ["b_id"])]
+    )
+    options = {"schema": pa.schema([("id", pa.int64())]), "write_mode": "truncate"}
+    with pytest.raises(ShapeError, match="fk_external_0"):
+        sink.prepare_constraints(uri, {"a": options, "b": options, "missing": options})
+    assert server.rows("a") == [(1,)] and server.rows("b") == [(2,)]
+    assert not [
+        sql
+        for sql in server.statements()
+        if sql.startswith(("TRUNCATE", "DELETE", "DROP", "CREATE"))
+    ]

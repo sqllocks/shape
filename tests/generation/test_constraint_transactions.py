@@ -106,3 +106,97 @@ def test_later_prepare_failure_aborts_earlier_private_transaction(monkeypatch):
             TargetOptions(),
         )
     assert conn.events == ["rollback", "close"]
+
+
+def test_commit_failure_aborts_remaining_retained_destinations(monkeypatch):
+    from shape.generation.write_constraints import _PreparedTransaction
+
+    first = Connection()
+    second = Connection()
+    failure = RuntimeError("planted commit failure")
+
+    def fail_commit():
+        first.events.append("commit")
+        raise failure
+
+    first.commit = fail_commit
+
+    class Sink:
+        def prepare_constraints(self, uri, plans):
+            conn = first if uri.endswith("first") else second
+            return _PreparedTransaction(conn, owns_connection=True)
+
+        def write(self, uri, table, batches, **options):
+            return sum(batch.num_rows for batch in batches)
+
+    monkeypatch.setattr("shape.io.targets.sink_for_target", lambda uri: ("postgres", Sink()))
+    with pytest.raises(RuntimeError, match="planted commit failure") as error:
+        write_targets(
+            engine(),
+            ["postgresql://localhost/first", "postgresql://localhost/second"],
+            TargetOptions(),
+            max_workers=1,
+        )
+    assert error.value is failure
+    assert first.events == ["commit", "rollback", "close"]
+    assert second.events == ["rollback", "close"]
+
+
+def test_commit_failure_survives_rollback_cleanup_failure():
+    from shape.generation.write_constraints import _PreparedTransaction
+
+    conn = Connection()
+    original = RuntimeError("original commit failure")
+
+    def fail_commit():
+        conn.events.append("commit")
+        raise original
+
+    def fail_rollback():
+        conn.events.append("rollback")
+        raise RuntimeError("cleanup rollback failure")
+
+    conn.commit = fail_commit
+    conn.rollback = fail_rollback
+    transaction = _PreparedTransaction(conn, owns_connection=True)
+    with pytest.raises(RuntimeError, match="original commit failure") as error:
+        transaction.finish(True)
+    assert error.value is original
+    assert conn.events == ["commit", "rollback", "close"]
+
+
+def test_retained_destination_fanout_keeps_the_same_table_in_flight(monkeypatch):
+    from shape.generation.write_constraints import _PreparedTransaction
+
+    guard = threading.Lock()
+    in_flight = {}
+
+    class Sink:
+        def prepare_constraints(self, uri, plans):
+            return _PreparedTransaction(Connection(), owns_connection=True)
+
+        def write(self, uri, table, batches, **options):
+            with guard:
+                assert set(in_flight) <= {table}, "retained destinations must share table order"
+                in_flight[table] = in_flight.get(table, 0) + 1
+            try:
+                total = 0
+                for batch in batches:
+                    time.sleep(0.001)
+                    total += batch.num_rows
+                return total
+            finally:
+                with guard:
+                    in_flight[table] -= 1
+                    if not in_flight[table]:
+                        del in_flight[table]
+
+    monkeypatch.setattr("shape.io.targets.sink_for_target", lambda uri: ("postgres", Sink()))
+    result = write_targets(
+        engine(),
+        ["postgresql://localhost/first", "postgresql://localhost/second"],
+        TargetOptions(),
+        max_workers=3,
+    )
+    assert all(rows == {"one": 6, "two": 6, "three": 6} for rows in result.values())
+    assert not in_flight

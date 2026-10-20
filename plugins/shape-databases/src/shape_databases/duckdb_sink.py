@@ -593,6 +593,8 @@ class DuckDbSink:
             "WHERE database_name = current_database() AND schema_name = ? AND table_name = ?",
             [schema_name, table],
         ).fetchall()
+        if key and not any(row[0] == "PRIMARY KEY" and row[1] == list(key) for row in rows):
+            raise ShapeError(f"existing table {table!r}: PRIMARY KEY differs")
         for reference in options.get("foreign_keys", []):
             wanted = (
                 "FOREIGN KEY",

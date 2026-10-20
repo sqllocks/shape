@@ -364,6 +364,26 @@ def prepare_constraint_tables(
                         for clause in compiled.foreign_keys:
                             db.ddl(f"ALTER TABLE {_tsql.qualified(sname, table)} ADD {clause}")
                 return _PreparedTransaction(db.get(), owns_connection=db._injected is None)
+        for table, sname, mode, schema, options, compiled in plans:
+            if not db.table_exists(sname, table):
+                continue
+            if mode == "create":
+                raise ShapeError(f"table {sname}.{table} already exists")
+            if mode != "replace":
+                verify_constraints(db, sname, table, {**options, "schema": schema}, compiled)
+            if not db.warehouse and mode in {"truncate", "replace"}:
+                incoming = db.execute(
+                    "SELECT fk.name AS coordinated_constraint_name, "
+                    "OBJECT_SCHEMA_NAME(fk.parent_object_id), "
+                    "OBJECT_NAME(fk.parent_object_id) FROM sys.foreign_keys fk "
+                    "WHERE fk.referenced_object_id = OBJECT_ID(?)",
+                    _tsql.qualified(sname, table),
+                ).fetchone()
+                if incoming is not None:
+                    raise ShapeError(
+                        f"cannot {mode} table {table!r}: foreign key {incoming[0]!r} "
+                        "must be preserved before any target mutation"
+                    )
         foreign: list[tuple[str, str, ConstraintDDL]] = []
         for table, sname, mode, schema, options, compiled in plans:
             exists = db.table_exists(sname, table)
@@ -683,7 +703,7 @@ class SqlDatabaseWriter:
                 primary_key=primary_key,
                 constraint_ddl=compiled,
                 prepared_constraints=prepared_constraints,
-                declarations={**declarations, "schema": use_schema},
+                declarations={**declarations, "schema": use_schema, "primary_key": primary_key},
             )
             # a replaced table is new, like one this call created: nothing to disable; a
             # truncate's TRUNCATE (or DELETE) commits with the rows, so NOCHECK does too (#429)

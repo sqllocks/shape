@@ -775,7 +775,7 @@ def write_targets(
     written: dict[str, dict[str, int]] = {redact(u): {} for u in uris}
     lock = threading.Lock()
 
-    def one(name: str) -> None:
+    def load_one(name: str) -> None:
         schema: pa.Schema | None = None
         source: Iterator[pa.RecordBatch]
         if name in sources:
@@ -833,6 +833,18 @@ def write_targets(
             for (uri, _, _), rows in zip(sinks, counts, strict=True):
                 written[redact(uri)][name] = rows
 
+    transaction_run_lock = threading.Lock()
+
+    def one(name: str) -> None:
+        if transactions:
+            # All retained destinations must process the same table together: allowing
+            # different tables to acquire different destination locks can deadlock the
+            # bounded fan-out queues. Destinations for this table still run in parallel.
+            with transaction_run_lock:
+                load_one(name)
+        else:
+            load_one(name)
+
     try:
         if preparing:
             for level in engine.levels:
@@ -844,6 +856,11 @@ def write_targets(
             transaction.finish(False)
         raise
     else:
-        for transaction in transactions.values():
-            transaction.finish(True)
+        try:
+            for transaction in transactions.values():
+                transaction.finish(True)
+        except BaseException:
+            for transaction in transactions.values():
+                transaction.finish(False)
+            raise
     return written

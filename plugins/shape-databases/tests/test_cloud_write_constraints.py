@@ -143,3 +143,18 @@ def test_cloud_matching_metadata_allows_append_and_changed_constraint_refuses(cl
     with pytest.raises(ShapeError, match=expected):
         sink.write(uri, "child", [batch(3)], write_mode="truncate", **options)
     assert server.rows("child", schema_name) == [(1, 3), (2, 3)]
+
+
+@pytest.mark.parametrize(
+    "expected,actual,columns",
+    [
+        ("`a` = TRUE", "`a` = `TRUE`", ["a", "TRUE"]),
+        ("(`a` = `b`) AND (`c` = `d`)", "(`a` = (`b` AND `c`)) = `d`", ["a", "b", "c", "d"]),
+    ],
+)
+def test_catalog_expression_comparison_preserves_literal_identity_and_grouping(
+    expected, actual, columns
+):
+    from shape_databases._cloud_constraint_catalog import _expression
+
+    assert _expression(expected, columns) != _expression(actual, columns)

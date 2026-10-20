@@ -688,6 +688,26 @@ class DatabaseSink:
             if transaction is not None:
                 retained = True
                 return transaction
+            # Check every existing destination before the first DDL statement. In
+            # particular, MySQL TRUNCATE/CREATE can commit earlier mutations even
+            # when a later table would refuse its incoming reference.
+            for plan, schema, first in plans:
+                if not self._exists(conn, plan):
+                    continue
+                if plan.mode == "create":
+                    raise ShapeError(f"table {plan.table!r} already exists")
+                if plan.mode != "replace" and any(
+                    plan.options.get(kind)
+                    for kind in ("foreign_keys", "unique", "checks", "defaults")
+                ):
+                    self._verify_existing_constraints(conn, plan, schema, first)
+                if plan.mode in {"truncate", "replace"}:
+                    reference = self._incoming_constraint(conn, plan)
+                    if reference is not None:
+                        raise ShapeError(
+                            f"cannot {plan.mode} table {plan.table!r}: foreign key "
+                            f"{reference!r} must be preserved before any target mutation"
+                        )
             created = set()
             for plan, schema, first in plans:
                 if self._prepare_table(conn, plan, schema, first, defer_foreign_keys=True):
