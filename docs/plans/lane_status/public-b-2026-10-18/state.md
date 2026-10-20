@@ -15,13 +15,13 @@ Current main:35addfc4c310b85a62cbe7f315e1d50fb8e426f8. Main post-merge CI3948303
 | Issue | Branch / exact head | PR | Stage |
 |---|---|---|---|
 | #9 W9-08 | lane/W9-08-finish / 91ef6200266bf962246d1553356b26a442be2303 | https://github.com/sqllocks/shape/pull/32 | MERGED35addfc4; all triggered source-head AND post-merge main workflows green |
-| #10 W9-09 | lane/W9-09 / 0b313bba0a74332fa7c5c955fceca4bdb92ae0d4 | https://github.com/sqllocks/shape/pull/34 | ready, refreshed, APPROVED; fresh CI pending |
+| #10 W9-09 | lane/W9-09 / 0178fa0c93ba0bc9133a7a6e63067a97f9add115 | https://github.com/sqllocks/shape/pull/34 | ready, refreshed, APPROVED; fresh CI pending |
 | #11 W9-10 | lane/W9-10-finish / 00d648ce65c9f58ae003168f38a1a8dd46db78aa | https://github.com/sqllocks/shape/pull/29 | ready, refreshed, APPROVED; fresh CI pending |
 | #12 W9-11 | lane/W9-11-finish / cad8cfd96a18453cb426de5b1d22e1cff9f9147a | https://github.com/sqllocks/shape/pull/30 | ready, refreshed, APPROVED; fresh CI pending |
 | #13 W9-12 | lane/W9-12-finish / 1535427ec055eb5e197c91a86e10df17347a3be3 | https://github.com/sqllocks/shape/pull/33 | ready, refreshed, APPROVED; fresh CI pending |
 | #17 W9-16 | lane/W9-16-finish / 81cff73ea799039a70b5c584ea7cbfd1e3ec1749 | https://github.com/sqllocks/shape/pull/31 | ready, refreshed, APPROVED; fresh CI pending |
-| #6 W9-05 | lane/W9-05 / 4704c7118966e9e17aa61a230744e51a8275d448 | https://github.com/sqllocks/shape/pull/43 | ready, independently APPROVED; depends on PR42/main refresh/combined exact-head CI |
-| #20 FRZ-01 | lane/FRZ-01-finish / 8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4 | https://github.com/sqllocks/shape/pull/42 | error category ready and APPROVED; four remaining value workloads parked; no closure |
+| #6 W9-05 | lane/W9-05 / 66ace0965ce5442cb931abc77d4b8bdab43f08a9 | https://github.com/sqllocks/shape/pull/43 | ready, independently APPROVED; depends on PR42/main refresh/combined exact-head CI |
+| #20 FRZ-01 | lane/FRZ-01-finish / aa5be107c62ca2d98901a43d627b4e028d626cf7 | https://github.com/sqllocks/shape/pull/42 | error category ready and APPROVED; four remaining value workloads parked; no closure |
 | #14 W9-13 | lane/W9-13 / 58966e0 | none | journal only; dependency-blocked until PR35/main source interface |
 
 PR34 old7a head had an unchanged macOS cancellation-test timing failure; new0b head CI supersedes it. Do not weaken/edit the unowned test. Iceberg Windows local-file URI fix remains in8c,128targeted pass each mode+16current/minimumSDK tests; actual Windows freshCI pending. The old font failure was in unchanged branded-site tests; no assertion edited.
@@ -116,3 +116,6 @@ PR40 exact3f62547 latest28success/2running/1structural skip/no failures. Remaini
 PR40 merged as main53d3d0c1a740fcca0665c216c3ebdabaaac95e49 after exact3f62547 independent approval, all4 workflows SUCCESS and30successful jobs (only conditional documentation publish skip). Source-head links in CI-runtime-repair.md; new main CI39504029294/Documentation39504029094/Security39504029453 running, not yet complete. Old priority paragraphs above are historical.
 
 Parallel refreshes underway for all own open lanes. PR29 now00d648ce, PR30 cad8cfd9, PR31 81cff73e independently APPROVED exact heads. Root PR33 now1535427e, review pending; only additive changelog conflict, source auto-merged, old dirty commands file preserved unstaged. No local reruns. Remaining34/42/43 author refreshes in progress. Merge order29 then30/33 then34/31 then42/43. All need fresh all-triggered CI and current main. Assigned counts still1merged/6active-ready/2blocked-or-parked of9. PR35 remainsOPEN; #14 still dependency-blocked. Latest interim report6e399a4 is current, not final.
+
+
+All seven open product/support lanes now contain main53d3d0c and have been signed/pushed. Additional heads: PR34 0178fa0c93ba0bc9133a7a6e63067a97f9add115 APPROVED by metadata; PR42 aa5be107c62ca2d98901a43d627b4e028d626cf7 and PR43 66ace0965ce5442cb931abc77d4b8bdab43f08a9 APPROVED by frz_review. Only additive changelog conflicts in34/42; no product code conflicts or local reruns. PR42 includes the precise clock/name journal clarification. Fresh CI all initializing, no current-head failures at first snapshot. Distributed bounded watches through22:30: dbt29/30, formats34/42, iceberg31, eventhouse33/43, metadata main53. Root merges exact green reviewed current-main heads in Owner order.
