@@ -2072,6 +2072,15 @@ Converting a full capture to the safe form now gives a different content ID when
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
 
+### W9-01 — PostgreSQL and MySQL profiling
+
+- Database sources stream Arrow record batches from `postgresql://` (also `postgres://`) and
+  `mysql://`, preserve catalog types and nullability, and share the sinks' credential/TLS rules.
+- `shape profile` and bridge `profile` capture a whole schema or selected tables with declared
+  keys and bounded spread samples. `--tables` and `--sample-rows` select CLI tables/sample size;
+  bridge arguments are `tables` and `sample_rows`. Catalog-only capture uses sample size zero.
+- Database profiles and bridge database artifacts use existing safe capture rules.
+
 ### W9-08: broker message metadata
 
 - Kafka and Event Hubs support column/composite keys, user headers, partition
