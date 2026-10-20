@@ -1,42 +1,40 @@
-# Public B state — resumed 2026-10-20
+# Public B state — 2026-10-20 throughput directive
 
-Scratch `lead/public-b-2026-10-18`; main unchanged `d0e64d53eecfe03b29caa5dd111598f3b9a9ace2`. Credentials: git ls-remote and ownPR APIs exit0. No product merge yet. Read attached prompt and this state after restart. Previous Oct18 state preserved separately for historical evidence.
+Read the attached prompt and this state after restart. The Owner throughput directive in chat supersedes earlier local-full/evidence procedures. Keep working until all assigned issues are merged/parked or a specified hard stop occurs.
 
-| Issue | Branch / exact head | PR | Current CI counts |
+## Effective rules
+
+CI is the full-suite gate on each exact head, including both kernel implementations. Locally use acceptance/changed-module tests, Ruff/format/mypy/wording and only genuinely uncovered functional acceptance. The native joint-heavy test absent from CI passed in all six lanes. Independent review confirmed that extra unchanged Python performance benchmarks are redundant Cartesian reruns under the new policy: they were interrupted, NOT passed. Do not restart the serial full worker. Do not archive raw logs, gate-state JSON, watcher heartbeats or receipt indexes. Existing historical artifacts remain historical. Keep only PR, green CI links and acceptance red→green output as lane evidence.
+
+All six PRs were marked ready. PR32 merged via API as a merge commit; every remaining lane refreshed onto that main in parallel and signed-off/pushed immediately. Only formats had code conflicts, resolved using the previously reviewed candidate and targeted tests345passed each kernel. Other conflicts were additive changelog/requirements entries, both preserved; no local reruns for clean code merges. All refreshed heads independently APPROVED. Never push main directly or alter gates/tolerances. No release/version/tag/settings/secrets changes.
+
+## Current lanes
+
+Current main:35addfc4c310b85a62cbe7f315e1d50fb8e426f8. Main CI is running/queued; watch for genuine failures under the prompt hard-stop rule.
+
+| Issue | Branch / exact head | PR | Stage |
 |---|---|---|---|
-| #9 | `lane/W9-08-finish` `91ef6200266bf962246d1553356b26a442be2303` | [PR#32](https://github.com/sqllocks/shape/pull/32) | {'SUCCESS': 32, 'SKIPPED': 2} |
-| #10 | `lane/W9-09` `7a0316cc0ac18ae8b9fe283446f449325b798083` | [PR#34](https://github.com/sqllocks/shape/pull/34) | {'IN_PROGRESS': 14, 'SUCCESS': 18, 'SKIPPED': 1} |
-| #11 | `lane/W9-10-finish` `6438d907727e2b71c3993230615cc10a9376b2e7` | [PR#29](https://github.com/sqllocks/shape/pull/29) | {'SUCCESS': 30, 'SKIPPED': 1} |
-| #12 | `lane/W9-11-finish` `a7e450ad105a71c334d00eeed1c8b7291aac6153` | [PR#30](https://github.com/sqllocks/shape/pull/30) | {'SUCCESS': 32, 'SKIPPED': 2} |
-| #13 | `lane/W9-12-finish` `5e583f2e0b71798943d947fbb017374ce801d015` | [PR#33](https://github.com/sqllocks/shape/pull/33) | {'SUCCESS': 32, 'SKIPPED': 2} |
-| #17 | `lane/W9-16-finish` `632360ae51adc88fce42bdbefb44136a05986a6e` | [PR#31](https://github.com/sqllocks/shape/pull/31) | {'SUCCESS': 39, 'SKIPPED': 2, 'FAILURE': 3} |
+| #9 W9-08 | lane/W9-08-finish91ef6200266bf962246d1553356b26a442be2303 | https://github.com/sqllocks/shape/pull/32 | MERGED35addfc4; all triggered source-head workflows green |
+| #10 W9-09 | lane/W9-09 0b313bba0a74332fa7c5c955fceca4bdb92ae0d4 | https://github.com/sqllocks/shape/pull/34 | ready, refreshed, APPROVED; fresh CI pending |
+| #11 W9-10 | lane/W9-10-finish e1ae5787c395714f558252ef0190068077d8d4ad | https://github.com/sqllocks/shape/pull/29 | ready, refreshed, APPROVED; fresh CI pending |
+| #12 W9-11 | lane/W9-11-finish bc98623f582c121cad0bcf56a83a8829fd826437 | https://github.com/sqllocks/shape/pull/30 | ready, refreshed, APPROVED; fresh CI pending |
+| #13 W9-12 | lane/W9-12-finish170ce0dd549eaca5898d368b7fc3715ccc1a5d53 | https://github.com/sqllocks/shape/pull/33 | ready, refreshed, APPROVED; fresh CI pending |
+| #17 W9-16 | lane/W9-16-finish8c9fa927dc31540f19755827641b0dbc9a8a3668 | https://github.com/sqllocks/shape/pull/31 | ready, refreshed, APPROVED; fresh CI pending |
 
-Parked: #20 comparison-contract decision (both authenticated artifacts/logs retrieved, all6workloads/14generation flags in FRZ-01-evidence.md); #6 Wanted5 unsupported-baseline rule conflict; #14 missing mergedW9-01 source interface. BigQuery decimal native0<=scale<=precision refusal is ALREADYRESOLVED by issuecomment6072817299 (2026-10-09), no new Ownerdecision needed. Questions updated. No LeadA issues/branches inspected. All3parked issues stillopen, no new comments/decisions sinceOct18.
+PR34 old7a head had an unchanged macOS cancellation-test timing failure; new0b head CI supersedes it. Do not weaken/edit the unowned test. Iceberg Windows local-file URI fix remains in8c,128targeted pass each mode+16current/minimumSDK tests; actual Windows freshCI pending. The old font failure was in unchanged branded-site tests; no assertion edited.
 
-## Recovery and validation
+## Decisions and Owner actions
 
-The environment resumedOct20. ALL /tmp files, detached queues and oldagents were lost. Workspace/branches/nativebinaries survive. Do not infer any full local pass from old pending runs, even if background jobs may have continued. Hosted jobs nowcomplete;4PRs have allapplicablechecks green. Iceberg current632360 has Windows3.11+3.14 nativecreate_table failures and unrelatedfontdocs failure; formats oldd6dc9 had one unchanged WindowsDelta regression failure. Newformats7a0316 standalone deadletterfix signed/pushed, independentAPPROVED,220focused eachkernel; freshCI reruns. Iceberg author is fixing localFileIO across currentSDK and published0.9floor, currentnewtests red→green but oldSDK read-path issue stillbeingaddressed; no commituntilfloor passes. No old assertions, skips, gates or tolerances changed.
+Throughput decision-log row is committed on scratch cf68ff1 and included in dbt PR29 e1ae578 for main. Premium process05/08 edits are owned by Premium Build A; do not touch that repo or another session's PRs. Semantic/dbt explicit Owner-actions headings were added during refresh. Pending service validation is already listed in each lane record; no live success claimed. Semantic fixture/measure/role expected-results decision remains Owner work.
 
-Newactiveagentnames: formats_recover, metadata_recover, dbt_recover, eventhouse_recover, iceberg_recover. Someidle after focused recovery; use followup_task ifneeded. Separate review by eventhouse_recover binds formats7a0316; metadata_recover APPROVED recovered streaming integrationtree363da4067db65b3ec66e02b27d18075b9b1dafaf, based7a0316. Persistent candidate `/workspace/public-b-stream-integration`, no commits/push; cross-feature14cases independentlypass both modes. Candidate productbytes same as priorapprovedd6d5ec55; newtree adds2standalonecases/evidence. Patches/summary in `/workspace/public-b-validation/W9-09/`. Actual lanes only absorb each other throughmain after a PRmerge. All15 ownbranch pair previews stored merge-previews.json; productconflicts onlystreamingpair, othersdocs/requirements/changelog.
+Parked #20: comparison-contract decision, authenticated artifacts retrieved and exact failures/root cause in FRZ-01-evidence.md. Do not re-record, restore obsolete errors/labels, or change pass rules. Latest issuecomment6252771902.
+Parked #6: Wanted5 unsupported-baseline classification conflicts with frozen comparison policy; Owner decision required. Existing implementation/test-first branch3de70e3.
+Parked #14: waiting only for W9-01 source interface on main; do not inspect Lead A branches/issues. Decimal0<=scale<=precision refusal was ALREADY approved in issuecomment6072817299, no further decision needed. Existing journal branch1249af9.
 
-ALL scripts/logs/results now in `/workspace/public-b-validation` (persistent), never /tmp. Sharedruntime `test-env.sh`: uv0.8.17 `/workspace/.onboarding/tools/bin/uv`, onboardingCargo/Rustup, umask022, dynamicdocumentedDockerproxyIP/CA, persistentpinnedDBTpackages, storage-onlypytestfailed-temp retention. DBTpackages restored with unchangedscript exacttags1.4.0/0.10.9/0.10.1. Nativecore Arrow25, Fabric separateArrow19. Everytest/reaper+beforeafterzombies, hardstop>1000. Currentzombies~4, no hardstop.
+Exact questions/options/recommendations remain in questions.md. All three issues remain open; no product PR/merge for them.
 
-Single persistent queue worker `/workspace/public-b-validation/worker.py`, PID in worker.pid; control.json selects currentlane/head; status.json and runs/<lane>-<head>/state.json persist eachcommand+exit+head/tree/sourcehash/zombies/log. Currentlane W9-08 exact91ef620, makecheckrunning. Stopsandpauses onfirstfailure; no automaticfailure rerun. Bootstrap exit0. Exactcollectionproof PASS: fullnativecore18867 IDs equals make-light18768 +make-heavy52 +extra-jointheavy1 +content46; no missing/extra. Fabricrunseparately. Thus no duplicatefullnative needed: actualmakecheck0 +additionaljointheavy/content/Fabricnative mustallpass; Pythonfullcore +FabricPython separately. All8jobs/bootstrap/proof showninworker; no fullcommonpass yet. Initialearlymakeattempt wasinterrupted(~38pytestprogressdots) toapplyfailure-stoprunnerfix; original log and independentcorrection JSON retained, no fullpassinferred.
+## Next actions
 
-Before eachjob, pruneunusedDockerbuildercache throughmanagedlocalsocket preservingselectors/credentials, and remove onlythisownlane rebuildableCargo targetcache, keepinginstallednativebinary. DockerVFS clonescanconsume~13GBactual despite~3GBreported, keep free diskmonitored. AllownobsoleteCargo targets clearedonce, freeing~4GB; currentdisk13GBfree, /tmp8GBfree. Old successfuldocs657transcripts/manifest remaininscratch evidence. No active testfiles deleted onresume.
+Poll fresh exact-head CI without persisting JSON/heartbeats. Merge green reviewed current PRs promptly via merge API; refresh other own open lanes from new main, preserve additive entries and let CI rerun. Local tests only for code conflicts. Keep lanes parallel; do not run local fulls again. Re-check main/dependency interface when it moves, and unpark BigQuery only if its needed interface is on main. Do not end just to wait. Final report.md has not been written; only write it at completion/hard stop.
 
-## Next
-
-Monitor currentmetadata makecheck andpersistentworker. If8jobs valid/complete, recheck exactCIgreen/currentmain/review, markPRready and mergeAPImergecommit. Merge newmaininto EVERY otherownopenlane, retainbothchangelogs/requirements, applyapprovedstreamresolutionwhereappropriate, targetedintegrationreview+freshCI. Then setcontrol nextlane NEWhead to runfullcommononupdatedmain; worker waitsafterlanecompletion. No directmainpush/tags/releases/versionbumps/settings/secrets. No livepassclaims. Continueuntilall9issues mergedorparked orspecifiedhardstop; finalreport.md stillnotwritten.
-
-## Runner correction cycle 2026-10-20T18:44:28.466484+00:00
-
-Persistent worker on disk now checks every tracked change except explicit lane evidence, rejects untracked source/configuration, checks pause/head at each boundary, and archives prior retry entries/logs. Independent re-audit pending. Running5354 still uses prior code; metadata checkout stays frozen/clean and must have fully clean before/after statuses for manual binding audit. Restart updated script at current lane idle boundary. Initial interruption correction remains separately preserved. Zombies8; metadata makecheck stillrunning without observed failure at24percent. Iceberg focused128cases eachkernel and16 actualminimumSDK0.9 cases pass; independent latest filesystem adapter review pending, not committed. No full common pass or merge claimed.
-
-## Exact-head checkpoint 2026-10-20T18:50:26.120158+00:00
-
-Iceberg signed/pushed be2f6727a563fbb830dcce2d3685da180506ae0a with independent exact-SHA APPROVED review;128 focused tests eachkernel +16 currentSDK0.12 and minimum0.9 tests; Ruff/mypy706/shippeddata167 clean. ActualWindows/freshCI pending. Updated worker independent APPROVED at sha256256500dea0342c7a8e9e90568fec69a4bb0f1a11ccc20a9208ddd119699a1e56; restart only at idle boundary. Owner-actions audit captured: append explicit headings to dbt+semantic at next mandatory main refresh, no secret blocker to stated offline scope. Current metadata makecheck24percent, CONTRIBUTING replay completed and CONTRACT_EMIT replay active; no full pass/merge claimed. Exact integration artifacts additionally archived as tar.gz+original-byte SHA256 manifest to survive Git newline conversion. Fresh CI details in pr-snapshot.json.
-
-## Owner throughput directive 2026-10-20 — effective immediately
-
-CI replaces full local makecheck/pytest as merge gate. Serial full worker stopped intentionally by Owner directive at documentation phase, no completed full result claimed. Do not restart worker or archive more rawlogs/state/heartbeats. Use targeted issue/changed-module tests + lint/type/wording and only missing §13 CI coverage. PRs29–34 should be ready. Merge green reviewed current heads promptly, then refresh remaining own open lanes in parallel; rerun local targeted tests only for code conflicts. Evidence going forward: PRlink, green exact-head CI links, red→green acceptance output only. Decision row recorded in completion-plan2.3 on scratch; carry it into first integration refresh. Premium process05/08 wording belongs to Premium Build A, not this session.
+Active/idle recover agents: metadata_recover (streaming reviewer), formats_recover, dbt_recover, eventhouse_recover (Iceberg/semantic reviewer), iceberg_recover. Use followup_task to resume idle agents. All local test commands use /home/agent/bin/reap.py. Last observed zombies22 (<1000); credentials/git/gh operations succeed. Worktrees: /workspace/shape-w9-08/-09/-10/-11/-12/-16. All heavy/full queues are intentionally stopped; old status.json is historical and must not cause a restart.

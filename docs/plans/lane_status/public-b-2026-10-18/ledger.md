@@ -348,3 +348,5 @@ ReadruntimeSKILL/network/Dockerrefs and prompt/state/AGENTS/CLAUDE:success. Netw
 - 2026-10-20T18:58:18.833051+00:00 `sed -n '1,250p' .github/workflows/ci.yml; rg -n 'pytest|SHAPE_KERNEL|ignore|group|fabric' .github/workflows/docs-test.yml .github/workflows/*.yml | head -100` — exit 0.
 
 - 2026-10-20T18:59:23.951701+00:00 `sleep 50; python /workspace/public-b-validation/monitor.py` — exit 0.
+
+- 2026-10-20T19:11:50.588356+00:00 `git add docs/plans/COMPLETION_PLAN.md docs/plans/lane_status/public-b-2026-10-18/state.md docs/plans/lane_status/public-b-2026-10-18/ledger.md && git commit -s -m "Public B: adopt Owner CI throughput directive" && git push origin lead/public-b-2026-10-18` — exit 0.
