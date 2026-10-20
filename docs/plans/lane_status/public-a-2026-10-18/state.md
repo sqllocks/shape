@@ -1,8 +1,14 @@
 # Public A state
 
-## HARD STOP — credential failure, 2026-10-20 20:33 UTC
+## RESUMED — Owner directive, 2026-10-20
 
-GitHub API returned HTTP401 Bad credentials; repeated scratch git pushes failed to read Username. Earlier transient failure recovered, but this latest failure was confirmed by both API and push. User prompt requires stop. All agents stopped; no auth/config changes or further network retries. Final report is report.md. Last confirmed remotely pushed scratch commit30974d5; local state commit7dd2c2a and final report remain unpublished because authentication failed. Resume only after GitHub authentication is restored.
+Credentials restored: git read and API exit0; scratch handoff0f38dcffe2091f2904289f5245b2184cb5900d82 pushed successfully, including7dd2c2a. All seven implementation branches and throughput branch matched their remote heads at resume. Six dirty #5 files preserved for its assigned agent.
+
+Owner decisions: #4 refuses undeclared-width indexed strings before any connection with named column; max_length required for keys; four extra exact corpus refusals approved, no guessed450. #5 allows DuckDB-only parent-first inline FKs, retaining prepare-all-before-load, enforcement, named failures and transaction rules. #8 integrates final #5 constraint helper after #5 merges. All three lanes UNPARKED; agents record decisions in own lane records. Existing table below describes pre-resume checkpoints; these directives supersede parked labels.
+
+0/7 merged, 0% done, 100% remaining; four reviewed implementation PRs; zero currently parked. PR40 still open at resume, its head3f625476 has no failed checks and several jobs running. Do not touch other session's PR40. Refresh own ready heads once after it reaches main, then require all triggered exact-head checks green and merge via API merge commit in dependency order #35, #37/#39, #38, then #5/#8/#4. Lead docs PR36 also pending.
+
+Credential failures now stop only after git/API retry pairs at5,10,20minutes all fail; continue local work between retries. No token output or credential/config changes.
 
 ## Governing instructions
 

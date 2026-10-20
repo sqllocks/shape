@@ -37,3 +37,11 @@ Status: parked on the preceding #5 Owner decision. Wanted2 explicitly reuses W9-
 Question: approve the recommended DuckDB exception for #5 so its safe constraint helper can merge, then merge the already-stacked helper into main before #8?
 
 Recommendation: resolve #5 and merge it first, then finish targeted local acceptance and require full exact-head CI. The actual #5 helper is now stacked and its AST integration tests pass; no helper was duplicated and arbitrary check SQL remains refused. Unsupported native feature combinations use the already-authorized capability-refusal rules in Wanted8/#7Wanted6, requiring no additional Owner amendment. Independently implemented Delta features and their review fixes remain preserved on lane/W9-07; no ready-to-merge claim.
+
+## Owner resolutions — 2026-10-20 resume
+
+- #4 Option1 approved: named preconnection refusal for undeclared-width indexed strings, required key max_length and four extra exact corpus refusals.
+- #5 Option1 approved: documented DuckDB-only parent-first inline FK exception, preserving preparation, enforcement, named errors and transaction rules.
+- #8 finish after #5 main merge and integrate its actual constraint helper.
+
+These questions are resolved; all three lanes resumed.
