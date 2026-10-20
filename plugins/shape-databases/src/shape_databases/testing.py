@@ -582,6 +582,11 @@ class FakeSnowflakeCursor:
         self._set((), [])
         if s.fail_on is not None:
             s.fail_on(sql)
+        if sql.startswith("SHOW EXPORTED KEYS IN TABLE "):
+            self._set(("fk_name",), [])
+            return
+        if sql.startswith("ALTER TABLE ") and " ADD CONSTRAINT " in sql:
+            return  # phase-only record; real services enforce their supported constraints
         if sql.startswith("SELECT 1 FROM information_schema.tables"):
             assert params is not None
             schema, table = params
@@ -600,7 +605,7 @@ class FakeSnowflakeCursor:
             s.columns[key] = [
                 _unquote(_ONE_IDENT.match(ln)[0])  # type: ignore[index]
                 for ln in lines
-                if not ln.startswith("PRIMARY KEY")
+                if not ln.startswith(("PRIMARY KEY", "CONSTRAINT", "UNIQUE", "CHECK"))
             ]
             s.stages[key] = {}
             return
@@ -781,6 +786,12 @@ class FakeDatabricksCursor:
             return
         if sql in s.arrow_results:
             return
+        if sql.startswith("SELECT fk.constraint_name AS inbound_constraint_name "):
+            self.description = [("inbound_constraint_name",)]
+            self._result = []
+            return
+        if sql.startswith("ALTER TABLE ") and " ADD CONSTRAINT " in sql:
+            return  # phase-only record; a live Unity Catalog owns enforcement
         if sql.startswith("SELECT 1 FROM information_schema.tables"):
             assert parameters is not None
             schema, table = parameters
@@ -797,7 +808,7 @@ class FakeDatabricksCursor:
             s.columns[key] = [
                 _unquote(_ONE_IDENT.match(ln)[0])  # type: ignore[index]
                 for ln in lines
-                if not ln.startswith("PRIMARY KEY")
+                if not ln.startswith(("PRIMARY KEY", "CONSTRAINT", "UNIQUE", "CHECK"))
             ]
             return
         if m := _DROP.match(sql):
