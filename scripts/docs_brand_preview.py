@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import functools
 import json
-import shutil
 import tempfile
 import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -76,8 +75,7 @@ def verify_site(site: Path, output: Path) -> list[dict]:
         origin = f"http://127.0.0.1:{server.server_port}"
         try:
             with sync_playwright() as playwright:
-                executable = shutil.which("chromium") or shutil.which("google-chrome")
-                browser = playwright.chromium.launch(executable_path=executable)
+                browser = playwright.chromium.launch()
                 for width, device in ((1440, "desktop"), (390, "mobile")):
                     for scheme in ("light", "dark"):
                         page = browser.new_page(
