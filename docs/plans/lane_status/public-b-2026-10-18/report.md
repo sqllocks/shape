@@ -1,4 +1,6 @@
-# Public B report — credential hard stop, 2026-10-20 20:33 UTC
+# Public B interim checkpoint — 2026-10-20 20:33 UTC
+
+**Interruption resolved at20:35UTC:** fresh commands successfully authenticated to both REST and GraphQL without changing authentication settings. The401 was confined to the long-running watcher, which was stopped. Work resumed using fresh commands. This is a historical checkpoint, not the final completion report; statuses below are the20:33 observations.
 
 GitHub GraphQL returned HTTP 401 “Bad credentials” while reading PR40. The attached prompt explicitly makes credential failure a hard stop. No authentication settings were changed and no subsequent merge was attempted. Latest remote main verified before the failure: `35addfc4c310b85a62cbe7f315e1d50fb8e426f8`.
 

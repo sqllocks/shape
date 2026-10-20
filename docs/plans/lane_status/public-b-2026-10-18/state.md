@@ -35,7 +35,7 @@ Exact questions/options/recommendations remain in questions.md. All three issues
 
 ## Next actions
 
-Poll fresh exact-head CI without persisting JSON/heartbeats. Merge green reviewed current PRs promptly via merge API; refresh other own open lanes from new main, preserve additive entries and let CI rerun. Local tests only for code conflicts. Keep lanes parallel; do not run local fulls again. Re-check main/dependency interface when it moves, and unpark BigQuery only if its needed interface is on main. Do not end just to wait. Final report.md has not been written; only write it at completion/hard stop.
+Poll fresh exact-head CI without persisting JSON/heartbeats. Merge green reviewed current PRs promptly via merge API; refresh other own open lanes from new main, preserve additive entries and let CI rerun. Local tests only for code conflicts. Keep lanes parallel; do not run local fulls again. Re-check main/dependency interface when it moves, and unpark BigQuery only if its needed interface is on main. Do not end just to wait. report.md currently holds an interim credential-interruption checkpoint, clearly marked resolved; replace it with the final report at completion or an unresolved hard stop.
 
 Active/idle recover agents: metadata_recover (streaming reviewer), formats_recover, dbt_recover, eventhouse_recover (Iceberg/semantic reviewer), iceberg_recover. Use followup_task to resume idle agents. All local test commands use /home/agent/bin/reap.py. Last observed zombies22 (<1000); credentials/git/gh operations succeed. Worktrees: /workspace/shape-w9-08/-09/-10/-11/-12/-16. All heavy/full queues are intentionally stopped; old status.json is historical and must not cause a restart.
 
@@ -52,3 +52,7 @@ Next: merge PR40 promptly when all exact-head CI is green and it contains curren
 ## HARD STOP — 2026-10-20 20:33 UTC
 
 GitHub GraphQL PR40 polling returned HTTP401 Bad credentials. This is the prompt credential hard stop. Root stopped remote work and interrupted the only active agent watcher. No new merge or authentication configuration change attempted. See report.md for the final handoff. Last successful PR40 final-head snapshot:14success/16running/no observed failure; main20success/7running/no observed failure. Counts:1/9merged11.1%,5/9active55.6%,3/9parked33.3%,8/9unmerged88.9%. Resume only after credentials are restored and the prompt/state are re-read; current CI status is not established.
+
+## RESUMED — 2026-10-20 20:35 UTC
+
+Fresh commands authenticated successfully to GitHub REST and GraphQL without any authentication/settings change. The401 was confined to the inherited environment of the long-running watcher, now stopped; do not use long-lived shell processes for GitHub polling. Use fresh exec commands each cycle so current runtime credentials apply. The scratch checkpoint was pushed successfully as108f18f. report.md is marked interim/resolved, not final. Latest PR40 snapshot:19success/11running/1conditional skip/no failures, exact3f62547 unchanged and APPROVED. Continue required CI/merge/refresh work. User requests full count updates every five minutes plus merge/blocker changes. Latest complete issue counts remain1/9merged11.1%,5/9active55.6%,3/9parked33.3%.
