@@ -199,7 +199,7 @@ def test_nested_values_become_json_text(flavour):
             ]
         ),
     )
-    sink.write(uri, "t", iter([batch]))
+    sink.write(uri, "t", iter([batch]), nested="json")
     assert server.rows("t") == [(1, '["a", "b"]', '{"k": 1}')]
     ddl = next(s for s in server.statements() if s.startswith("CREATE TABLE"))
     assert "TEXT" in ddl

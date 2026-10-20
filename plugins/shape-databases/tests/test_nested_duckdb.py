@@ -96,6 +96,16 @@ def test_empty_native_table_uses_declared_nested_schema(tmp_path):
     assert query_table(path).cast(expected.schema).equals(expected)
 
 
+def test_duckdb_distinct_non_ascii_struct_names_remain_distinct(tmp_path):
+    schema = pa.schema(
+        [("id", pa.int32()), ("payload", pa.struct([("Ä", pa.int16()), ("ä", pa.int16())]))]
+    )
+    expected = pa.Table.from_pylist([{"id": 1, "payload": {"Ä": 1, "ä": 2}}], schema=schema)
+    path = tmp_path / "non-ascii.duckdb"
+    assert DuckDbSink().write(f"duckdb:///{path}", "data", expected.to_batches()) == 1
+    assert query_table(path).cast(schema).equals(expected)
+
+
 @pytest.mark.parametrize("via_uri", [False, True])
 def test_explicit_json_mode_keeps_nested_values_as_json_text(tmp_path, via_uri):
     expected = nested_table()
@@ -189,6 +199,21 @@ def test_invalid_nested_option_fails_before_any_connection(tmp_path, monkeypatch
             schema=pa.schema([("id", pa.int32())]),
             nested="invalid",
         )
+
+
+@pytest.mark.parametrize("mode", ["native", "json"])
+def test_exact_duplicate_struct_names_refuse_before_connection_with_rename_alternative(
+    tmp_path, monkeypatch, mode
+):
+    from shape_databases import duckdb_sink
+
+    monkeypatch.setattr(duckdb_sink, "_driver", lambda: pytest.fail("driver loaded"))
+    schema = pa.schema([("payload", pa.list_(pa.struct([("x", pa.int32()), ("x", pa.int32())])))])
+    with pytest.raises(ShapeError, match="payload.*rename.*distinct") as error:
+        DuckDbSink().write(
+            f"duckdb:///{tmp_path / 'duplicates.duckdb'}", "data", [], schema=schema, nested=mode
+        )
+    assert "use nested=json" not in str(error.value)
 
 
 def test_nested_temporal_values_use_the_documented_microsecond_normalization(tmp_path):

@@ -723,6 +723,6 @@ requirements:
   level: L1
   milestone: W9-06
   priority: MUST
-  text: DuckDB writes recursive list, struct and map columns through native Arrow scans, preserves null and empty containers, applies documented temporal normalization recursively, and refuses unsupported nested shapes before connecting with the column and JSON alternative named. JSON mode preserves exact decimal and temporal text.
+  text: Database sinks support documented native list, struct and map types, preserve null and empty containers, apply explicit temporal normalization, and refuse unsupported nested shapes before connecting with the column and truthful alternative named. JSON transports preserve decimal and temporal text, reject ambiguous object map keys and non-finite values, and retain an explicit legacy JSON mode.
   verify: [unit, conformance]
   owner: databases

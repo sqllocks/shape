@@ -23,6 +23,7 @@ import pyarrow.types as pat  # type: ignore[import-untyped]
 from shape.errors import ShapeError
 
 from . import _sql
+from .nested import native_type, validate_json_shape, validate_snowflake_shape
 
 DEFAULT_CHUNK_ROWS = 1_000_000
 MAX_DECIMAL_PRECISION = 38
@@ -58,7 +59,9 @@ def _decimal(field: pa.Field, t: pa.DataType) -> str:
     return f"({t.precision},{t.scale})"
 
 
-def snowflake_type(field: pa.Field, meta: Mapping[str, Any] | None = None) -> str:
+def snowflake_type(
+    field: pa.Field, meta: Mapping[str, Any] | None = None, *, nested: str = "native"
+) -> str:
     """The Snowflake type that holds ``field``."""
     t = _value_type(field.type)
     if pat.is_boolean(t):
@@ -91,13 +94,23 @@ def snowflake_type(field: pa.Field, meta: Mapping[str, Any] | None = None) -> st
     if pat.is_timestamp(t):
         return "TIMESTAMP_NTZ" if t.tz is None else "TIMESTAMP_TZ"
     if is_nested(t):
+        validate_snowflake_shape(t, field.name)
+        if nested == "typed":
+            return (
+                "ARRAY"
+                if pat.is_list(t) or pat.is_large_list(t) or pat.is_fixed_size_list(t)
+                else "OBJECT"
+            )
         return "VARIANT"
     raise _unsupported(field, "snowflake")
 
 
-def databricks_type(field: pa.Field) -> str:
+def databricks_type(field: pa.Field, *, nested: str = "native") -> str:
     """The Databricks (Delta) type that holds ``field``."""
     t = _value_type(field.type)
+    if is_nested(t):
+        validate_json_shape(t, field.name)
+        return native_type(field, "databricks") if nested == "native" else "STRING"
     if pat.is_boolean(t):
         return "BOOLEAN"
     if pat.is_integer(t):
@@ -125,6 +138,7 @@ def check_types(
     dialect: str,
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
+    nested: str = "native",
 ) -> None:
     """Refuse, before any connection, a column with no type, a bad ``columns`` entry or a key
     that is not a column."""
@@ -133,9 +147,9 @@ def check_types(
             raise ShapeError(f"primary key column {name!r} is not a column of the table")
     for field in schema:
         if dialect == "snowflake":
-            snowflake_type(field, (columns or {}).get(field.name))
+            snowflake_type(field, (columns or {}).get(field.name), nested=nested)
         else:
-            databricks_type(field)
+            databricks_type(field, nested=nested)
 
 
 def create_table_sql(
@@ -144,6 +158,7 @@ def create_table_sql(
     dialect: str,
     columns: Mapping[str, Mapping[str, Any]],
     primary_key: Sequence[str],
+    nested: str = "native",
 ) -> str:
     """``CREATE TABLE`` with the mapped types; key columns are ``NOT NULL`` and the key is
     declared (neither database enforces it)."""
@@ -153,7 +168,11 @@ def create_table_sql(
     lines = []
     for field in schema:
         meta = columns.get(field.name, {})
-        sql_type = snowflake_type(field, meta) if dialect == "snowflake" else databricks_type(field)
+        sql_type = (
+            snowflake_type(field, meta, nested=nested)
+            if dialect == "snowflake"
+            else databricks_type(field, nested=nested)
+        )
         nullable = bool(meta.get("nullable", True)) and field.name not in primary_key
         lines.append(
             f"  {_sql.quote(field.name, dialect)} {sql_type}{'' if nullable else ' NOT NULL'}"

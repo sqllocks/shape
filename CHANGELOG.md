@@ -6,6 +6,12 @@ Status: available.
 
 ## Unreleased
 
+- Database sinks now default to native nested types: PostgreSQL scalar arrays/JSONB, MySQL
+  JSON and recursive Databricks ARRAY/STRUCT/MAP. `nested=json` preserves earlier text paths;
+  Snowflake also accepts `nested=typed` for ARRAY/OBJECT and uses vectorized nested Parquet
+  COPY to retain null array positions. Unsupported shapes fail before connecting; strict
+  JSON conversion refuses duplicate object map keys, non-finite numbers and malformed values.
+
 - DuckDB writes Arrow lists, structs and maps natively by default. The new `nested=json`
   option stores nested values as JSON text; unsupported native shapes fail before connection
   with their column and the JSON alternative named. Nested temporal values use the same

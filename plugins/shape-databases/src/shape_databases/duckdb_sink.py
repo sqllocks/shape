@@ -79,7 +79,7 @@ from shape.errors import ShapeError
 from . import _sql
 from ._base import as_int, as_text, one_of, parse_uri
 from .errors import WriteError
-from .nested import is_nested, json_batch, nested_mode
+from .nested import is_nested, json_batch, nested_mode, validate_json_shape
 
 log = logging.getLogger("shape_databases")
 
@@ -101,6 +101,7 @@ _INTS = {
     (False, 64): "UBIGINT",
 }
 _TIMESTAMPS = {"s": "TIMESTAMP_S", "ms": "TIMESTAMP_MS", "us": "TIMESTAMP", "ns": "TIMESTAMP_NS"}
+_ASCII_CASE = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 
 
 def _quote(name: str) -> str:
@@ -125,6 +126,7 @@ def duckdb_type(field: pa.Field, meta: Mapping[str, Any], *, nested: str = "nati
     if pat.is_dictionary(kind):
         kind = kind.value_type
     if is_nested(kind):
+        validate_json_shape(kind, field.name)
         if nested == "json":
             return "VARCHAR"
         try:
@@ -132,7 +134,7 @@ def duckdb_type(field: pa.Field, meta: Mapping[str, Any], *, nested: str = "nati
                 item = pa.field(field.name, kind.value_type)
                 return f"{duckdb_type(item, {})}[]"
             if pat.is_struct(kind):
-                names = [child.name.lower() for child in kind]
+                names = [child.name.translate(_ASCII_CASE) for child in kind]
                 if not names or len(names) != len(set(names)):
                     raise ShapeError("struct needs non-empty, distinct field names")
                 parts = [

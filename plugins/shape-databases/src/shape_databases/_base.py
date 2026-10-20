@@ -30,6 +30,7 @@ from shape.errors import ShapeError
 from . import _sql
 from ._auth import Secret, resolve_password, scrub
 from .errors import WriteError
+from .nested import nested_mode
 
 log = logging.getLogger("shape_databases")
 
@@ -199,6 +200,7 @@ class DatabaseSink:
             first=first,
             columns=plan.columns,
             primary_key=plan.primary_key,
+            nested=plan.options.get("nested", "native"),
         )
 
     def keys_sql(self, plan: Plan) -> str:
@@ -213,6 +215,7 @@ class DatabaseSink:
 
     def check_schema(self, schema: pa.Schema, plan: Plan) -> None:
         """Refuse, before any connection, a column the table cannot hold."""
+        self.create_table_sql(plan, schema, None)
 
     def connect_params(self, plan: Plan) -> dict[str, Any]:
         raise NotImplementedError
@@ -243,6 +246,11 @@ class DatabaseSink:
     def plan(self, uri: str, table: str, options: Mapping[str, Any]) -> Plan:
         dialect = self.dialect
         target = self.parse_target(uri)
+        nested = nested_mode(
+            options.get("nested", target.params.pop("nested", "native")),
+            typed=dialect == "snowflake",
+        )
+        options = {**options, "nested": nested}
         prefix = options.get("table_prefix") or ""
         if not isinstance(prefix, str):
             raise ShapeError("table_prefix must be a string")
