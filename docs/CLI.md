@@ -306,6 +306,20 @@ provenance records the actual warehouse. Credentials use source options and refe
 never URI passwords or tokens. See the [Snowflake](databases/snowflake.md) and
 [Databricks](databases/databricks.md) source guides for authentication, types and limits.
 
+## Generated SQL constraints
+
+`shape generate --sql-constraints keys|all|none` controls derived database and SQL-script
+declarations. Omitted means `keys`: primary keys, foreign keys and declared unique keys.
+`all` adds supported structured CHECK and literal DEFAULT clauses. `none` omits derived
+constraints, and `keep` is its compatibility alias. The existing SQL Server `disable`
+loading option remains available; `emit`, seed and scale retain their existing behavior.
+
+`--contract FILE` reads a JSON or YAML contract before opening destinations. With `all`,
+its bounds, accepted values and literal defaults join supported generation-schema checks.
+Raw SQL expressions and regex checks are not accepted as database CHECK expressions.
+`--dry-run` shows the resolved DDL without connecting. Unsupported declarations produce
+warnings and SQL-script notes. See [destination capabilities and safe reruns](SINKS.md#generated-sql-constraints).
+
 ## Cloud and Fabric options
 
 Three options reach cloud destinations and sources. Their help text, as `shape --help` prints it:
