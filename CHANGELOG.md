@@ -6,6 +6,29 @@ Status: available.
 
 ## Unreleased
 
+- PostgreSQL sources retain native array element types, and Databricks sources parse declared
+  recursive catalog types. Source URIs refuse writer-only nested options before connecting.
+
+- Delta adds `nested=json` for explicit JSON text storage. Native maps keep their entries
+  and normalize nested timestamps to UTC and microsecond precision, matching scalar/list
+  read-back; unsupported nested shapes fail before storage.
+- DuckDB native container roundtrips use the existing read-only Source, with UTC instants.
+  JSON-backed read-back can restore caller-supplied Arrow types with strict one-pass parsing;
+  ambiguous JSON and temporal precision loss are refused.
+
+- Database sinks now default to native nested types: PostgreSQL scalar arrays/JSONB, MySQL
+  JSON and recursive Databricks ARRAY/STRUCT/MAP. `nested=json` preserves earlier text paths;
+  Snowflake also accepts `nested=typed` for ARRAY/OBJECT and uses vectorized nested Parquet
+  COPY to retain null array positions. Unsupported shapes fail before connecting; strict
+  JSON conversion refuses duplicate object map keys, non-finite numbers and malformed values.
+
+- DuckDB writes Arrow lists, structs and maps natively by default. The new `nested=json`
+  option stores nested values as JSON text; unsupported native shapes fail before connection
+  with their column and the JSON alternative named. Nested temporal values use the same
+  documented microsecond normalization as scalar values.
+
+- Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.
+
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 
 Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
@@ -2054,6 +2077,15 @@ Converting a full capture to the safe form now gives a different content ID when
 - The fidelity e-mail format pattern runs in linear time (#293).
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
+
+### W9-01 — PostgreSQL and MySQL profiling
+
+- Database sources stream Arrow record batches from `postgresql://` (also `postgres://`) and
+  `mysql://`, preserve catalog types and nullability, and share the sinks' credential/TLS rules.
+- `shape profile` and bridge `profile` capture a whole schema or selected tables with declared
+  keys and bounded spread samples. `--tables` and `--sample-rows` select CLI tables/sample size;
+  bridge arguments are `tables` and `sample_rows`. Catalog-only capture uses sample size zero.
+- Database profiles and bridge database artifacts use existing safe capture rules.
 
 ### W9-08: broker message metadata
 

@@ -63,6 +63,7 @@ class PostgresSink(DatabaseSink):
         "sslkey": as_text,
         "connect_timeout": as_int,
         "application_name": as_text,
+        "nested": as_text,
     }
     exists_sql = (
         "SELECT 1 FROM information_schema.tables "
@@ -117,7 +118,9 @@ class PostgresSink(DatabaseSink):
         statement = (
             f"COPY {qualified} ({', '.join(_sql.quote(n, self.dialect) for n in names)}) FROM STDIN"
         )
-        converters = _sql.converters_for(first.schema, self.dialect)
+        converters = _sql.converters_for(
+            first.schema, self.dialect, plan.options.get("nested", "native")
+        )
 
         def rows() -> Iterator[tuple[Any, ...]]:
             for batch in chain_batches(first, rest):

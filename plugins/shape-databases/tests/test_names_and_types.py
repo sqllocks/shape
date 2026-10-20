@@ -122,8 +122,8 @@ TYPES = [
     (pa.large_binary(), "BYTEA", "LONGBLOB"),
     (pa.string(), "VARCHAR(255)", "VARCHAR(255)"),
     (pa.large_string(), "VARCHAR(255)", "VARCHAR(255)"),
-    (pa.list_(pa.int64()), "TEXT", "LONGTEXT"),
-    (pa.struct([("a", pa.int64())]), "TEXT", "LONGTEXT"),
+    (pa.list_(pa.int64()), "BIGINT[]", "JSON"),
+    (pa.struct([("a", pa.int64())]), "JSONB", "JSON"),
 ]
 
 

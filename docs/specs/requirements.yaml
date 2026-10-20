@@ -718,6 +718,33 @@ requirements:
   verify: [specification-review]
   status: registered-not-independently-certified
 
+- id: SHAPE-SINK-003
+  title: Native nested database values
+  level: L1
+  milestone: W9-06
+  priority: MUST
+  text: Database sinks support documented native list, struct and map types, preserve null and empty containers, apply explicit temporal normalization, and refuse unsupported nested shapes before connecting with the column and truthful alternative named. JSON transports preserve decimal and temporal text, reject ambiguous object map keys and non-finite values, and retain an explicit legacy JSON mode. Matching sources retain native physical types; JSON-backed restoration requires the original Arrow schema, parses once and refuses ambiguous data or precision loss.
+  verify: [unit, conformance]
+  owner: databases
+
+- id: SHAPE-CLOUD-001
+  title: Cloud database catalog and Arrow sources
+  level: L1
+  milestone: W9-02
+  priority: MUST
+  text: Snowflake and Databricks sources preserve declared Arrow widths, decimals and zones, expose catalog counts and declared keys with bounded samples, refuse URI credentials before connection, and record Snowflake warehouse provenance.
+  verify: [unit, conformance, compatibility]
+  owner: databases
+
+- id: SHAPE-DBS-001
+  title: Bounded PostgreSQL and MySQL catalog profiling
+  level: L1
+  milestone: W9-01
+  priority: MUST
+  text: Database sources stream typed Arrow batches and profile catalog schemas with bounded samples, declared keys, safe capture and no persisted credentials.
+  verify: [database-source-conformance]
+  owner: databases
+
 - id: SHAPE-STREAM-METADATA-001
   title: Broker message metadata
   level: L1

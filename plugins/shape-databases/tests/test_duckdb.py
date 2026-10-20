@@ -250,8 +250,8 @@ def test_reading_the_table_back_gives_the_same_dataset_id(db):
 
 def test_unsupported_and_oversized_types_are_refused_naming_the_column(db):
     nested = pa.RecordBatch.from_pydict({"tags": [["a"], ["b"]]})
-    with pytest.raises(ShapeError, match="tags"):
-        write(db, [nested])
+    assert write(db, [nested], table="native_nested") == 2
+    assert read(db, "native_nested").column("tags").to_pylist() == [["a"], ["b"]]
     wide = pa.schema([("amount", pa.decimal256(50, 2))])
     with pytest.raises(ShapeError, match="amount"):
         write(db, [pa.RecordBatch.from_pydict({"amount": [decimal.Decimal("1.00")]}, schema=wide)])

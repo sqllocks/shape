@@ -266,7 +266,8 @@ refusal unless it passes `True` or sets the variable. Plugin commands such as
 `pip install 'sqllocks-shape[duckdb]'` (the `sqllocks-shape-databases[duckdb]` extra; DuckDB is
 never a core dependency). `duckdb:///PATH.duckdb` is relative to the working directory and
 `duckdb:////abs/path.duckdb` absolute; `?schema=main` names the DuckDB schema (created when
-missing). Arrow batches are scanned by DuckDB directly, with no per-row conversion. Tables are
+missing). In the default native mode, Arrow batches are scanned directly, without per-row
+conversion. Tables are
 created from the schema:
 
 | Arrow type | DuckDB column |
@@ -280,14 +281,97 @@ created from the schema:
 | date, time | `DATE`, `TIME` |
 | timestamp (no zone, µs / ns / ms / s) | `TIMESTAMP` / `TIMESTAMP_NS` / `TIMESTAMP_MS` / `TIMESTAMP_S` |
 | timestamp with a zone | `TIMESTAMPTZ` |
+| list (including large/fixed-size), struct, map | `T[]`, `STRUCT("field" T, ...)`, `MAP(K, V)`, recursively |
 
-The schema's primary key is a `PRIMARY KEY`. A type DuckDB cannot hold (nested values, durations)
+The schema's primary key is a `PRIMARY KEY`. A type DuckDB cannot hold (for example durations)
 is refused with the column named. `--write-mode` takes `create` (default), `append`, `truncate`,
 `replace` and `upsert` (`INSERT OR REPLACE` on the primary key; without one:
 `upsert needs a primary key on <table>`, exit 2). One table is one transaction; `--commit-rows N`
 commits every N rows so another connection sees them. A database file locked by another process is
 exit 2 with DuckDB's message. Reading the tables back gives the same `shape.repro.dataset_id` as
 the generated tables.
+
+The matching `shape.sources` DuckDB reader from `sqllocks-shape-integrations` opens the file
+read-only: `duckdb:///abs/path.duckdb?table=main.NAME`. Its path follows that source's URI
+syntax (three slashes for an absolute path). In Python,
+`DuckDbSource().read(uri, batch_size=65536)` yields the stored Arrow types and values;
+`schema(uri)` reads the table schema. It uses UTC for timestamp instants. A missing file
+is refused without creating it; writer-only URI parameters are refused before opening.
+
+### Native nested database values
+
+The database writers and Delta accept `nested=native` (default) or `nested=json`. Database
+writers also accept it as a URI parameter. On the command line use
+`--sink-config postgres.nested=json`, substituting the sink name (including `delta`).
+This option does not change the `sql` script sink or SQL Server/Fabric targets.
+
+| Arrow container | PostgreSQL | MySQL | Databricks | DuckDB | Snowflake |
+|---|---|---|---|---|---|
+| scalar list | matching `T[]` | `JSON` | `ARRAY<T>` | `T[]` | `VARIANT` (`ARRAY` with `typed`) |
+| struct | `JSONB` | `JSON` | `STRUCT<field: T, ...>` | `STRUCT(field T, ...)` | `VARIANT` (`OBJECT` with `typed`) |
+| list of structs | `JSONB` | `JSON` | `ARRAY<STRUCT<...>>` | `STRUCT(...)[]` | `VARIANT` (`ARRAY` with `typed`) |
+| map | `JSONB` | `JSON` | `MAP<STRING, V>` | `MAP(K,V)` | `VARIANT` (`OBJECT` with `typed`) |
+
+PostgreSQL arrays are text-format COPY data with array quoting, not SQL expressions. Native
+Databricks values are bound JSON passed to `from_json` with the resolved recursive schema and
+`FAILFAST` parsing. Its JSON transport requires string map keys; non-string map keys and
+unsupported leaves fail before connecting, naming the column and `nested=json` alternative.
+Duplicate Databricks map keys are refused rather than collapsed; an invalid later streaming
+batch reports how many earlier rows were committed. PostgreSQL arrays of lists are refused
+before connecting; `nested=json` stores their JSON text instead.
+
+Snowflake keeps `VARIANT` by default; `nested=typed` selects unstructured `ARRAY`/`OBJECT`.
+Native/typed Parquet COPY explicitly uses the vectorized scanner and logical types so null
+array entries retain their positions. Empty structs and non-string map keys cannot use this
+Parquet object transport; errors name the column and suggest adding fields or preencoding a
+JSON string. A manually preencoded Arrow string writes as `VARCHAR`; it does not restore a
+native VARIANT/OBJECT automatically. Unsupported Parquet leaves and invalid nested decimal
+precision/scale are also refused before connecting. Duplicate object map keys are refused.
+Nested binary requires manual base64 encoding into Arrow strings before writing: a lossless
+Parquet-to-VARIANT binary read-back mapping has not been verified. This applies to typed
+and legacy modes too; top-level binary columns keep their scalar mapping.
+Live connector validation remains an Owner action.
+
+The explicit `json` mode keeps the earlier text/VARIANT paths: PostgreSQL `TEXT`, MySQL
+`LONGTEXT`, Databricks `STRING`, Snowflake's existing VARIANT staging; DuckDB uses `VARCHAR`
+JSON text. Delta's explicit `json` mode stores nested columns as UTF-8 JSON text too. Native
+Delta maps retain key/value entries. Native Delta timestamps at every nesting depth read
+back in UTC with microsecond precision, matching its scalar and list behavior; submicrosecond
+precision is not retained. For example, timestamp nanoseconds `1767323045123456789` read back
+as timestamp microseconds `1767323045123456`, including inside map values. Compare native
+Delta values after this explicit UTC/microsecond normalization. Delta uses the existing
+table protocol defaults. Unsupported nested Delta leaves name the
+column and the `nested=json` alternative before storage is accessed.
+Native writes preserve SQL NULL versus empty containers. PostgreSQL/MySQL JSON values and
+Databricks JSON parameters encode decimals as exact text, temporal values as ISO text and binary values as base64; map
+entries use key/value pairs where the target permits duplicates, and Databricks maps use JSON
+objects. Non-finite numbers are refused by the native JSON transport.
+Nanosecond Arrow time fields cannot cross the PostgreSQL/MySQL Python JSON or array
+transport exactly; these shapes are refused before connecting. Preencode exact time values
+as Arrow strings before writing. The JSON fallback also uses Python time values and does
+not recover their discarded nanoseconds. Databricks nested timestamp values with nonzero
+submicroseconds are refused before binding; use JSON text storage to keep their digits.
+PostgreSQL native timestamp arrays likewise require at most microsecond precision;
+nanosecond Arrow timestamp array schemas are refused with the JSON text alternative.
+
+PostgreSQL scalar arrays, Databricks containers, DuckDB and Delta have native Arrow read-back
+types. Databricks child types come from `full_data_type` catalogs, without child profiling.
+JSON-backed
+columns may read as JSON text; restoring their Arrow types requires the original Arrow schema
+from the caller. Automatic child-schema recovery is not promised. Compare parsed values with
+that schema after normalizing map/JSON key order, decimal scale and temporal instants. Corrupt
+or schema-mismatched JSON must be refused, rather than coerced. Parse the source JSON exactly
+once: a quoted JSON string is not an object or array, duplicate object fields are ambiguous,
+and JSON-looking string children remain strings. Native DuckDB lists read back
+as variable lists; nested time and zoned timestamps use the documented scalar microsecond
+normalization, with UTC for instant comparisons. Exact duplicate struct field names must be
+renamed; they cannot be represented unambiguously by the JSON fallback either.
+
+`shape_databases.nested_readback.restore_json_column(raw_values, original_field)` performs
+that strict schema-guided JSON restoration. It preserves exact decimal values and nanosecond
+timestamps/times where the original type can hold them, and refuses precision loss. This
+helper applies to JSON-backed physical columns; native Databricks catalog child types and
+PostgreSQL array element types must be read directly rather than reconstructed from JSON.
 
 ## Secrets
 
