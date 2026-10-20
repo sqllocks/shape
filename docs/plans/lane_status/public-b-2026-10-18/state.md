@@ -57,6 +57,6 @@ Use `/workspace/public-b-validation/test-env.sh`, uv0.8.17 locked workflow, no p
 No skips/xfail/deleted/weakened tests, loosened gates/tolerances, tags/releases/publish, direct protected push, credential/settings changes, self-hosted runners or banned names. report.md is INTERIM; rewrite final only when all assigned issues merged/parked or unresolved hard stop. Continue now after every reset/compaction.
 
 
-## Generation interpretation corrected — 2026-10-20 22:22UTC
+## Generation interpretation corrected — 2026-10-20
 
 Independent frz_review reassessment: earlier blanket parking of code-shaped category names was too broad. All14 known generation flags can potentially be addressed by permitted fixed provenance/lineage-backed name aliases, preserving counts/weights/probabilities/numeric charges and unchanged checks. formats_recover implementing targeted tests-first on42; frz_review reviews exact result. No green claim yet. Two time-only workloads remain parked; #20 remains open/partial, no Nightly dispatch or closure. Updated questions.md supersedes the earlier four-workload/new-decision rationale above. Keep all input/recording hashes unchanged. Existing isolated history0.9.1 reference pools match recorded-release dataset blobs, but Arrow26 differs from frozen environment, so no whole-environment equivalence claim.
