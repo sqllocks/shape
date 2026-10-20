@@ -181,3 +181,39 @@ def test_mysql_referenced_replace_refuses_before_implicit_ddl_commits(rerun_data
     with pytest.raises(ShapeError, match="fk_child_parent"):
         write_targets(engine(10), [uri], options(write_mode="replace"))
     assert rows() == before
+
+
+@pytest.mark.parametrize("rerun_database", ["mysql"], indirect=True)
+def test_mixed_existing_and_new_tables_refuse_before_any_destructive_preparation(rerun_database):
+    uri, prefix, execute, rows, options, q = rerun_database
+    constraint = "fk_external_mixed_" + prefix
+    execute(f"CREATE TABLE {q(prefix + 'a')} (id BIGINT PRIMARY KEY)")
+    execute(f"INSERT INTO {q(prefix + 'a')} VALUES (999)")
+    execute(
+        f"CREATE TABLE {q(prefix + 'external')} (parent_id BIGINT, CONSTRAINT {q(constraint)} "
+        f"FOREIGN KEY (parent_id) REFERENCES {q(prefix + 'parent')} (id))"
+    )
+    execute(f"INSERT INTO {q(prefix + 'external')} VALUES (1)")
+    before = rows()
+    schema = definition(10)
+    tables = {
+        "a": Table("a", {"id": Column("id", "integer", {"strategy": "sequence"})}, ["id"]),
+        **schema.tables,
+        "new": Table("new", {"id": Column("id", "integer", {"strategy": "sequence"})}, ["id"]),
+    }
+    replacement = Engine(
+        GenSchema(schema.model, tables, schema.relationships, []),
+        row_counts={name: 3 for name in tables},
+        seed=42,
+        chunk_rows=2,
+    )
+    try:
+        with pytest.raises(ShapeError) as error:
+            write_targets(replacement, [uri], options(write_mode="truncate"))
+        assert list(execute(f"SELECT id FROM {q(prefix + 'a')}")) == [(999,)]
+        assert rows() == before
+        assert list(execute(f"SELECT parent_id FROM {q(prefix + 'external')}")) == [(1,)]
+        assert any(name in str(error.value) for name in (constraint, "fk_child_parent"))
+    finally:
+        for name in ("new", "a"):
+            execute(f"DROP TABLE IF EXISTS {q(prefix + name)}")
