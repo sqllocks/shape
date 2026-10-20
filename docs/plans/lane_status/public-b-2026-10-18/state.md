@@ -4,7 +4,7 @@ Updated 2026-10-20 after PR40 merged and all own open lanes refreshed. Work cont
 
 ## Progress
 
-Nine assigned issues:1merged11.1%,6active-ready66.7%,1active-partial11.1%,1dependency-blocked11.1%;8unmerged88.9%. Seven ready implementations including the merged issue77.8%. Partial #20 category is not full delivery. Supporting PR40 is outside the nine-issue denominator. Give full count updates every five minutes plus merge/blocker milestones; last full update approximately22:03UTC.
+Nine assigned issues:1merged11.1%,7active-ready77.8%,1dependency-blocked11.1%;8unmerged88.9%. Eight ready implementations including the merged issue88.9%. Partial #20 category is not full delivery. Supporting PR40 is outside the nine-issue denominator. Give full count updates every five minutes plus merge/blocker milestones; last full update approximately22:03UTC.
 
 Current main: `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` from PR40. Its post-merge workflows CI39504029294, Documentation39504029094 and Security39504029453 are still queued/running; no observed failures, no complete main-green claim. Metadata agent watches. Prior main35addfc4 had all workflows green, recorded in W9-08.md.
 
@@ -19,7 +19,7 @@ Current main: `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` from PR40. Its post-mer
 | #10 W9-09 | lane/W9-09 / 0178fa0c93ba0bc9133a7a6e63067a97f9add115 | https://github.com/sqllocks/shape/pull/34 | Ready; main53 contained; exact independent APPROVAL metadata; fresh CI pending |
 | #17 W9-16 | lane/W9-16-finish / 81cff73ea799039a70b5c584ea7cbfd1e3ec1749 | https://github.com/sqllocks/shape/pull/31 | Ready; main53 contained; exact independent APPROVAL metadata; fresh CI pending |
 | #6 W9-05 | lane/W9-05 / 66ace0965ce5442cb931abc77d4b8bdab43f08a9 | https://github.com/sqllocks/shape/pull/43 | Ready; main53 contained; exact independent APPROVAL frz_review; depends42 landing and combined main refresh/CI |
-| #20 FRZ-01 | lane/FRZ-01-finish / da5fefe24e5c4cb6e54dcbf7ab5cccaae3f711ad | https://github.com/sqllocks/shape/pull/42 | Category + generation aliases approved at intermediate head; clock implementation in progress; no closure |
+| #20 FRZ-01 | lane/FRZ-01-finish / 0b95d31a7f70fcaa2c399b1ff121420b66eb0113 | https://github.com/sqllocks/shape/pull/42 | Complete3-part fix independently APPROVED exact head; all4value acceptance green; freshCI/merge/mainNightly pending; no closure |
 | #14 W9-13 | lane/W9-13 / 58966e09218ef3a8c2cdb96ad22ccbcf6fbd6033 | none | Decision journal only; source-interface dependency blocked until Lead A35 merges |
 
 Worktrees: `/workspace/shape-w9-08`, `-09`, `-10`, `-11`, `-12`, `-16`, `-05`; `/workspace/shape-frz-01` for42. Authors: dbt_recover29; eventhouse_recover30/43; root33; formats_recover34/42; iceberg_recover31. All tracked trees clean except root33's old owned `docs/plans/lane_status/W9-12-commands.md` unstaged changes; preserve those, do not commit old raw commands. dbt has known empty untracked `not-json.tmp`; leave it.
@@ -73,3 +73,8 @@ Generation fix signed/pushed da5fefe24e5c4cb6e54dcbf7ab5cccaae3f711ad on42; frz_
 ## Hosted runner scheduling
 
 Root intentionally canceled PR31 CI39504110302/Wheels39504110292 and PR34 CI39504158279 to release hosted runner slots for first Owner merge group29/30/33. Required29 jobs were still queued after substantial wait. These lower-priority heads must absorb the next main merge and rerun anyway. Cancellations are NOT passing evidence; do not retry until next main refresh. Their source and exact independent approvals are unchanged. Main53 validation and first-group/new-source43 CI remain running. Docs/Security feedback on31/34 remains relevant, but complete merge gates will be fresh after refresh. No local fulls or scope/gate changes.
+
+
+## FRZ complete implementation ready
+
+PR42 complete3-part fix signed/pushed0b95d31a7f70fcaa2c399b1ff121420b66eb0113, independent frz_review APPROVED exact source. Actual healthcare80/80 and capital64/64 pass allclausesa-f with5original baseline seed digests authenticated; both actual time-only fixtures exit0/0mismatches. Restored original generation verifier reproduces14flags; restored profile/timing source reproduces5red controls. HostSunday/2027, provenance/input tamper, distribution, explicit-date and restore/timed-context controls pass. Final targeted138pass eachkernel; configuredmypy703+strict2newmodules/Ruff/format/wording clean. No record/manifest/fixture/numeric/threshold edit. FullPRtitle/body rewritten, Refs20 only. HostedCI initializing; no mainNightly or closure yet. Earlier partial/parking statements above are historical. Counts now1merged/7active-ready/1dependency-blocked of9; implementationready8/9inclmerged88.9%, actualdelivery1/9=11.1%.

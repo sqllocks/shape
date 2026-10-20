@@ -1,10 +1,10 @@
-# Public B interim checkpoint — 2026-10-20 21:40 UTC
+# Public B interim report — 2026-10-20
 
-Work is continuing. This is not the final completion report. The earlier transient credential interruption resolved with fresh command environments; authentication settings were unchanged. Current main is `35addfc4c310b85a62cbe7f315e1d50fb8e426f8`.
+Work is continuing. This is not the final completion report. The earlier transient credential interruption resolved with fresh command environments; authentication settings were unchanged. Current main is `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` after supporting PR40 merged. Its full post-merge gate is still running; no completed main-green claim.
 
 ## Progress
 
-Nine assigned issues: one merged (11.1%), six ready/reviewed implementations (66.7%), two blocked or partially parked (22.2%). Eight remain unmerged (88.9%). Seven have ready implementation including the merged issue (77.8%). Partial #20 category work is not full delivery. Supporting PR40 is outside the nine-issue total.
+Nine assigned issues: one merged (11.1%), seven ready/reviewed implementations (77.8%), one dependency-blocked (11.1%). Eight remain unmerged (88.9%). Eight have ready implementation including the merged issue (88.9%). #20 implementation is complete and approved; delivery still requires CI/merge/main Nightly/closure. Supporting PR40 is outside the nine-issue total.
 
 | Issue | Status | PR | Merge SHA |
 |---|---|---|---|
@@ -16,7 +16,7 @@ Nine assigned issues: one merged (11.1%), six ready/reviewed implementations (66
 | #17 Iceberg | Implemented, ready, independently approved; both current-head Windows core jobs passed; shared repair still required | [31](https://github.com/sqllocks/shape/pull/31) | None |
 | #6 Nested profiling | Ready and independently approved; depends on PR42 and current-main CI | [43](https://github.com/sqllocks/shape/pull/43) | None |
 | #14 BigQuery | Parked: source interface dependency absent from main | None | None |
-| #20 Frozen comparison | Reviewed error category ready; four value-recording workloads remain parked | [42](https://github.com/sqllocks/shape/pull/42) | None |
+| #20 Frozen comparison | Complete three-part fix ready and independently approved; all four value workloads pass; CI/merge/Nightly pending | [42](https://github.com/sqllocks/shape/pull/42) | None |
 
 All current feature heads and branches are recorded in [state.md](state.md). Their existing reviews remain bound to those heads. Canceled checks are not passes. No open feature PR has a complete green exact-head gate established.
 
@@ -33,7 +33,7 @@ Targeted acceptance red → green results below summarize the existing lane reco
 | #13 | `40 failed, 7 passed` against unchanged main | 171 focused passed in each kernel |
 | #17 | Original suite 18 failures: new module missing; expanded suite collection failed | 128 focused passed in each kernel; 16 adapter cases passed with SDK0.12 and minimum0.9 |
 | #6 | 14 acceptance cases failed in each kernel against base; later boundary regressions red | 221 focused/changed tests including both 1 GB cases; Python 220 nonheavy; capsules 171; conformance 39; corrected docs workflow green |
-| #20 partial category | 11 initial red; stronger base-behavior 3 red; identity 2 red and forged-pass 1 red | 107 focused passed; 21 Python category controls passed; four value workloads remain parked |
+| #20 | Category11initial red; original generation verifier reproduces14flags; prior profile/timing code reproduces5red controls | Final138targeted eachkernel; actualhealthcare80/80 andcapital64/64 allclausesa-f; both time-only fixtures0mismatches; unchanged original digests/thresholds |
 
 The native joint-heavy functional selection missing from CI passed in every implemented lane. No live account success is claimed.
 
@@ -54,11 +54,11 @@ Merged-head main workflows all completed successfully:
 
 ## Shared repair and next actions
 
-[PR40](https://github.com/sqllocks/shape/pull/40), head `3f6254768085d6f96683550c8939998170be989f`, is ready and independently APPROVED. It updates certifi to2026.10.19 plus the generated docs pin, uses pinned Playwright Chromium, and installs that browser before Documentation verification. No existing job, gate, assertion, dependency range, project version or tolerance was removed or loosened.
+[PR40](https://github.com/sqllocks/shape/pull/40) merged as `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` after independent exact-head approval and all four triggered workflows passed (30 successful jobs; conditional documentation publish skip only). Source-head green links and targeted red/green are in CI-runtime-repair.md. The new main's full gate remains pending; its security/build checks passed.
 
-Targeted advisory audit: old version exit1 with GHSA-6q48-6c7w-9gw2 → fixed version exit0, no known vulnerabilities. Branding acceptance:1 passed in30.95s. Static/lock/export checks passed. Exact-head complete CI is required before merge; no unfinished run is represented as passing.
+All seven open lanes were refreshed, signed/pushed and independently approved. Current exact heads are in state.md. Root deliberately canceled lower-priority31 coreCI/Wheels and34 coreCI to release hosted runner slots for first group29/30/33; these are NOT passes and must rerun after next main refresh. Other fresh gates are queued/running, with no observed failure. Merge whichever first-group member is fully green/current/reviewed first; then refresh other lanes, then34/31, then42/43, then14 after35/main interface. No local fulls. Product-code conflict refreshes require only targeted tests.
 
-Merge priority:40, then29/30/33 (32 already merged), then34/31, then42/43, then14 after Lead A's35. Refresh own open lanes after main moves, preserving additive entries. Run local targeted tests only for code conflicts, rebind independent reviews and require all exact-head triggered CI. Do not restart historical local full-suite workers. #20 stays open until its value acceptance is resolved and a qualifying main Nightly is green on all five parity shards, parity-publish and sqlserver-e2e.
+PR42 at `0b95d31a7f70fcaa2c399b1ff121420b66eb0113` implements recorded-error classification, authenticated name aliases and scoped pre-computation capture-date replay. No original recording/manifest/fixture/numeric value or threshold changed. Reviewer frz_review approved complete exact source. All four previous value failures pass targeted acceptance; final138tests pass eachkernel and static checks pass. It uses Refs20; no closure or main Nightly pass is claimed. PR43 still depends on42 landing and combined exact-head/main checks.
 
 ## Pending Owner/service actions
 
@@ -69,12 +69,10 @@ Merge priority:40, then29/30/33 (32 already merged), then34/31, then42/43, then1
 - #13: Owner supplies a model with a measure and row-level-security role, expected metadata and role-visible rows. Existing live test covers relationships/table reads; add measure/role read-back assertions after fixture approval. No role deployment or live query occurred.
 - #17: REST/MinIO emulator validation when images are available; no account-live pass is claimed; both Windows3.11 and3.14 core CI jobs passed on8c9fa927.
 
-## Parked questions
+## Remaining dependency and required post-merge acceptance
 
-Full options/evidence are in [questions.md](questions.md).
+Only #14 remains dependency-blocked: PR35 must merge before reusing W9-01's source interface. Its decimal rule is already approved:0<=scale<=precision before connecting, naming the column. Start fresh from then-main, not its historical journal ancestry. [Issue clarification](https://github.com/sqllocks/shape/issues/14#issuecomment-6299575080).
 
-- #20: Owner approved error/unsupported-recording classification, implemented in PR42. Reviewed registry names `profile:edge/x_pq_list.parquet` and `profile:edge/x_pq_nested.parquet`, both recorded TypeError with no values. They are reported separately and never count as passes. Four value workloads remain parked: `profile:edge/x_time_only.csv`, `profile:edge/x_time_ampm.csv`, `generate:capital_markets:medium`, `generate:healthcare:medium`. Recommendation: preserve strict recorded-value comparisons until a precise further comparison-context decision exists. Runtime timestamp exclusions and reference-name substitutions do not authorize changing calendar histograms or code values. [Updated issue comment](https://github.com/sqllocks/shape/issues/20#issuecomment-6301325664).
-- #6: former Wanted5 decision is resolved by the same Owner category approval. PR43 is ready and independently approved at4704c711; it depends on PR42 landing and combined current-main checks.
-- #14: wait for W9-01's source interface on main; PR35 remains open at the latest read. Recommendation: wait, start a fresh lane branch from then-main, and reuse the merged interface. Owner-approved validation is `0 <= scale <= precision` before connecting, with the column named in the error. [Issue comment](https://github.com/sqllocks/shape/issues/14#issuecomment-6299575080).
+#20 has no pending Owner comparison question after the provenance reconstruction. The two explicit recorded-error workloads never count as passes. Four value workloads now pass unchanged checks. After implementation merges, dispatch Nightly on main and require all five parity shards, parity-publish and sqlserver-e2e green; link the run and close20 only through a subsequent PR. No Nightly was dispatched or claimed yet. [Current issue status](https://github.com/sqllocks/shape/issues/20#issuecomment-6301325664). Exact safeguards and provenance are in questions.md and the reviewed FRZ lane record.
 
-Full options and evidence remain in questions.md. Lead A branches/issues and Premium were not modified. All owned local implementation commits are pushed; exact branch SHAs are in state.md.
+All owned local implementation commits are pushed. Current branch heads/reviews/next actions are in state.md. Lead A branches/issues and Premium were not modified. This report remains INTERIM while active merge gates run.
