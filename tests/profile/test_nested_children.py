@@ -17,6 +17,105 @@ from shape.streaming.messages import StreamMessage, decode_messages
 pytestmark = [pytest.mark.conformance, pytest.mark.zero_network]
 
 
+@pytest.mark.parametrize("kernel", ["python", "rust"])
+@pytest.mark.parametrize("mode", ["reference", "exact", "bounded"])
+@pytest.mark.parametrize("width", [2, 4, 16] + (["uuid"] if hasattr(pa, "uuid") else []))
+def test_opaque_scalar_children_keep_type_and_null_counts(
+    kernel: str, mode: str, width: int | str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SHAPE_KERNEL", kernel)
+    dispatch.reset()
+    if width == "uuid":
+        leaf = pa.ExtensionArray.from_storage(
+            pa.uuid(), pa.array([b"\xff" * 16, None, b"\xff" * 16, b"\x00" * 16], pa.binary(16))
+        )
+    else:
+        assert isinstance(width, int)
+        leaf = pa.array([b"\xff" * width, None, b"\xff" * width, b"\x00" * width], pa.binary(width))
+    table = pa.table({"x": pa.ListArray.from_arrays([0, 4], leaf)})
+    if mode == "reference":
+        child = shape.profile(table, joint=False).to_dict()["columns"]["x"]["children"][0]
+        assert child["null_rate"] == 0.25
+        assert child["dtype"] == "other"
+        assert child["cardinality"] == 2
+        assert child["min_value"] is None and child["value_counts_ext"] is None
+    else:
+        from shape.profile.engine import profile
+
+        child = profile(table, mode=mode)["tables"]["table"]["columns"][0]["children"][0]
+        assert child["kind"] == "other"
+        if mode == "exact":
+            assert child["distinct"] == 2
+        else:
+            assert child["distinct"] == pytest.approx(2, abs=0.01)
+        assert child["error_models"]["cardinality"]["exact"] is (mode == "exact")
+        assert "top" not in child and "min" not in child
+    assert child["arrow_type"] == str(leaf.type)
+    assert child["null_count"] == 1 and child["row_count"] == 4
+    assert child["path"] == "$.x[]"
+    dispatch.reset()
+
+
+def test_safe_nested_generation_uses_public_defaults_for_suppressed_extrema() -> None:
+    from shape.generation.nested import DEFAULT_MAX_LENGTH, DEFAULT_MIN_LENGTH
+
+    full = shape.profile(pa.table({"x": [[1]] * 40 + [[1] * 29]}), joint=False)
+    safe = redact_profile(full)
+    length = safe.to_dict()["columns"]["x"]["nested"]["length"]
+    assert "min" not in length and "max" not in length
+    assert length["hist"]["29"] == 1
+    output = shape.generate(safe, n=100, seed=11).tables["table"]
+    lengths = [len(row) for row in output.column("x").to_pylist() if row is not None]
+    assert min(lengths) >= DEFAULT_MIN_LENGTH
+    assert max(lengths) <= DEFAULT_MAX_LENGTH
+
+
+@pytest.mark.parametrize("kernel", ["python", "rust"])
+def test_binary_child_distinct_survives_bounded_merge_and_restore(
+    kernel: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from shape.profile.child_state import ProfileState
+    from shape.profile.engine import table_entry
+
+    monkeypatch.setenv("SHAPE_KERNEL", kernel)
+    dispatch.reset()
+    table = pa.table(
+        {
+            "x": pa.array(
+                [[b"\xaa\xbb\xcc\xdd", None], [b"\x00" * 4], [b"\xaa\xbb\xcc\xdd"]],
+                pa.list_(pa.binary(4)),
+            )
+        }
+    )
+    first = ProfileState(table.schema, "bounded")
+    first.update(table.slice(0, 1).to_batches()[0])
+    restored = ProfileState.from_snapshot(table.schema, first.snapshot())
+    second = ProfileState(table.schema, "bounded")
+    for batch in table.slice(1).to_batches(max_chunksize=1):
+        second.update(batch)
+    restored.merge(second)
+    result = table_entry(restored, "t", table.schema, "bounded")
+    child = result["columns"][0]["children"][0]
+    assert child["distinct"] == pytest.approx(2, abs=0.01)
+    assert child["count"] == 4 and child["null_count"] == 1
+    assert child["arrow_type"] == "fixed_size_binary[4]"
+    assert child["error_models"]["cardinality"]["exact"] is False
+    assert set(child) == {
+        "name",
+        "count",
+        "null_count",
+        "distinct",
+        "distinct_exact",
+        "kind",
+        "arrow_type",
+        "path",
+        "row_count",
+        "error_models",
+    }
+    assert "aabbccdd" not in json.dumps(result)
+    dispatch.reset()
+
+
 def fixture() -> pa.Table:
     return pa.table(
         {

@@ -976,7 +976,7 @@ def _diff_column(
         if rel > th["length_ratio"]:
             out.append(
                 _change(
-                    base.length_path or name,
+                    name,
                     "length_change",
                     base.length_mean,
                     cur.length_mean,

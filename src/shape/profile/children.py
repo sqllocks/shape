@@ -37,6 +37,18 @@ def child_path(parent: str, name: str, struct: bool = False) -> str:
     return parent + name if not struct else field_path(parent, name)
 
 
+def binary_storage(array: Any) -> Any:
+    """Binary leaf storage, including binary-backed extensions, without text decoding."""
+    a = array.combine_chunks() if isinstance(array, pa.ChunkedArray) else array
+    return binary_storage(a.storage) if isinstance(a.type, pa.BaseExtensionType) else a
+
+
+def is_binary_leaf(typ: Any) -> bool:
+    if isinstance(typ, pa.BaseExtensionType):
+        return is_binary_leaf(typ.storage_type)
+    return bool(pa.types.is_fixed_size_binary(typ))
+
+
 def lengths(array: Any) -> Any | None:
     t = array.type
     if pa.types.is_map(t):
@@ -50,11 +62,45 @@ def lengths(array: Any) -> Any | None:
 
 def reference_children(array: Any, path: str, depth: int) -> list[dict[str, Any]]:
     from .reference.column import _profile_column
+    from .reference.model import ColumnProfile
     from .reference.profile import _column_dict
     from .reference.readers import _arrow_cols
 
     out = []
     for name, arr, struct in arrays(array):
+        if is_binary_leaf(arr.type):
+            # These leaves were supported inside opaque parents before child profiling.
+            # They have no scalar profiler; never decode arbitrary bytes as text.
+            doc = _column_dict(
+                ColumnProfile(
+                    name=name,
+                    dtype="other",
+                    null_count=arr.null_count,
+                    null_rate=arr.null_count / len(arr) if len(arr) else None,
+                    cardinality=int(pc.count_distinct(binary_storage(arr)).as_py()),
+                    cardinality_ratio=None,
+                    is_unique=None,
+                    is_enum=False,
+                    enum_values=None,
+                    min_value=None,
+                    max_value=None,
+                    mean=None,
+                    std=None,
+                    distribution=None,
+                    distribution_params=None,
+                    pattern=None,
+                    is_primary_key=False,
+                    is_foreign_key=False,
+                    fk_ref_table=None,
+                )
+            )
+            doc.update(
+                arrow_type=str(arr.type), path=child_path(path, name, struct), row_count=len(arr)
+            )
+            if struct:
+                doc["present"] = (len(arr) - arr.null_count) / len(arr) if len(arr) else None
+            out.append(doc)
+            continue
         col = _arrow_cols(pa.table({name: arr}))[0]
         col.nested_depth = depth - 1
         col.nested_path = child_path(path, name, struct)

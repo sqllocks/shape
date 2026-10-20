@@ -2070,3 +2070,5 @@ Converting a full capture to the safe form now gives a different content ID when
   with child paths, presence rates, length statistics and configurable depth.
 - Preserve bounded child sketches through stream checkpoints; compare and check
   child paths, and include them in safe capture, JSON summaries and explanations.
+- Keep fixed-size binary and fixed-binary-backed extension children opaque, preserve existing parent
+  length-drift names, and generate safe nested captures using public length defaults.

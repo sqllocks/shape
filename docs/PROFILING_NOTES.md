@@ -717,6 +717,10 @@ windows use T-14 sketches for every child and length distribution, record their
 error models and retain those sketches through checkpoints and window merges.
 An older checkpoint without child sketches stays opaque after restore; replay
 from data to capture children rather than inventing historical child counts.
+Fixed-size binary and fixed-binary-backed extension children retain their Arrow type, null/presence
+counts and distinct counts as opaque scalar leaves. Their text and numeric value
+statistics are unavailable. Distinct counts are exact for files and tables and use
+the existing bounded cardinality sketch for streaming profiles.
 
 For a JSON stream, `shape stream-profile events.jsonl -o stream.json --option nested=true`
 decodes nested payload objects/lists as Arrow fields. Without that option payloads
@@ -735,6 +739,9 @@ deviations conservatively, even if repeated elements make an apparent large coho
 Counts, types, null/presence rates and length aggregates remain available. Full
 capture is explicit. `safe_scan` walks children using the existing fail-closed
 rules; safe captures omit the opaque nested length extreme pair those rules deny.
+Generation from these captures uses the existing public default of one to three
+elements per variable-length list/map, without reconstructing suppressed extremes
+from retained length bins. Full profiles retain their recorded length distribution.
 
 Nested comparison workloads whose authenticated 0.9.1 recording is an error are
 reported separately as NOT COMPARABLE through the reviewed comparison registry.

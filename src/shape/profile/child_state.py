@@ -10,7 +10,15 @@ import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.kernel.dispatch import get_kernel
 
-from .children import arrays, child_path, field_path, lengths, validate_depth
+from .children import (
+    arrays,
+    binary_storage,
+    child_path,
+    field_path,
+    is_binary_leaf,
+    lengths,
+    validate_depth,
+)
 
 _MAGIC = b"shape-children-v1\n"
 
@@ -24,14 +32,18 @@ class ProfileState:
         self.mode = mode
         self.max_depth = max_depth
         self.path = path
-        self.base = get_kernel().ProfileState(schema, mode)
+        self.binary = path != "$" and len(schema) == 1 and is_binary_leaf(schema.field(0).type)
+        self.base_schema = (
+            pa.schema([(schema.field(0).name, pa.string())]) if self.binary else schema
+        )
+        self.base = get_kernel().ProfileState(self.base_schema, mode)
         self.children: dict[str, list[ProfileState]] = {}
         self.lengths: dict[str, Any] = {}
         if not max_depth:
             return
         for f in schema:
             owner = field_path(path, f.name) if path == "$" else path
-            empty = pa.array([], type=f.type)
+            empty = pa.nulls(0, type=f.type)
             children = arrays(empty)
             if children:
                 self.children[f.name] = [
@@ -53,7 +65,17 @@ class ProfileState:
         return int(self.base.rows)
 
     def update(self, batch: Any) -> None:
-        self.base.update(batch)
+        if self.binary:
+            # Hex is bijective for bytes. Reuse exact/HLL cardinality and snapshot
+            # machinery without decoding bytes or exposing surrogate value summaries.
+            values = binary_storage(batch.column(0))
+            encoded = pa.array(
+                [None if value is None else value.hex() for value in values.to_pylist()],
+                pa.string(),
+            )
+            self.base.update(pa.record_batch([encoded], schema=self.base_schema))
+        else:
+            self.base.update(batch)
         for i, f in enumerate(self.schema):
             arr = batch.column(i)
             for state, (name, values, _) in zip(
@@ -70,6 +92,14 @@ class ProfileState:
 
     def finalize(self, top_n: int = 500) -> dict[str, Any]:
         result: dict[str, Any] = self.base.finalize(top_n)
+        if self.binary:
+            col = result["columns"][0]
+            result["columns"][0] = {
+                key: col[key]
+                for key in ("name", "count", "null_count", "distinct", "distinct_exact")
+                if key in col
+            }
+            result["columns"][0]["kind"] = "other"
         for f, col in zip(self.schema, result["columns"], strict=True):
             states = self.children.get(f.name)
             if states is not None:
@@ -121,7 +151,7 @@ class ProfileState:
                 schema, base64.b64decode(text, validate=True)
             )
 
-        self.base = restore(self.schema, document["base"])
+        self.base = restore(self.base_schema, document["base"])
         for name, states in self.children.items():
             for state, doc in zip(states, document["children"][name], strict=True):
                 state._restore(doc)

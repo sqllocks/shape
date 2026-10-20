@@ -112,6 +112,8 @@ def _column_doc(stats: dict[str, Any], arrow_type: str, mode: str) -> dict[str, 
     kind = d["kind"]
     exact = mode == "exact"
     models: dict[str, ErrorModel] = {"counts": _EXACT}
+    if "distinct" in d:
+        models["cardinality"] = _EXACT_CARD if exact else hll_error(14)
     if "top" in d:
         d["top"] = [[_json_value(v), c, e, f] for v, c, e, f in d["top"]]
         models["cardinality"] = _EXACT_CARD if exact else hll_error(14)
