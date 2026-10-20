@@ -726,3 +726,12 @@ requirements:
   text: Kafka and Event Hubs support column keys and headers, preserve replay identity, refuse reserved header names and unknown metadata columns before sending, and optionally decode broker metadata outside default drift comparisons.
   verify: [conformance]
   owner: streaming
+
+- id: SHAPE-NESTED-CHILD-001
+  title: Nested child profiling
+  level: L1
+  milestone: W9-05
+  priority: MUST
+  text: Nested profiles retain child statistics under their owning column, exact or bounded by mode, with depth, paths, privacy and path-addressed consumers.
+  verify: [conformance]
+  owner: profiling

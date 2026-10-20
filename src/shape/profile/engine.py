@@ -37,15 +37,22 @@ _EXACT = ErrorModel("exact", True)
 
 @dataclass(frozen=True)
 class EngineOptions:
-    """Engine settings. ``threads`` of ``None`` reads ``SHAPE_THREADS`` (unset: all cores)."""
+    """Engine settings; child depth defaults to 8 (0 keeps opaque columns).
+
+    ``threads`` of ``None`` reads ``SHAPE_THREADS`` (unset: all cores).
+    """
 
     mode: str = "exact"
     batch_size: int = 1 << 17
     threads: int | None = None
     top_n: int = 500
     csv: CsvOptions | None = None
+    max_depth: int = 8
 
     def __post_init__(self) -> None:
+        from shape.profile.children import validate_depth
+
+        validate_depth(self.max_depth)
         if self.mode not in MODES:
             raise ValueError(f"mode must be 'exact' or 'bounded', got {self.mode!r}")
         if self.batch_size < 1:
@@ -97,7 +104,11 @@ _MOMENTS = ("mean", "m2", "variance_population", "variance_sample")
 
 def _column_doc(stats: dict[str, Any], arrow_type: str, mode: str) -> dict[str, Any]:
     d = dict(stats)
+    if "children" in d:
+        d["children"] = [_column_doc(c, c.get("arrow_type", ""), mode) for c in d["children"]]
     d["arrow_type"] = arrow_type
+    if isinstance(d.get("length"), dict) and "kind" in d["length"]:
+        d["length"] = _column_doc(d["length"], "int64", mode)
     kind = d["kind"]
     exact = mode == "exact"
     models: dict[str, ErrorModel] = {"counts": _EXACT}
@@ -140,7 +151,9 @@ def profile_table(
         # the current decoded block so allocator retention cannot grow with the file.
         csv = CsvOptions(stream=True, block_size=_BOUNDED_CSV_BLOCK, use_threads=False)
     src = open_source(source, name=name, batch_size=opts.batch_size, csv=csv)
-    state = get_kernel().ProfileState(src.schema, opts.mode)
+    from shape.profile.child_state import ProfileState
+
+    state = ProfileState(src.schema, opts.mode, opts.max_depth)
     pool = pa.default_memory_pool()
     for batch in src.batches():
         state.update(batch)

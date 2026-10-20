@@ -579,3 +579,33 @@ def _sh2_030() -> None:
 @requirement("SH2-031")
 def _sh2_031() -> None:
     assert coverage_problems() == []
+
+
+@requirement("SH2-033")
+def _sh2_033() -> None:
+    import pyarrow as pa
+
+    from shape.privacy.redact import redact_profile
+    from shape.profile.engine import EngineOptions, profile_table
+    from shape.profile.reference.profile import profile
+
+    table = pa.table({"x": [[{"value": 918273.0}] * 50]})
+    full = profile(table, joint=False)
+    child = full.to_dict()["columns"]["x"]["children"][0]["children"][0]
+    assert child["path"] == "$.x[].value" and child["row_count"] == 50
+    assert child["mean"] == 918273
+    safe = redact_profile(full).to_dict()["columns"]["x"]["children"][0]["children"][0]
+    assert all(
+        safe.get(key) is None
+        for key in (
+            "mean",
+            "min_value",
+            "max_value",
+            "quantiles",
+            "enum_values",
+            "value_counts_ext",
+        )
+    )
+    bounded = profile_table(table, options=EngineOptions(mode="bounded"))
+    model = bounded["columns"][0]["children"][0]["children"][0]["error_models"]["quantiles"]
+    assert model["exact"] is False and model["algorithm"]

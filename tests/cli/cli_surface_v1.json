@@ -4636,6 +4636,10 @@
      "choices": null,
      "takes_value": true
     },
+    "--max-depth": {
+     "choices": null,
+     "takes_value": true
+    },
     "--multivariate": {
      "choices": null,
      "takes_value": false

@@ -2061,3 +2061,10 @@ Converting a full capture to the safe form now gives a different content ID when
   controls and event-time message timestamps; replay keys remain available.
 - Stream sources expose message metadata on request and drift ignores it by
   default. The CLI exposes both write and read metadata options.
+
+### W9-05: nested child profiling
+
+- Profile struct fields, list elements and map keys/values under their owning column,
+  with child paths, presence rates, length statistics and configurable depth.
+- Preserve bounded child sketches through stream checkpoints; compare and check
+  child paths, and include them in safe capture, JSON summaries and explanations.

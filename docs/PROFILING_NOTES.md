@@ -541,12 +541,15 @@ only the contract. The findings become `type` proposals with `shape proposals pr
 
 A Parquet file, a Delta table or a JSON Lines file can hold list, struct and map columns, and lists and structs inside
 them. `shape profile` reads them (Shape 0.9.1 stopped with `unhashable type: nested Arrow column`). A nested column is
-recorded as a whole. Nothing inside its values is profiled: a struct's fields, a list's elements and a map's keys and
-values have no statistics of their own.
+recorded as a whole, with optional `children` underneath it. Each struct field, list element
+(`[]`) and map key/value (`{key}`, `{value}`) has its ordinary statistics and a `path`, such as
+`$.address.city` or `$.items[].price`. Child `row_count` excludes null parents; list elements
+include null elements. A struct field's `present` rate counts non-null fields among its non-null
+parent structs (null for no parents). Names containing punctuation use JSON-quoted brackets.
 
 The column has `dtype` `nested` and the usual `null_count` and `null_rate`; the table's `row_count` is the number of rows.
-It has no `cardinality`, `min_value`, `max_value`, `mean`, `pattern` or value counts, and it is never a key. Three keys
-only a nested column has:
+It has no `cardinality`, `min_value`, `max_value`, `mean`, `pattern` or value counts, and it is never a key. Additional keys
+a nested column carries:
 
 | Key | Meaning |
 |---|---|
@@ -700,3 +703,40 @@ shape profile data/ --dataset -o shop.shape --sample 20%                       #
     shape: note: profiled a random sample of 20 of 100 rows (seed 42), table orders
     {"shape_content_id": "e61f01b12dfbf067d390c120e7e78ec5a08e94c833ebdabb71f70c57ce96baf3", "written": "shop.shape"}
     ```
+
+
+### Child depth, streams and privacy
+
+`shape profile INPUT --max-depth 8 --json profile.json` includes up to eight child
+levels, as does `shape.profile(source, max_depth=8)`. Zero keeps the existing opaque
+record. Depth must be an integer from 0 to 64. Older profiles without `children`
+load unchanged. IPC/Arrow files (`.ipc`, `.arrow`, `.feather`) are also accepted.
+`length` contains the ordinary numeric statistics of non-null list/map lengths.
+Exact files and tables use exact statistics. Bounded engine profiles and stream
+windows use T-14 sketches for every child and length distribution, record their
+error models and retain those sketches through checkpoints and window merges.
+An older checkpoint without child sketches stays opaque after restore; replay
+from data to capture children rather than inventing historical child counts.
+
+For a JSON stream, `shape stream-profile events.jsonl -o stream.json --option nested=true`
+decodes nested payload objects/lists as Arrow fields. Without that option payloads
+retain the existing JSON-text behavior; broker header metadata retains its existing
+representation. In Python use `decode_messages(messages, nested=True)`.
+
+`shape diff` reports child additions/removals and statistic changes by path; list
+length distributions use the existing KS-distance threshold and minimum-row rule,
+including distributions whose means agree. `shape check` accepts both
+`items[].price` and `$.items[].price` column rules, such as `{"min": 4}`.
+`shape explain` names those paths. JSON summaries and bridge `profile_show` keep
+children under their column. Generation does not use the child distributions.
+
+Safe captures suppress child values, extremes, quantiles, means and standard
+deviations conservatively, even if repeated elements make an apparent large cohort.
+Counts, types, null/presence rates and length aggregates remain available. Full
+capture is explicit. `safe_scan` walks children using the existing fail-closed
+rules; safe captures omit the opaque nested length extreme pair those rules deny.
+
+Nested comparison workloads whose authenticated 0.9.1 recording is an error are
+reported separately as NOT COMPARABLE through the reviewed comparison registry.
+They never count as passing parity; workloads with recorded values keep unchanged
+comparisons and tolerances. No recording is refreshed.

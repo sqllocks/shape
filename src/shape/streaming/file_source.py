@@ -312,7 +312,7 @@ class FileStreamSource:
         order = opts.pop("order", "file")
         decode: dict[str, Any] = {
             k: opts.pop(k)
-            for k in ("event_time_field", "event_time_unit", "with_offsets", "on_error")
+            for k in ("event_time_field", "event_time_unit", "with_offsets", "on_error", "nested")
             if k in opts
         }
         if opts:
