@@ -6,19 +6,19 @@ Read the attached prompt at `/workspace/attachments/9302a188-787d-4428-9403-3510
 
 Lane evidence from now on: PR link, green CI links on the merged head, acceptance red/green output. Per-command ledger and raw-log archival are retired; historical files remain. Parking, naming restrictions, no skips/xfails/deleted tests, unchanged assertions/gates/tolerances and protected-branch rules remain in force. Keep lanes parallel and skip another session’s work.
 
-Decision-log row: `docs/plans/COMPLETION_PLAN.md` §2.3, commit `ec27f88`, ready lead PR https://github.com/sqllocks/shape/pull/36, independently APPROVED; CI pending. Premium process wording and planning PRs belong to other sessions; Public A does not touch them.
+Decision-log row: `docs/plans/COMPLETION_PLAN.md` §2.3, refreshed head `5ae9734`, ready lead PR https://github.com/sqllocks/shape/pull/36, independently APPROVED; CI pending. Premium process wording and planning PRs belong to other sessions; Public A does not touch them.
 
 ## Issues — 0 of 7 merged
 
 | Issue | Branch / head | Current stage / next action |
 |---|---|---|
-| #2 W9-01 | lane/W9-01, 8bb2375; ready PR https://github.com/sqllocks/shape/pull/35 | Independent implementation/docs review APPROVED. Own source/security/privacy/SQLServer checks passed, including 727 tests in each kernel. Both stale plugin-list transcripts were corrected from actual 182-entry output and both affected nodes passed. Review approval extends to 8bb2375. Merge once every triggered exact-head CI job is green and main is current. No local full gate required. |
-| #3 W9-02 | lane/W9-02, 15c8b67 | Source checkpoint and 65 targeted cases complete provisionally against W9-01 model. Resume real integration after #2 merge, then ready PR/CI/review. Same agent currently implements #7. |
+| #2 W9-01 | lane/W9-01, 8bb2375 (refresh in progress); ready PR https://github.com/sqllocks/shape/pull/35 | Independent implementation/docs review APPROVED. Own source/security/privacy/SQLServer checks passed, including 727 tests in each kernel. Both stale plugin-list transcripts were corrected from actual 182-entry output and both affected nodes passed. Review approval extends to 8bb2375. Main advanced to35addfc; docs-only conflict resolution is underway, preserving both additions. Merge once every triggered exact-head CI job is green and main is current. No local full gate required. |
+| #3 W9-02 | lane/W9-02, 15c8b67 | Dedicated cloud agent owns this branch. 66 provisional acceptance cases pass, including a new Unity Catalog table-kind discovery regression. CLI/bridge integration remains red until #2 merges. Continue independent work in parallel, then integrate real source base and open ready PR. |
 | #4 W9-03 | lane/W9-03, 9869529 | PARKED: Owner approval needed for four extra unbounded string-primary-key refusals. 233 focused cases passed; authorized corpus changes preserved. No PR. |
 | #5 W9-04 | lane/W9-04, d9591d0 | PARKED: DuckDB cannot add FK after both tables exist. Recommend documented parent-first inline FK exception. Partial derivation/preparation checkpoint has 77 passing targeted cases. No PR. |
-| #7 W9-06 | lane/W9-06, 526e4f2 | Native SQL/cloud/DuckDB writer checkpoint pushed; remaining recursive preflight and matching-source read-back integration in progress. Source integration waits #2/#3 merge; Delta map coverage/options still to finish. Targeted DB plugin selection passed 554 tests, including 81 new cases. Independent review active. |
+| #7 W9-06 | lane/W9-06, 15566fd | Native SQL/cloud/DuckDB writer checkpoint pushed; remaining recursive preflight and matching-source read-back integration in progress. Source integration waits #2/#3 merge; Delta native maps implemented; strict read-back nanosecond precision fix underway. Targeted DB plugin selection passed 554 tests, including 81 new cases. Independent review active. |
 | #8 W9-07 | lane/W9-07, 264efcd | PARKED on earlier #5 safe constraint derivation dependency. Independent feature module 91 cases pass; reviewer verified 17 regressions. Two AST integration cases remain red pending #5. No PR. |
-| #16 W9-15 | not started; prior lane/W9-15 contains journal only | Read-only readiness complete with no Owner blocker. Implementation MUST wait #2 merge. Oracle plan and test matrix: /workspace/public-a-evidence/W9-15-readiness.md. |
+| #16 W9-15 | independent implementation active | Readiness complete with no Owner blocker. New sink/helpers/tests can proceed in parallel; source integration and merge follow #2. Shared-file ownership is coordinated with #7. Oracle plan and test matrix: /workspace/public-a-evidence/W9-15-readiness.md. |
 
 ## Parked questions
 
@@ -30,7 +30,7 @@ Exact options and recommendations: `questions.md`.
 
 ## Environment
 
-Git credential gate passed; main was d0e64d5 at last inspection. All commits are signed and pushed only through origin. Prior unsigned lane histories were backed up before exact-lease signed-squash repair. Scratch branch remains `lead/public-a-2026-10-18`.
+Git credential gate passed; main was35addfc at last inspection. All commits are signed and pushed only through origin. Prior unsigned lane histories were backed up before exact-lease signed-squash repair. Scratch branch remains `lead/public-a-2026-10-18`.
 
 Pinned uv 0.8.17 is at `/tmp/public-a-uv/bin/uv` (restore externally after an environment reset). Reaper persists at `$HOME/bin/reap.py`. Existing checks have stayed far below 1,000 zombies. Bootstrap completed. No full local suite is active or required under the new directive.
 
@@ -40,4 +40,4 @@ Public CI already runs both core kernel modes in its min-versions job, plus nati
 
 ## Next
 
-Merge reviewed PRs #35 and #36 promptly as each reaches green CI and current main. Merge the resulting main into open implementation lanes once; do not repeat local tests for a clean refresh. Resume #3 and start #16 immediately after #2 merge. Continue #7 in parallel. Preserve parked checkpoints until genuine Owner decisions arrive. Final report is required when all seven issues are merged or parked, or another hard stop occurs.
+Merge reviewed PRs #35 and #36 promptly as each reaches green CI and current main. Merge the resulting main into open implementation lanes once; do not repeat local tests for a clean refresh. Continue independent #3/#16 implementation now; integrate the actual source base immediately after #2 merge. Continue #7 in parallel. Preserve parked checkpoints until genuine Owner decisions arrive. Final report is required when all seven issues are merged or parked, or another hard stop occurs.

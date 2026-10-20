@@ -194,3 +194,119 @@ Tools used before shell access: download_file initially failed because workspace
 - 2026-10-20T18:37:31.155578+00:00 | `gh issue comment 5 --repo sqllocks/shape --body-file /workspace/public-a-evidence/W9-04-park-comment.md` | exit 0
 
 - 2026-10-20T18:37:32.681019+00:00 | `gh issue comment 8 --repo sqllocks/shape --body-file /workspace/public-a-evidence/W9-07-park-comment.md` | exit 0
+
+- 2026-10-20T18:39:19.174055+00:00 | `git add docs/plans/lane_status/public-a-2026-10-18` | exit 0
+
+- 2026-10-20T18:39:19.269968+00:00 | `git commit -s -m 'chore: record source PR and parked backend decisions'` | exit 0
+
+- 2026-10-20T18:39:20.945855+00:00 | `git push origin HEAD` | exit 0
+
+- 2026-10-20T18:40:09.816530+00:00 | `gh api repos/sqllocks/shape/pulls/35 --jq '{head:.head.sha,base:.base.sha,draft,mergeable,mergeable_state}'` | exit 0
+
+- 2026-10-20T18:40:10.546469+00:00 | `gh api 'repos/sqllocks/shape/commits/f344810/check-runs?per_page=100' --jq '{total_count,summary:(.check_runs \| group_by(.status+":"+(.conclusion//"pending")) \| map({state:(.[0].status+":"+(.[0].conclusion//"pending")),count:length})),failures:[.check_runs[] \| select(.conclusion=="failure" or .conclusion=="timed_out") \| {name,conclusion,html_url}]}'` | exit 0
+
+- 2026-10-20T18:40:36.817176+00:00 | `git add docs/plans/lane_status/W9-07.md` | exit 0
+
+- 2026-10-20T18:40:36.879700+00:00 | `git commit -s -m 'W9-07: record independent checkpoint review disposition'` | exit 0
+
+- 2026-10-20T18:40:39.739288+00:00 | `git push origin HEAD` | exit 0
+
+- 2026-10-20T18:40:44.894260+00:00 | `git status --short` | exit 0
+
+- 2026-10-20T18:41:22.586556+00:00 | `gh api 'repos/sqllocks/shape/commits/f344810/check-runs?per_page=100' --jq '{total_count,summary:(.check_runs \| group_by(.status+":"+(.conclusion//"pending")) \| map({state:(.[0].status+":"+(.[0].conclusion//"pending")),count:length})),failures:[.check_runs[] \| select(.conclusion=="failure" or .conclusion=="timed_out") \| {name,conclusion,html_url}]}'` | exit 0
+
+- 2026-10-20T18:41:22.630424+00:00 | `tail -5 /workspace/public-a-evidence/W9-01/make-check.log` | exit 0
+
+- 2026-10-20T18:42:45.800507+00:00 | `tail -6 /workspace/public-a-evidence/W9-01/make-check.log` | exit 0
+
+- 2026-10-20T18:42:46.173296+00:00 | `git -C /workspace/public-a-W9-06 log -1 '--format=%h %s'` | exit 0
+
+- 2026-10-20T18:42:47.162104+00:00 | `gh api 'repos/sqllocks/shape/commits/f344810/check-runs?per_page=100' --jq '{summary:(.check_runs \| group_by(.status+":"+(.conclusion//"pending")) \| map({state:(.[0].status+":"+(.[0].conclusion//"pending")),count:length})),failures:[.check_runs[] \| select(.conclusion=="failure" or .conclusion=="timed_out") \| {name,conclusion,html_url}]}'` | exit 0
+
+- 2026-10-20T18:43:35.882359+00:00 | `rg -n 'docs-test:\|playwright\|docs_dbt_packages\|SHAPE_DOCS\|fabric-demo:\|apt-get\|npm ci' .github/workflows/ci.yml` | exit 0
+
+- 2026-10-20T18:43:46.205646+00:00 | `sed -n 164,228p .github/workflows/ci.yml` | exit 0
+
+- 2026-10-20T18:43:48.279783+00:00 | `/tmp/public-a-uv/bin/uv run --locked --no-sync python -c 'from pathlib import Path; import ctypes.util; from playwright.sync_api import sync_playwright; p=sync_playwright().start(); x=p.chromium.executable_path; print("Chromium installed:",Path(x).exists()); print("ODBC library:",ctypes.util.find_library("odbc")); p.stop()'` | exit 0
+
+- 2026-10-20T18:44:07.076938+00:00 | `rg -n 'SHAPE_DOCS_DBT_PACKAGES\|playwright\|chromium\|PIP_FIND_LINKS\|DOCS_PROXY_IP' tests/docs/conftest.py tests/docs/test_launch_site.py tests/docs/test_reference_examples.py scripts/docs_example_setup.py scripts/docs_dbt_packages.py` | exit 2
+
+- 2026-10-20T18:44:14.151373+00:00 | `rg -n 'playwright\|chromium\|PIP_FIND_LINKS\|DOCS_PROXY_IP\|SHAPE_DOCS_DBT_PACKAGES' tests/docs scripts/docs_dbt_packages.py` | exit 0
+
+- 2026-10-20T18:44:14.241885+00:00 | `sed -n 55,104p tests/docs/test_reference_examples.py` | exit 0
+
+- 2026-10-20T18:45:12.873142+00:00 | `python3 /home/agent/bin/reap.py /tmp/public-a-uv/bin/uv run --locked --no-sync python scripts/docs_dbt_packages.py --directory /tmp/docs-dbt-packages` | exit 0
+
+- 2026-10-20T18:45:43.506495+00:00 | `env NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt python3 /home/agent/bin/reap.py /tmp/public-a-uv/bin/uv run --locked --no-sync python -m playwright install chromium` | exit 0
+
+- 2026-10-20T18:46:11.194799+00:00 | `env -u DOCKER_HOST -u DOCKER_CONTEXT -u DOCKER_TLS -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH docker --host=unix:///var/run/docker.sock info --format '{{.ServerVersion}}'` | exit 0
+
+- 2026-10-20T18:46:11.296122+00:00 | `/tmp/public-a-uv/bin/uv run --locked --no-sync python -c 'import socket; print("Resolved proxy address:",socket.gethostbyname("proxy"))'` | exit 0
+
+- 2026-10-20T18:46:25.168563+00:00 | `env SHAPE_DOCS_REPO=/workspace/public-a-W9-01 python3 /home/agent/bin/reap.py /tmp/public-a-uv/bin/uv run --project /workspace/public-a-W9-01 --locked --no-sync python /workspace/public-a-W9-01/scripts/docs_example_setup.py CONTAINER` | exit 0
+
+- 2026-10-20T18:46:26.761489+00:00 | `python3 /home/agent/bin/reap.py /tmp/public-a-uv/bin/uv run --locked --no-sync python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(); print("Chromium headless launch succeeded"); b.close(); p.stop()'` | exit 0
+
+- 2026-10-20T18:46:45.574906+00:00 | `rg --files -g Dockerfile -g .dockerignore -g '*requirements*' /workspace/public-a-evidence` | exit 0
+
+- 2026-10-20T18:46:58.318157+00:00 | `cat /workspace/public-a-evidence/Dockerfile /workspace/public-a-evidence/.dockerignore` | exit 0
+
+- 2026-10-20T18:46:58.364664+00:00 | `sed -n 295,335p .github/workflows/ci.yml` | exit 0
+
+- 2026-10-20T18:48:37.637187+00:00 | `env -u DOCKER_HOST -u DOCKER_CONTEXT -u DOCKER_TLS -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH python3 /home/agent/bin/reap.py docker --host=unix:///var/run/docker.sock pull python:3.11-slim` | exit 0
+
+- 2026-10-20T18:48:43.424824+00:00 | `gh api 'repos/sqllocks/shape/commits/f344810/check-runs?per_page=100' --jq '{summary:(.check_runs \| group_by(.status+":"+(.conclusion//"pending")) \| map({state:(.[0].status+":"+(.[0].conclusion//"pending")),count:length})),failures:[.check_runs[] \| select(.conclusion=="failure" or .conclusion=="timed_out") \| {name,conclusion,html_url}]}'` | exit 0
+
+- 2026-10-20T18:48:53.505804+00:00 | `gh run view 39476175494 --repo sqllocks/shape --job 118812594477 --log-failed` | exit 0
+
+- 2026-10-20T18:49:29.431059+00:00 | `sh -c 'gh run view 39476175494 --repo sqllocks/shape --job 118812594477 --log-failed > /workspace/public-a-evidence/PR35-docs-verify-failure.log'` | exit 0
+
+- 2026-10-20T18:49:29.903980+00:00 | `python3 -` | exit 0
+
+- 2026-10-20T18:50:18.242598+00:00 | `tail -8 /workspace/public-a-evidence/docs-container-build.log` | exit 0
+
+- 2026-10-20T18:51:29.610238+00:00 | `tail -8 /workspace/public-a-evidence/docs-container-build.log` | exit 0
+
+- 2026-10-20T18:51:34.726169+00:00 | `df -h /workspace` | exit 0
+
+- 2026-10-20T18:52:11.675555+00:00 | `du -sh /workspace/public-a-evidence /workspace/shape/rust/shape-kernel/target /workspace/public-a-W9-01/rust/shape-kernel/target /workspace/public-a-W9-03/rust/shape-kernel/target /workspace/public-a-W9-04/rust/shape-kernel/target /workspace/public-a-W9-07/rust/shape-kernel/target` | exit 0
+
+- 2026-10-20T18:52:11.690659+00:00 | `tail -6 /workspace/public-a-evidence/docs-container-build.log` | exit 0
+
+- 2026-10-20T18:53:01.754806+00:00 | `tail -8 /workspace/public-a-evidence/docs-container-build.log` | exit 0
+
+- 2026-10-20T18:53:03.431837+00:00 | `env -u DOCKER_HOST -u DOCKER_CONTEXT -u DOCKER_TLS -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH docker --host=unix:///var/run/docker.sock system df --format '{{.Type}}: {{.Size}} (reclaimable {{.Reclaimable}})'` | exit 0
+
+- 2026-10-20T18:53:35.365735+00:00 | `python3 /home/agent/bin/reap.py /tmp/public-a-uv/bin/uv run --locked --no-sync python -c 'import duckdb; con=duckdb.connect(); print("DuckDB version:",duckdb.__version__); print("Delta extension:",con.execute("SELECT installed,loaded FROM duckdb_extensions() WHERE extension_name = ?",["delta"]).fetchone()); con.execute("LOAD delta"); print("Delta extension load succeeded"); con.close()'` | exit 0
+
+- 2026-10-20T18:54:13.379353+00:00 | `tail -8 /workspace/public-a-evidence/docs-container-build.log` | exit 0
+
+- 2026-10-20T18:54:13.495383+00:00 | `df -h /workspace` | exit 0
+
+- 2026-10-20T18:55:29.237595+00:00 | `sh -c 'env -u DOCKER_HOST -u DOCKER_CONTEXT -u DOCKER_TLS -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH python3 "$HOME/bin/reap.py" docker --host=unix:///var/run/docker.sock build --add-host proxy:172.31.6.221 --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --secret id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt -t shape-docs-examples . > /workspace/public-a-evidence/docs-container-build.log 2>&1; build_status=$?; tail -30 /workspace/public-a-evidence/docs-container-build.log; exit "$build_status"'` | exit 0
+
+- 2026-10-20T18:55:41.982091+00:00 | `tail -8 /workspace/public-a-evidence/docs-container-build.log` | exit 0
+
+- 2026-10-20T18:55:58.427706+00:00 | `cp -a /tmp/docs-dbt-packages /workspace/public-a-evidence/docs-dbt-packages` | exit 0
+
+- 2026-10-20T18:55:58.483272+00:00 | `df -h /workspace` | exit 0
+
+- 2026-10-20T18:55:58.616843+00:00 | `git status --short` | exit 0
+
+- 2026-10-20T18:56:42.221634+00:00 | `rg -n 'server\|SSCursor\|cursor\(\|stream\|fetchmany\|read\(' plugins/shape-databases/src/shape_databases/sources.py` | exit 0
+
+- 2026-10-20T18:57:43.360970+00:00 | `gh api 'repos/sqllocks/shape/commits/f344810/check-runs?per_page=100' --jq '{summary:(.check_runs \| group_by(.status+":"+(.conclusion//"pending")) \| map({state:(.[0].status+":"+(.[0].conclusion//"pending")),count:length})),failures:[.check_runs[] \| select(.conclusion=="failure" or .conclusion=="timed_out") \| {name,conclusion,html_url}]}'` | exit 0
+
+- 2026-10-20T18:57:52.937454+00:00 | `sh -c 'gh run view 39476175630 --repo sqllocks/shape --job 118813213389 --log-failed > /workspace/public-a-evidence/PR35-docs-test-failure.log'` | exit 1
+
+- 2026-10-20T18:59:03.316584+00:00 | `sh -c 'gh api repos/sqllocks/shape/actions/jobs/118813213389/logs > /workspace/public-a-evidence/PR35-docs-test-failure.log'` | exit 1
+
+- 2026-10-20T19:11:47.937958+00:00 | `rg -n '2.3\|Decision log\|decision log\|2026-10-' docs/plans/COMPLETION_PLAN.md` | exit 1
+
+- 2026-10-20T19:11:48.124572+00:00 | `sed -n 260,358p docs/plans/COMPLETION_PLAN.md` | exit 0
+
+- 2026-10-20T19:11:48.226112+00:00 | `ps -eo pid,ppid,stat,comm` | exit 0
+
+- 2026-10-20T19:12:08.438762+00:00 | `sed -n 246,249p docs/plans/COMPLETION_PLAN.md` | exit 0
+
+- 2026-10-20T19:12:55.607766+00:00 | `git worktree add -b lead/public-a-throughput-2026-10-20 /workspace/public-a-throughput origin/main` | exit 0
