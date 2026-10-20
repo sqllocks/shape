@@ -335,11 +335,11 @@ Python conversion would discard digits. Preencode exact times as Arrow strings f
 Native Databricks timestamps have microsecond precision; a nested value with nonzero finer
 digits is refused before binding, with `nested=json` as the text-storage alternative.
 
-The local DuckDB `shape.sources` reader is
-`shape_databases.duckdb_source.DuckDbSource`. Use
-`duckdb:////abs/path.duckdb?schema=main&table=NAME`, then `schema(uri)` or
+The existing local DuckDB `shape.sources` reader is
+`shape_integrations.duckdb_source.DuckDbSource` (`sqllocks-shape-integrations`). Use
+`duckdb:///abs/path.duckdb?table=main.NAME`, then `schema(uri)` or
 `read(uri, batch_size=65536)` for native Arrow data, with UTC timestamp instants. It opens
-read-only, refuses writer options and never creates missing files. No catalog profiling
+read-only, refuses writer URI options and never creates missing files. No catalog profiling
 capability is claimed for this local reader.
 
 ## Credentials

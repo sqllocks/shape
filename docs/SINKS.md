@@ -291,8 +291,9 @@ commits every N rows so another connection sees them. A database file locked by 
 exit 2 with DuckDB's message. Reading the tables back gives the same `shape.repro.dataset_id` as
 the generated tables.
 
-The matching `shape.sources` DuckDB reader opens the file read-only:
-`duckdb:////abs/path.duckdb?schema=main&table=NAME`. In Python,
+The matching `shape.sources` DuckDB reader from `sqllocks-shape-integrations` opens the file
+read-only: `duckdb:///abs/path.duckdb?table=main.NAME`. Its path follows that source's URI
+syntax (three slashes for an absolute path). In Python,
 `DuckDbSource().read(uri, batch_size=65536)` yields the stored Arrow types and values;
 `schema(uri)` reads the table schema. It uses UTC for timestamp instants. A missing file
 is refused without creating it; writer-only URI parameters are refused before opening.

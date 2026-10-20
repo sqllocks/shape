@@ -11,7 +11,7 @@ import pyarrow as pa
 import pytest
 from shape_databases import DuckDbSink
 from shape_databases.duckdb_sink import duckdb_type
-from shape_databases.duckdb_source import DuckDbSource
+from shape_integrations.duckdb_source import DuckDbSource
 
 from shape.errors import ShapeError
 
@@ -63,7 +63,7 @@ def nested_table():
 
 def query_table(path):
     source = DuckDbSource()
-    uri = f"duckdb:///{path}?table=data"
+    uri = f"duckdb://{path}?table=data"
     return pa.Table.from_batches(list(source.read(uri)), schema=source.schema(uri)).sort_by("id")
 
 
