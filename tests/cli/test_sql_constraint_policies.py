@@ -84,3 +84,12 @@ def test_sql_dry_run_shows_constraint_ddl_without_output(capsys, tmp_path, as_js
         output = "\n".join(json.loads(output)["constraint_ddl"])
     assert "ALTER TABLE" in output and "FOREIGN KEY" in output and "REFERENCES" in output
     assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("target", ["postgresql://unreachable/db", "mysql://unreachable/db"])
+def test_database_dry_run_shows_constraints_without_connecting(capsys, target):
+    from shape.cli.main import main
+
+    assert main(["generate", "retail", "--dry-run", "--to", target]) == 0
+    output = capsys.readouterr().out
+    assert "ALTER TABLE" in output and "FOREIGN KEY" in output

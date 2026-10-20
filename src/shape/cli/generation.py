@@ -408,26 +408,72 @@ def cmd_composite(a: argparse.Namespace) -> int:
 
 def _constraint_preview(a: argparse.Namespace, schema: GenSchema, order: list[str]) -> list[str]:
     """Show derived SQL constraint DDL without generating rows or opening a target."""
-    if a.format != "sql":
-        return []
+    from shape.cli import to
     from shape.generation.output import _options
+
+    choices: list[tuple[str, dict[str, dict[str, Any]]]] = []
+    targets = getattr(a, "to", None) or []
+    if targets:
+        from shape.io.targets import sink_for_target
+
+        dialects = {
+            "postgres": "postgres",
+            "mysql": "mysql",
+            "duckdb": "duckdb",
+            "sqlserver": "tsql",
+            "sql-database": "tsql",
+            "warehouse": "tsql-fabric-warehouse",
+            "snowflake": "snowflake",
+            "databricks": "databricks",
+        }
+        options = to.target_options(a, a.format, targets, offline=True)
+        for target in targets:
+            name, _ = sink_for_target(target)
+            if name in dialects:
+                choices.append(
+                    (
+                        dialects[name],
+                        {table: options.for_sink(name, schema, table) for table in order},
+                    )
+                )
+    elif a.format == "sql":
+        file_options = _sink_options(a)
+        choices.append(
+            (
+                a.sql_dialect,
+                {table: _options("sql", schema, table, file_options) for table in order},
+            )
+        )
+    result: list[str] = []
+    for dialect, table_options in choices:
+        result.extend(_render_constraint_preview(schema, order, dialect, table_options))
+    return result
+
+
+def _render_constraint_preview(
+    schema: GenSchema,
+    order: list[str],
+    dialect: str,
+    table_options: dict[str, dict[str, Any]],
+) -> list[str]:
     from shape.generation.write_constraints import compile_constraints, identifier
 
-    dialect = a.sql_dialect
-    options = _sink_options(a)
     result: list[str] = []
     foreign: list[str] = []
     for table in order:
-        derived = _options("sql", schema, table, options)
+        derived = table_options[table]
+        schema_name = derived.get("schema_name")
+        prefix = derived.get("table_prefix") or ""
         plan = compile_constraints(
             derived,
             columns=schema.tables[table].column_names,
             table=table,
             dialect=dialect,
-            schema_name=a.schema_name,
+            schema_name=schema_name,
+            table_prefix=prefix,
         )
-        qualified = (identifier(a.schema_name, dialect) + ".") if a.schema_name else ""
-        qualified += identifier(table, dialect)
+        qualified = (identifier(schema_name, dialect) + ".") if schema_name else ""
+        qualified += identifier(prefix + table, dialect)
         result.extend("-- NOTE: " + note for note in plan.notes)
         result.extend(
             f"ALTER TABLE {qualified} ADD {clause};"
