@@ -726,6 +726,15 @@ requirements:
   text: dbt imports preserve semantic resources and singular metadata; generated singular rules treat contract values as data and retain exact contract round trips; impact reports carry format and integer version.
   verify: [conformance, plugins/shape-dbt/tests/test_w9_10.py]
   owner: integrations
+- id: SHAPE-SOURCE-001
+  title: Eventhouse table profiling
+  level: L1
+  milestone: W9-11
+  priority: MUST
+  text: Fabric Eventhouse reads validate schemas, bound query pages, record sampling, and omit emitter keys from profiles.
+  verify: [conformance]
+  owner: integrations
+
 
 - id: SHAPE-STREAM-METADATA-001
   title: Broker message metadata

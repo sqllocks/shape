@@ -2064,6 +2064,10 @@ Converting a full capture to the safe form now gives a different content ID when
   in DuckDB, PostgreSQL, Snowflake and BigQuery SQL.
 - Report metric and exposure impact for failing or drifted columns, and optionally
   emit semantic models beside generated dbt seeds.
+- W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+  catalog row counts and whole-database profiles through the KQL endpoint.
+  Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
+
 ### W9-08: broker message metadata
 
 - Kafka and Event Hubs support column/composite keys, user headers, partition
