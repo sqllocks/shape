@@ -28,3 +28,7 @@ Before eachjob, pruneunusedDockerbuildercache throughmanagedlocalsocket preservi
 ## Next
 
 Monitor currentmetadata makecheck andpersistentworker. If8jobs valid/complete, recheck exactCIgreen/currentmain/review, markPRready and mergeAPImergecommit. Merge newmaininto EVERY otherownopenlane, retainbothchangelogs/requirements, applyapprovedstreamresolutionwhereappropriate, targetedintegrationreview+freshCI. Then setcontrol nextlane NEWhead to runfullcommononupdatedmain; worker waitsafterlanecompletion. No directmainpush/tags/releases/versionbumps/settings/secrets. No livepassclaims. Continueuntilall9issues mergedorparked orspecifiedhardstop; finalreport.md stillnotwritten.
+
+## Runner correction cycle 2026-10-20T18:44:28.466484+00:00
+
+Persistent worker on disk now checks every tracked change except explicit lane evidence, rejects untracked source/configuration, checks pause/head at each boundary, and archives prior retry entries/logs. Independent re-audit pending. Running5354 still uses prior code; metadata checkout stays frozen/clean and must have fully clean before/after statuses for manual binding audit. Restart updated script at current lane idle boundary. Initial interruption correction remains separately preserved. Zombies8; metadata makecheck stillrunning without observed failure at24percent. Iceberg focused128cases eachkernel and16 actualminimumSDK0.9 cases pass; independent latest filesystem adapter review pending, not committed. No full common pass or merge claimed.

@@ -1,0 +1,586 @@
+diff --git a/docs/CLI.md b/docs/CLI.md
+index ffac33a..0433f27 100644
+--- a/docs/CLI.md
++++ b/docs/CLI.md
+@@ -769,7 +769,6 @@ shape doctor
+     Result: OK
+     ```
+ 
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+ ## Binary broker formats
+ 
+ `shape emit` and `shape stream` accept `--event-format avro` or
+@@ -782,7 +781,8 @@ or `format="protobuf"` with the same `schema_file` and `message` options;
+ `schema=pyarrow.schema(...)` pins the reader schema and counts rejected rows.
+ See [the binary format guide](EMIT.md#local-binary-schemas-and-nested-events) for
+ nested types, registry schema evolution and Azure Schema Registry options.
+-=======
++
++
+ ### Message metadata (W9-08)
+ 
+ Both broker emitters accept `key="column"` or `key="a|b"` (values joined with
+@@ -816,4 +816,3 @@ CLI: `shape emit ... --key customer_id --header trace=@trace_id --partition 0
+ --timestamp event_time` (Kafka); use `--partition-key customer_id` for Event
+ Hubs. `shape stream-profile URI --with-key --with-headers --with-timestamp`
+ reads metadata. The existing `--option nested=false` selects JSON-text maps.
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+diff --git a/docs/EMIT.md b/docs/EMIT.md
+index 08659c5..b2c48a2 100644
+--- a/docs/EMIT.md
++++ b/docs/EMIT.md
+@@ -1791,7 +1791,6 @@ shape emit retail --scale small --anomaly-fraction 0.05 --live-target retail --l
+ 
+ This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.
+ 
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+ ## Local binary schemas and nested events
+ 
+ Avro and Protobuf work on both Kafka and Event Hubs. Set `event_format=avro`
+@@ -1851,7 +1850,8 @@ caches schemas by the `avro/binary+<schema-id>` content type; Azure messages use
+ that content type with the Avro binary body, rather than the Kafka wire prefix.
+ The account needs permission on the registry group. Azure live validation requires
+ Owner-provided account access and is pending; offline tests use an encoder fake.
+-=======
++
++
+ ### Message metadata (W9-08)
+ 
+ Both broker emitters accept `key="column"` or `key="a|b"` (values joined with
+@@ -1898,4 +1898,3 @@ Use a topic created by the existing emulator rehearsal. Read offsets in partitio
+ replay header. Run the marked keyed round-trip tests against both emulators with
+ `pytest -m emulator plugins/shape-kafka/tests/test_emitter_emulator.py
+ plugins/shape-eventhubs/tests/test_emitter_emulator.py`.
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+diff --git a/docs/specs/requirements.yaml b/docs/specs/requirements.yaml
+index 3fffc8c..b828555 100644
+--- a/docs/specs/requirements.yaml
++++ b/docs/specs/requirements.yaml
+@@ -718,7 +718,6 @@ requirements:
+   verify: [specification-review]
+   status: registered-not-independently-certified
+ 
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+ - id: SHAPE-STREAM-009
+   title: Binary broker formats
+   level: L1
+@@ -726,7 +725,7 @@ requirements:
+   priority: MUST
+   text: Local Avro and Protobuf events have no registry prefix, retain nested types, and reject incompatible reader rows without coercion. Registry Avro readers resolve and cache each writer schema id.
+   verify: [conformance, tests/streaming/test_binary_formats.py]
+-=======
++  owner: streaming
+ - id: SHAPE-STREAM-METADATA-001
+   title: Broker message metadata
+   level: L1
+@@ -734,5 +733,4 @@ requirements:
+   priority: MUST
+   text: Kafka and Event Hubs support column keys and headers, preserve replay identity, refuse reserved header names and unknown metadata columns before sending, and optionally decode broker metadata outside default drift comparisons.
+   verify: [conformance]
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+   owner: streaming
+diff --git a/plugins/shape-eventhubs/README.md b/plugins/shape-eventhubs/README.md
+index cd45a41..0d29da9 100644
+--- a/plugins/shape-eventhubs/README.md
++++ b/plugins/shape-eventhubs/README.md
+@@ -48,7 +48,6 @@ secrets (`EVENTHUBS_CONNECTION_STRING`, `EVENTHUBS_HUB`, optionally `EVENTHUBS_G
+ Its version always equals core's (`sqllocks-shape`), and it is released together with core.
+ How plugins are written: `docs/plugins/authoring.md` in the repository.
+ 
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+ ## Local binary schemas and nested events
+ 
+ Avro and Protobuf work on both Kafka and Event Hubs. Set `event_format=avro`
+@@ -108,7 +107,8 @@ caches schemas by the `avro/binary+<schema-id>` content type; Azure messages use
+ that content type with the Avro binary body, rather than the Kafka wire prefix.
+ The account needs permission on the registry group. Azure live validation requires
+ Owner-provided account access and is pending; offline tests use an encoder fake.
+-=======
++
++
+ ### Message metadata (W9-08)
+ 
+ Both broker emitters accept `key="column"` or `key="a|b"` (values joined with
+@@ -142,4 +142,3 @@ CLI: `shape emit ... --key customer_id --header trace=@trace_id --partition 0
+ --timestamp event_time` (Kafka); use `--partition-key customer_id` for Event
+ Hubs. `shape stream-profile URI --with-key --with-headers --with-timestamp`
+ reads metadata. The existing `--option nested=false` selects JSON-text maps.
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+diff --git a/plugins/shape-eventhubs/src/shape_eventhubs/emitter.py b/plugins/shape-eventhubs/src/shape_eventhubs/emitter.py
+index d847670..664d9fd 100644
+--- a/plugins/shape-eventhubs/src/shape_eventhubs/emitter.py
++++ b/plugins/shape-eventhubs/src/shape_eventhubs/emitter.py
+@@ -173,18 +173,15 @@ class EventHubsEmitter:
+         partition_key: str = "table",
+         busy_retries: int = 6,
+         synthetic: bool = False,
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+         event_format: str = "json",
+         schema_file: str | None = None,
+         message: str | None = None,
+         schema_registry_url: str | None = None,
+         schema_registry_group: str | None = None,
+         registry_encoder: Any = None,
+-=======
+         key: str | None = None,
+         headers: dict[str, Any] | list[str] | None = None,
+         timestamp: str = "broker",
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+         **options: Any,
+     ) -> int:
+         """Send every batch; return the number of events, after the service accepted them."""
+@@ -195,9 +192,6 @@ class EventHubsEmitter:
+             raise ShapeError(f"unknown {self.name} emitter options: {sorted(options)}")
+         if envelope not in ENVELOPES:
+             raise ShapeError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+-        if partition_key not in ("table", "none"):
+-            raise ShapeError("partition_key must be 'table' or 'none'")
+         from shape.streaming.binary import BinaryCodec
+ 
+         codec = None
+@@ -222,15 +216,16 @@ class EventHubsEmitter:
+                 schema_text=codec.text,
+                 encoder=registry_encoder,
+             )
+-=======
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+         target = self.parse(uri)
+         client = self._client(target, connect)
+         content_type = "application/json" if envelope == "flat" else "application/cloudevents+json"
+         sent = 0
+         saw_batch = False
+         for batch in batches:
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
++            saw_batch = True
++            meta = metadata(
++                batch, key=key, headers=headers, timestamp=timestamp, partition_key=partition_key
++            )
+             types = {}
+             if codec is None:
+                 events = encode_events(batch, envelope)
+@@ -239,26 +234,20 @@ class EventHubsEmitter:
+                 events = []
+                 for row in batch.to_pylist():
+                     table, seq = row["_shape_table"], row["_shape_seq"]
+-                    key = f"{table}/{seq}"
++                    event_key = f"{table}/{seq}"
+                     try:
+                         if azure is not None:
+                             encoded = azure.encode(row)
+                             body = encoded["content"]
+-                            types[key] = encoded["content_type"]
++                            types[event_key] = encoded["content_type"]
+                         else:
+                             body = codec.encode(row)
+                     except ValueError as exc:
+-                        raise ShapeError(f"cannot encode event {key}") from exc
+-                    events.append(EncodedEvent(key, table, seq, row.get("_shape_event_time"), body))
++                        raise ShapeError(f"cannot encode event {event_key}") from exc
++                    events.append(
++                        EncodedEvent(event_key, table, seq, row.get("_shape_event_time"), body)
++                    )
+                 content_type = f"application/{event_format}"
+-            for key, group in _groups(events, partition_key == "table"):
+-                self._send_group(client, key, group, content_type, busy_retries, synthetic, types)
+-=======
+-            saw_batch = True
+-            meta = metadata(
+-                batch, key=key, headers=headers, timestamp=timestamp, partition_key=partition_key
+-            )
+-            events = encode_events(batch, envelope)
+             by_event = {e.key: m for e, m in zip(events, meta, strict=True)}
+             if FIELD_DEAD_REASON in batch.schema.names:
+                 for event, reason in zip(
+@@ -273,9 +262,8 @@ class EventHubsEmitter:
+                 groups = list(_groups(events, partition_key == "table"))
+             for route, group in groups:
+                 self._send_group(
+-                    client, route, group, content_type, busy_retries, synthetic, by_event
++                    client, route, group, content_type, busy_retries, synthetic, by_event, types
+                 )
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+             sent += len(events)
+         if not saw_batch and partition_key not in ("table", "none"):
+             raise ShapeError("partition_key column cannot be validated without a batch")
+@@ -290,11 +278,8 @@ class EventHubsEmitter:
+         content_type: str,
+         busy: int,
+         synthetic: bool = False,
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+-        content_types: dict[str, str] | None = None,
+-=======
+         message_metadata: dict[str, Any] | None = None,
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
++        content_types: dict[str, str] | None = None,
+     ) -> None:
+         from azure.eventhub import EventData
+ 
+diff --git a/plugins/shape-eventhubs/src/shape_eventhubs/source.py b/plugins/shape-eventhubs/src/shape_eventhubs/source.py
+index f741efe..dbe315f 100644
+--- a/plugins/shape-eventhubs/src/shape_eventhubs/source.py
++++ b/plugins/shape-eventhubs/src/shape_eventhubs/source.py
+@@ -374,16 +374,12 @@ class EventHubsStreamSource:
+                             pid,
+                             int(e.sequence_number),
+                             _body(e),
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+-                            _enqueued_us(e.enqueued_time),
+-                            getattr(e, "content_type", None),
+-=======
+-                            _message_timestamp(e),
+-                            _message_key(e),
+-                            _properties(e),
+-                            _properties(e),
+-                            _partition_key(e),
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
++                            timestamp_us=_message_timestamp(e),
++                            content_type=getattr(e, "content_type", None),
++                            key=_message_key(e),
++                            headers=_properties(e),
++                            properties=_properties(e),
++                            partition_key=_partition_key(e),
+                         )
+                         for e in events
+                     ],
+diff --git a/plugins/shape-eventhubs/tests/test_live.py b/plugins/shape-eventhubs/tests/test_live.py
+index 3de1e96..6d44315 100644
+--- a/plugins/shape-eventhubs/tests/test_live.py
++++ b/plugins/shape-eventhubs/tests/test_live.py
+@@ -46,7 +46,6 @@ def test_checkpoint(tmp_path):
+     contract.check_checkpoint(new_harness, directory=tmp_path)
+ 
+ 
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+ def test_azure_schema_registry_avro_roundtrip():
+     """Owner validation: Entra identity needs schema contributor on the named group."""
+     from shape_eventhubs.registry import azure_codec
+@@ -59,7 +58,8 @@ def test_azure_schema_registry_avro_roundtrip():
+     )
+     encoded = codec.encode({"id": 1})
+     assert codec.decode(encoded["content"], encoded["content_type"]) == {"id": 1}
+-=======
++
++
+ def test_keyed_metadata_round_trip_live():
+     h = new_harness()
+     batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 3)
+@@ -69,4 +69,3 @@ def test_keyed_metadata_round_trip_live():
+     )
+     emitter.close()
+     assert [key for key, _ in h.delivered()] == ["order_line"] * 3
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+diff --git a/plugins/shape-kafka/README.md b/plugins/shape-kafka/README.md
+index 8f5f7c0..35f820e 100644
+--- a/plugins/shape-kafka/README.md
++++ b/plugins/shape-kafka/README.md
+@@ -96,7 +96,6 @@ How plugins are written: `docs/plugins/authoring.md` in the repository.
+ Live tests (`pytest -m live plugins/shape-kafka/tests`) need `KAFKA_SERVERS`, `KAFKA_TOPIC` and,
+ optionally, `KAFKA_CONFIG` (JSON); the nightly job runs them only where those secrets exist.
+ 
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+ ## Local binary schemas and nested events
+ 
+ Avro and Protobuf work on both Kafka and Event Hubs. Set `event_format=avro`
+@@ -156,7 +155,8 @@ caches schemas by the `avro/binary+<schema-id>` content type; Azure messages use
+ that content type with the Avro binary body, rather than the Kafka wire prefix.
+ The account needs permission on the registry group. Azure live validation requires
+ Owner-provided account access and is pending; offline tests use an encoder fake.
+-=======
++
++
+ ### Message metadata (W9-08)
+ 
+ Both broker emitters accept `key="column"` or `key="a|b"` (values joined with
+@@ -190,4 +190,3 @@ CLI: `shape emit ... --key customer_id --header trace=@trace_id --partition 0
+ --timestamp event_time` (Kafka); use `--partition-key customer_id` for Event
+ Hubs. `shape stream-profile URI --with-key --with-headers --with-timestamp`
+ reads metadata. The existing `--option nested=false` selects JSON-text maps.
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+diff --git a/plugins/shape-kafka/src/shape_kafka/emitter.py b/plugins/shape-kafka/src/shape_kafka/emitter.py
+index 92dd152..c66e5f0 100644
+--- a/plugins/shape-kafka/src/shape_kafka/emitter.py
++++ b/plugins/shape-kafka/src/shape_kafka/emitter.py
+@@ -300,15 +300,10 @@ class KafkaEmitter:
+                     f"--event-format {event_format} needs a schema registry: "
+                     "--sink-config kafka.schema_registry_url=URL"
+                 )
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+             if schema_registry_url:
+                 registry = self._registry(
+                     schema_registry_url, schema_registry_username, schema_registry_password
+                 )
+-=======
+-            registry = self._registry(
+-                schema_registry_url, schema_registry_username, schema_registry_password
+-            )
+         if partition != "by_key":
+             if isinstance(partition, bool) or not isinstance(partition, int | str):
+                 raise ShapeError("partition must be a nonnegative number or 'by_key'")
+@@ -318,7 +313,6 @@ class KafkaEmitter:
+                 raise ShapeError("partition must be a nonnegative number or 'by_key'") from None
+             if isinstance(partition, bool) or partition < 0:
+                 raise ShapeError("partition must be a nonnegative number or 'by_key'")
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+         servers, topic = parse_uri(uri)
+         producer = self._producer(servers, config)
+         failures: list[Any] = []
+@@ -354,15 +348,17 @@ class KafkaEmitter:
+                 events = []
+                 for row in batch.to_pylist():
+                     table, seq = row[FIELD_TABLE], row[FIELD_SEQ]
+-                    key = f"{table}/{seq}"
++                    event_key = f"{table}/{seq}"
+                     try:
+                         body = local_codec.encode(row)
+                     except ValueError:
+-                        rejected.append(Rejection(key, f"cannot encode as {event_format}"))
++                        rejected.append(Rejection(event_key, f"cannot encode as {event_format}"))
+                         continue
+                     if row.get(FIELD_POISON):
+                         body = poison_body(body)
+-                    events.append(EncodedEvent(key, table, seq, row.get("_shape_event_time"), body))
++                    events.append(
++                        EncodedEvent(event_key, table, seq, row.get("_shape_event_time"), body)
++                    )
+             elif registry is None:
+                 events = encode_events(batch, envelope)
+             else:
+@@ -370,14 +366,7 @@ class KafkaEmitter:
+                     batch, event_format, topic, subject_strategy, registry
+                 )
+                 rejected.extend(refused)
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+             for event in events:
+-                headers = [(HEADER_TABLE, event.table.encode("utf-8")), *marker]
+-                if reasons is not None:
+-                    headers.append(
+-                        (HEADER_DEAD_LETTER_REASON, str(reasons[event.key]).encode("utf-8"))
+-=======
+-            for i, event in enumerate(events):
+                 message_key, user_headers, when, _ = by_event[event.key]
+                 event_headers = [
+                     (HEADER_TABLE, event.table.encode("utf-8")),
+@@ -393,8 +382,7 @@ class KafkaEmitter:
+                     extra["timestamp"] = when
+                 if reasons is not None:
+                     event_headers.append(
+-                        (HEADER_DEAD_LETTER_REASON, str(reasons[i]).encode("utf-8"))
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
++                        (HEADER_DEAD_LETTER_REASON, str(reasons[event.key]).encode("utf-8"))
+                     )
+                 while True:
+                     try:
+diff --git a/plugins/shape-kafka/src/shape_kafka/source.py b/plugins/shape-kafka/src/shape_kafka/source.py
+index 7f29eca..32d7bc8 100644
+--- a/plugins/shape-kafka/src/shape_kafka/source.py
++++ b/plugins/shape-kafka/src/shape_kafka/source.py
+@@ -259,8 +259,8 @@ class KafkaStreamSource:
+                             int(raw.offset()),
+                             raw.value(),
+                             None if ts is None or ts < 0 else int(ts) * 1000,
+-                            raw.key() if hasattr(raw, "key") else None,
+-                            dict(raw.headers() or []) if hasattr(raw, "headers") else None,
++                            key=raw.key() if hasattr(raw, "key") else None,
++                            headers=dict(raw.headers() or []) if hasattr(raw, "headers") else None,
+                         )
+                     )
+                 if not messages:
+diff --git a/plugins/shape-kafka/tests/test_emitter_emulator.py b/plugins/shape-kafka/tests/test_emitter_emulator.py
+index 417ce68..f89b8cf 100644
+--- a/plugins/shape-kafka/tests/test_emitter_emulator.py
++++ b/plugins/shape-kafka/tests/test_emitter_emulator.py
+@@ -180,7 +180,6 @@ def test_a_missing_client_option_is_refused_before_anything_is_sent():
+         KafkaEmitter().emit(f"kafka://{SERVERS}/t", [], nope=1)
+ 
+ 
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+ @pytest.mark.parametrize("fmt", ["avro", "protobuf"])
+ def test_plain_binary_nested_read_write(tmp_path, fmt):
+     import pyarrow as pa
+@@ -207,7 +206,8 @@ def test_plain_binary_nested_read_write(tmp_path, fmt):
+         writer.close()
+     out = list(KafkaStreamSource().read(uri, format=fmt, schema_file=str(path), message="E"))
+     assert [r["child"] for _, b in out for r in b.to_pylist()] == [row["child"]]
+-=======
++
++
+ def test_keyed_metadata_round_trip_emulator():
+     topic = make_topic()
+     batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 3)
+@@ -221,4 +221,3 @@ def test_keyed_metadata_round_trip_emulator():
+     )
+     emitter.close()
+     assert [key for key, _ in consume_all(topic)] == ["order_line"] * 3
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+diff --git a/src/shape/streaming/messages.py b/src/shape/streaming/messages.py
+index f1787d0..c98e5e0 100644
+--- a/src/shape/streaming/messages.py
++++ b/src/shape/streaming/messages.py
+@@ -63,14 +63,11 @@ class StreamMessage:
+     offset: int
+     value: bytes | str | None
+     timestamp_us: int | None = None
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+     content_type: str | None = None
+-=======
+     key: bytes | None = None
+     headers: Mapping[str, bytes | None] | None = None
+     properties: Mapping[str, bytes | None] | None = None
+     partition_key: str | None = None
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+ 
+ 
+ @dataclass(slots=True)
+@@ -318,18 +315,13 @@ def decode_messages(
+                 if key not in seen:
+                     seen.add(key)
+                     names.append(key)
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+-        names = [n for n in names if n not in (PARTITION, OFFSET) or not with_offsets]
+-        hint = getattr(getattr(decoder, "__self__", decoder), "schema", None)
+-        columns = {}
+-=======
+         names = [
+             n
+             for n in names
+             if n not in metadata_columns and (n not in (PARTITION, OFFSET) or not with_offsets)
+         ]
+-        columns = {n: _inferred([r.get(n) for r in rows]) for n in names}
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
++        hint = getattr(getattr(decoder, "__self__", decoder), "schema", None)
++        columns = {}
+         bad: set[int] = set()
+         for n in names:
+             values = [r.get(n) for r in rows]
+@@ -356,12 +348,9 @@ def decode_messages(
+             arr, failed = _typed([r.get(f.name) for r in rows], f.type)
+             columns[f.name] = arr
+             bad.update(failed)
+-<<<<<<< 7a0316cc0ac18ae8b9fe283446f449325b798083
+             if decoder is not None and not f.nullable:
+                 bad.update(i for i, row in enumerate(rows) if row.get(f.name) is None)
+-=======
+     columns.update(metadata_columns)
+->>>>>>> 91ef6200266bf962246d1553356b26a442be2303
+     columns[EVENT_TIME] = pa.array(times, type=EVENT_TIME_TYPE)
+     if with_offsets:
+         columns[PARTITION] = pa.array([m.partition for m in source], type=pa.string())
+diff --git a/tests/streaming/test_binary_formats.py b/tests/streaming/test_binary_formats.py
+index ad1ced8..b93dabb 100644
+--- a/tests/streaming/test_binary_formats.py
++++ b/tests/streaming/test_binary_formats.py
+@@ -820,6 +820,113 @@ def test_avro_uuid_normalization_does_not_change_nonfinite_read_values():
+     assert math.isnan(c.decode(buf.getvalue())["value"])
+ 
+ 
++@pytest.mark.parametrize("fmt", ["avro", "protobuf"])
++def test_integration_binary_reader_rejection_keeps_transport_metadata_aligned(fmt):
++    c = codec(fmt)
++    stats = DecodeStats()
++    messages = [
++        StreamMessage(
++            "0",
++            i,
++            c.encode({**ROW, "id": value}),
++            100 + i,
++            key=f"key-{i}".encode(),
++            headers={"trace": bytes([i])},
++        )
++        for i, value in enumerate([7, 999, 8])
++    ]
++    reader = SCHEMA.set(0, pa.field("id", pa.int8())).append(
++        pa.field("_shape_event_time", pa.timestamp("us", tz="UTC"))
++    )
++    batch = decode_messages(
++        messages,
++        decoder=c.decode,
++        schema=reader,
++        stats=stats,
++        with_key=True,
++        with_headers=True,
++        with_timestamp=True,
++    )
++    assert batch.column("id").to_pylist() == [7, 8]
++    assert batch.column("child").type == SCHEMA.field("child").type
++    assert batch.column("_shape_key").to_pylist() == [b"key-0", b"key-2"]
++    assert batch.column("_shape_headers").to_pylist() == [
++        [("trace", b"\x00")],
++        [("trace", b"\x02")],
++    ]
++    assert batch.column("_shape_timestamp").cast(pa.int64()).to_pylist() == [100, 102]
++    assert stats.to_dict() == {"messages": 3, "rows": 2, "undecodable": 0, "rejected": 1}
++
++
++@pytest.mark.parametrize("fmt", ["avro", "protobuf"])
++@pytest.mark.parametrize("transport", ["kafka", "eventhubs"])
++@pytest.mark.parametrize("selected_key", [None, "id"])
++def test_integration_plain_binary_emit_preserves_selected_key_headers_and_replay(
++    tmp_path, fmt, transport, selected_key
++):
++    from shape.streaming.emit.formats import with_event_fields
++
++    if transport == "kafka":
++        from shape_kafka.testing import EmitterHarness
++    else:
++        from shape_eventhubs.testing import EmitterHarness
++    path = tmp_path / ("events.avsc" if fmt == "avro" else "events.proto")
++    path.write_text(AVRO if fmt == "avro" else PROTO)
++    batch = with_event_fields(pa.RecordBatch.from_pylist([ROW], schema=SCHEMA), "orders", 0)
++    h = EmitterHarness()
++    assert (
++        h.make().emit(
++            h.uri,
++            [batch, batch],
++            event_format=fmt,
++            schema_file=str(path),
++            message="shop.Order",
++            key=selected_key,
++            headers=["trace=@id"],
++        )
++        == 2
++    )
++    if transport == "kafka":
++        _, key, body, headers = h.store.log[0]
++        assert [entry[1] for entry in h.store.log] == [b"7" if selected_key else b"orders/0"] * 2
++        assert key == (b"7" if selected_key else b"orders/0")
++        assert dict(headers)["trace"] == b"7"
++        if selected_key:
++            assert dict(headers)["shape-key"] == b"orders/0"
++    else:
++        event = h.hub.batches[0].events[0]
++        from shape_eventhubs.source import _body
++
++        body = _body(event)
++        assert event.content_type == f"application/{fmt}"
++        assert event.properties["shape_key"] == (b"7" if selected_key else "orders/0")
++        assert event.properties["trace"] == b"7"
++        if selected_key:
++            assert event.properties["shape-key"] == "orders/0"
++    assert codec(fmt).decode(body) == ROW
++
++
++@pytest.mark.parametrize("fmt", ["avro", "protobuf"])
++def test_integration_binary_encode_rejection_keeps_dead_letter_reason_aligned(tmp_path, fmt):
++    from shape_kafka.testing import EmitterHarness
++
++    from shape.streaming.emit import RejectedEvents
++    from shape.streaming.emit.formats import with_event_fields
++
++    path = tmp_path / ("events.avsc" if fmt == "avro" else "events.proto")
++    path.write_text(AVRO if fmt == "avro" else PROTO)
++    batch = with_event_fields(
++        pa.RecordBatch.from_pylist([{**ROW, "id": None}, {**ROW, "id": 8}], schema=SCHEMA),
++        "orders",
++        0,
++    ).append_column("_shape_dead_letter_reason", pa.array(["refused-row", "sent-row"]))
++    h = EmitterHarness()
++    with pytest.raises(RejectedEvents):
++        h.make().emit(h.uri, [batch], event_format=fmt, schema_file=str(path), message="shop.Order")
++    assert len(h.store.log) == 1
++    assert dict(h.store.log[0][3])["shape-dead-letter-reason"] == b"sent-row"
++
++
+ @pytest.mark.parametrize("fmt", ["avro", "protobuf"])
+ def test_binary_encode_rejection_keeps_dead_letter_reason_aligned(tmp_path, fmt):
+     from shape_kafka.testing import EmitterHarness

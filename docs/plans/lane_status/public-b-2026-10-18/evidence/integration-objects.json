@@ -1,0 +1,14 @@
+{
+  "binary_head": "7a0316cc0ac18ae8b9fe283446f449325b798083",
+  "metadata_head": "91ef6200266bf962246d1553356b26a442be2303",
+  "auto_merge_tree": "524c9085b2a420c8f0a9f25858992a004b4576d6",
+  "preview_exit": 1,
+  "resolved_tree": "363da4067db65b3ec66e02b27d18075b9b1dafaf",
+  "worktree": "/workspace/public-b-stream-integration",
+  "reviewed_product_sha256": {
+    "plugins/shape-kafka/src/shape_kafka/emitter.py": "77acf35238e6e45663ef4ed9c8e88f65e68e75fcc918c82106da3cb6897371c1",
+    "plugins/shape-eventhubs/src/shape_eventhubs/emitter.py": "8010d7f8abcff96100da7c0f5c95a7d4bc307ceadb4d529fde0fbaa7c17ad535",
+    "plugins/shape-eventhubs/src/shape_eventhubs/source.py": "f9e87e5c44d98c66bee75c54626f014a3198ba3506dbfe201ae6e6ecc1c0379f",
+    "src/shape/streaming/messages.py": "349b1c38d47a4dae06ffd0e8f5461faf0f3e311f81eec65e1147c18876e85db8"
+  }
+}

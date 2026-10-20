@@ -5,8 +5,9 @@ def save(p,d):
  t=p.with_suffix('.tmp');t.write_text(json.dumps(d,indent=2)+'\n');t.replace(p)
 def git(cwd,*args):return subprocess.check_output(['git',*args],cwd=cwd,text=True).strip()
 def snap(cwd):
- diff=subprocess.check_output(['git','diff','HEAD','--','src','tests','plugins','pyproject.toml','uv.lock','Makefile','scripts','rust'],cwd=cwd)
- untracked=git(cwd,'ls-files','--others','--exclude-standard','--','src','tests','plugins','scripts','rust')
+ diff=subprocess.check_output(['git','diff','HEAD','--','.',':(exclude)docs/plans/lane_status/**'],cwd=cwd)
+ raw_untracked=git(cwd,'ls-files','--others','--exclude-standard').splitlines()
+ untracked='\n'.join(x for x in raw_untracked if not x.startswith('docs/plans/lane_status/') and not (x=='not-json.tmp' and (cwd/x).is_file() and (cwd/x).stat().st_size==0))
  return {'head':git(cwd,'rev-parse','HEAD'),'tree':git(cwd,'rev-parse','HEAD^{tree}'),'status':git(cwd,'status','--porcelain'),'source_diff':hashlib.sha256(diff).hexdigest(),'untracked_source':untracked,'zombies':z()}
 uv='uv run --locked --group docs --group dbt --group benchmark '
 while True:
@@ -21,10 +22,19 @@ while True:
  ('python-core','SHAPE_KERNEL=python '+uv+'pytest -q -m "not emulator and not live" --ignore=tests/demo/fabric'),
  ('python-fabric','SHAPE_KERNEL=python UV_PROJECT_ENVIRONMENT='+str(cwd/'.venv-fabric')+' uv run --locked --group fabric-demo --group dbt pytest -q -m "not emulator and not live" tests/demo/fabric')]
  if state.get('stage')=='complete':save(base/'status.json',{'stage':'awaiting-next-lane','lane':lane,'head':head,'state':str(statepath)});time.sleep(5);continue
- failed=False
+ failed=False;boundary_pause=False
  for name,command in jobs:
+  fresh=json.loads(control.read_text())
+  if fresh.get('stop') or fresh.get('pause') or fresh.get('lane')!=lane or fresh.get('head')!=head:
+   save(base/'status.json',{'stage':'paused-at-boundary','lane':lane,'next_job':name,'state':str(statepath)});boundary_pause=True;break
   prior=state['jobs'].get(name,{})
   if prior.get('exit')==0 and prior.get('valid') is True:continue
+  if prior:
+   stamp=now().replace(':','').replace('.','');archive=root/'attempts'/(name+'-'+stamp);archive.mkdir(parents=True,exist_ok=True)
+   for old in (root/(name+'.log'),root/(name+'-cache.log')):
+    if old.exists():shutil.move(str(old),str(archive/old.name))
+   if name=='collection-proof' and (root/'collection').exists():shutil.move(str(root/'collection'),str(archive/'collection'))
+   save(archive/'entry.json',prior);state.setdefault('archived_attempts',[]).append({'job':name,'directory':str(archive),'entry':prior});save(statepath,state)
   with (base/'full-check.lock').open('a') as lock:
    fcntl.flock(lock,fcntl.LOCK_EX);before=snap(cwd)
    if before['head']!=head or before['source_diff']!=hashlib.sha256(b'').hexdigest() or before['untracked_source']:
@@ -45,6 +55,7 @@ while True:
    save(statepath,state)
    if after['zombies']>1000:save(base/'status.json',{'stage':'hard-stop-zombies','after':after});sys.exit(1)
    if not entry['valid']:state['stage']='failed';save(statepath,state);save(base/'status.json',{'stage':'failed','lane':lane,'job':name,'state':str(statepath)});failed=True;break
+ if boundary_pause:time.sleep(5);continue
  if failed:
   cfg['pause']=True;save(control,cfg);time.sleep(5);continue
  state.update(stage='complete',finished=now());save(statepath,state);save(base/'status.json',{'stage':'awaiting-next-lane','lane':lane,'head':head,'state':str(statepath)})
