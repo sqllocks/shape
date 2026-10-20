@@ -324,6 +324,10 @@ verified `deltalake>=1.6.6` release and their public APIs; refusals name both th
 installed and required versions before writing. The published `deltalake>=0.17`
 range remains available for default writes:
 
+The Delta sink's read-only `feature_plan(options)` method returns the minimum
+protocol and feature lists without importing the native writer or opening storage.
+The command-line dry run uses this method through the installed sink plugin.
+
 | Option | Value and effect | Required protocol |
 |---|---|---|
 | `table_properties` | String-to-string object passed as `configuration` on creation; changed properties are committed after a successful append. Custom properties compose with `shape.fingerprint`. Feature/protocol and fingerprint properties are reserved for their dedicated options. | 1 / 2 for ordinary properties |

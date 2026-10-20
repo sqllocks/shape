@@ -308,6 +308,12 @@ class DeltaSink:
     name = "delta"
     schemes = ("file", "delta+abfss", "delta+abfs")
     extension = ""  # no file extension: a directory per table
+    feature_options = features.FEATURE_OPTIONS
+
+    @staticmethod
+    def feature_plan(options: dict[str, Any]) -> dict[str, Any]:
+        """Report protocol requirements through the plugin without opening storage."""
+        return features.feature_plan(options)
 
     def open_table(
         self, uri: str, table: str, schema: pa.Schema | None = None, **options: Any

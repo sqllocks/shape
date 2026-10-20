@@ -666,3 +666,19 @@ def test_wanted8_verified_local_build_keeps_capability_checks(tmp_path, monkeypa
     table = write(tmp_path, column_mapping="name")
     assert table.metadata().configuration["delta.columnMapping.mode"] == "name"
     assert read(table).to_pydict() == batch().to_pydict()
+
+
+@pytest.mark.conformance
+def test_wanted7_registry_exposes_offline_feature_plan(monkeypatch):
+    """SHAPE-SINK-002: previews use the sink plugin rather than bypass the host."""
+    from shape.plugins.host import default_host
+
+    def no_writer_import():
+        pytest.fail("offline planning must not import the Delta writer")
+
+    monkeypatch.setattr(delta, "_deltalake", no_writer_import)
+    sink = default_host().get("shape.sinks", "delta")
+    assert "deletion_vectors" in sink.feature_options
+    planned = sink.feature_plan({"deletion_vectors": True})
+    assert (planned["min_reader_version"], planned["min_writer_version"]) == (3, 7)
+    assert "deletionVectors" in planned["reader_features"]

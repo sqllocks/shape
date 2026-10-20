@@ -283,11 +283,16 @@ def _dump(obj: Any) -> None:
 
 
 def _delta_feature_options(a: argparse.Namespace) -> dict[str, Any]:
-    from shape.builtins.sinks.delta_features import FEATURE_OPTIONS
     from shape.cli.to import sink_config
+    from shape.plugins.host import default_host
 
     extra = sink_config(getattr(a, "sink_config", None), offline=bool(getattr(a, "dry_run", False)))
-    return {k: v for k, v in extra.get("delta", {}).items() if k in FEATURE_OPTIONS}
+    given = extra.get("delta", {})
+    if not given:
+        return {}
+    sink = default_host().get("shape.sinks", "delta")
+    supported = getattr(sink, "feature_options", ())
+    return {k: v for k, v in given.items() if k in supported}
 
 
 def _delta_protocol(a: argparse.Namespace) -> dict[str, Any]:
@@ -299,9 +304,10 @@ def _delta_protocol(a: argparse.Namespace) -> dict[str, Any]:
     options = _delta_feature_options(a)
     if not options:
         return {}
-    from shape.builtins.sinks.delta import feature_plan
+    from shape.plugins.host import default_host
 
-    return {"delta_protocol": feature_plan(options)}
+    sink = default_host().get("shape.sinks", "delta")
+    return {"delta_protocol": sink.feature_plan(options)}
 
 
 def _print_delta_protocol(a: argparse.Namespace) -> None:
