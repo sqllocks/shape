@@ -10,7 +10,8 @@ nested object or array is kept as its JSON text. Besides the payload the batch c
 
 * the payload field named by ``event_time_field`` (default ``_shape_event_time``), an ISO-8601
   string or a number in ``event_time_unit``, when it holds a valid time;
-* otherwise the broker's timestamp (Kafka message time, Event Hubs enqueued time);
+* otherwise the message timestamp (Kafka message time; Event Hubs creation time when
+  present, otherwise enqueue time);
 * otherwise null (the runtime counts rows without an event time).
 
 Without a ``schema`` the column types come from the batch, with fields in order of first
@@ -54,7 +55,7 @@ class StreamMessage:
     """One message as the broker delivered it.
 
     ``partition`` is the broker's partition id as text, ``offset`` its position in the
-    partition (Kafka offset, Event Hubs sequence number), ``timestamp_us`` the broker time in
+    partition (Kafka offset, Event Hubs sequence number), ``timestamp_us`` the message time in
     microseconds since the epoch, ``value`` the body.
     """
 
@@ -62,6 +63,10 @@ class StreamMessage:
     offset: int
     value: bytes | str | None
     timestamp_us: int | None = None
+    key: bytes | None = None
+    headers: Mapping[str, bytes | None] | None = None
+    properties: Mapping[str, bytes | None] | None = None
+    partition_key: str | None = None
 
 
 @dataclass(slots=True)
@@ -177,6 +182,10 @@ def decode_messages(
     event_time_field: str = EVENT_TIME,
     event_time_unit: str = "ms",
     with_offsets: bool = False,
+    with_key: bool = False,
+    with_headers: bool = False,
+    with_timestamp: bool = False,
+    nested: bool = True,
     stats: DecodeStats | None = None,
     on_error: str = "skip",
 ) -> pa.RecordBatch | None:
@@ -219,6 +228,38 @@ def decode_messages(
     if not rows:
         return None
 
+    metadata_columns: dict[str, pa.Array] = {}
+    if with_key:
+        metadata_columns["_shape_key"] = pa.array([m.key for m in source], type=pa.binary())
+    if with_timestamp:
+        metadata_columns["_shape_timestamp"] = pa.array(
+            [m.timestamp_us for m in source], type=EVENT_TIME_TYPE
+        )
+    if with_headers:
+
+        def header_array(values: list[Any]) -> pa.Array:
+            if nested:
+                return pa.array(values, type=pa.map_(pa.string(), pa.binary()))
+            # Hex keeps arbitrary non-UTF-8 bytes lossless in JSON text.
+            return pa.array(
+                [
+                    None
+                    if v is None
+                    else json.dumps(
+                        {k: None if b is None else b.hex() for k, b in v.items()}, sort_keys=True
+                    )
+                    for v in values
+                ],
+                type=pa.string(),
+            )
+
+        metadata_columns["_shape_headers"] = header_array([m.headers for m in source])
+        if any(m.properties is not None for m in source):
+            metadata_columns["_shape_properties"] = header_array([m.properties for m in source])
+    if (with_key or with_headers) and any(m.properties is not None for m in source):
+        metadata_columns["_shape_partition_key"] = pa.array(
+            [m.partition_key for m in source], type=pa.string()
+        )
     if schema is None:
         names: list[str] = []
         seen: set[str] = set()
@@ -227,24 +268,46 @@ def decode_messages(
                 if key not in seen:
                     seen.add(key)
                     names.append(key)
-        names = [n for n in names if n not in (PARTITION, OFFSET) or not with_offsets]
+        names = [
+            n
+            for n in names
+            if n not in metadata_columns and (n not in (PARTITION, OFFSET) or not with_offsets)
+        ]
         columns = {n: _inferred([r.get(n) for r in rows]) for n in names}
         bad: set[int] = set()
     else:
         columns = {}
         bad = set()
         for f in schema:
-            if f.name == EVENT_TIME or (with_offsets and f.name in (PARTITION, OFFSET)):
+            if (
+                f.name in metadata_columns
+                or f.name == EVENT_TIME
+                or (with_offsets and f.name in (PARTITION, OFFSET))
+            ):
                 continue
             arr, failed = _typed([r.get(f.name) for r in rows], f.type)
             columns[f.name] = arr
             bad.update(failed)
+    columns.update(metadata_columns)
     columns[EVENT_TIME] = pa.array(times, type=EVENT_TIME_TYPE)
     if with_offsets:
         columns[PARTITION] = pa.array([m.partition for m in source], type=pa.string())
         columns[OFFSET] = pa.array([m.offset for m in source], type=pa.int64())
     batch = pa.RecordBatch.from_pydict(columns)
     if schema is not None:
+        # A caller's payload schema controls payload types, not opted-in transport metadata.
+        # Preserve metadata even when absent from that schema, with canonical binary/map/time
+        # types rather than coercing it to an accidentally supplied payload type.
+        fields = [
+            pa.field(f.name, metadata_columns[f.name].type) if f.name in metadata_columns else f
+            for f in schema
+        ]
+        fields.extend(
+            pa.field(name, array.type)
+            for name, array in metadata_columns.items()
+            if name not in schema.names
+        )
+        schema = pa.schema(fields, metadata=schema.metadata)
         batch = batch.select([f.name for f in schema])
         batch = conform(batch, schema)
     if bad:
