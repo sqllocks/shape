@@ -674,6 +674,14 @@ class FakeSqlCursor:
         elif text.startswith("SELECT col.name, def.definition FROM sys.default_constraints"):
             table = server.tables[self._key(params[0])]
             self._result = list(table.default_definitions.items())
+        elif text.startswith("SELECT fk.name AS coordinated_constraint_name"):
+            parent = self._key(params[0])
+            self._result = [
+                (constraint.name, child_schema, child)
+                for (child_schema, child), table in server.tables.items()
+                for constraint in table.constraints
+                if constraint.kind == "fk" and constraint.parent == parent
+            ]
         elif text.startswith("SELECT name FROM sys.foreign_keys"):
             table = server.tables[self._key(params[0])]
             self._result = [(c.name,) for c in table.constraints]

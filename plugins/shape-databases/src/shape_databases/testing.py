@@ -389,6 +389,20 @@ class FakeCursor:
                 for local, remote in zip(names, parents, strict=True)
             ]
             return
+        if " AS coordinated_constraint_name" in sql:
+            assert params is not None
+            namespace, target = s.key(*params)
+            self._result = [
+                (name, key[0], key[1])
+                for key, refs in s.constraint_foreign_keys.items()
+                if key in s.tables
+                for name, (_, parent_schema, parent, _, _) in refs.items()
+                if parent_schema == namespace and parent == target
+            ]
+            return
+        if sql.startswith("SELECT ENGINE FROM information_schema.TABLES"):
+            self._result = [("InnoDB",)]
+            return
         if " AS inbound_constraint_name " in sql:
             assert params is not None
             target_schema, target = s.key(*params)
@@ -501,8 +515,10 @@ class FakeCursor:
             s.constraint_foreign_keys[key] = {}
             lines = [ln.strip() for ln in m[3].split(",\n")]
             for line in lines:
-                if line.startswith("UNIQUE"):
-                    s.unique_keys[key].append(tuple(_unquote(c) for c in _ONE_IDENT.findall(line)))
+                if unique := re.match(rf"(?:CONSTRAINT {_IDENT} )?UNIQUE \((.*)\)\Z", line):
+                    s.unique_keys[key].append(
+                        tuple(_unquote(c) for c in _ONE_IDENT.findall(unique[1]))
+                    )
                 elif check := re.match(rf"CONSTRAINT ({_IDENT}) CHECK (.*)\Z", line, re.S):
                     s.check_sql[key][_unquote(check[1])] = check[2]
             # Table-level declarations do not become physical Arrow columns.
@@ -568,6 +584,21 @@ class FakeCursor:
                 s.constraint_foreign_keys,
             ):
                 declarations.pop(key, None)
+            return
+        if sql.startswith("TRUNCATE TABLE ") and ", " in sql:
+            s.ddl()
+            for target in sql.removeprefix("TRUNCATE TABLE ").split(", "):
+                match = _TRUNCATE.fullmatch("TRUNCATE TABLE " + target)
+                if match is None:
+                    raise FakeDriverError("invalid truncate target")
+                s.tables[s.key(_unquote(match[1]) if match[1] else None, _unquote(match[2]))] = []
+            return
+        if sql.startswith("DELETE FROM "):
+            match = _TRUNCATE.fullmatch("TRUNCATE TABLE " + sql.removeprefix("DELETE FROM "))
+            if match is None:
+                raise FakeDriverError("invalid delete target")
+            s.begin()
+            s.tables[s.key(_unquote(match[1]) if match[1] else None, _unquote(match[2]))] = []
             return
         if m := _TRUNCATE.match(sql):
             s.ddl()

@@ -7,6 +7,7 @@ schema defaults and structured CHECK operands; SQL expressions are never accepte
 from __future__ import annotations
 
 import math
+import threading
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
@@ -17,6 +18,44 @@ from shape.security.sqltext import check_identifier, postgres_text, tsql_text
 
 # Only the in-process generation coordinator may bypass preparation on a later load.
 _PREPARED_CONSTRAINTS = object()
+
+
+class _PreparedTransaction:
+    """Transient coordinator state; never an output option supplied by a caller."""
+
+    def __init__(self, connection: Any, *, owns_connection: bool) -> None:
+        self.connection = connection
+        self.owns_connection = owns_connection
+        self.lock = threading.RLock()
+        self.finished = False
+
+    def finish(self, success: bool) -> None:
+        with self.lock:
+            if self.finished:
+                return
+            self.finished = True
+            try:
+                if success:
+                    try:
+                        self.connection.commit()
+                    except BaseException:
+                        self.connection.rollback()
+                        raise
+                else:
+                    try:
+                        self.connection.rollback()
+                    except Exception:
+                        pass  # cleanup must preserve the original load error
+            finally:
+                if self.owns_connection:
+                    try:
+                        self.connection.close()
+                    except Exception:
+                        pass  # closing must preserve the transaction outcome
+
+    def __repr__(self) -> str:
+        return "<prepared constraint transaction>"
+
 
 _DIALECTS = {
     "postgres",

@@ -117,7 +117,7 @@ class LakehouseSink:
         return writer.write_table(table, batches, **keys)
 
 
-def _prepare_constraints(sink: Any, uri: str, tables: Mapping[str, Mapping[str, Any]]) -> None:
+def _prepare_constraints(sink: Any, uri: str, tables: Mapping[str, Mapping[str, Any]]) -> Any:
     """Use one lazy SQL connection after all destination options and DDL are validated."""
     with ExitStack() as stack:
         planned: dict[str, dict[str, Any]] = {}
@@ -140,7 +140,11 @@ def _prepare_constraints(sink: Any, uri: str, tables: Mapping[str, Mapping[str, 
                 raise ShapeError(f"duplicate constraint target {table!r}")
             planned[table] = {**write_options, "schema_name": writer.schema_name}
         if connection is not None:
-            prepare_constraint_tables(connection, planned)
+            transaction = prepare_constraint_tables(connection, planned)
+            if transaction is not None:
+                # The coordinator now closes this connection after every worker drains.
+                connection._injected = transaction.connection
+                return transaction
 
 
 class SqlDatabaseSink:
@@ -421,6 +425,7 @@ _WRITE_KEYS = (
     "checks",
     "defaults",
     "prepared_constraints",
+    "_constraint_transaction",
 )
 
 

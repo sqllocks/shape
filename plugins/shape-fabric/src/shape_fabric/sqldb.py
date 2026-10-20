@@ -64,6 +64,7 @@ from shape.errors import ShapeError
 from shape.generation.write_constraints import (
     _PREPARED_CONSTRAINTS,
     ConstraintDDL,
+    _PreparedTransaction,
     compile_constraints,
 )
 
@@ -263,7 +264,9 @@ def constraint_plan(
         raise ShapeError(str(exc)) from None
 
 
-def prepare_constraint_tables(db: SqlConnection, tables: Mapping[str, Mapping[str, Any]]) -> None:
+def prepare_constraint_tables(
+    db: SqlConnection, tables: Mapping[str, Mapping[str, Any]]
+) -> _PreparedTransaction | None:
     """Validate the entire load before creating any table, then add all foreign keys."""
     plans: list[tuple[str, str, str, pa.Schema, Mapping[str, Any], ConstraintDDL]] = []
     for table, options in tables.items():
@@ -294,6 +297,49 @@ def prepare_constraint_tables(db: SqlConnection, tables: Mapping[str, Mapping[st
         )
         plans.append((table, sname, plan.mode, schema, options, compiled))
     try:
+        if (
+            plans
+            and not db.warehouse
+            and all(
+                mode == "truncate" and db.table_exists(sname, table)
+                for table, sname, mode, _, _, _ in plans
+            )
+        ):
+            owned = {(sname, table) for table, sname, _, _, _, _ in plans}
+            references = []
+            for table, sname, _, schema, options, compiled in plans:
+                verify_constraints(db, sname, table, {**options, "schema": schema}, compiled)
+                references.extend(
+                    db.execute(
+                        "SELECT fk.name AS coordinated_constraint_name, "
+                        "OBJECT_SCHEMA_NAME(fk.parent_object_id), "
+                        "OBJECT_NAME(fk.parent_object_id) FROM sys.foreign_keys fk "
+                        "WHERE fk.referenced_object_id = OBJECT_ID(?)",
+                        _tsql.qualified(sname, table),
+                    ).fetchall()
+                )
+            for name, child_schema, child in references:
+                if (child_schema, child) not in owned:
+                    raise ShapeError(
+                        f"cannot truncate: external foreign key {name!r} must be preserved"
+                    )
+            if references:
+                name = references[0][0]
+                if any(
+                    options.get("commit_rows") or options.get("constraints") == "disable"
+                    for _, _, _, _, options, _ in plans
+                ):
+                    raise ShapeError(
+                        f"foreign key {name!r}: coordinated truncate requires default "
+                        "transaction granularity"
+                    )
+                if getattr(db.get(), "autocommit", False):
+                    raise ShapeError(
+                        f"foreign key {name!r}: coordinated truncate requires a transaction"
+                    )
+                for table, sname, _, _, _, _ in reversed(plans):
+                    db.execute("DELETE FROM " + _tsql.qualified(sname, table))
+                return _PreparedTransaction(db.get(), owns_connection=db._injected is None)
         foreign: list[tuple[str, str, ConstraintDDL]] = []
         for table, sname, mode, schema, options, compiled in plans:
             exists = db.table_exists(sname, table)
@@ -315,6 +361,7 @@ def prepare_constraint_tables(db: SqlConnection, tables: Mapping[str, Mapping[st
             for clause in compiled.foreign_keys:
                 db.ddl(f"ALTER TABLE {_tsql.qualified(sname, table)} ADD {clause}")
         db.commit()
+        return None
     except ShapeError:
         db.rollback()
         raise
@@ -524,9 +571,21 @@ class SqlDatabaseWriter:
         checks: list[dict[str, Any]] | None = None,
         defaults: Mapping[str, Any] | None = None,
         prepared_constraints: Any = None,
+        _constraint_transaction: Any = None,
     ) -> int:
         """Write one table; return its row count. ``schema`` is needed only to create an
         empty table from no batches."""
+        if _constraint_transaction is not None:
+            if not isinstance(_constraint_transaction, _PreparedTransaction):
+                raise ShapeError("_constraint_transaction is internal coordinator state")
+            if (
+                commit_rows
+                or constraints == "disable"
+                or self.db.get() is not _constraint_transaction.connection
+            ):
+                raise ShapeError(
+                    "prepared transaction requires its shared connection and default commits"
+                )
         if prepared_constraints is not None and prepared_constraints is not _PREPARED_CONSTRAINTS:
             raise ShapeError("prepared_constraints is an internal preparation marker")
         if isinstance(batch_size, bool) or not isinstance(batch_size, int) or batch_size < 1:
@@ -612,7 +671,8 @@ class SqlDatabaseWriter:
             rows = self._load(
                 sname, table, first, rest, plan, columns, batch_size, commit_rows, committed
             )
-            db.commit()
+            if _constraint_transaction is None:
+                db.commit()
         except Exception as exc:
             undo(db, sname, table, created and not committed[0])
             if disabled:

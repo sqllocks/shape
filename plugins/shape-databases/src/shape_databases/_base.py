@@ -29,6 +29,7 @@ from shape.errors import ShapeError
 from shape.generation.write_constraints import (
     _PREPARED_CONSTRAINTS,
     ConstraintDDL,
+    _PreparedTransaction,
     compile_constraints,
 )
 
@@ -312,7 +313,16 @@ class DatabaseSink:
             and options["prepared_constraints"] is not _PREPARED_CONSTRAINTS
         ):
             raise ShapeError("prepared_constraints is an internal preparation marker")
+        transaction = options.get("_constraint_transaction")
+        if transaction is not None and not isinstance(transaction, _PreparedTransaction):
+            raise ShapeError("_constraint_transaction is internal coordinator state")
         plan = self.plan(uri, table, options)
+        if transaction is not None and (
+            plan.commit_rows or options.get("connection") is not transaction.connection
+        ):
+            raise ShapeError(
+                "prepared transaction requires its shared connection and default commits"
+            )
         first, rest = self._peek(batches, plan)
         use_schema = first.schema if first is not None else plan.schema
         if use_schema is None:
@@ -342,7 +352,8 @@ class DatabaseSink:
             if plan.commit_rows:
                 conn.commit()  # the table is there for readers before the first rows arrive
             rows = self.load(conn, name, plan, first, rest, progress)
-            conn.commit()
+            if transaction is None:
+                conn.commit()
             log.debug("wrote %d rows to %s", rows, name)
             return rows
         except ShapeError:
@@ -508,7 +519,97 @@ class DatabaseSink:
         finally:
             cur.close()
 
-    def _prepare_constraint_tables(self, uri: str, tables: Mapping[str, Mapping[str, Any]]) -> None:
+    def _coordinated_truncate(
+        self,
+        conn: Any,
+        plans: list[tuple[Plan, pa.Schema, pa.RecordBatch | None]],
+        *,
+        owns_connection: bool,
+    ) -> _PreparedTransaction | None:
+        if self.dialect not in {"postgres", "mysql"} or not all(
+            plan.mode == "truncate" and self._exists(conn, plan) for plan, _, _ in plans
+        ):
+            return None
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                "SELECT current_schema()" if self.dialect == "postgres" else "SELECT DATABASE()"
+            )
+            default_schema = str(cur.fetchone()[0])
+            owned = {(plan.schema_name or default_schema, plan.table) for plan, _, _ in plans}
+            references = []
+            for plan, schema, first in plans:
+                self._verify_existing_constraints(conn, plan, schema, first)
+                if self.dialect == "postgres":
+                    sql = (
+                        "SELECT DISTINCT con.conname AS coordinated_constraint_name, "
+                        "childns.nspname, child.relname "
+                        "FROM pg_catalog.pg_constraint con "
+                        "JOIN pg_catalog.pg_class parent ON parent.oid=con.confrelid "
+                        "JOIN pg_catalog.pg_namespace ns ON ns.oid=parent.relnamespace "
+                        "JOIN pg_catalog.pg_class child ON child.oid=con.conrelid "
+                        "JOIN pg_catalog.pg_namespace childns ON childns.oid=child.relnamespace "
+                        "WHERE con.contype='f' AND "
+                        "ns.nspname=COALESCE(%s::text,current_schema()::text) "
+                        "AND parent.relname=%s"
+                    )
+                else:
+                    sql = (
+                        "SELECT DISTINCT CONSTRAINT_NAME AS coordinated_constraint_name, "
+                        "TABLE_SCHEMA, TABLE_NAME "
+                        "FROM information_schema.KEY_COLUMN_USAGE "
+                        "WHERE REFERENCED_TABLE_SCHEMA=COALESCE(%s,DATABASE()) AND "
+                        "REFERENCED_TABLE_NAME=%s"
+                    )
+                cur.execute(sql, (plan.schema_name, plan.table))
+                references.extend(cur.fetchall())
+            for name, child_schema, child in references:
+                if (str(child_schema), str(child)) not in owned:
+                    raise ShapeError(
+                        f"cannot truncate: external foreign key {name!r} must be preserved"
+                    )
+            if not references:
+                return None
+            name = str(references[0][0])
+            if any(plan.commit_rows for plan, _, _ in plans):
+                raise ShapeError(
+                    f"foreign key {name!r}: coordinated truncate cannot preserve "
+                    "commit_rows granularity"
+                )
+            autocommit = getattr(conn, "autocommit", False)
+            if callable(autocommit):
+                autocommit = conn.get_autocommit()
+            if autocommit:
+                raise ShapeError(
+                    f"foreign key {name!r}: coordinated truncate requires a transaction"
+                )
+            targets = [
+                _sql.qualified(plan.schema_name, plan.table, self.dialect) for plan, _, _ in plans
+            ]
+            if self.dialect == "postgres":
+                cur.execute("TRUNCATE TABLE " + ", ".join(targets))
+            else:
+                for plan, _, _ in plans:
+                    cur.execute(
+                        "SELECT ENGINE FROM information_schema.TABLES WHERE "
+                        "TABLE_SCHEMA=COALESCE(%s,DATABASE()) AND TABLE_NAME=%s",
+                        (plan.schema_name, plan.table),
+                    )
+                    row = cur.fetchone()
+                    if row is None or str(row[0]).lower() != "innodb":
+                        raise ShapeError(
+                            f"foreign key {name!r}: coordinated truncate requires InnoDB "
+                            "transactions"
+                        )
+                for target in reversed(targets):
+                    cur.execute("DELETE FROM " + target)
+            return _PreparedTransaction(conn, owns_connection=owns_connection)
+        finally:
+            cur.close()
+
+    def _prepare_constraint_tables(
+        self, uri: str, tables: Mapping[str, Mapping[str, Any]]
+    ) -> _PreparedTransaction | None:
         """Create every target, then foreign keys, before the output engine sends rows."""
         plans: list[tuple[Plan, pa.Schema, pa.RecordBatch | None]] = []
         for table, raw in tables.items():
@@ -529,7 +630,7 @@ class DatabaseSink:
             self._constraint_ddl(plan, schema)
             plans.append((plan, schema, first))
         if not plans:
-            return
+            return None
         initial = plans[0][0]
 
         def material(value: Any) -> Any:
@@ -550,6 +651,7 @@ class DatabaseSink:
         secrets = [s for plan, _, _ in plans for s in (plan.secret, *plan.secrets)]
         injected = initial.options.get("connection")
         conn = injected
+        retained = False
         failure: WriteError
 
         def rollback() -> None:
@@ -564,18 +666,26 @@ class DatabaseSink:
                 conn = self._open(
                     initial, initial.target.label, secrets, initial.options.get("connect")
                 )
+            transaction = self._coordinated_truncate(conn, plans, owns_connection=injected is None)
+            if transaction is not None:
+                retained = True
+                return transaction
+            created = set()
             for plan, schema, first in plans:
-                self._prepare_table(conn, plan, schema, first, defer_foreign_keys=True)
+                if self._prepare_table(conn, plan, schema, first, defer_foreign_keys=True):
+                    created.add(plan.table)
             cur = conn.cursor()
             try:
                 for plan, schema, _ in plans:
+                    if plan.table not in created:
+                        continue
                     for clause in self._constraint_ddl(plan, schema).foreign_keys:
                         target = _sql.qualified(plan.schema_name, plan.table, self.dialect)
                         cur.execute(f"ALTER TABLE {target} ADD {clause}")
             finally:
                 cur.close()
             conn.commit()
-            return
+            return None
         except ShapeError:
             rollback()
             raise
@@ -587,7 +697,7 @@ class DatabaseSink:
                 0,
             )
         finally:
-            if conn is not None and injected is None:
+            if conn is not None and injected is None and not retained:
                 try:
                     conn.close()
                 except Exception:  # noqa: S110  # nosec B110

@@ -678,6 +678,12 @@ def _feed(
         if finished is not None:
             finished.set()
 
+    from shape.generation.write_constraints import _PreparedTransaction
+
+    transaction = options.get("_constraint_transaction")
+    if isinstance(transaction, _PreparedTransaction):
+        with transaction.lock:
+            return int(sink.write(uri, table, batches(), **options))
     return int(sink.write(uri, table, batches(), **options))
 
 
@@ -725,6 +731,9 @@ def write_targets(
         if options.constraints not in ("none", "keep")
         and callable(prepare := getattr(sink, "prepare_constraints", None))
     }
+    from shape.generation.write_constraints import _PreparedTransaction
+
+    transactions: dict[int, _PreparedTransaction] = {}
     sources: dict[str, Iterator[pa.RecordBatch]] = {}
     schemas: dict[str, pa.Schema] = {}
     if preparing:
@@ -743,19 +752,26 @@ def write_targets(
                 raise ValueError(f"table {name!r} produced no batches and no Arrow schema")
             first_batches[name] = first
             sources[name] = chain(() if first is None else (first,), source)
-        for index, prepare in preparing.items():
-            uri, sink_name, _ = sinks[index]
-            prepare(
-                uri,
-                {
-                    name: {
-                        **options.for_sink(sink_name, engine.schema, name),
-                        "schema": schemas[name],
-                        "first_batch": first_batches[name],
-                    }
-                    for name in names
-                },
-            )
+        try:
+            for index, prepare in preparing.items():
+                uri, sink_name, _ = sinks[index]
+                transaction = prepare(
+                    uri,
+                    {
+                        name: {
+                            **options.for_sink(sink_name, engine.schema, name),
+                            "schema": schemas[name],
+                            "first_batch": first_batches[name],
+                        }
+                        for name in names
+                    },
+                )
+                if isinstance(transaction, _PreparedTransaction):
+                    transactions[index] = transaction
+        except BaseException:
+            for transaction in transactions.values():
+                transaction.finish(False)
+            raise
     written: dict[str, dict[str, int]] = {redact(u): {} for u in uris}
     lock = threading.Lock()
 
@@ -784,6 +800,9 @@ def write_targets(
                 from shape.generation.write_constraints import _PREPARED_CONSTRAINTS
 
                 opts["prepared_constraints"] = _PREPARED_CONSTRAINTS
+            if i in transactions:
+                opts["_constraint_transaction"] = transactions[i]
+                opts["connection"] = transactions[i].connection
             finished = threading.Event()
             try:
                 counts[i] = _feed(sink, uri, name, queues[i], opts, finished)
@@ -814,9 +833,17 @@ def write_targets(
             for (uri, _, _), rows in zip(sinks, counts, strict=True):
                 written[redact(uri)][name] = rows
 
-    if preparing:
-        for level in engine.levels:
-            _run_parallel(level, one, _writers(max_workers))
+    try:
+        if preparing:
+            for level in engine.levels:
+                _run_parallel(level, one, _writers(max_workers))
+        else:
+            _run_parallel(names, one, _writers(max_workers))
+    except BaseException:
+        for transaction in transactions.values():
+            transaction.finish(False)
+        raise
     else:
-        _run_parallel(names, one, _writers(max_workers))
+        for transaction in transactions.values():
+            transaction.finish(True)
     return written
