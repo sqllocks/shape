@@ -42,19 +42,39 @@ def engine(start):
     return Engine(definition(start), row_counts={"parent": 3, "child": 3}, seed=42, chunk_rows=2)
 
 
-@pytest.fixture
-def rerun_database():
-    import psycopg
+@pytest.fixture(params=["postgres", "mysql"])
+def rerun_database(request):
+    dialect = request.param
+    if dialect == "postgres":
+        import psycopg
 
-    conn = psycopg.connect(
-        host="localhost",
-        user="shape",
-        dbname="shape",
-        password=os.environ["SHAPE_POSTGRES_PASSWORD"],
-        autocommit=True,
-    )
+        conn = psycopg.connect(
+            host="localhost",
+            user="shape",
+            dbname="shape",
+            password=os.environ["SHAPE_POSTGRES_PASSWORD"],
+            autocommit=True,
+        )
+    else:
+        import pymysql
+
+        conn = pymysql.connect(
+            host="127.0.0.1",
+            user="shape",
+            database="shape",
+            password=os.environ["SHAPE_MYSQL_PASSWORD"],
+            autocommit=True,
+        )
     prefix = "rr_" + uuid.uuid4().hex[:10] + "_"
-    uri = "postgresql://shape@localhost:5432/shape"
+    uri = (
+        "postgresql://shape@localhost:5432/shape"
+        if dialect == "postgres"
+        else "mysql://shape@localhost:3306/shape"
+    )
+
+    def q(name):
+        char = '"' if dialect == "postgres" else "`"
+        return char + name.replace(char, char + char) + char
 
     def execute(sql):
         with conn.cursor() as cursor:
@@ -63,27 +83,30 @@ def rerun_database():
 
     def rows():
         return {
-            name: list(execute(f'SELECT * FROM "{prefix}{name}" ORDER BY id'))
+            name: list(execute(f"SELECT * FROM {q(prefix + name)} ORDER BY id"))
             for name in ("parent", "child")
         }
 
     def options(**kwargs):
-        return TargetOptions(
-            constraints="all", extra={"postgres": {"table_prefix": prefix}}, **kwargs
-        )
+        return TargetOptions(constraints="all", extra={dialect: {"table_prefix": prefix}}, **kwargs)
 
     try:
         assert write_targets(engine(1), [uri], options()) == {uri: {"parent": 3, "child": 3}}
-        yield uri, prefix, execute, rows, options
+        yield uri, prefix, execute, rows, options, q
     finally:
         for name in ("external", "child", "parent"):
-            execute(f'DROP TABLE IF EXISTS "{prefix}{name}"')
+            execute(f"DROP TABLE IF EXISTS {q(prefix + name)}")
         conn.close()
 
 
-def test_all_owned_truncate_rerun_keeps_constraints_and_replaces_all_rows(rerun_database):
-    uri, _, _, rows, options = rerun_database
-    assert write_targets(engine(10), [uri], options(write_mode="truncate")) == {
+@pytest.mark.parametrize(
+    "rerun_database,mode",
+    [("postgres", "truncate"), ("postgres", "replace"), ("mysql", "truncate")],
+    indirect=["rerun_database"],
+)
+def test_all_owned_truncate_rerun_keeps_constraints_and_replaces_all_rows(rerun_database, mode):
+    uri, _, _, rows, options, _ = rerun_database
+    assert write_targets(engine(10), [uri], options(write_mode=mode)) == {
         uri: {"parent": 3, "child": 3}
     }
     found = rows()
@@ -92,8 +115,15 @@ def test_all_owned_truncate_rerun_keeps_constraints_and_replaces_all_rows(rerun_
     assert {row[1] for row in found["child"]} <= {10, 11, 12}
 
 
-def test_later_child_failure_rolls_back_the_whole_coordinated_rerun(rerun_database, monkeypatch):
-    uri, _, _, rows, options = rerun_database
+@pytest.mark.parametrize(
+    "rerun_database,mode",
+    [("postgres", "truncate"), ("postgres", "replace"), ("mysql", "truncate")],
+    indirect=["rerun_database"],
+)
+def test_later_child_failure_rolls_back_the_whole_coordinated_rerun(
+    rerun_database, monkeypatch, mode
+):
+    uri, _, _, rows, options, _ = rerun_database
     before = rows()
     replacement = engine(10)
     original = replacement.iter_chunks
@@ -111,14 +141,14 @@ def test_later_child_failure_rolls_back_the_whole_coordinated_rerun(rerun_databa
 
     monkeypatch.setattr(replacement, "iter_chunks", planted)
     with pytest.raises(WriteError, match="fk_child_parent") as error:
-        write_targets(replacement, [uri], options(write_mode="truncate"))
+        write_targets(replacement, [uri], options(write_mode=mode))
     assert planted_rows == [1]
     assert error.value.rows_committed == 0
     assert rows() == before
 
 
 def test_incompatible_chunk_commits_refuse_before_coordinated_mutation(rerun_database):
-    uri, _, _, rows, options = rerun_database
+    uri, _, _, rows, options, _ = rerun_database
     before = rows()
     with pytest.raises(ShapeError, match="fk_child_parent"):
         write_targets(engine(10), [uri], options(write_mode="truncate", commit_rows=1))
@@ -126,14 +156,23 @@ def test_incompatible_chunk_commits_refuse_before_coordinated_mutation(rerun_dat
 
 
 def test_external_incoming_foreign_key_is_named_and_every_table_is_preserved(rerun_database):
-    uri, prefix, execute, rows, options = rerun_database
+    uri, prefix, execute, rows, options, q = rerun_database
     execute(
-        f'CREATE TABLE "{prefix}external" (parent_id BIGINT, CONSTRAINT fk_external_ref '
-        f'FOREIGN KEY (parent_id) REFERENCES "{prefix}parent" (id))'
+        f"CREATE TABLE {q(prefix + 'external')} (parent_id BIGINT, CONSTRAINT fk_external_ref "
+        f"FOREIGN KEY (parent_id) REFERENCES {q(prefix + 'parent')} (id))"
     )
-    execute(f'INSERT INTO "{prefix}external" VALUES (1)')
+    execute(f"INSERT INTO {q(prefix + 'external')} VALUES (1)")
     before = rows()
     with pytest.raises(ShapeError, match="fk_external_ref"):
         write_targets(engine(10), [uri], options(write_mode="truncate"))
     assert rows() == before
-    assert list(execute(f'SELECT parent_id FROM "{prefix}external"')) == [(1,)]
+    assert list(execute(f"SELECT parent_id FROM {q(prefix + 'external')}")) == [(1,)]
+
+
+@pytest.mark.parametrize("rerun_database", ["mysql"], indirect=True)
+def test_mysql_referenced_replace_refuses_before_implicit_ddl_commits(rerun_database):
+    uri, _, _, rows, options, _ = rerun_database
+    before = rows()
+    with pytest.raises(ShapeError, match="fk_child_parent"):
+        write_targets(engine(10), [uri], options(write_mode="replace"))
+    assert rows() == before
