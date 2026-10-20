@@ -45,3 +45,16 @@ Recommendation: resolve #5 and merge it first, then finish targeted local accept
 - #8 finish after #5 main merge and integrate its actual constraint helper.
 
 These questions are resolved; all three lanes resumed.
+
+## NEW pending — #4 frozen bridge1.1 DDL contract (2026-10-20)
+
+Status: PARKED, separate from all three resolved Owner decisions. Issue evidence/question: https://github.com/sqllocks/shape/issues/4#issuecomment-6302585629. Preserved code63ab15c is independently code-approved, with87follow-up tests green; frozen gate remains red.
+
+`tests/bridge/test_compat_1_1.py` explicitly replays frozen1.1 responses with every field equal except api_version. Required canonical string mapping changes only five historical result.ddl declarations in docs/bridge/vectors/1.1/design.json: star.month_name and day_of_week_name NVARCHAR(255)→NVARCHAR(MAX); postgres-3nf.city.city, city_city.city and city_city.country VARCHAR(255)→TEXT. All other response fields are unchanged. Frozen vectors/fixtures remain untouched. Current nonfrozen vectors carry the actual corrected DDL. No existing version-aware DDL compatibility path exists.
+
+Options:
+- Explicitly amend the frozen-contract policy to authorize exactly these five historical DDL corrections, retaining one canonical map and exact assertions. Recommended, but it is an Owner contract-policy amendment, not a routine fixture refresh.
+- Preserve historical1.1 DDL exactly and authorize a scoped compatibility/version design that can coexist with Wanted2 and the no-legacy rule. That requires scope/policy approval; no speculative fallback or guessed key width is implemented.
+- Keep #4 parked until the contract policy is resolved.
+
+Other six issues continue. No gate, assertion, tolerance, frozen artifact or Owner-approved refusal count changed to hide this conflict.
