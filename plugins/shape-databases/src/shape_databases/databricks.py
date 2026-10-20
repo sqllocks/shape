@@ -222,6 +222,8 @@ class DatabricksSink(DatabaseSink):
                 if not _cloud.is_nested(field.type):
                     continue
                 _, convert = binding(field)
+                if convert is None:
+                    raise ShapeError(f"column {field.name!r}: nested value has no JSON binding")
                 failure = None
                 try:
                     for value in column.to_pylist():
