@@ -12,8 +12,8 @@ import json
 from decimal import Decimal
 from typing import Any
 
-import pyarrow as pa
-import pyarrow.types as pat
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.types as pat  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
 from shape.io.nested_values import is_nested as is_nested
