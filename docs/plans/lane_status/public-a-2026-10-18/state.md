@@ -56,16 +56,24 @@ Oracle emulator was retired after its final3 successful runs; root removed only 
 
 Security audits on the current baseline found certifi2026.7.22 GHSA-6q48-6c7w-9gw2; fixed version is2026.10.19. Lead B owns the existing certificate/browser fix PR40. Do not edit, refresh or merge its branch. All five owned ready PR heads still pin the vulnerable baseline; their unfinished workflows were cancelled deliberately to free capacity for the shared fix. No gate was bypassed: after the fix reaches main, merge that main once into each owned ready branch and push, then require every triggered exact-head check green. Independent implementation approvals remain valid subject to reviewing any refresh conflicts.
 
-Parked #8 now stacks actual #5 helper, with its former red AST integration fixed; #5 has a fresh agent finishing unblocked writer/CLI portions on its stacked #7 graph, preserving DuckDB Owner blocker. Neither is unparked or approved for a PR/main merge. Shared file ownership is coordinated; no helper copies.
+#8 stacks the actual #5 helper, with its former red AST integration fixed. Both #5 and #8 are unparked under the Owner decisions above. #5 is finishing coordinated reruns and final review; #8 must integrate its final helper after #5 merges. Shared file ownership is coordinated; no helper copies.
 
 A transient scratch push authentication error recovered on a dry-run and actual retry; latest git read/write credential checks passed. No config or credential changes.
 
 ## Next actions
 
-Authentication restored and unpublished scratch commits pushed. All three parked lanes resumed under explicit Owner decisions. #4 acceptance/review active; #5 completing constraints and rerun preservation; #8 final integration follows actual#5 main merge. Do not import #4 whole type tree into#5 and invert required ordering.
+Authentication restored and unpublished scratch commits pushed. All three parked lanes resumed under explicit Owner decisions. #4 is ready and independently approved; #5 completing constraints and rerun preservation; #8 final integration follows actual#5 main merge. Do not import #4 whole type tree into#5 and invert required ordering.
 
 Monitor other-owned PR40 read-only. Once merged, fetch main and refresh each owned ready PR once, push and let every triggered job run. Merge reviewed green current heads via API merge commits, #35 first then#37/#39, #38 after#37; #5 then#8 then#4. Refresh after subsequent base moves without local reruns unless code conflicts. Docs PR36 also needs sharedfix/currentmain/greenCI. No full local suite, raw archives or per-command ledgers. Keep quantified progress updates, then finalreport when all seven merged or legitimatelyparked.
 
 ## Retail acceptance support — active
 
 Root owns isolated /workspace/public-a-W9-04-retail support worktree; no concurrent edits to active lane files. Its6df261c changes only tests and is pushed for lane integration. Base35add:3DBcases plus1Fabricfakecase red with missingTargetOptions.contract. Positive fullretail21750rows passes PG/MySQL/DuckDB/Fabricfake; finalmatching-declarations append regression awaits lane catalog work exceptDuckDBgreen. SQLServer real emulator definition added to existing selected file; notrun locally. Attempted ownSQLServer container/image filleddisk undervfs; immediatelyremovedONLYnewshape-w9-04-mssql-1/image, restored6GB, PG/MySQLbothhealthy. ODBCdriveralsoabsent. No Nightly/workflow edits, skips or xfails.
+
+## Constraint acceptance checkpoint — 2026-10-20
+
+Root support commits signed and pushed: catalog helper89c472d, transaction/enforcement metadata341883d, rerun tests e571ad6/c08ebb7, prose34ffae1. Agent integrates these through cherry-picks; support branch is not a separate implementation PR. Catalog selection26red against main35addfc then26green;333 affected database module tests green; independent reviewer approved helper341883d. Full retail matching-declaration cases now pass for PostgreSQL/MySQL/DuckDB/Fabric fake. No SQL Server emulator/live pass claimed.
+
+Expanded real rerun acceptance: clean main35addfc gives8failed/3passed in2.14s, current lane gives11passed in2.64s. PostgreSQL truncate/replace and MySQL truncate restore the exact old whole dataset after a planted second-child-batch FK failure; unsafe chunk commits, external incoming references and MySQL referenced replacement refuse before mutation with the FK name. Fabric fake truncate/replace rollback4cases green in lane. Final independent whole-lane review pending; no full local suite.
+
+Latest shared fix PR40 snapshot:28 successful checks,2 running,0 failures; still other-owned and unmerged. Seven issues remain unmerged, five independently approved ready implementation PRs, zero parked.
