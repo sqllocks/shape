@@ -57,3 +57,30 @@ def test_contract_must_be_an_object(tmp_path):
     args = generation_args("--contract", str(path))
     with pytest.raises(ValueError, match="contract must be an object"):
         target_options(args, "parquet")
+
+
+@pytest.mark.parametrize("as_json", [False, True])
+def test_sql_dry_run_shows_constraint_ddl_without_output(capsys, tmp_path, as_json):
+    import json
+
+    from shape.cli.main import main
+
+    args = [
+        "generate",
+        "retail",
+        "--dry-run",
+        "--format",
+        "sql",
+        "--sql-dialect",
+        "postgres",
+        "--output",
+        str(tmp_path),
+    ]
+    if as_json:
+        args.append("--json")
+    assert main(args) == 0
+    output = capsys.readouterr().out
+    if as_json:
+        output = "\n".join(json.loads(output)["constraint_ddl"])
+    assert "ALTER TABLE" in output and "FOREIGN KEY" in output and "REFERENCES" in output
+    assert list(tmp_path.iterdir()) == []

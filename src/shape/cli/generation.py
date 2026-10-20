@@ -406,6 +406,45 @@ def cmd_composite(a: argparse.Namespace) -> int:
     return _generate_schema(a, lambda: resolve(a.target).schema, {})
 
 
+def _constraint_preview(a: argparse.Namespace, schema: GenSchema, order: list[str]) -> list[str]:
+    """Show derived SQL constraint DDL without generating rows or opening a target."""
+    if a.format != "sql":
+        return []
+    from shape.generation.output import _options
+    from shape.generation.write_constraints import compile_constraints, identifier
+
+    dialect = a.sql_dialect
+    options = _sink_options(a)
+    result: list[str] = []
+    foreign: list[str] = []
+    for table in order:
+        derived = _options("sql", schema, table, options)
+        plan = compile_constraints(
+            derived,
+            columns=schema.tables[table].column_names,
+            table=table,
+            dialect=dialect,
+            schema_name=a.schema_name,
+        )
+        qualified = (identifier(a.schema_name, dialect) + ".") if a.schema_name else ""
+        qualified += identifier(table, dialect)
+        result.extend("-- NOTE: " + note for note in plan.notes)
+        result.extend(
+            f"ALTER TABLE {qualified} ADD {clause};"
+            for clause in (*plan.definitions, *plan.after_create)
+        )
+        for column, value in plan.defaults.items():
+            quoted = identifier(column, dialect)
+            clause = (
+                f"ADD DEFAULT {value} FOR {quoted}"
+                if dialect == "tsql"
+                else f"ALTER COLUMN {quoted} SET DEFAULT {value}"
+            )
+            result.append(f"ALTER TABLE {qualified} {clause};")
+        foreign.extend(f"ALTER TABLE {qualified} ADD {clause};" for clause in plan.foreign_keys)
+    return result + foreign
+
+
 def _generate_schema(
     a: argparse.Namespace, load: Callable[[], GenSchema], per_table: dict[str, int]
 ) -> int:
@@ -452,10 +491,17 @@ def _generate_schema(
     if a.dry_run:
         plan = engine.dry_run()
         run.set(rows=plan.total_rows, tables=len(plan.order))
+        constraints = _constraint_preview(a, schema, list(plan.order))
         if a.json:
-            _dump(plan.to_dict())
+            payload = plan.to_dict()
+            if constraints:
+                payload["constraint_ddl"] = constraints
+            _dump(payload)
         else:
             print(plan.render())
+            if constraints:
+                print("\nConstraint DDL (preview):")
+                print("\n".join(constraints))
         return 0 if plan.ok else 1
     return _generate(a, engine)
 
