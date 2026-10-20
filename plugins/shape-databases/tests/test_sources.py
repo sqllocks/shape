@@ -89,7 +89,7 @@ def test_uri_password_refused_without_echo(source):
         ("uuid", pa.string()),
         ("jsonb", pa.string()),
         ("json", pa.string()),
-        ("integer[]", pa.string()),
+        ("integer[]", pa.list_(pa.int32())),
     ],
 )
 def test_catalog_type_map(sql, arrow):
@@ -158,6 +158,17 @@ def test_table_selection_missing_table_and_negative_sample(source):
     for n in [-1, True]:
         with pytest.raises(ShapeError, match="sample_rows"):
             src.profile_database(uri, sample_rows=n)
+
+
+@pytest.mark.parametrize("key", ["nested", "write_mode", "commit_rows"])
+def test_source_does_not_accept_new_writer_uri_options(source, monkeypatch, key):
+    from shape_databases._base import as_text
+
+    src, uri, server = source
+    monkeypatch.setattr(src.sink, "uri_params", {**src.sink.uri_params, key: as_text})
+    with pytest.raises(ShapeError, match="unknown.*" + key):
+        list(src.read(uri + "?table=accounts&" + key + "=native"))
+    assert not server.events
 
 
 def test_password_tls_and_error_redaction(source):

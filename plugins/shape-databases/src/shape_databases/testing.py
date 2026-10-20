@@ -83,6 +83,45 @@ def _unquote(ident: str) -> str:
     return ident[1:-1].replace(q + q, q)
 
 
+def _pg_array(value: str | None, sql_type: str) -> Any:
+    """Emulate psycopg's 1-D array decoding from stored COPY wire data in opt-in tests."""
+    if value is None:
+        return None
+    if not value.startswith("{") or not value.endswith("}"):
+        raise FakeDriverError("invalid stored array")
+    text = value[1:-1]
+    result = []
+    position = 0
+    while position < len(text):
+        match = re.match(r'"((?:[^"\\]|\\.)*)"|(NULL)', text[position:], re.S)
+        if match is None:
+            raise FakeDriverError("invalid stored array item")
+        item: Any = None if match[2] else re.sub(r"\\(.)", r"\1", match[1], flags=re.S)
+        if item is not None:
+            kind = sql_type[:-2].lower()
+            if kind in ("smallint", "integer", "bigint"):
+                item = int(item)
+            elif kind.startswith(("numeric", "decimal")):
+                item = Decimal(item)
+            elif kind in ("real", "double precision"):
+                item = float(item)
+            elif kind == "boolean":
+                item = item.lower() == "true"
+            elif kind == "bytea":
+                item = bytes.fromhex(item.removeprefix("\\x"))
+            elif kind in ("timestamp", "timestamptz"):
+                item = dt.datetime.fromisoformat(item)
+            elif kind == "date":
+                item = dt.date.fromisoformat(item)
+        result.append(item)
+        position += len(match[0])
+        if position < len(text):
+            if text[position] != ",":
+                raise FakeDriverError("invalid stored array delimiter")
+            position += 1
+    return result
+
+
 class FakeServer:
     """One database: tables, a transaction model and the record of what was done to it."""
 
@@ -95,6 +134,7 @@ class FakeServer:
         fail_message: str = "simulated driver failure",
         fail_connect: str | None = None,
         on_row: Callable[[], None] | None = None,
+        decode_arrays: bool = False,
     ) -> None:
         if dialect not in ("postgres", "mysql"):
             raise ValueError("dialect must be postgres or mysql")
@@ -110,6 +150,7 @@ class FakeServer:
         self.fail_message = fail_message
         self.fail_connect = fail_connect
         self.on_row = on_row
+        self.decode_arrays = decode_arrays
         self.rows_seen = 0
         self._snapshot: tuple[dict[Key, list[tuple[Any, ...]]], dict[Key, list[str]]] | None = None
         # A sink writes each table on its own thread into one server: every statement, copy
@@ -298,6 +339,15 @@ class FakeCursor:
             names = s.columns[key]
             at = [names.index(_unquote(c)) for c in _ONE_IDENT.findall(m[1])]
             self._result = [tuple(row[i] for i in at) for row in s.tables[key]]
+            if s.decode_arrays and s.dialect == "postgres":
+                types = [s.catalog[key][i][1] for i in at]
+                self._result = [
+                    tuple(
+                        _pg_array(value, kind) if kind.endswith("[]") else value
+                        for value, kind in zip(row, types, strict=True)
+                    )
+                    for row in self._result
+                ]
             return
         if m := _CREATE.match(sql):
             s.ddl()

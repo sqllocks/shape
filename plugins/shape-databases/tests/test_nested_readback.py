@@ -130,6 +130,24 @@ def test_databricks_invalid_catalog_is_named_and_never_inferred(catalog):
 
 
 @pytest.mark.parametrize(
+    "catalog,expected",
+    [
+        ("integer[]", pa.list_(pa.int32())),
+        ("numeric(12,4)[]", pa.list_(pa.decimal128(12, 4))),
+        ("timestamp with time zone[]", pa.list_(pa.timestamp("us", "UTC"))),
+        ("bytea[]", pa.list_(pa.binary())),
+        ("boolean[]", pa.list_(pa.bool_())),
+    ],
+)
+def test_postgres_array_catalog_retains_native_element_type(catalog, expected):
+    from shape_databases.sources import catalog_field
+
+    field = catalog_field("payload", catalog, True)
+    assert field.type == expected
+    assert b"shape.encoding" not in field.metadata
+
+
+@pytest.mark.parametrize(
     "kind,text,expected",
     [
         (pa.timestamp("ns"), "2026-01-02T03:04:05.123456789", 1767323045123456789),

@@ -334,6 +334,9 @@ Python conversion would discard digits. Preencode exact times as Arrow strings f
 `nested=json` also uses Python time values and cannot recover those digits.
 Native Databricks timestamps have microsecond precision; a nested value with nonzero finer
 digits is refused before binding, with `nested=json` as the text-storage alternative.
+PostgreSQL source array element types come from catalog declarations, including decimal
+scale and timestamp zones, and read as native Arrow lists. Source URIs reject writer-only
+options such as `nested`, `write_mode` and `commit_rows` before connecting.
 
 The existing local DuckDB `shape.sources` reader is
 `shape_integrations.duckdb_source.DuckDbSource` (`sqllocks-shape-integrations`). Use
