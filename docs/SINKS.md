@@ -196,6 +196,42 @@ and the writer makes the value `NULL` before staging or inserting it, so a pool,
 database never receives one. Reading the table back gives `NULL` where `NaN` was written, and the
 dataset id of the read-back differs from the NaN-bearing input for that reason alone.
 
+### Generated SQL constraints
+
+For `shape generate`, `--sql-constraints keys` is the default: primary keys, foreign keys
+and declared unique keys are created before loading rows. `all` also derives supported
+CHECK and literal DEFAULT clauses from the generation schema and `--contract FILE`
+(JSON or YAML). `none` omits derived constraints; `keep` is its compatibility alias.
+The existing `disable` option retains the SQL Server loading behavior described below.
+These generation defaults do not change `emit`, seed or scale workflows.
+
+| Destination | Constraint behavior |
+|---|---|
+| PostgreSQL, MySQL, DuckDB, SQL Server and Fabric SQL database | Enforced foreign keys, UNIQUE and CHECK constraints; literal DEFAULT clauses |
+| Fabric Warehouse | Informational foreign keys and UNIQUE constraints (`NOT ENFORCED`); no CHECK or DEFAULT |
+| Snowflake | Informational foreign keys and UNIQUE constraints; DEFAULT; no CHECK |
+| Databricks Unity Catalog | Informational primary/foreign keys; CHECK through `ALTER TABLE`; no UNIQUE or DEFAULT |
+
+Unsupported declarations produce a warning and a `-- NOTE:` in SQL scripts. Checks use
+structured comparisons, conjunctions, membership and null tests; free-form SQL, regular
+expression checks, triggers, sequences and deferred constraints are outside this feature.
+Identifiers are quoted and row values remain bound parameters. `--dry-run` shows the
+resolved DDL without opening a connection or writing data artifacts.
+
+Shape prepares every table before loading and writes parents before children. DuckDB alone
+uses parent-first inline foreign keys because it cannot add them afterward. Constraints
+remain enforced. An existing destination must match the requested declarations before an
+append or rerun; PostgreSQL/MySQL CHECK and DEFAULT verification also needs permission to
+create temporary tables.
+
+For a dataset whose referenced tables all belong to the run, PostgreSQL, MySQL and SQL
+Server coordinate `truncate` in one transaction; PostgreSQL and SQL Server also coordinate
+`replace`. A later batch failure restores the previous dataset. MySQL `replace`, DuckDB
+reruns that cannot preserve enforced references, external incoming foreign keys and
+incompatible `--commit-rows` combinations are refused before mutation, naming the
+constraint. Other writes retain their existing transaction and committed-row accounting.
+Failures name the constraint and include row details when the database supplies them.
+
 ## Confirming a non-local target
 
 Writing to a database, OneLake, Event Hubs or Kafka is harmless on synthetic data and harmful on
@@ -239,8 +275,10 @@ refusal unless it passes `True` or sets the variable. Plugin commands such as
   anything is written. `shape from-ddl` writes `"identity": true` for `IDENTITY`, `SERIAL`,
   `BIGSERIAL` and `AUTO_INCREMENT` columns. A schema with no `identity` produces the DDL and
   scripts it always did. Fabric Warehouse has no identity semantics: it ignores the key.
-* **Constraints.** `--sql-constraints keep|disable` (`generate` and `emit`; the sink option
-  `constraints`, default `keep`). `disable` runs `ALTER TABLE ... NOCHECK CONSTRAINT ALL` on every
+* **Constraints.** Generation supports `--sql-constraints keys|all|none` as described above.
+  The low-level sink option `constraints=keep|disable` retains its default `keep`, and
+  `emit` retains its existing `keep|disable` behavior. `disable` runs
+  `ALTER TABLE ... NOCHECK CONSTRAINT ALL` on every
   table the run writes that already exists, loads, then `ALTER TABLE ... WITH CHECK CHECK
   CONSTRAINT ALL`. When a constraint does not hold the rows stay, the run **exits 1** and names
   each table and constraint (`dbo.order.FK_order_customer`) and says it was **left disabled**; the

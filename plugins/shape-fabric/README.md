@@ -136,6 +136,26 @@ password, token or connection string appears in an exception message or a log re
 should go on a command line (use an environment variable and pass it as an option, or sign in
 with `--auth` and `--connection-string` on `shape generate --to mssql://...`; see the next section).
 
+### Generated SQL constraints
+
+`shape generate --sql-constraints keys` is the default; `all` also derives supported
+structured CHECK and literal DEFAULT clauses, including declarations from `--contract FILE`.
+`none` (also `keep`) omits derived constraints. Existing low-level `constraints=keep|disable`
+loading behavior remains available. See [the destination guide](../../docs/SINKS.md#generated-sql-constraints).
+
+SQL Server and Fabric SQL database enforce foreign keys, UNIQUE and CHECK constraints
+and support literal DEFAULT clauses. Fabric Warehouse foreign/unique keys are
+informational (`NOT ENFORCED`); CHECK and DEFAULT are unsupported and produce warnings
+and SQL-script notes. Free-form SQL is not accepted as a CHECK expression.
+
+Generation prepares declarations before loading parent-first. Existing tables must match
+the requested declarations before mutation. SQL Server coordinates all-owned foreign-key
+datasets for transactional `truncate` and `replace`: a later batch failure restores the
+previous dataset. External incoming references and incompatible chunk commits are
+refused before mutation with the constraint name. Other writes retain the transaction
+and committed-row behavior above. Constraint errors include row details when the server
+supplies them.
+
 ## Sign-in and credential references
 
 `--auth cli|msi|spn|sql|device-code|fabric`, `--tenant-id`, `--client-id`, `--client-secret REF`,

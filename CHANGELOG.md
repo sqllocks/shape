@@ -6,6 +6,12 @@ Status: available.
 
 ## Unreleased
 
+- Generation derives SQL keys by default; `--sql-constraints all` adds supported structured
+  CHECK and literal DEFAULT clauses from schemas and JSON/YAML contracts. Database writes
+  verify existing declarations and preserve enforced references during supported dataset
+  reruns; unsafe combinations fail before mutation with a named constraint. DuckDB uses
+  parent-first inline foreign keys. Warehouse constraint limitations are reported explicitly.
+
 - PostgreSQL sources retain native array element types, and Databricks sources parse declared
   recursive catalog types. Source URIs refuse writer-only nested options before connecting.
 
