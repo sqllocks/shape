@@ -130,3 +130,39 @@ def test_constraint_reference_prefix_matches_physical_tables():
     foreign = next(sql for sql in server.statements if "ADD CONSTRAINT [fk_child_parent]" in sql)
     assert "ALTER TABLE [dbo].[run_child]" in foreign
     assert "REFERENCES [dbo].[run_parent]" in foreign
+
+
+def test_matching_sqlserver_constraints_allow_append_and_changed_check_refuses():
+    server = FakeSqlServer()
+    with SqlDatabaseWriter("Server=x;Database=d", connect=server.connect) as writer:
+        writer.write_table("child", [batch()], **declarations())
+        second = pa.RecordBatch.from_pydict({"id": [2], "parent_id": [1], "amount": [4]})
+        assert writer.write_table("child", [second], write_mode="append", **declarations()) == 1
+        changed = declarations()
+        changed["checks"][0]["expression"]["right"]["literal"] = 3
+        with pytest.raises(ShapeError, match="ck_amount"):
+            writer.write_table("child", [second], write_mode="truncate", **changed)
+    assert server.rows("dbo", "child") == [(1, 1, 3), (2, 1, 4)]
+
+
+def test_catalog_grouping_normalization_preserves_literal_contents():
+    from shape_fabric._constraint_catalog import expression_tokens
+
+    assert expression_tokens("([amount]<=[limit])") == (
+        "[amount]",
+        "<=",
+        "[limit]",
+    )
+    assert expression_tokens("(([amount]>=(0)))") == expression_tokens("([amount] >= 0)")
+    assert expression_tokens("([status] IN (N'a(b)', N'c d'))") != expression_tokens(
+        "([status] IN (N'ab', N'cd'))"
+    )
+
+
+def test_changed_sqlserver_default_refused_before_truncate():
+    server = FakeSqlServer()
+    with SqlDatabaseWriter("Server=x;Database=d", connect=server.connect) as writer:
+        writer.write_table("child", [batch()], defaults={"amount": 2})
+        with pytest.raises(ShapeError, match="DEFAULT.*amount"):
+            writer.write_table("child", [batch()], write_mode="truncate", defaults={"amount": 3})
+    assert server.rows("dbo", "child") == [(1, 1, 3)]

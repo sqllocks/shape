@@ -68,6 +68,7 @@ from shape.generation.write_constraints import (
 )
 
 from . import _tsql
+from ._constraint_catalog import verify_constraints
 from .errors import ConstraintError, WriteError, WriteResult
 
 WRITE_MODES = ("create", "append", "truncate", "replace")
@@ -306,6 +307,7 @@ def prepare_constraint_tables(db: SqlConnection, tables: Mapping[str, Mapping[st
                 primary_key=options.get("primary_key") or (),
                 constraint_ddl=compiled,
                 defer_foreign_keys=True,
+                declarations={**options, "schema": schema},
             )
             if not exists or mode == "replace":
                 foreign.append((sname, table, compiled))
@@ -334,6 +336,7 @@ def prepare_table(
     constraint_ddl: ConstraintDDL | None = None,
     prepared_constraints: Any = None,
     defer_foreign_keys: bool = False,
+    declarations: Mapping[str, Any] | None = None,
 ) -> bool:
     """Make the target ready for ``mode`` (see the module docstring); ``schema`` is normalized.
 
@@ -360,7 +363,7 @@ def prepare_table(
             )
         )
     ):
-        raise ShapeError(f"existing table {table!r}: requested constraints cannot yet be verified")
+        verify_constraints(db, schema_name, table, declarations or {}, constraint_ddl)
     if mode == "create" and exists:
         raise WriteError(
             f"table {schema_name}.{table} already exists; set write_mode to append, truncate "
@@ -597,6 +600,7 @@ class SqlDatabaseWriter:
                 primary_key=primary_key,
                 constraint_ddl=compiled,
                 prepared_constraints=prepared_constraints,
+                declarations={**declarations, "schema": use_schema},
             )
             # a replaced table is new, like one this call created: nothing to disable; a
             # truncate's TRUNCATE (or DELETE) commits with the rows, so NOCHECK does too (#429)

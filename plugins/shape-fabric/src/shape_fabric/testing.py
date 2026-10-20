@@ -425,6 +425,7 @@ class SqlConstraint:
         self.parent = parent
         self.parent_columns = parent_columns
         self.predicate = predicate
+        self.expression: str | None = None
         self.disabled = False
         self.trusted = True
 
@@ -438,6 +439,7 @@ class SqlTable:
         self.primary_key: tuple[str, ...] = ()
         self.constraints: list[SqlConstraint] = []
         self.defaults: dict[str, Any] = {}
+        self.default_definitions: dict[str, str] = {}
 
     def names(self) -> list[str]:
         return [c[0] for c in self.columns]
@@ -637,6 +639,41 @@ class FakeSqlCursor:
             self._set_identity_insert(text)
         elif text.startswith("ALTER TABLE"):
             self._alter(text)
+        elif text.startswith("SELECT kc.name, col.name, ic.key_ordinal"):
+            table = server.tables[self._key(params[0])]
+            self._result = [
+                (constraint.name, column, index + 1)
+                for constraint in table.constraints
+                if constraint.kind in ("unique", "info_unique")
+                for index, column in enumerate(constraint.columns)
+            ]
+        elif text.startswith("SELECT fk.name, cc.name, OBJECT_SCHEMA_NAME"):
+            table = server.tables[self._key(params[0])]
+            self._result = [
+                (
+                    constraint.name,
+                    column,
+                    constraint.parent[0],
+                    constraint.parent[1],
+                    target,
+                    constraint.disabled,
+                )
+                for constraint in table.constraints
+                if constraint.kind in ("fk", "info_fk") and constraint.parent is not None
+                for column, target in zip(
+                    constraint.columns, constraint.parent_columns, strict=True
+                )
+            ]
+        elif text.startswith("SELECT name, definition, is_disabled FROM sys.check_constraints"):
+            table = server.tables[self._key(params[0])]
+            self._result = [
+                (constraint.name, constraint.expression, constraint.disabled)
+                for constraint in table.constraints
+                if constraint.kind == "check" and constraint.expression is not None
+            ]
+        elif text.startswith("SELECT col.name, def.definition FROM sys.default_constraints"):
+            table = server.tables[self._key(params[0])]
+            self._result = list(table.default_definitions.items())
         elif text.startswith("SELECT name FROM sys.foreign_keys"):
             table = server.tables[self._key(params[0])]
             self._result = [(c.name,) for c in table.constraints]
@@ -700,6 +737,7 @@ class FakeSqlCursor:
         primary_key: tuple[str, ...] = ()
         constraints: list[SqlConstraint] = []
         defaults: dict[str, Any] = {}
+        default_definitions: dict[str, str] = {}
         for line in body.split(",\n"):
             line = line.strip()
             if line.startswith("CONSTRAINT"):
@@ -714,6 +752,7 @@ class FakeSqlCursor:
                             _unbracket(check[1]), "check", predicate=check_predicate(check[2])
                         )
                     )
+                    constraints[-1].expression = check[2]
                 elif unique:
                     constraints.append(
                         SqlConstraint(
@@ -730,6 +769,7 @@ class FakeSqlCursor:
             sql_type, marker, default = sql_type.partition(" DEFAULT ")
             if marker:
                 defaults[_unbracket(col[1])] = default_scalar(default)
+                default_definitions[_unbracket(col[1])] = default
             ident = re.match(r"(.+?) IDENTITY\((\d+), (\d+)\)$", sql_type)
             if ident:
                 sql_type = ident.group(1)
@@ -740,6 +780,7 @@ class FakeSqlCursor:
         table.primary_key = primary_key
         table.constraints = constraints
         table.defaults = defaults
+        table.default_definitions = default_definitions
         self.server.tables[(schema, name)] = table
 
     # -- rows ---------------------------------------------------------------------------
@@ -877,19 +918,20 @@ class FakeSqlCursor:
             parent = (_unbracket(parent_schema), _unbracket(parent_table))
             self._table(*parent)
             child_table = self._table(*child)
-            if self.server.warehouse:
-                if not suffix:
-                    raise RuntimeError("Warehouse foreign keys require NOT ENFORCED")
-            else:
-                child_table.constraints.append(
-                    SqlConstraint(
-                        _unbracket(name),
-                        "fk",
-                        tuple(_unbracket(n) for n in re.findall(_NAME, columns)),
-                        parent,
-                        tuple(_unbracket(n) for n in re.findall(_NAME, parent_columns)),
-                    )
+            if self.server.warehouse and not suffix:
+                raise RuntimeError("Warehouse foreign keys require NOT ENFORCED")
+            child_table.constraints.append(
+                SqlConstraint(
+                    _unbracket(name),
+                    "fk",
+                    tuple(_unbracket(n) for n in re.findall(_NAME, columns)),
+                    parent,
+                    tuple(_unbracket(n) for n in re.findall(_NAME, parent_columns)),
                 )
+            )
+            if self.server.warehouse:
+                child_table.constraints[-1].kind = "info_fk"
+                child_table.constraints[-1].disabled = True
             return
         if self.server.warehouse and " ADD CONSTRAINT " in text:
             match = re.fullmatch(
@@ -903,6 +945,10 @@ class FakeSqlCursor:
             names = [_unbracket(n) for n in re.findall(_NAME, match.group(4))]
             if any(n not in key_table.names() for n in names):
                 raise RuntimeError("a constraint names an unknown column")
+            if " UNIQUE " in text:
+                constraint = SqlConstraint(_unbracket(match[3]), "info_unique", tuple(names))
+                constraint.disabled = True
+                key_table.constraints.append(constraint)
             return  # informational only: Warehouse does not enforce uniqueness
         match = re.match(
             rf"ALTER TABLE {_NAME}\.{_NAME} (NOCHECK|WITH CHECK CHECK|CHECK) CONSTRAINT "

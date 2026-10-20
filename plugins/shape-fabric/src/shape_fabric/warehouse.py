@@ -233,6 +233,7 @@ class WarehouseWriter:
                     primary_key=primary_key,
                     constraint_ddl=compiled,
                     prepared_constraints=prepared_constraints,
+                    declarations={**declarations, "schema": use_schema},
                 )
             else:
                 created = self._prepare(sname, table, mode, use_schema, columns, primary_key)
