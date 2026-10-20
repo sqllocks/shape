@@ -718,6 +718,16 @@ requirements:
   verify: [specification-review]
   status: registered-not-independently-certified
 
+- id: SHAPE-SOURCE-001
+  title: Eventhouse table profiling
+  level: L1
+  milestone: W9-11
+  priority: MUST
+  text: Fabric Eventhouse reads validate schemas, bound query pages, record sampling, and omit emitter keys from profiles.
+  verify: [conformance]
+  owner: integrations
+
+
 - id: SHAPE-SEMANTIC-METADATA-001
   title: Semantic model metadata and native role reads
   level: L2
