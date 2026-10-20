@@ -4,9 +4,9 @@ Updated 2026-10-20 after PR40 merged and all own open lanes refreshed. Work cont
 
 ## Progress
 
-Nine assigned issues:1merged11.1%,6active-ready66.7%,1active-regression-fix11.1%,1dependency-blocked11.1%;8unmerged88.9%. Seven ready implementations including the merged issue77.8%; PR43 is being repaired after a real CI regression. Issue20 closure additionally requires qualifying post-merge main Nightly. Supporting PR40 is outside the nine-issue denominator. Give full count updates every five minutes plus merge/blocker milestones. Use actual UTC clock for update cadence.
+Nine assigned issues:1merged11.1%,7ready/reviewed77.8%,1dependency-blocked11.1%;8unmerged88.9%. Eight ready implementations including the merged issue88.9%; PR43 compatibility repair is signed, pushed and independently approved, with fresh CI pending. Issue20 closure additionally requires qualifying post-merge main Nightly. Supporting PR40 is outside the nine-issue denominator. Give full count updates every five minutes plus merge/blocker milestones. Use actual UTC clock for update cadence.
 
-Current main: `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` from PR40. Post-merge Security39504029453 is SUCCESS; CI39504029294 and Documentation39504029094 remain pending, with no observed failures and no complete main-green claim. metadata_watch monitors. Prior main35addfc4 had all workflows green, recorded in W9-08.md.
+Current main: `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` from PR40. Post-merge Security39504029453 is SUCCESS; Documentation39504029094 is SUCCESS; CI39504029294 remains pending, with no observed failures and no complete main-green claim. metadata_watch monitors. Prior main35addfc4 had all workflows green, recorded in W9-08.md.
 
 ## Assigned lanes
 
@@ -18,7 +18,7 @@ Current main: `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` from PR40. Post-merge S
 | #13 W9-12 | lane/W9-12-finish / 1535427ec055eb5e197c91a86e10df17347a3be3 | https://github.com/sqllocks/shape/pull/33 | Ready; main53 contained; exact independent APPROVAL eventhouse; fresh CI pending |
 | #10 W9-09 | lane/W9-09 / 0178fa0c93ba0bc9133a7a6e63067a97f9add115 | https://github.com/sqllocks/shape/pull/34 | Ready; main53 contained; exact independent APPROVAL metadata; fresh CI pending |
 | #17 W9-16 | lane/W9-16-finish / 81cff73ea799039a70b5c584ea7cbfd1e3ec1749 | https://github.com/sqllocks/shape/pull/31 | Ready; main53 contained; exact independent APPROVAL metadata; fresh CI pending |
-| #6 W9-05 | lane/W9-05 / 66ace0965ce5442cb931abc77d4b8bdab43f08a9 | https://github.com/sqllocks/shape/pull/43 | ACTIVE REGRESSION FIX; main53 contained; prior exact review recorded but Windows3.14 CI failed; repair/review/newCI required; depends42 |
+| #6 W9-05 | lane/W9-05 / 5ae6460db5f2ce0ee06070434104b71745a63523 | https://github.com/sqllocks/shape/pull/43 | Ready; actual Windows3.14 compatibility regression repaired; main53 contained; independent frz_resume_review APPROVED exact head; freshCI pending; depends42 |
 | #20 FRZ-01 | lane/FRZ-01-finish / 0b95d31a7f70fcaa2c399b1ff121420b66eb0113 | https://github.com/sqllocks/shape/pull/42 | Complete3-part fix independently APPROVED exact head; all4value acceptance green; freshCI/merge/mainNightly pending; no closure |
 | #14 W9-13 | lane/W9-13 / 58966e09218ef3a8c2cdb96ad22ccbcf6fbd6033 | none | Decision journal only; source-interface dependency blocked until Lead A35 merges |
 
@@ -68,3 +68,7 @@ Environment restarted briefly; original prompt and this state were reread immedi
 ## PR43 actual compatibility failure; repair active
 
 Windows3.14 CI job118909326600/run39504152982 failed on exact66ace096 (https://github.com/sqllocks/shape/actions/runs/39504152982/job/118909326600). Author eventhouse_watch reproduced16failed/92passed in targeted existing nested generation/diff/CLI modules. Three causes: fixed-binary/UUID child traversal now rejects formerly opaque fields; legacy parent mean-length drift name changed; generation expects extrema removed by safe redaction. Narrow repairs underway, independent frz_resume_review assisting read-only and reviewing actual delta. Do NOT weaken assertions/redaction/scanner or reconstruct intentionally private extrema from retained unvetted histogram bins; use legitimate public/schema/default bounds when private extrema absent. No full local runs. Main/firstgroup29/30/33 remain failure-free; keep merging that group as soon as exact gates complete. PR43 is temporarily active-fix, not ready; counts1merged6ready1activefix1depblocked.
+
+## PR43 compatibility repair completed 2026-10-20 23:19 UTC
+
+Signed/pushed5ae6460db5f2ce0ee06070434104b71745a63523, independently APPROVED exact head by frz_resume_review. Red16failed/92passed existing targeted nested generation/diff/CLI; green170targeted eachkernel,183changed learn/fit+nested consumers,24scalar cases and2snapshot/merge lifecycle cases. Ruff/format,configuredmypy705,wording/diff clean. Fixedwidth-only bijective internal hex state preserves actual count_distinct and exact/HLL lifecycle; public whitelist drops all surrogate values. Extension storage/null handling and transformed-schema resume/merge covered. Legacy parent length names restored, child distribution paths retained. Missing safe extrema discard incomplete length model/use existing public1–3 defaults; no private histogram reconstruction. Existing assertions,privacy,heavy bounds,gates unchanged. Prior failed66ace CI is not a pass; fresh exact5ae CI required plus42 dependency/currentmain. Counts1merged7ready1dependency-blocked;8of9unmerged88.9%.

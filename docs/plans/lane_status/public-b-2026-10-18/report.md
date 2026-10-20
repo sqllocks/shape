@@ -4,7 +4,7 @@ Work is continuing. This is not the final completion report. The earlier transie
 
 ## Progress
 
-Nine assigned issues: one merged (11.1%), six ready/reviewed implementations (66.7%), one active compatibility repair (11.1%), one dependency-blocked (11.1%). Eight remain unmerged (88.9%). Seven have ready implementation including the merged issue (77.8%); PR43 has a real CI regression under repair. #20 implementation is complete and approved; delivery still requires CI/merge/main Nightly/closure. Supporting PR40 is outside the nine-issue total.
+Nine assigned issues: one merged (11.1%), seven ready/reviewed implementations (77.8%), one dependency-blocked (11.1%). Eight remain unmerged (88.9%). Eight have ready implementation including the merged issue (88.9%); PR43 compatibility repair is signed, pushed and independently approved, with fresh CI pending. #20 implementation is complete and approved; delivery still requires CI/merge/main Nightly/closure. Supporting PR40 is outside the nine-issue total.
 
 | Issue | Status | PR | Merge SHA |
 |---|---|---|---|
@@ -78,3 +78,5 @@ Only #14 remains dependency-blocked: PR35 must merge before reusing W9-01's sour
 All owned local implementation commits are pushed. Current branch heads/reviews/next actions are in state.md. Lead A branches/issues and Premium were not modified. This report remains INTERIM while active merge gates run.
 
 PR43 update: Windows3.14 job118909326600 failed in existing nested generation/diff/CLI compatibility tests. Targeted reproduction16failed/92passed; author repairing scalar type traversal, legacy length naming and safe-profile generation defaults, with independent privacy review and no assertion/redaction weakening. Main and first merge group have no observed failure. This is an active implementation repair, not a newly parked issue or completed gate.
+
+PR43 compatibility repair signed/pushed5ae6460db5f2ce0ee06070434104b71745a63523 and independently APPROVED by frz_resume_review. Targeted16red→170green eachkernel;183changed consumers,24scalar cases and2snapshot/merge cases green; static/mypy705/wording clean. Fixedwidth-only internal exact/HLL support preserves actual distinct statistics without exposing surrogates; legacy length names restored; incomplete safe length models use existing public defaults1–3 without reconstructing private extrema. Fresh exact-head CI and42 dependency remain gates.
