@@ -10,10 +10,10 @@ import copy
 import hashlib
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-import pandas as pd
-import pyarrow as pa
+import pandas as pd  # type: ignore[import-untyped]
+import pyarrow as pa  # type: ignore[import-untyped]
 from recorded_store import RecordingError, manifest
 
 OWNER_COMMIT = "904d5d2ed46bdd2e79c0ffb243ff82821134c4d2"
@@ -21,7 +21,7 @@ BASELINE_COMMIT = "d09731e59b630fac11b7127c812c47ccca8ab64f"
 HERE = Path(__file__).resolve().parent
 REGISTRY = HERE / "reference_name_aliases.json"
 DATA = HERE.parents[1] / "plugins/shape-domains/src/shape_domains/data"
-GROUPS = {
+GROUPS: dict[str, dict[str, tuple[str, str, str | None]]] = {
     "healthcare": {
         "code": ("cpt_codes", "code", None),
         "description": ("cpt_codes", "description", None),
@@ -32,7 +32,7 @@ GROUPS = {
         "industry_name": ("gics_sectors", "industry_name", "industry_id"),
     },
 }
-SCOPES = {
+SCOPES: dict[str, dict[tuple[str, str], str]] = {
     "healthcare": {
         ("procedure", "cpt_code"): "code",
         ("procedure", "cpt_description"): "description",
@@ -45,7 +45,7 @@ SCOPES = {
         ("company", "industry_name"): "industry_name",
     },
 }
-DATASETS = {
+DATASETS: dict[str, dict[str, dict[str, str]]] = {
     "healthcare": {"cpt_codes": {"code": "code", "description": "description"}},
     "capital_markets": {
         "gics_sectors": {"sector_name": "sector_name", "sector_code": "sector_code"},
@@ -78,7 +78,13 @@ def lineage(rows: list[dict[str, Any]], field: str, key: str | None) -> dict[int
 
 
 class ReferenceNames:
-    def __init__(self, domain: str, source: dict, target: dict, contract: dict) -> None:
+    def __init__(
+        self,
+        domain: str,
+        source: dict[str, list[dict[str, Any]]],
+        target: dict[str, list[dict[str, Any]]],
+        contract: dict[str, Any],
+    ) -> None:
         self.domain = domain
         if (
             domain not in GROUPS
@@ -139,7 +145,7 @@ class ReferenceNames:
             raise RecordingError(f"unknown reference NAME in {self.domain}.{group}")
         return self.maps[group][hashed]
 
-    def normalize_dataset(self, dataset: str, rows: list[dict]) -> list[dict]:
+    def normalize_dataset(self, dataset: str, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         result = copy.deepcopy(rows)
         for row in result:
             for field, group in DATASETS[self.domain].get(dataset, {}).items():
@@ -171,9 +177,13 @@ class ReferenceNames:
                 rows = pools.dataset(name, table)
                 return aliases.normalize_dataset(name, rows)
 
-            def pool_for(self, gen: dict, table: str | None = None) -> set[str] | None:
-                values = pools.pool_for(gen, table)
-                group = DATASETS[aliases.domain].get(gen.get("dataset"), {}).get(gen.get("field"))
+            def pool_for(self, gen: dict[str, Any], table: str | None = None) -> set[str] | None:
+                values = cast(set[str] | None, pools.pool_for(gen, table))
+                group = (
+                    DATASETS[aliases.domain]
+                    .get(gen.get("dataset", ""), {})
+                    .get(gen.get("field", ""))
+                )
                 return (
                     {aliases.name(group, v) for v in values}
                     if group and values is not None

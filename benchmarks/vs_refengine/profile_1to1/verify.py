@@ -13,6 +13,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 import baseline_dump as sd  # noqa: E402 (harness path bootstrap)
+from capture_date import profile_date_context  # noqa: E402
 from comparison_contract import NOT_COMPARABLE_EXIT, not_comparable_reason  # noqa: E402
 from paths import PROFILE_DATA_DIR  # noqa: E402 (harness path bootstrap)
 from recorded_store import RecordingError, load, sha256  # noqa: E402 (harness path bootstrap)
@@ -300,7 +301,8 @@ def main(argv: list[str] | None = None) -> int:
                 failures.append(ds + ": error category differs")
         else:
             try:
-                candidate = shape_profile(ds)
+                with profile_date_context(ds, DATA):
+                    candidate = shape_profile(ds)
             except Exception as exc:
                 failures.append(ds + ": candidate raised " + sd.error_category(exc))
                 candidate = None

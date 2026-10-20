@@ -238,3 +238,15 @@ probabilities, weights, charges, other numeric values, fixed seeds and threshold
 unchanged; existing clauses a–f recompute their results. Unknown scoped names, mismatched
 provenance, incomplete/nonbijective/permuted associations and changed reference rows fail
 closed. No clinical or taxonomy semantic equivalence is asserted.
+
+## Authenticated date context for time-only profiles
+
+`capture_date_context.json` records the original capture source/run/job, full step window,
+UTC/local clock evidence, and the exact recording/input digests for the two time-only fixtures.
+The entire capture occurred on 2026-10-13; this date comes from execution provenance, not
+from a histogram. Verifier and timed profiling worker both validate that context, then supply
+that calendar date at the parser's implicit-date boundary before computing the profile.
+Explicit dates remain unchanged, all context is restored on exit, and all other workloads
+run ordinarily. There is no global clock change, timestamp exclusion, histogram rotation,
+value substitution, new recording or threshold change. Unknown replay requests, modified
+inputs/recordings, wrong provenance and ambiguous date/timezone contexts fail closed.

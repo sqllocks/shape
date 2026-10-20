@@ -6,9 +6,9 @@ Status: available.
 
 ## Unreleased
 
-- Report the two reviewed Shape 0.9.1 nested-input errors as not comparable in the release
-  regression harness, separately from passes and without timing them; value comparisons
-  and thresholds are unchanged.
+- Compare frozen release results with explicit recorded-error noncomparability, approved
+  reference category-name aliases and authenticated capture-date replay; recorded values
+  and all numeric comparison thresholds remain unchanged.
 - Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.
 
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.

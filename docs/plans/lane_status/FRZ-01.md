@@ -53,43 +53,16 @@ groups, and no dependency synchronization. No local full run or raw archive was 
 - Deterministic Tuesday/Sunday time-only parsing control preserves the differing weekday
   values despite the current date (Tuesday) coinciding with the capture weekday.
 
-## Remaining value acceptance: parked, not resolved
+## Original value failures: superseded by the proven paths below
 
-The original failures and authenticated input/archive digests are in
-`public-b-2026-10-18/FRZ-01-evidence.md` on the lead scratch branch. Read-only source review
-confirms these four workloads produced values in 0.9.1 and cannot use this category:
-
-| Workload | Unresolved value mismatch |
-| --- | --- |
-| `profile:edge/x_time_only.csv` | Recorded weekday histogram `[0,1,0,0,0,0,0]`; Sunday yields `[0,0,0,0,0,0,1]`. |
-| `profile:edge/x_time_ampm.csv` | Recorded `[0.5,0.5,0,0,0,0,0]`; Sunday yields `[0.5,0,0,0,0,0,0.5]`. |
-| `generate:capital_markets:medium` | Synthetic sector/industry data values have vocabulary overlap 0 vs floor 0.999, failed TVD checks, record coherence 0 vs floor 0.995. |
-| `generate:healthcare:medium` | Synthetic procedure codes/descriptions have vocabulary overlap 0 vs floor 0.999, failed TVD checks, record coherence 0 vs floor 0.995. |
-
-The profiler's `dtparse._midnight` uses the current date for date-free time strings; the
-weekday histogram is a compared data value, not a runtime timestamp. The public profiling
-call has no capture-clock parameter. Both authenticated time-only records and the manifest
-contain `recorded_utc=2026-10-13T01:47:50Z`. The recorder assigns that timestamp once before
-collecting workers: it establishes capture-session start, not each workload's actual local
-execution date, timezone or clock policy. Faithfully replaying an authenticated execution
-environment would be conceptually different from rewriting output values, but current
-records do not establish that complete clock context. No context is inferred from a histogram
-or expected weekday. Excluding the histogram would bypass a value comparison; a Tuesday-only
-green result is calendar coincidence and does not resolve portability. No context freezing,
-candidate monkeypatch or output normalization is implemented.
-
-Owner commit `904d5d2` intentionally replaced sector and procedure reference contents.
-The domains documentation confirms same row positions and weights but changed dataset ids.
-The domain verifier correctly uses the baseline vocabulary and reference records; changing
-the pool, substituting synthetic scalar values or mapping codes would change what is
-compared. Restoring removed values contradicts the approved data replacement. The reference
-source aliases and schema column names were retained, so renaming those alone fixes no current
-failure. Explicit display/category-name aliases justified by unchanged sector/industry IDs
-could be partial name-only work while preserving observations, counts and probabilities;
-their metrics would need honest recomputation, not numerical substitution. They do not by
-themselves reconcile the remaining sector/procedure code data. No code-token mapping or
-frequency-fitted mapping is authorized or implemented. No compliant fix for either whole
-generation workload has been established, so all four acceptance workloads remain parked.
+The original four value-producing workloads cannot use the recorded-error category. Their
+historical values and authenticated digests are in `public-b-2026-10-18/FRZ-01-evidence.md`
+on the lead scratch branch. The initial blanket parking interpretation was too narrow:
+approved category-name aliases can include code-shaped names, and original capture-job
+provenance independently establishes the execution calendar date. The implemented paths
+below retain all numeric values and comparison thresholds; they do not infer mappings from
+frequencies or choose a date from a histogram. The historical parked status is superseded
+by targeted acceptance proof, while hosted CI and post-merge Nightly remain outstanding.
 
 ## Required main refresh
 
@@ -97,12 +70,6 @@ Merged main `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` after PR 40. Only the add
 Unreleased changelog entry conflicted; both entries are retained. The certifi lock and
 prepared-browser fixes merge without code conflicts. This refresh includes the read-only
 clock/name clarification above. No local rerun was needed for a source conflict.
-
-Precise remaining decision: retain these value failures under the current contract, or
-separately define a comparison context/policy for date-free clock-derived values and
-intentionally replaced reference-data values. Recommendation: keep these acceptance cases
-parked with all comparisons intact until that additional decision; do not interpret the
-error-category authorization as permission to change them. No expanded policy is implemented.
 
 The PR uses `Refs #20`. Issue 20 stays open: closure requires a later PR only after a Nightly
 dispatched on main is green on profile, stream, generate-1/2/3, parity-publish and sqlserver-e2e,
@@ -133,5 +100,53 @@ all original clauses a–f. The existing isolated 0.9.1 interpreter uses Arrow 2
 the historical Arrow 25 environment; every generated baseline seed nevertheless matched
 the original recorded digests before comparison. This is value-equivalence proof, not a
 claim of frozen-environment timing equivalence. Reports went to `/dev/null`; no raw archive
-or recording was created. The two time-only cases remain active for authenticated clock
-replay work; no full Nightly or issue closure is claimed.
+or recording was created. The two time-only cases use the independently authenticated replay below.
+No full Nightly or issue closure is claimed.
+
+## Authenticated capture-date replay: implementation and proof
+
+Original capture run `38332677511`, job `115085741837`, source commit
+`e41a67eab08beed36804bf3a84db83fb7f2595f6`, recorded every workload in the step
+`Record every release workload, equivalence before timing`, from
+`2026-10-13T01:47:38Z` through `2026-10-13T02:17:06Z`. The original workflow used
+Ubuntu with no timezone override. The complete capture stayed within the same UTC
+calendar date; manifest session start `2026-10-13T01:47:50Z` equals local machine start
+`2026-10-13 01:47:50`. The checked store was committed at
+`909a941cd294cd25031a8dcaa221e6b49e949674`. This establishes the execution date
+independently of the expected weekday histogram, correcting the earlier missing-context premise.
+
+`capture_date_context.json` commits this reviewed provenance and the exact record/input SHA-256
+values for only `edge/x_time_only.csv` and `edge/x_time_ampm.csv`. Their authenticated inputs
+contain time-of-day strings, no relative `now` or `today` tokens. The helper rejects unknown
+replay requests, wrong source/window/timezone/context, changed records or inputs, and date-boundary
+ambiguity. It supplies the captured date only at the parser's existing implicit `_midnight`
+input boundary before computation, preserving explicit date arguments. It neither changes
+system time nor rewrites, rotates or excludes any computed value. Every exit restores the
+original function; other workloads retain ordinary execution.
+
+The verifier comparison call and timed worker use the same independently authenticated helper.
+Context setup and teardown stay outside the measured profiling interval. The generic profiling
+function used by the recorder remains unchanged, so this does not force a historical date into
+an authorized future recording. The recordings and all original comparison thresholds remain
+untouched. Initial new controls were 12 red; restoring the prior verifier and timed worker with
+the new helper present reproduced five behavioral failures, including both fixtures under
+Sunday and another calendar date and the timing worker. The new path passes those actual
+recorded-value comparisons, rejects changed time distributions/inputs, and restores context
+after exceptions. No historical reference timing is remeasured or substituted.
+
+## Final targeted acceptance and checks
+
+- Direct authenticated two-fixture verifier: both time-only workloads PASS, zero mismatches,
+  exit 0. Their values remain comparable, distinct from the two recorded-error refusals.
+- Final focused harness/profile/domain/CLI/store/Nightly controls: 138 passed in Rust mode
+  (7.12 seconds) and 138 passed in Python mode (6.93 seconds).
+- Ruff and formatting pass for all 12 changed Python files. Configured mypy passes for
+  703 source files; targeted strict mypy additionally passes for the two new harness modules.
+  Documentation wording reports zero hits and the user-facing check is clean.
+- Recordings, manifest and input fixtures are byte-identical to main. No tolerance, seed,
+  numeric value, reference weight or comparison clause was changed or skipped.
+
+All four former value failures now have concrete targeted passing paths. The remaining
+acceptance gate is hosted CI and a later Nightly dispatched on merged main, including all
+five parity shards, parity-publish and sqlserver-e2e. Those runs have not been claimed green;
+this lane performs no merge, Nightly dispatch or issue closure.

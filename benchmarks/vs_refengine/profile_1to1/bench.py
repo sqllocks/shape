@@ -23,6 +23,7 @@ from typing import Any, cast
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
+from capture_date import profile_date_context  # noqa: E402
 from common import bench_lock, machine_meta, maxrss_kib, wait_for_quiet  # noqa: E402
 from paths import (  # noqa: E402
     BASELINE_PY,
@@ -114,10 +115,11 @@ def worker(tool: str, ds: str) -> Any:
                 return shape.profile(str(path))
 
     expected_error = recorded_error(ds)
-    base = _rss_kb()[0]
-    t0 = time.perf_counter()
-    prof, refused = call_profile(run, expected_error, ds)
-    dt = time.perf_counter() - t0
+    with profile_date_context(ds, DATA):
+        base = _rss_kb()[0]
+        t0 = time.perf_counter()
+        prof, refused = call_profile(run, expected_error, ds)
+        dt = time.perf_counter() - t0
     self_kb, child_kb = _rss_kb()
     ncols = (
         0
