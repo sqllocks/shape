@@ -13,6 +13,7 @@ import queue
 import threading
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from concurrent.futures import ThreadPoolExecutor
+from itertools import chain
 from pathlib import Path
 from typing import Any
 
@@ -665,9 +666,10 @@ def preflight(
     """Let every sink that has a ``preflight(uri, {table: options})`` refuse an impossible
     combination of options for the whole run, before anything is generated or written."""
     for uri, name, sink in sinks:
+        planned = {table: options.for_sink(name, schema, table) for table in tables}
         check = getattr(sink, "preflight", None)
         if check is not None:
-            check(uri, {table: options.for_sink(name, schema, table) for table in tables})
+            check(uri, planned)
 
 
 def write_targets(
@@ -689,15 +691,60 @@ def write_targets(
     result = engine.generate() if post else None
     names = list(result.generation_order if result is not None else engine.order)
     preflight(sinks, options, engine.schema, names)
+    # A supporting database creates every table and adds the foreign keys before
+    # data loads. That keeps constraint violations inside the normal load
+    # transaction, including its commit_rows accounting. Only one batch per
+    # table is read to discover the actual Arrow schemas before this phase.
+    preparing = {
+        i: prepare
+        for i, (_, _, sink) in enumerate(sinks)
+        if options.constraints != "none"
+        and callable(prepare := getattr(sink, "prepare_constraints", None))
+    }
+    sources: dict[str, Iterator[pa.RecordBatch]] = {}
+    schemas: dict[str, pa.Schema] = {}
+    if preparing:
+        first_batches: dict[str, pa.RecordBatch | None] = {}
+        for name in names:
+            if result is not None:
+                table = result.tables[name]
+                source = iter(table.to_batches())
+                schemas[name] = table.schema
+            else:
+                source = engine.iter_chunks(name, chunk_rows)
+            first = next(source, None)
+            if first is not None:
+                schemas[name] = first.schema
+            elif name not in schemas:
+                raise ValueError(f"table {name!r} produced no batches and no Arrow schema")
+            first_batches[name] = first
+            sources[name] = chain(() if first is None else (first,), source)
+        for index, prepare in preparing.items():
+            uri, sink_name, _ = sinks[index]
+            prepare(
+                uri,
+                {
+                    name: {
+                        **options.for_sink(sink_name, engine.schema, name),
+                        "schema": schemas[name],
+                        "first_batch": first_batches[name],
+                    }
+                    for name in names
+                },
+            )
     written: dict[str, dict[str, int]] = {redact(u): {} for u in uris}
     lock = threading.Lock()
 
     def one(name: str) -> None:
         schema: pa.Schema | None = None
-        if result is not None:
+        source: Iterator[pa.RecordBatch]
+        if name in sources:
+            schema = schemas[name]
+            source = _prefetch(sources[name])
+        elif result is not None:
             table = result.tables[name]
             schema = table.schema
-            source: Iterator[pa.RecordBatch] = iter(table.to_batches())
+            source = iter(table.to_batches())
         else:
             source = _prefetch(engine.iter_chunks(name, chunk_rows))
         queues = [queue.Queue[Any](maxsize=_QUEUE_DEPTH) for _ in sinks]
@@ -709,6 +756,8 @@ def write_targets(
             opts = options.for_sink(sink_name, engine.schema, name)
             if schema is not None:
                 opts["schema"] = schema
+            if i in preparing:
+                opts["prepared_constraints"] = True
             finished = threading.Event()
             try:
                 counts[i] = _feed(sink, uri, name, queues[i], opts, finished)
@@ -739,5 +788,9 @@ def write_targets(
             for (uri, _, _), rows in zip(sinks, counts, strict=True):
                 written[redact(uri)][name] = rows
 
-    _run_parallel(names, one, _writers(max_workers))
+    if preparing:
+        for level in engine.levels:
+            _run_parallel(level, one, _writers(max_workers))
+    else:
+        _run_parallel(names, one, _writers(max_workers))
     return written

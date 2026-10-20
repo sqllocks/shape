@@ -253,3 +253,168 @@ def test_ast_node_limit_counts_operands_and_enum_values():
         render(enum)
     # One conjunction plus 341 expressions and 682 operands is exactly 1024 nodes.
     assert render({"op": "and", "args": [comparison] * 341}).count('"amount"') == 341
+
+
+def _write_engine(rows=4):
+    from shape.generation.engine import Engine
+
+    definition = schema()
+    definition.business_rules = []
+    definition.tables["child"].columns = {
+        name: col
+        for name, col in definition.tables["child"].columns.items()
+        if name in {"id", "parent_id"}
+    }
+    return Engine(definition, row_counts={"parent": rows, "child": rows}, chunk_rows=2)
+
+
+def test_constraint_preparation_precedes_parent_first_data_and_buffers_one_batch(monkeypatch):
+    import threading
+
+    import pyarrow as pa
+
+    from shape.generation.output import write_targets
+
+    prepared = threading.Event()
+    events = []
+    engine = _write_engine()
+    original = engine.iter_chunks
+
+    def chunks(name, size=None):
+        for index, batch in enumerate(original(name, size)):
+            if index:
+                assert prepared.is_set(), "more than one batch was buffered before preparation"
+            yield batch
+
+    engine.iter_chunks = chunks
+
+    class Sink:
+        def prepare_constraints(self, uri, plans):
+            assert set(plans) == {"parent", "child"}
+            for plan in plans.values():
+                assert isinstance(plan["schema"], pa.Schema)
+                assert plan["first_batch"].num_rows == 2
+            assert plans["child"]["foreign_keys"][0]["ref_table"] == "parent"
+            events.append("prepare")
+            prepared.set()
+
+        def write(self, uri, table, batches, **options):
+            assert prepared.is_set()
+            assert options["prepared_constraints"] is True
+            if table == "child":
+                assert events[-1] == "parent", "child loaded before parent completed"
+            events.append(table)
+            return sum(batch.num_rows for batch in batches)
+
+    sink = Sink()
+    monkeypatch.setattr("shape.io.targets.sink_for_target", lambda uri: ("postgres", sink))
+    found = write_targets(engine, ["postgresql://u@localhost/db"], TargetOptions(), max_workers=2)
+    assert list(found.values()) == [{"parent": 4, "child": 4}]
+    assert events == ["prepare", "parent", "child"]
+
+
+def test_empty_tables_are_prepared_with_real_arrow_schema(monkeypatch):
+    from shape.generation.output import write_targets
+
+    plans = {}
+
+    class Sink:
+        def prepare_constraints(self, uri, options):
+            plans.update(options)
+
+        def write(self, uri, table, batches, **options):
+            assert options["schema"] == plans[table]["schema"]
+            assert options["schema"].names
+            return sum(batch.num_rows for batch in batches)
+
+    monkeypatch.setattr("shape.io.targets.sink_for_target", lambda uri: ("postgres", Sink()))
+    found = write_targets(_write_engine(0), ["postgresql://u@localhost/db"], TargetOptions())
+    assert list(found.values()) == [{"parent": 0, "child": 0}]
+    assert all(plan["first_batch"].num_rows == 0 for plan in plans.values())
+
+
+def test_prepare_failure_never_enters_data_load(monkeypatch):
+    from shape.generation.output import write_targets
+
+    class Sink:
+        def prepare_constraints(self, uri, plans):
+            raise ValueError("fk_child_parent: cannot restore referenced constraint")
+
+        def write(self, *args, **options):
+            raise AssertionError("data load started after preparation failed")
+
+    monkeypatch.setattr("shape.io.targets.sink_for_target", lambda uri: ("postgres", Sink()))
+    with pytest.raises(ValueError, match="fk_child_parent"):
+        write_targets(_write_engine(), ["postgresql://u@localhost/db"], TargetOptions())
+
+
+def test_all_target_options_are_validated_before_any_connection(monkeypatch):
+    from shape.generation.output import write_targets
+
+    class Sink:
+        def write(self, *args, **options):
+            raise AssertionError("sink opened before all options were validated")
+
+    monkeypatch.setattr("shape.io.targets.sink_for_target", lambda uri: ("postgres", Sink()))
+    with pytest.raises(ValueError, match="invalid contract column"):
+        write_targets(
+            _write_engine(0),
+            ["postgresql://u@localhost/db"],
+            TargetOptions(
+                constraints="all", contract={"tables": {"child": {"columns": {"bad": {"min": 0}}}}}
+            ),
+        )
+
+
+def test_post_pass_empty_result_uses_schema_when_there_is_no_batch(monkeypatch):
+    from shape.generation.output import write_targets
+
+    engine = _write_engine(0)
+    engine.schema.business_rules = [BusinessRule("valid", "constraint", "id >= 0", "parent")]
+    prepared = {}
+
+    class Sink:
+        def prepare_constraints(self, uri, plans):
+            prepared.update(plans)
+            assert all(plan["first_batch"] is None for plan in plans.values())
+            assert all(plan["schema"].names for plan in plans.values())
+
+        def write(self, uri, table, batches, **options):
+            assert table in prepared
+            return sum(batch.num_rows for batch in batches)
+
+    monkeypatch.setattr("shape.io.targets.sink_for_target", lambda uri: ("postgres", Sink()))
+    assert list(
+        write_targets(engine, ["postgresql://u@localhost/db"], TargetOptions()).values()
+    ) == [{"parent": 0, "child": 0}]
+
+
+def test_self_reference_prepares_normally_and_cross_table_cycle_refuses_before_connection(
+    monkeypatch,
+):
+    from shape.generation.engine import Engine
+    from shape.generation.output import write_targets
+    from shape.generation.schema import GenSchemaError
+
+    engine = _write_engine()
+    engine.schema.relationships.append(
+        Relationship("self_parent", "parent", "parent", ["id"], ["id"], "self_referencing")
+    )
+    prepared = []
+
+    class Sink:
+        def prepare_constraints(self, uri, plans):
+            prepared.append(plans)
+
+        def write(self, uri, table, batches, **options):
+            return sum(batch.num_rows for batch in batches)
+
+    monkeypatch.setattr("shape.io.targets.sink_for_target", lambda uri: ("postgres", Sink()))
+    write_targets(engine, ["postgresql://u@localhost/db"], TargetOptions())
+    assert prepared[0]["parent"]["foreign_keys"][0]["ref_table"] == "parent"
+    definition = _write_engine().schema
+    definition.relationships.append(Relationship("reverse", "child", "parent", ["id"], ["id"]))
+    prepared.clear()
+    with pytest.raises(GenSchemaError, match="child.*parent"):
+        write_targets(Engine(definition), ["postgresql://u@localhost/db"], TargetOptions())
+    assert prepared == []
