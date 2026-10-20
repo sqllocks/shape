@@ -20,7 +20,7 @@ Current main:35addfc4c310b85a62cbe7f315e1d50fb8e426f8. Main post-merge CI3948303
 | #12 W9-11 | lane/W9-11-finish / bc98623f582c121cad0bcf56a83a8829fd826437 | https://github.com/sqllocks/shape/pull/30 | ready, refreshed, APPROVED; fresh CI pending |
 | #13 W9-12 | lane/W9-12-finish / 170ce0dd549eaca5898d368b7fc3715ccc1a5d53 | https://github.com/sqllocks/shape/pull/33 | ready, refreshed, APPROVED; fresh CI pending |
 | #17 W9-16 | lane/W9-16-finish / 8c9fa927dc31540f19755827641b0dbc9a8a3668 | https://github.com/sqllocks/shape/pull/31 | ready, refreshed, APPROVED; fresh CI pending |
-| #6 W9-05 | lane/W9-05 / 39760e6927b36dc32f7d0bd7f4977a36719f70ac | https://github.com/sqllocks/shape/pull/43 | ready, independently APPROVED; depends on PR42/main refresh/combined exact-head CI |
+| #6 W9-05 | lane/W9-05 / 4704c7118966e9e17aa61a230744e51a8275d448 | https://github.com/sqllocks/shape/pull/43 | ready, independently APPROVED; depends on PR42/main refresh/combined exact-head CI |
 | #20 FRZ-01 | lane/FRZ-01-finish / 8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4 | https://github.com/sqllocks/shape/pull/42 | error category ready and APPROVED; four remaining value workloads parked; no closure |
 | #14 W9-13 | lane/W9-13 / 58966e0 | none | journal only; dependency-blocked until PR35/main source interface |
 
@@ -31,7 +31,7 @@ PR34 old7a head had an unchanged macOS cancellation-test timing failure; new0b h
 Throughput decision-log row is committed on scratch cf68ff1 and included in dbt PR29 e1ae578 for main. Premium process05/08 edits are owned by Premium Build A; do not touch that repo or another session's PRs. Semantic/dbt explicit Owner-actions headings were added during refresh. Pending service validation is already listed in each lane record; no live success claimed. Semantic fixture/measure/role expected-results decision remains Owner work.
 
 PARTIAL READY / REMAINING ACCEPTANCE PARKED #20: approved error category implemented in PR42 at8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4, independently APPROVED. Four value-recording workloads remain blocked under unchanged value rules; exact question/options/recommendation in questions.md and issuecomment6301325664. Do not count #20 delivered or close it. Value comparisons/recordings/thresholds unchanged.
-READY #6: Owner2026-10-20 approval implemented in PR43, independently APPROVED exact39760e6927b36dc32f7d0bd7f4977a36719f70ac. Depends on shared category PR42 landing and a combined main refresh; no harness code copied. eventhouse_recover owns refreshes; frz_review approved full diff.
+READY #6: Owner2026-10-20 approval implemented in PR43, independently APPROVED current exact4704c7118966e9e17aa61a230744e51a8275d448 after the documentation-only correction. Depends on shared category PR42 landing and a combined main refresh; no harness code copied. eventhouse_recover owns refreshes; frz_review approved full diff.
 Parked #14: waiting only for W9-01 source interface on main; do not inspect Lead A branches/issues. Decimal0<=scale<=precision refusal was ALREADY approved in issuecomment6072817299, no further decision needed. Current pushed journal lane/W9-13 head58966e0. Updated clarification: issuecomment6299575080; no new decimal decision is pending.
 
 Exact questions/options/recommendations remain in questions.md. #6 is active; #20 has a ready category PR with remaining value acceptance parked; #14 remains dependency-blocked. All three remain open; no product PR/merge yet.
@@ -103,3 +103,9 @@ Rootattached43 after childattachmenttool stalled; no further artifact attachment
 ## Metadata merged-head gate complete — 2026-10-20 21:23 UTC
 
 CI39483030770 statuscompleted/conclusionsuccess on main35addfc4, all27jobs passed; Docs39483030734 and Security39483030728 also success. Canonical green merged-head links added to W9-08.md; no raw logs/snapshots. PR40 is24success/6running/1structural skip/no failures at lastread; stillpriorityfirst and unchangedhead3f62547/APPROVED. Nextuserfullcountupdate~21:28UTC.
+
+## Child-profile docs gate correction — 2026-10-20 21:30 UTC
+
+PR43 signed/pushed currenthead4704c7118966e9e17aa61a230744e51a8275d448, independent frz_review reboundAPPROVED, cleanworktree. Deltaonly22observedwarning430→436 references across7docpages, INSTALLisolatedbareconformance-list correction(retainingSH2-033), and laneacceptance. No productsource/assertion/normalizer/gate/tolerancechange. CI8pagesred; localPROFILING_NOTESred;7targetpagespassedbatch andSIGNINGpassedalone after editable-buildsetup race; all8actualpagesgreen. No full suite rerun. Sourceimplementationproof from39760e6 remainsvalid. CIsecurity/audit/build failures onoldheadwereeachconfirmedonlyknowncertifiadvisory; resolvevia40/mainrefresh.
+
+PR40 exact3f62547 latest28success/2running/1structural skip/no failures. RemainingUbuntu3.12 andWindows3.11. Sourceapprovalunchanged, main35fullygreen/currentbasecontainedlastcheck. Mergeas soon as alljobs/workflowscompletegreen andfreshmainancestryisverified. Userlastfullcountupdate21:28,nextdue~21:33; blockermilestone21:30. Countsremain1merged,6active-ready,2blocked/parkedof9.
