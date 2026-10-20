@@ -34,6 +34,6 @@ Concrete partial work: safe constraint derivation/rendering and bounded schema-p
 
 Status: parked on the preceding #5 Owner decision. Wanted2 explicitly reuses W9-04's constraint derivation, and the run requires an earlier issue to merge before a dependent one. W9-04 cannot currently merge under its literal DuckDB phase requirement.
 
-Question: approve the recommended DuckDB exception for #5 so its safe constraint helper can merge, then integrate that helper into #8?
+Question: approve the recommended DuckDB exception for #5 so its safe constraint helper can merge, then merge the already-stacked helper into main before #8?
 
-Recommendation: resolve #5 and merge it first, then resume #8 and run complete local/CI gates. Do not duplicate or bypass the unmerged derivation or accept arbitrary check SQL. Independently implemented Delta features and their review fixes remain preserved on lane/W9-07; no ready-to-merge claim.
+Recommendation: resolve #5 and merge it first, then finish targeted local acceptance and require full exact-head CI. The actual #5 helper is now stacked and its AST integration tests pass; no helper was duplicated and arbitrary check SQL remains refused. Unsupported native feature combinations use the already-authorized capability-refusal rules in Wanted8/#7Wanted6, requiring no additional Owner amendment. Independently implemented Delta features and their review fixes remain preserved on lane/W9-07; no ready-to-merge claim.
