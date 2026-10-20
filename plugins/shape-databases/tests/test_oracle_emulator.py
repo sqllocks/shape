@@ -33,7 +33,7 @@ def table():
 def test_oracle_exact_types_lob_nanoseconds_and_catalog(table):
     batch = pa.record_batch(
         [
-            pa.array([Decimal("12345678901234567890.1234")], pa.decimal128(24, 4)),
+            pa.array([Decimal("1234567890123456789012345678.1234567890")], pa.decimal128(38, 10)),
             pa.array(["2026-01-01T00:00:00.123456789Z"]).cast(pa.timestamp("ns", "UTC")),
             pa.array([b"payload"]),
             pa.array([True]),
@@ -43,7 +43,7 @@ def test_oracle_exact_types_lob_nanoseconds_and_catalog(table):
     assert OracleSink().write(URI, table, [batch]) == 1
     source = OracleSource()
     got = pa.Table.from_batches(source.read(URI + f"?table={table}"))
-    assert got.column("amount")[0].as_py() == Decimal("12345678901234567890.1234")
+    assert got.column("amount")[0].as_py() == Decimal("1234567890123456789012345678.1234567890")
     assert (
         got.column("at").cast(pa.int64()).to_pylist()
         == batch.column(1).cast(pa.int64()).to_pylist()

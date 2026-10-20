@@ -15,8 +15,9 @@ from shape.errors import ShapeError
 from shape.security import credrefs
 
 from . import _sql
-from ._auth import Secret, resolve_password
+from ._auth import Secret, resolve_password, scrub
 from ._base import DatabaseSink, Plan, as_bool, as_text, chain_batches, is_loopback
+from .errors import WriteError
 from .oracle_types import bind_expression, bound_value, oracle_type, temporal_text
 
 log = logging.getLogger("shape_databases")
@@ -318,6 +319,7 @@ class OracleSink(DatabaseSink):
         statement = f"INSERT INTO {qualified} ({names}) VALUES ({binds})"  # nosec B608
         cur = conn.cursor()
         total = pending = 0
+        failure: WriteError | None = None
         try:
             cur.setinputsizes(*self._input_sizes(first.schema, plan))
             for batch in chain_batches(first, rest):
@@ -349,6 +351,15 @@ class OracleSink(DatabaseSink):
                     plan.table,
                     plan.auth["empty_strings"],
                 )
+        except ShapeError as exc:
+            if not progress[0]:
+                raise
+            reason = scrub(str(exc), [plan.secret, *plan.secrets])
+            failure = WriteError(
+                f"{reason}; {progress[0]} rows were committed before it failed", progress[0]
+            )
         finally:
             cur.close()
+        if failure is not None:
+            raise failure
         return total

@@ -349,3 +349,19 @@ def test_oracle_driver_failure_never_persists_password(monkeypatch, tmp_path):
             assert secret not in record.read_text()
     finally:
         bridge.close()
+
+
+@pytest.mark.parametrize("later_type", [False, True])
+def test_oracle_late_validation_reports_committed_rows(later_type):
+    fake = FakeOracle()
+    batches = (
+        [pa.record_batch({"value": [1]}), pa.record_batch({"value": [1.5]})]
+        if later_type
+        else [pa.record_batch({"text": ["kept", ""]})]
+    )
+    with pytest.raises(WriteError, match="1 rows were committed") as error:
+        OracleSink(connect=fake.connect).write(
+            "oracle://shape@localhost/service", "t", batches, batch_rows=1, commit_rows=1
+        )
+    assert error.value.rows_committed == 1 and len(fake.dml) == 1
+    assert "type" in str(error.value) if later_type else "empty-string" in str(error.value)
