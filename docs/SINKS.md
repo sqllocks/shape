@@ -221,7 +221,7 @@ resolved DDL without opening a connection or writing data artifacts.
 Shape prepares every table before loading and writes parents before children. DuckDB alone
 uses parent-first inline foreign keys because it cannot add them afterward. Constraints
 remain enforced. An existing destination must match the requested declarations before an
-append or rerun; PostgreSQL/MySQL CHECK and DEFAULT verification also needs permission to
+append or truncate; PostgreSQL/MySQL CHECK and DEFAULT verification also needs permission to
 create temporary tables.
 
 For a dataset whose referenced tables all belong to the run, PostgreSQL, MySQL and SQL

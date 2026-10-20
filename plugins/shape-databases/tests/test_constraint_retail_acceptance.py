@@ -1,4 +1,4 @@
-"""W9-04 Wanted 5: every retail table loads, and a planted violation fails."""
+"""SHAPE-SINK-004: W9-04 Wanted 5: every retail table loads, and a planted violation fails."""
 
 import os
 import uuid

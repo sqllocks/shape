@@ -6,6 +6,7 @@ schema defaults and structured CHECK operands; SQL expressions are never accepte
 
 from __future__ import annotations
 
+import hashlib
 import math
 import threading
 from collections.abc import Mapping, Sequence
@@ -44,13 +45,13 @@ class _PreparedTransaction:
                 else:
                     try:
                         self.connection.rollback()
-                    except Exception:
+                    except Exception:  # noqa: S110  # nosec B110
                         pass  # cleanup must preserve the original load error
             finally:
                 if self.owns_connection:
                     try:
                         self.connection.close()
-                    except Exception:
+                    except Exception:  # noqa: S110  # nosec B110
                         pass  # closing must preserve the transaction outcome
 
     def __repr__(self) -> str:
@@ -95,6 +96,25 @@ def identifier(name: Any, dialect: str) -> str:
     if dialect.startswith("tsql"):
         return "[" + name.replace("]", "]]") + "]"
     return '"' + name.replace('"', '""') + '"'
+
+
+def unique_constraint_name(table: str, index: int, dialect: str) -> str:
+    """Stable generated names respect the backend's identifier limit, including UTF-8."""
+    candidate = f"uq_{table}_{index}"
+    limit = {"postgres": 63, "mysql": 64, "tsql": 128, "tsql-fabric-warehouse": 128}.get(
+        dialect, 255
+    )
+    size = len(candidate.encode("utf-8")) if dialect == "postgres" else len(candidate)
+    if size <= limit:
+        return candidate
+    suffix = "_" + hashlib.sha256(candidate.encode("utf-8")).hexdigest()[:12]
+    available = limit - len(suffix)
+    prefix = (
+        candidate.encode("utf-8")[:available].decode("utf-8", errors="ignore")
+        if dialect == "postgres"
+        else candidate[:available]
+    )
+    return prefix + suffix
 
 
 def literal(value: Any, dialect: str) -> str:
@@ -197,12 +217,15 @@ def compile_constraints(
             note("UNIQUE")
         elif dialect == "tsql-fabric-warehouse":
             after.append(
-                f"CONSTRAINT {name(f'uq_{table}_{index}')} "
+                f"CONSTRAINT {name(unique_constraint_name(table, index, dialect))} "
                 f"UNIQUE NONCLUSTERED ({cols}) NOT ENFORCED"
             )
         else:
             suffix = " NOT ENFORCED" if dialect == "snowflake" else ""
-            definitions.append(f"CONSTRAINT {name(f'uq_{table}_{index}')} UNIQUE ({cols}){suffix}")
+            definitions.append(
+                f"CONSTRAINT {name(unique_constraint_name(table, index, dialect))} "
+                f"UNIQUE ({cols}){suffix}"
+            )
     for check in items("checks"):
         if not isinstance(check, Mapping) or set(check) != {"name", "expression"}:
             raise ValueError("a CHECK requires only name and a structured expression")

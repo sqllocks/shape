@@ -519,15 +519,18 @@ class DatabaseSink:
         finally:
             cur.close()
 
-    def _coordinated_truncate(
+    def _coordinated_rerun(
         self,
         conn: Any,
         plans: list[tuple[Plan, pa.Schema, pa.RecordBatch | None]],
         *,
         owns_connection: bool,
     ) -> _PreparedTransaction | None:
-        if self.dialect not in {"postgres", "mysql"} or not all(
-            plan.mode == "truncate" and self._exists(conn, plan) for plan, _, _ in plans
+        mode = plans[0][0].mode
+        if (
+            self.dialect not in {"postgres", "mysql"}
+            or mode not in {"truncate", "replace"}
+            or not all(plan.mode == mode and self._exists(conn, plan) for plan, _, _ in plans)
         ):
             return None
         cur = conn.cursor()
@@ -539,7 +542,8 @@ class DatabaseSink:
             owned = {(plan.schema_name or default_schema, plan.table) for plan, _, _ in plans}
             references = []
             for plan, schema, first in plans:
-                self._verify_existing_constraints(conn, plan, schema, first)
+                if mode == "truncate":
+                    self._verify_existing_constraints(conn, plan, schema, first)
                 if self.dialect == "postgres":
                     sql = (
                         "SELECT DISTINCT con.conname AS coordinated_constraint_name, "
@@ -571,6 +575,11 @@ class DatabaseSink:
             if not references:
                 return None
             name = str(references[0][0])
+            if mode == "replace" and self.dialect == "mysql":
+                raise ShapeError(
+                    f"foreign key {name!r}: MySQL replace DDL commits implicitly; "
+                    "the previous dataset cannot be preserved"
+                )
             if any(plan.commit_rows for plan, _, _ in plans):
                 raise ShapeError(
                     f"foreign key {name!r}: coordinated truncate cannot preserve "
@@ -586,7 +595,16 @@ class DatabaseSink:
             targets = [
                 _sql.qualified(plan.schema_name, plan.table, self.dialect) for plan, _, _ in plans
             ]
-            if self.dialect == "postgres":
+            if mode == "replace":
+                for target in reversed(targets):
+                    cur.execute("DROP TABLE " + target)
+                for plan, schema, first in plans:
+                    self._prepare_table(conn, plan, schema, first, defer_foreign_keys=True)
+                for plan, schema, _ in plans:
+                    for clause in self._constraint_ddl(plan, schema).foreign_keys:
+                        target = _sql.qualified(plan.schema_name, plan.table, self.dialect)
+                        cur.execute(f"ALTER TABLE {target} ADD {clause}")
+            elif self.dialect == "postgres":
                 cur.execute("TRUNCATE TABLE " + ", ".join(targets))
             else:
                 for plan, _, _ in plans:
@@ -666,7 +684,7 @@ class DatabaseSink:
                 conn = self._open(
                     initial, initial.target.label, secrets, initial.options.get("connect")
                 )
-            transaction = self._coordinated_truncate(conn, plans, owns_connection=injected is None)
+            transaction = self._coordinated_rerun(conn, plans, owns_connection=injected is None)
             if transaction is not None:
                 retained = True
                 return transaction

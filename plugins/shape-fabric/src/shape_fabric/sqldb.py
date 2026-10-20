@@ -297,18 +297,21 @@ def prepare_constraint_tables(
         )
         plans.append((table, sname, plan.mode, schema, options, compiled))
     try:
+        rerun_mode = plans[0][2] if plans else None
         if (
             plans
             and not db.warehouse
+            and rerun_mode in {"truncate", "replace"}
             and all(
-                mode == "truncate" and db.table_exists(sname, table)
+                mode == rerun_mode and db.table_exists(sname, table)
                 for table, sname, mode, _, _, _ in plans
             )
         ):
             owned = {(sname, table) for table, sname, _, _, _, _ in plans}
             references = []
             for table, sname, _, schema, options, compiled in plans:
-                verify_constraints(db, sname, table, {**options, "schema": schema}, compiled)
+                if rerun_mode == "truncate":
+                    verify_constraints(db, sname, table, {**options, "schema": schema}, compiled)
                 references.extend(
                     db.execute(
                         "SELECT fk.name AS coordinated_constraint_name, "
@@ -321,7 +324,7 @@ def prepare_constraint_tables(
             for name, child_schema, child in references:
                 if (child_schema, child) not in owned:
                     raise ShapeError(
-                        f"cannot truncate: external foreign key {name!r} must be preserved"
+                        f"cannot {rerun_mode}: external foreign key {name!r} must be preserved"
                     )
             if references:
                 name = references[0][0]
@@ -338,7 +341,28 @@ def prepare_constraint_tables(
                         f"foreign key {name!r}: coordinated truncate requires a transaction"
                     )
                 for table, sname, _, _, _, _ in reversed(plans):
-                    db.execute("DELETE FROM " + _tsql.qualified(sname, table))
+                    db.execute(
+                        ("DROP TABLE " if rerun_mode == "replace" else "DELETE FROM ")
+                        + _tsql.qualified(sname, table)
+                    )
+                if rerun_mode == "replace":
+                    for table, sname, _, schema, options, compiled in plans:
+                        db.ddl(
+                            _tsql.create_table_sql(
+                                sname,
+                                table,
+                                schema,
+                                warehouse=False,
+                                columns=options.get("columns"),
+                                primary_key=options.get("primary_key") or (),
+                                constraint_ddl=compiled,
+                            )
+                        )
+                        for clause in compiled.after_create:
+                            db.ddl(f"ALTER TABLE {_tsql.qualified(sname, table)} ADD {clause}")
+                    for table, sname, _, _, _, compiled in plans:
+                        for clause in compiled.foreign_keys:
+                            db.ddl(f"ALTER TABLE {_tsql.qualified(sname, table)} ADD {clause}")
                 return _PreparedTransaction(db.get(), owns_connection=db._injected is None)
         foreign: list[tuple[str, str, ConstraintDDL]] = []
         for table, sname, mode, schema, options, compiled in plans:
@@ -391,12 +415,12 @@ def prepare_table(
     rows, and a rollback brings the old rows back (#429). A table that did not exist is created
     and committed on its own. Returns whether this call committed a new table, which
     :func:`undo` drops again after a failure."""
-    db.ensure_schema(schema_name)
     exists = db.table_exists(schema_name, table)
     if prepared_constraints is _PREPARED_CONSTRAINTS:
         if not exists:
             raise ShapeError(f"prepared table {table!r} is missing before loading")
         return False
+    db.ensure_schema(schema_name)
     if (
         exists
         and mode != "replace"

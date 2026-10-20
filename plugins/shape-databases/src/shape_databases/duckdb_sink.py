@@ -540,8 +540,11 @@ class DuckDbSink:
                     for item in options.get(kind, [])
                 ]
                 if "unique" in str(exc).lower():
+                    from shape.generation.write_constraints import unique_constraint_name
+
                     names.extend(
-                        f"uq_{table}_{index}" for index, _ in enumerate(options.get("unique", []))
+                        unique_constraint_name(table, index, "duckdb")
+                        for index, _ in enumerate(options.get("unique", []))
                     )
                 named = (
                     "; configured constraints: " + ", ".join(names)

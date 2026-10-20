@@ -209,3 +209,16 @@ def test_script_sink_writes_constraints_and_notes_in_their_phases(tmp_path, dial
         assert "CHECK (" not in text
     else:
         assert "ck_amount" in text and "DEFAULT 1.25" in text
+
+
+@pytest.mark.parametrize(
+    "dialect,table", [("postgres", "é" * 31), ("mysql", "x" * 64), ("tsql", "x" * 128)]
+)
+def test_generated_unique_names_fit_identifier_limit_and_are_stable(dialect, table):
+    from shape.generation.write_constraints import compile_constraints
+
+    result = compile_constraints({"unique": [["id"]]}, columns=["id"], table=table, dialect=dialect)
+    assert result == compile_constraints(
+        {"unique": [["id"]]}, columns=["id"], table=table, dialect=dialect
+    )
+    assert "UNIQUE" in result.definitions[0]

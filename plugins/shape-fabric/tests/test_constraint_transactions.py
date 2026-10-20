@@ -34,8 +34,9 @@ def engine(start):
     return Engine(schema, row_counts={"parent": 3, "child": 3}, chunk_rows=2)
 
 
+@pytest.mark.parametrize("mode", ["truncate", "replace"])
 @pytest.mark.parametrize("fail", [False, True])
-def test_owned_truncate_transaction(monkeypatch, fail):
+def test_owned_truncate_transaction(monkeypatch, fail, mode):
     server = FakeSqlServer()
     sink = SqlServerSink(connect=server.connect)
     monkeypatch.setattr("shape.io.targets.sink_for_target", lambda uri: ("sqlserver", sink))
@@ -56,14 +57,14 @@ def test_owned_truncate_transaction(monkeypatch, fail):
     monkeypatch.setattr(replacement, "iter_chunks", batches)
     if fail:
         with pytest.raises(WriteError, match="fk_child_parent") as error:
-            write_targets(replacement, [uri], TargetOptions(write_mode="truncate"))
+            write_targets(replacement, [uri], TargetOptions(write_mode=mode))
         assert planted == [True]
         assert error.value.rows_committed == 0
         assert {name: list(server.rows("dbo", name)) for name in before} == before
     else:
-        write_targets(replacement, [uri], TargetOptions(write_mode="truncate"))
+        write_targets(replacement, [uri], TargetOptions(write_mode=mode))
         assert [row[0] for row in server.rows("dbo", "parent")] == [10, 11, 12]
     current = {name: list(server.rows("dbo", name)) for name in before}
     with pytest.raises(ShapeError, match="fk_child_parent"):
-        write_targets(engine(20), [uri], TargetOptions(write_mode="truncate", commit_rows=1))
+        write_targets(engine(20), [uri], TargetOptions(write_mode=mode, commit_rows=1))
     assert {name: list(server.rows("dbo", name)) for name in before} == current
