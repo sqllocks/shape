@@ -16,9 +16,10 @@ import pyarrow as pa
 import pyarrow.types as pat
 
 from shape.errors import ShapeError
-from shape.io.nested_values import is_nested, validate_json_shape
+from shape.io.nested_values import is_nested as is_nested
 from shape.io.nested_values import json_batch as json_batch
 from shape.io.nested_values import nested_mode as nested_mode
+from shape.io.nested_values import validate_json_shape as validate_json_shape
 
 
 def validate_snowflake_shape(kind: pa.DataType, column: str) -> None:
