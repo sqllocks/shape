@@ -144,3 +144,12 @@ def test_caller_cannot_spoof_duckdb_preparation(tmp_path):
             prepared_constraints=True,
         )
     assert not path.exists()
+
+
+def test_duckdb_unique_failure_names_generated_constraint_and_prior_commits(tmp_path):
+    uri = "duckdb:///" + (tmp_path / "unique.duckdb").as_posix()
+    first = pa.RecordBatch.from_pydict({"id": [1], "code": ["x"]})
+    second = pa.RecordBatch.from_pydict({"id": [2], "code": ["x"]})
+    with pytest.raises(WriteError, match="uq_t_0") as info:
+        DuckDbSink().write(uri, "t", [first, second], unique=[["code"]], commit_rows=1)
+    assert info.value.rows_committed == 1

@@ -21,6 +21,8 @@ from urllib.parse import parse_qs, unquote, urlsplit
 import pyarrow as pa  # type: ignore[import-untyped,unused-ignore]
 import pyarrow.parquet as pq  # type: ignore[import-untyped,unused-ignore]
 
+from ._fake_checks import predicate as check_predicate
+from ._fake_checks import scalar as default_scalar
 from .errors import MissingPluginError, missing_plugin, optional_plugin
 from .eventhouse import EventhouseEmitter
 from .eventstream import EventstreamEmitter
@@ -435,6 +437,7 @@ class SqlTable:
         self.identity_next = 0
         self.primary_key: tuple[str, ...] = ()
         self.constraints: list[SqlConstraint] = []
+        self.defaults: dict[str, Any] = {}
 
     def names(self) -> list[str]:
         return [c[0] for c in self.columns]
@@ -695,17 +698,38 @@ class FakeSqlCursor:
         columns = []
         identity: tuple[str, int, int] | None = None
         primary_key: tuple[str, ...] = ()
+        constraints: list[SqlConstraint] = []
+        defaults: dict[str, Any] = {}
         for line in body.split(",\n"):
             line = line.strip()
             if line.startswith("CONSTRAINT"):
                 pk = re.search(r"PRIMARY KEY (?:NONCLUSTERED )?\(([^)]*)\)", line)
                 if pk and "NOT ENFORCED" not in line:
                     primary_key = tuple(_unbracket(n) for n in re.findall(_NAME, pk.group(1)))
+                check = re.fullmatch(rf"CONSTRAINT {_NAME} CHECK (.+)", line)
+                unique = re.fullmatch(rf"CONSTRAINT {_NAME} UNIQUE \((.+)\)", line)
+                if check:
+                    constraints.append(
+                        SqlConstraint(
+                            _unbracket(check[1]), "check", predicate=check_predicate(check[2])
+                        )
+                    )
+                elif unique:
+                    constraints.append(
+                        SqlConstraint(
+                            _unbracket(unique[1]),
+                            "unique",
+                            tuple(_unbracket(n) for n in re.findall(_NAME, unique[2])),
+                        )
+                    )
                 continue
             col = re.match(rf"{_NAME} (.+?) (NOT NULL|NULL)$", line)
             if not col:
                 raise RuntimeError(f"the fake cannot read the column definition: {line[:60]}")
             sql_type = col.group(2)
+            sql_type, marker, default = sql_type.partition(" DEFAULT ")
+            if marker:
+                defaults[_unbracket(col[1])] = default_scalar(default)
             ident = re.match(r"(.+?) IDENTITY\((\d+), (\d+)\)$", sql_type)
             if ident:
                 sql_type = ident.group(1)
@@ -714,6 +738,8 @@ class FakeSqlCursor:
         table = SqlTable(columns)
         table.identity = identity
         table.primary_key = primary_key
+        table.constraints = constraints
+        table.defaults = defaults
         self.server.tables[(schema, name)] = table
 
     # -- rows ---------------------------------------------------------------------------
@@ -741,10 +767,10 @@ class FakeSqlCursor:
         missing = [n for n in all_names if n not in values]
         if missing:
             nullable = {c[0]: c[2] for c in table.columns}
-            if any(not nullable[n] for n in missing):
+            if any(not nullable[n] and n not in table.defaults for n in missing):
                 raise RuntimeError(f"Cannot insert NULL into column '{missing[0]}'")
             for n in missing:
-                values[n] = None
+                values[n] = table.defaults.get(n)
         full = tuple(values[n] for n in all_names)
         self._check(table, full)
         self._store(key, table, full)
@@ -768,7 +794,7 @@ class FakeSqlCursor:
             if c.disabled:
                 continue
             if self._violates(table, names, c, row):
-                kind = "FOREIGN KEY" if c.kind == "fk" else "CHECK"
+                kind = {"fk": "FOREIGN KEY", "unique": "UNIQUE"}.get(c.kind, "CHECK")
                 raise RuntimeError(
                     f'The INSERT statement conflicted with the {kind} constraint "{c.name}".'
                 )
@@ -776,6 +802,12 @@ class FakeSqlCursor:
     def _violates(
         self, table: SqlTable, names: list[str], c: SqlConstraint, row: tuple[Any, ...]
     ) -> bool:
+        if c.kind == "unique":
+            indexes = [names.index(column) for column in c.columns]
+            return any(
+                tuple(existing[i] for i in indexes) == tuple(row[i] for i in indexes)
+                for existing in table.rows
+            )
         if c.kind == "check":
             assert c.predicate is not None
             return not c.predicate(dict(zip(names, row, strict=True)))
@@ -832,6 +864,33 @@ class FakeSqlCursor:
         self.server.identity_insert = key
 
     def _alter(self, text: str) -> None:
+        foreign = re.fullmatch(
+            rf"ALTER TABLE {_NAME}\.{_NAME} ADD CONSTRAINT {_NAME} FOREIGN KEY \((.+)\) "
+            rf"REFERENCES {_NAME}\.{_NAME} \((.+)\)( NOT ENFORCED)?",
+            text,
+        )
+        if foreign:
+            schema, table, name, columns, parent_schema, parent_table, parent_columns, suffix = (
+                foreign.groups()
+            )
+            child = (_unbracket(schema), _unbracket(table))
+            parent = (_unbracket(parent_schema), _unbracket(parent_table))
+            self._table(*parent)
+            child_table = self._table(*child)
+            if self.server.warehouse:
+                if not suffix:
+                    raise RuntimeError("Warehouse foreign keys require NOT ENFORCED")
+            else:
+                child_table.constraints.append(
+                    SqlConstraint(
+                        _unbracket(name),
+                        "fk",
+                        tuple(_unbracket(n) for n in re.findall(_NAME, columns)),
+                        parent,
+                        tuple(_unbracket(n) for n in re.findall(_NAME, parent_columns)),
+                    )
+                )
+            return
         if self.server.warehouse and " ADD CONSTRAINT " in text:
             match = re.fullmatch(
                 rf"ALTER TABLE {_NAME}\.{_NAME} ADD CONSTRAINT {_NAME} "
@@ -840,9 +899,9 @@ class FakeSqlCursor:
             )
             if match is None:
                 raise RuntimeError("Warehouse keys require NONCLUSTERED NOT ENFORCED")
-            target = self._table(_unbracket(match.group(1)), _unbracket(match.group(2)))
+            key_table = self._table(_unbracket(match.group(1)), _unbracket(match.group(2)))
             names = [_unbracket(n) for n in re.findall(_NAME, match.group(4))]
-            if any(n not in target.names() for n in names):
+            if any(n not in key_table.names() for n in names):
                 raise RuntimeError("a constraint names an unknown column")
             return  # informational only: Warehouse does not enforce uniqueness
         match = re.match(
@@ -1229,7 +1288,17 @@ class FakeIdentity:
         return self
 
 
-def remove_item(api, workspace, kind, name, *, wait=60.0, pause=2.0, clock=None, sleep=None):
+def remove_item(
+    api: Any,
+    workspace: str,
+    kind: str,
+    name: str,
+    *,
+    wait: float = 60.0,
+    pause: float = 2.0,
+    clock: Callable[[], float] | None = None,
+    sleep: Callable[[float], None] | None = None,
+) -> bool:
     """Delete the item ``name`` of ``kind``, waiting up to ``wait`` seconds for it to show in the
     listing. A creation Fabric accepted can be absent from the listing for a moment (or longer
     when the test stopped early); looking once and giving up left six notebooks behind."""

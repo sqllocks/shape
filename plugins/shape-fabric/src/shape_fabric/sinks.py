@@ -40,7 +40,8 @@ from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
+from contextlib import ExitStack, contextmanager
 from typing import Any
 from urllib.parse import parse_qsl, unquote, urlsplit
 
@@ -54,7 +55,7 @@ from .errors import WriteError
 from .eventhouse_writer import EventhouseWriter
 from .eventstream_writer import EventstreamWriter
 from .lakehouse import LakehouseWriter
-from .sqldb import SqlDatabaseWriter, plan_write
+from .sqldb import SqlDatabaseWriter, plan_write, prepare_constraint_tables
 from .synapse import SYNAPSE_HOST, SynapseWriter
 from .warehouse import WarehouseWriter
 
@@ -116,13 +117,48 @@ class LakehouseSink:
         return writer.write_table(table, batches, **keys)
 
 
+def _prepare_constraints(sink: Any, uri: str, tables: Mapping[str, Mapping[str, Any]]) -> None:
+    """Use one lazy SQL connection after all destination options and DDL are validated."""
+    with ExitStack() as stack:
+        planned: dict[str, dict[str, Any]] = {}
+        connection: Any = None
+        first: Any = None
+        for logical, options in tables.items():
+            given = dict(options)
+            given.pop("first_batch", None)
+            table = _prefixed_table(logical, given)
+            writer, write_options = stack.enter_context(sink._constraint_writer(uri, given))
+            db = writer.db
+            identity = (db.connection_string, db._injected, db._credential, db._connect)
+            if first is None:
+                first, connection = identity, db
+            elif identity != first:
+                raise ShapeError(
+                    "constraint preparation needs the same connection options for every table"
+                )
+            if table in planned:
+                raise ShapeError(f"duplicate constraint target {table!r}")
+            planned[table] = {**write_options, "schema_name": writer.schema_name}
+        if connection is not None:
+            prepare_constraint_tables(connection, planned)
+
+
 class SqlDatabaseSink:
     name = "sql-database"
     schemes = ("sql-database",)
 
+    prepare_constraints = _prepare_constraints
+
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
         table = _prefixed_table(table, opts)
+        with self._constraint_writer(uri, opts) as (writer, keys):
+            return writer.write_table(table, batches, **keys)
+
+    @contextmanager
+    def _constraint_writer(
+        self, uri: str, opts: dict[str, Any]
+    ) -> Iterator[tuple[SqlDatabaseWriter, dict[str, Any]]]:
         conn = connection_string_for(uri, opts, "sql-database")
         with SqlDatabaseWriter(
             conn,
@@ -130,18 +166,42 @@ class SqlDatabaseSink:
             connection=opts.pop("connection", None),
             schema_name=opts.pop("schema_name", "dbo"),
         ) as writer:
-            keys = _take(opts, ("write_mode", "batch_size", "columns", "primary_key", "schema"))
+            keys = _take(
+                opts,
+                (
+                    "write_mode",
+                    "batch_size",
+                    "commit_rows",
+                    "columns",
+                    "primary_key",
+                    "schema",
+                    "foreign_keys",
+                    "unique",
+                    "checks",
+                    "defaults",
+                    "prepared_constraints",
+                ),
+            )
             _unknown(self.name, opts)
-            return writer.write_table(table, batches, **keys)
+            yield writer, keys
 
 
 class WarehouseSink:
     name = "warehouse"
     schemes = ("warehouse",)
 
+    prepare_constraints = _prepare_constraints
+
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
         table = _prefixed_table(table, opts)
+        with self._constraint_writer(uri, opts) as (writer, keys):
+            return writer.write_table(table, batches, **keys)
+
+    @contextmanager
+    def _constraint_writer(
+        self, uri: str, opts: dict[str, Any]
+    ) -> Iterator[tuple[WarehouseWriter, dict[str, Any]]]:
         conn = connection_string_for(uri, opts, "warehouse")
         with WarehouseWriter(
             conn,
@@ -151,9 +211,23 @@ class WarehouseSink:
             filesystem=opts.pop("filesystem", None),
             schema_name=opts.pop("schema_name", "dbo"),
         ) as writer:
-            keys = _take(opts, ("write_mode", "chunk_rows", "columns", "primary_key", "schema"))
+            keys = _take(
+                opts,
+                (
+                    "write_mode",
+                    "chunk_rows",
+                    "columns",
+                    "primary_key",
+                    "schema",
+                    "foreign_keys",
+                    "unique",
+                    "checks",
+                    "defaults",
+                    "prepared_constraints",
+                ),
+            )
             _unknown(self.name, opts)
-            return writer.write_table(table, batches, **keys)
+            yield writer, keys
 
 
 class SynapseSink:
@@ -342,6 +416,11 @@ _WRITE_KEYS = (
     "identity",
     "constraints",
     "identity_references",
+    "foreign_keys",
+    "unique",
+    "checks",
+    "defaults",
+    "prepared_constraints",
 )
 
 
@@ -458,6 +537,18 @@ class SqlServerSink:
     def _write(
         self, uri: str, table: str, batches: Iterable[pa.RecordBatch], opts: dict[str, Any]
     ) -> int:
+        with self._constraint_writer(uri, opts) as (writer, write_opts):
+            log.debug("writing table %r to %s", table, writer.destination)
+            rows = writer.write_table(table, batches, **write_opts)
+            log.debug("wrote %d rows of table %r to %s", rows, table, writer.destination)
+            return rows
+
+    prepare_constraints = _prepare_constraints
+
+    @contextmanager
+    def _constraint_writer(
+        self, uri: str, opts: dict[str, Any]
+    ) -> Iterator[tuple[SqlDatabaseWriter, dict[str, Any]]]:
         credential = opts.pop("credential", None)
         connection = opts.pop("connection", None)
         kerberos = opts.pop("kerberos", None)  # a KerberosSession (--auth kerberos on Linux/macOS)
@@ -495,10 +586,7 @@ class SqlServerSink:
             connect=connect,
             schema_name=str(schema_name or "dbo"),
         ) as writer:
-            log.debug("writing table %r to %s", table, writer.destination)
-            rows = writer.write_table(table, batches, **write_opts)
-            log.debug("wrote %d rows of table %r to %s", rows, table, writer.destination)
-            return rows
+            yield writer, write_opts
 
     def preflight(self, uri: str, tables: Mapping[str, Mapping[str, Any]]) -> None:
         """Refuse an impossible combination of write options for any of ``tables`` (each value is
@@ -607,4 +695,12 @@ def _prefixed_table(table: str, options: dict[str, Any]) -> str:
     prefix = options.pop("table_prefix", "") or ""
     if not isinstance(prefix, str):
         raise ShapeError("table_prefix must be a string")
+    references = options.get("foreign_keys")
+    if prefix and isinstance(references, list):
+        options["foreign_keys"] = [
+            {**reference, "ref_table": prefix + reference["ref_table"]}
+            if isinstance(reference, Mapping) and isinstance(reference.get("ref_table"), str)
+            else reference
+            for reference in references
+        ]
     return prefix + table

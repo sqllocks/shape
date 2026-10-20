@@ -539,6 +539,10 @@ class DuckDbSink:
                     for kind in ("checks", "foreign_keys")
                     for item in options.get(kind, [])
                 ]
+                if "unique" in str(exc).lower():
+                    names.extend(
+                        f"uq_{table}_{index}" for index, _ in enumerate(options.get("unique", []))
+                    )
                 named = (
                     "; configured constraints: " + ", ".join(names)
                     if names and "constraint" in str(exc).lower()

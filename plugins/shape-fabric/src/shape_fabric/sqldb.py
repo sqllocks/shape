@@ -52,6 +52,7 @@ microsoft.com``) is recognised and gets Warehouse types; for bulk loading it use
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -60,6 +61,11 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.generation.write_constraints import (
+    _PREPARED_CONSTRAINTS,
+    ConstraintDDL,
+    compile_constraints,
+)
 
 from . import _tsql
 from .errors import ConstraintError, WriteError, WriteResult
@@ -70,6 +76,7 @@ IDENTITY_MODES = ("keep", "server")
 CONSTRAINT_MODES = ("keep", "disable")
 DEFAULT_BATCH_SIZE = 5000
 DEFAULT_SCHEMA = "dbo"
+log = logging.getLogger(__name__)
 
 
 def check_mode(mode: str) -> str:
@@ -235,6 +242,85 @@ def _peek(
     return next(it, None), it
 
 
+def constraint_plan(
+    schema_name: str,
+    table: str,
+    schema: pa.Schema,
+    warehouse: bool,
+    declarations: Mapping[str, Any],
+) -> ConstraintDDL:
+    try:
+        return compile_constraints(
+            declarations,
+            columns=schema.names,
+            table=table,
+            dialect="tsql-fabric-warehouse" if warehouse else "tsql",
+            schema_name=schema_name,
+            table_prefix=declarations.get("table_prefix") or "",
+        )
+    except ValueError as exc:
+        raise ShapeError(str(exc)) from None
+
+
+def prepare_constraint_tables(db: SqlConnection, tables: Mapping[str, Mapping[str, Any]]) -> None:
+    """Validate the entire load before creating any table, then add all foreign keys."""
+    plans: list[tuple[str, str, str, pa.Schema, Mapping[str, Any], ConstraintDDL]] = []
+    for table, options in tables.items():
+        schema = options.get("schema")
+        if not isinstance(schema, pa.Schema):
+            raise ShapeError(f"table {table!r}: constraint preparation needs an Arrow schema")
+        schema = _tsql.normalize_schema(schema)
+        sname = options.get("schema_name") or DEFAULT_SCHEMA
+        plan = plan_write(
+            table,
+            mode=options.get("write_mode", "create"),
+            identity=options.get("identity", "keep"),
+            constraints=options.get("constraints", "keep"),
+            columns=options.get("columns"),
+            primary_key=options.get("primary_key") or (),
+            identity_references=options.get("identity_references") or (),
+            warehouse=db.warehouse,
+        )
+        compiled = constraint_plan(sname, table, schema, db.warehouse, options)
+        _tsql.create_table_sql(
+            sname,
+            table,
+            schema,
+            warehouse=db.warehouse,
+            columns=options.get("columns"),
+            primary_key=options.get("primary_key") or (),
+            constraint_ddl=compiled,
+        )
+        plans.append((table, sname, plan.mode, schema, options, compiled))
+    try:
+        foreign: list[tuple[str, str, ConstraintDDL]] = []
+        for table, sname, mode, schema, options, compiled in plans:
+            exists = db.table_exists(sname, table)
+            prepare_table(
+                db,
+                sname,
+                table,
+                mode,
+                schema,
+                columns=options.get("columns"),
+                primary_key=options.get("primary_key") or (),
+                constraint_ddl=compiled,
+                defer_foreign_keys=True,
+            )
+            if not exists or mode == "replace":
+                foreign.append((sname, table, compiled))
+        for sname, table, compiled in foreign:
+            for clause in compiled.foreign_keys:
+                db.ddl(f"ALTER TABLE {_tsql.qualified(sname, table)} ADD {clause}")
+        db.commit()
+    except ShapeError:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise WriteError(f"preparing constraints failed: {_tsql.redact(str(exc))}") from None
+
+
 def prepare_table(
     db: SqlConnection,
     schema_name: str,
@@ -245,6 +331,9 @@ def prepare_table(
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
     options: str | None = None,
+    constraint_ddl: ConstraintDDL | None = None,
+    prepared_constraints: Any = None,
+    defer_foreign_keys: bool = False,
 ) -> bool:
     """Make the target ready for ``mode`` (see the module docstring); ``schema`` is normalized.
 
@@ -254,6 +343,24 @@ def prepare_table(
     :func:`undo` drops again after a failure."""
     db.ensure_schema(schema_name)
     exists = db.table_exists(schema_name, table)
+    if prepared_constraints is _PREPARED_CONSTRAINTS:
+        if not exists:
+            raise ShapeError(f"prepared table {table!r} is missing before loading")
+        return False
+    if (
+        exists
+        and mode != "replace"
+        and constraint_ddl
+        and any(
+            (
+                constraint_ddl.definitions,
+                constraint_ddl.foreign_keys,
+                constraint_ddl.defaults,
+                constraint_ddl.after_create,
+            )
+        )
+    ):
+        raise ShapeError(f"existing table {table!r}: requested constraints cannot yet be verified")
     if mode == "create" and exists:
         raise WriteError(
             f"table {schema_name}.{table} already exists; set write_mode to append, truncate "
@@ -282,8 +389,15 @@ def prepare_table(
             columns=columns,
             primary_key=primary_key,
             options=options,
+            constraint_ddl=constraint_ddl,
         )
     )
+    if constraint_ddl:
+        clauses = list(constraint_ddl.after_create)
+        if not defer_foreign_keys:
+            clauses.extend(constraint_ddl.foreign_keys)
+        for clause in clauses:
+            db.ddl(f"ALTER TABLE {_tsql.qualified(schema_name, table)} ADD {clause}")
     if exists:
         return False  # the drop and the new table commit with the rows, or roll back together
     db.commit()
@@ -402,9 +516,16 @@ class SqlDatabaseWriter:
         identity: str = "keep",
         constraints: str = "keep",
         identity_references: Sequence[Mapping[str, str]] = (),
+        foreign_keys: list[dict[str, Any]] | None = None,
+        unique: list[list[str]] | None = None,
+        checks: list[dict[str, Any]] | None = None,
+        defaults: Mapping[str, Any] | None = None,
+        prepared_constraints: Any = None,
     ) -> int:
         """Write one table; return its row count. ``schema`` is needed only to create an
         empty table from no batches."""
+        if prepared_constraints is not None and prepared_constraints is not _PREPARED_CONSTRAINTS:
+            raise ShapeError("prepared_constraints is an internal preparation marker")
         if isinstance(batch_size, bool) or not isinstance(batch_size, int) or batch_size < 1:
             raise ShapeError("batch_size must be a positive integer")
         if commit_rows is not None and (
@@ -438,6 +559,29 @@ class SqlDatabaseWriter:
                 f"table {table!r} has only identity columns: identity=server has no column to "
                 "insert; use identity=keep"
             )
+        declarations = {
+            key: value
+            for key, value in (
+                ("foreign_keys", foreign_keys),
+                ("unique", unique),
+                ("checks", checks),
+                ("defaults", defaults),
+            )
+            if value is not None
+        }
+        compiled = constraint_plan(sname, table, use_schema, self.db.warehouse, declarations)
+        # Complete type and constraint validation runs before the lazy connection opens.
+        _tsql.create_table_sql(
+            sname,
+            table,
+            use_schema,
+            warehouse=self.db.warehouse,
+            columns=columns,
+            primary_key=primary_key,
+            constraint_ddl=compiled,
+        )
+        for note in compiled.notes:
+            log.warning("%s", note)
         created = False
         disabled = False
         db = self.db
@@ -451,6 +595,8 @@ class SqlDatabaseWriter:
                 use_schema,
                 columns=columns,
                 primary_key=primary_key,
+                constraint_ddl=compiled,
+                prepared_constraints=prepared_constraints,
             )
             # a replaced table is new, like one this call created: nothing to disable; a
             # truncate's TRUNCATE (or DELETE) commits with the rows, so NOCHECK does too (#429)
@@ -469,7 +615,11 @@ class SqlDatabaseWriter:
                 self._enable_again(sname, table)
             if isinstance(exc, ShapeError):
                 raise
-            raise WriteError(f"writing {sname}.{table} failed: {_tsql.redact(str(exc))}") from exc
+            kept = f"; {committed[0]} rows were committed before it failed" if committed[0] else ""
+            raise WriteError(
+                f"writing {sname}.{table} failed: {_tsql.redact(str(exc))}{kept}",
+                rows_committed=committed[0],
+            ) from exc
         if disabled:
             self._validate(sname, table)
         return rows

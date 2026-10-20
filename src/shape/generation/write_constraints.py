@@ -163,7 +163,7 @@ def compile_constraints(
             )
         else:
             suffix = " NOT ENFORCED" if dialect == "snowflake" else ""
-            definitions.append(f"UNIQUE ({cols}){suffix}")
+            definitions.append(f"CONSTRAINT {name(f'uq_{table}_{index}')} UNIQUE ({cols}){suffix}")
     for check in items("checks"):
         if not isinstance(check, Mapping) or set(check) != {"name", "expression"}:
             raise ValueError("a CHECK requires only name and a structured expression")
