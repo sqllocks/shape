@@ -76,7 +76,11 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.types as pat  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
-from shape.generation.write_constraints import ConstraintDDL, compile_constraints
+from shape.generation.write_constraints import (
+    _PREPARED_CONSTRAINTS,
+    ConstraintDDL,
+    compile_constraints,
+)
 
 from . import _sql
 from ._base import as_int, as_text, one_of, parse_uri
@@ -413,6 +417,11 @@ class DuckDbSink:
                     con.close()
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        if (
+            "prepared_constraints" in options
+            and options["prepared_constraints"] is not _PREPARED_CONSTRAINTS
+        ):
+            raise ShapeError("prepared_constraints is an internal preparation marker")
         path, query = _file_path(uri, self.uri_params)
         nested = nested_mode(options.get("nested", query.get("nested", "native")))
         mode = options.get("write_mode", query.get("write_mode", "create"))
@@ -654,7 +663,7 @@ class DuckDbSink:
     ) -> None:
         name = _qualified(schema_name, table)
         exists = self._exists(con, schema_name, table)
-        if options.get("prepared_constraints"):
+        if options.get("prepared_constraints") is _PREPARED_CONSTRAINTS:
             if not exists:
                 raise ShapeError(f"prepared table {table!r} is missing before loading")
             return

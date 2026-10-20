@@ -15,6 +15,9 @@ from typing import Any
 from shape.generation.sql_constraints import render_expression
 from shape.security.sqltext import check_identifier, postgres_text, tsql_text
 
+# Only the in-process generation coordinator may bypass preparation on a later load.
+_PREPARED_CONSTRAINTS = object()
+
 _DIALECTS = {
     "postgres",
     "mysql",

@@ -6,6 +6,7 @@ import pytest
 from shape_databases import DuckDbSink, WriteError
 
 from shape.errors import ShapeError
+from shape.generation.write_constraints import _PREPARED_CONSTRAINTS
 
 
 def relation():
@@ -65,14 +66,14 @@ def test_prepare_parent_first_inline_constraints_before_rows(tmp_path):
         "parent",
         [pa.RecordBatch.from_pydict({"id": [1]})],
         **declarations["parent"],
-        prepared_constraints=True,
+        prepared_constraints=_PREPARED_CONSTRAINTS,
     )
     sink.write(
         uri,
         "child",
         [pa.RecordBatch.from_pydict({"id": [1], "parent_id": [1], "amount": [4]})],
         **declarations["child"],
-        prepared_constraints=True,
+        prepared_constraints=_PREPARED_CONSTRAINTS,
     )
     with duckdb.connect(str(path)) as con:
         con.execute("INSERT INTO child (id, parent_id) VALUES (2, NULL)")
@@ -130,3 +131,16 @@ def test_matching_duckdb_checks_defaults_allow_append_and_changed_check_refuses(
         sink.write(uri, "child", [first], write_mode="truncate", **options)
     with duckdb.connect(str(path)) as con:
         assert con.execute("SELECT id FROM child ORDER BY id").fetchall() == [(1,), (2,)]
+
+
+def test_caller_cannot_spoof_duckdb_preparation(tmp_path):
+    path = tmp_path / "spoof.duckdb"
+    with pytest.raises(ShapeError, match="internal"):
+        DuckDbSink().write(
+            "duckdb:///" + path.as_posix(),
+            "t",
+            [],
+            schema=pa.schema([("id", pa.int64())]),
+            prepared_constraints=True,
+        )
+    assert not path.exists()

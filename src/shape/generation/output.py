@@ -781,7 +781,9 @@ def write_targets(
             if schema is not None:
                 opts["schema"] = schema
             if i in preparing:
-                opts["prepared_constraints"] = True
+                from shape.generation.write_constraints import _PREPARED_CONSTRAINTS
+
+                opts["prepared_constraints"] = _PREPARED_CONSTRAINTS
             finished = threading.Event()
             try:
                 counts[i] = _feed(sink, uri, name, queues[i], opts, finished)

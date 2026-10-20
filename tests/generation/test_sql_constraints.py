@@ -6,6 +6,7 @@ import pytest
 
 from shape.generation.output import TargetOptions, sql_options
 from shape.generation.schema import BusinessRule, Column, GenSchema, Model, Relationship, Table
+from shape.generation.write_constraints import _PREPARED_CONSTRAINTS
 
 
 def schema():
@@ -346,7 +347,7 @@ def test_constraint_preparation_precedes_parent_first_data_and_buffers_one_batch
 
         def write(self, uri, table, batches, **options):
             assert prepared.is_set()
-            assert options["prepared_constraints"] is True
+            assert options["prepared_constraints"] is _PREPARED_CONSTRAINTS
             if table == "child":
                 assert events[-1] == "parent", "child loaded before parent completed"
             events.append(table)

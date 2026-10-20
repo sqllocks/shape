@@ -5,6 +5,7 @@ import pytest
 from shape_databases import WriteError
 
 from shape.errors import ShapeError
+from shape.generation.write_constraints import _PREPARED_CONSTRAINTS
 
 
 def batch():
@@ -76,7 +77,10 @@ def test_prepare_all_creates_both_tables_then_fk_before_any_data(flavour):
     for table in ["parent", "child"]:
         opts = options | (declarations() | {"foreign_keys": foreign()} if table == "child" else {})
         opts.pop("first_batch")
-        assert sink.write(uri, table, [batch()], prepared_constraints=True, **opts) == 1
+        assert (
+            sink.write(uri, table, [batch()], prepared_constraints=_PREPARED_CONSTRAINTS, **opts)
+            == 1
+        )
     assert len([sql for sql in server.statements() if sql.startswith("CREATE TABLE")]) == 2
 
 
@@ -161,3 +165,10 @@ def test_referenced_table_refusal_names_constraint_and_preserves_rows(flavour, m
         sink.write(uri, "parent", [rows], write_mode=mode)
     assert server.rows("parent") == [(1,)]
     assert not any(sql.startswith(("DROP TABLE", "TRUNCATE")) for sql in server.statements())
+
+
+def test_caller_cannot_spoof_prepared_constraints(flavour):
+    sink, uri, server = flavour
+    with pytest.raises(ShapeError, match="internal"):
+        sink.write(uri, "child", [batch()], prepared_constraints=True)
+    assert server.events == []

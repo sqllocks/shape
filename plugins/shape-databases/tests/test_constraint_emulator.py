@@ -7,6 +7,8 @@ import pyarrow as pa
 import pytest
 from shape_databases import MySqlSink, PostgresSink, WriteError
 
+from shape.generation.write_constraints import _PREPARED_CONSTRAINTS
+
 pytestmark = pytest.mark.emulator
 
 
@@ -93,11 +95,18 @@ def test_actual_foreign_unique_check_default_and_partial_commit(database):
             parent,
             [pa.RecordBatch.from_pydict({"id": [1]})],
             primary_key=["id"],
-            prepared_constraints=True,
+            prepared_constraints=_PREPARED_CONSTRAINTS,
         )
         invalid = pa.RecordBatch.from_pydict({"id": [1, 2], "parent_id": [1, 1], "amount": [3, -1]})
         with pytest.raises(WriteError, match=check_name) as info:
-            sink.write(uri, child, [invalid], **options, prepared_constraints=True, commit_rows=1)
+            sink.write(
+                uri,
+                child,
+                [invalid],
+                **options,
+                prepared_constraints=_PREPARED_CONSTRAINTS,
+                commit_rows=1,
+            )
         assert info.value.rows_committed == 1
         assert execute(conn, f"SELECT COUNT(*) FROM {quote(child, dialect)}")[0][0] == 1
         with pytest.raises(WriteError, match=foreign_name):
@@ -106,7 +115,7 @@ def test_actual_foreign_unique_check_default_and_partial_commit(database):
                 child,
                 [pa.RecordBatch.from_pydict({"id": [3], "parent_id": [999], "amount": [2]})],
                 **options,
-                prepared_constraints=True,
+                prepared_constraints=_PREPARED_CONSTRAINTS,
             )
         with pytest.raises(WriteError, match="[Dd]uplicate|[Uu]nique"):
             sink.write(
@@ -114,7 +123,7 @@ def test_actual_foreign_unique_check_default_and_partial_commit(database):
                 child,
                 [pa.RecordBatch.from_pydict({"id": [1], "parent_id": [1], "amount": [2]})],
                 **options,
-                prepared_constraints=True,
+                prepared_constraints=_PREPARED_CONSTRAINTS,
             )
         execute(
             conn,

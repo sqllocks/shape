@@ -26,7 +26,11 @@ from urllib.parse import parse_qsl, unquote, urlsplit
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
-from shape.generation.write_constraints import ConstraintDDL, compile_constraints
+from shape.generation.write_constraints import (
+    _PREPARED_CONSTRAINTS,
+    ConstraintDDL,
+    compile_constraints,
+)
 
 from . import _sql
 from ._auth import Secret, resolve_password, scrub
@@ -303,6 +307,11 @@ class DatabaseSink:
         )
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        if (
+            "prepared_constraints" in options
+            and options["prepared_constraints"] is not _PREPARED_CONSTRAINTS
+        ):
+            raise ShapeError("prepared_constraints is an internal preparation marker")
         plan = self.plan(uri, table, options)
         first, rest = self._peek(batches, plan)
         use_schema = first.schema if first is not None else plan.schema
@@ -417,7 +426,7 @@ class DatabaseSink:
         cur = conn.cursor()
         try:
             exists = self._exists(conn, plan)
-            if plan.options.get("prepared_constraints"):
+            if plan.options.get("prepared_constraints") is _PREPARED_CONSTRAINTS:
                 if not exists:
                     raise ShapeError(f"prepared table {plan.table!r} is missing before loading")
                 return False
