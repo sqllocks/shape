@@ -47,6 +47,10 @@ snowflake = "shape_databases:SnowflakeSink"
 databricks = "shape_databases:DatabricksSink"
 duckdb = "shape_databases:DuckDbSink"
 
+[project.entry-points."shape.sources"]
+snowflake = "shape_databases.cloud_readers:SnowflakeSource"
+databricks = "shape_databases.cloud_readers:DatabricksSource"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

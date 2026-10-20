@@ -1359,7 +1359,9 @@ There is no second implementation: a command calls what the matching command lin
 The bridge speaks over standard input and output and does what its caller asks with the
 permissions of its process: it reads and writes the paths a request names, as given. Run it with
 the permissions you would give the program that drives it. It opens no network connection of its
-own, except to Fabric for a `fabric_spark` run you ask for. A credential is read from the request
+own, except to Fabric for a `fabric_spark` run you ask for and when `profile` receives a
+database URI. Snowflake and Databricks SQL warehouse URIs use the databases plugin's catalog
+and bounded-sample source, including declared keys and sampling metadata. A credential is read from the request
 or the environment when a command needs it and is never written to a job file, a result or a
 log. Job files and spilled results are created with mode `0600` in a `0700` directory.
 

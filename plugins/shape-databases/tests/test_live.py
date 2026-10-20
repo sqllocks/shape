@@ -96,3 +96,34 @@ def test_snowflake_round_trip():
 def test_databricks_round_trip():
     (uri, _) = need("SHAPE_TEST_DATABRICKS_URI", "DATABRICKS_TOKEN")
     _round_trip(DatabricksSink(), uri, {})
+
+
+def _source_round_trip(source, sink, uri, options):
+    table = f"shape_source_{uuid.uuid4().hex[:8]}"
+    expected = pa.table({"id": pa.array([1, 2, 3], type=pa.int32())})
+    try:
+        assert sink.write(uri, table, iter(expected.to_batches()), **options) == 3
+        actual = pa.Table.from_batches(list(source.read(uri + "&table=" + table, **options)))
+        assert sorted(actual.column("id").to_pylist()) == [1, 2, 3]
+        assert actual.schema.field("id").type == pa.int32()
+    finally:
+        _drop(sink, uri, table, options)
+
+
+def test_snowflake_source_round_trip():
+    from shape_databases.cloud_readers import SnowflakeSource
+
+    (uri,) = need("SHAPE_TEST_SNOWFLAKE_URI")
+    options = {}
+    if os.environ.get("SHAPE_TEST_SNOWFLAKE_PRIVATE_KEY"):
+        options["private_key"] = os.environ["SHAPE_TEST_SNOWFLAKE_PRIVATE_KEY"]
+    else:
+        need("SNOWFLAKE_PASSWORD")
+    _source_round_trip(SnowflakeSource(), SnowflakeSink(), uri, options)
+
+
+def test_databricks_source_round_trip():
+    from shape_databases.cloud_readers import DatabricksSource
+
+    (uri, _) = need("SHAPE_TEST_DATABRICKS_URI", "DATABRICKS_TOKEN")
+    _source_round_trip(DatabricksSource(), DatabricksSink(), uri, {})
