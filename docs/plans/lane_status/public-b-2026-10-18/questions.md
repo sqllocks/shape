@@ -6,15 +6,15 @@
 
 The error-category registry in [PR42](https://github.com/sqllocks/shape/pull/42) names `profile:edge/x_pq_list.parquet` and `profile:edge/x_pq_nested.parquet`, both recorded TypeError with no result values. Both are separate NOT COMPARABLE results and never pass/timing credit. Targeted red/green and independent review are recorded in its lane. #6 is implemented in [PR43](https://github.com/sqllocks/shape/pull/43), independently approved, with Wanted5 using that category; it depends on PR42 landing and combined current-main checks.
 
-## #20 generation names — ACTIVE under existing approval
+## #20 generation names — IMPLEMENTED under existing approval
 
 Earlier parking of both generation workloads was too broad. Independent reassessment confirms all14 known generation flags are categorical vocabulary/TVD or record-coherence checks on deliberately renamed reference labels. Code-shaped strings can be reference-category names; the approved fixed-name normalization need not alter any numeric value or observation.
 
-Author formats_recover is implementing tests-first fixed field/domain-scoped bijections for `generate:capital_markets:medium` and `generate:healthcare:medium`. Reviewer frz_review requires authenticated original/new reference provenance and exact stable-ID/procedure-ordinal lineage, never pairing by generated frequencies, numeric charge similarity or generated output order. Preserve every row, null, count, probability, numeric charge, seed and threshold; recompute the existing checks, including code-description/charge association and corruption negatives. No clinical/taxonomy semantic-equivalence claim. Both actual generation workloads now pass fullclausesa-f (healthcare80/80columns; capital64/64), with original five seed digests authenticated. Prior verifier reproduces14flags on identical outputs. No new Owner decision is needed just to implement permitted name aliases.
+PR42 implements tests-first fixed field/domain-scoped bijections for `generate:capital_markets:medium` and `generate:healthcare:medium`. Reviewer frz_review requires authenticated original/new reference provenance and exact stable-ID/procedure-ordinal lineage, never pairing by generated frequencies, numeric charge similarity or generated output order. Preserve every row, null, count, probability, numeric charge, seed and threshold; recompute the existing checks, including code-description/charge association and corruption negatives. No clinical/taxonomy semantic-equivalence claim. Both actual generation workloads now pass fullclausesa-f (healthcare80/80columns; capital64/64), with original five seed digests authenticated. Prior verifier reproduces14flags on identical outputs. No new Owner decision is needed just to implement permitted name aliases.
 
 Root located `/workspace/shape-history/.venv/bin/python` (Shape0.9.1, Arrow26). Its three relevant reference IPC blobs equal recorded-release commitd09731e exactly; use authenticated identical pools only, without claiming the whole environment matches the frozen recording environment. Do not alter that history environment or re-record.
 
-## #20 time-only context — ACTIVE after provenance reconstruction
+## #20 time-only context — IMPLEMENTED after provenance reconstruction
 
 Earlier parking relied on incomplete capture context and is superseded. Git history for recorded/MANIFEST.json identifies original capture run38332677511 from head e41a67eab08beed36804bf3a84db83fb7f2595f6. GitHub job115085741837 records the entire full-capture step on2026-10-13,01:47:38Z–02:17:06Z. Authenticated manifest recorded_utc is01:47:50Z, while local machine.started is also01:47:50. Original workflow uses ubuntu-latest without timezone override; recorder workers inherit that environment without TZ/tzset manipulation. The complete same-day execution window establishes date context independently of the expected histogram.
 
@@ -24,7 +24,7 @@ Both actual time-only fixtures now pass every original comparison, exit0/0mismat
 
 ## #14 merged source dependency — PARKED
 
-Owner reconfirms Oct9 decision: check `0 <= scale <= precision` BEFORE connecting and name the column. No new decimal decision is pending. Reuse W9-01 source catalog/sampling interface only after [PR35](https://github.com/sqllocks/shape/pull/35) merges into main; it remains open at latest22:18 read. Decision journal signed/pushed58966e0; no current implementation. Start fresh lane/W9-13-finish from THEN main, without importing the old journal branch's unmerged Lead A history. Lead A branches/issues were not inspected or modified.
+Owner reconfirms Oct9 decision: check `0 <= scale <= precision` BEFORE connecting and name the column. No new decimal decision is pending. Reuse W9-01 source catalog/sampling interface only after [PR35](https://github.com/sqllocks/shape/pull/35) merges into main; it remains open at latest23:22 read. Decision journal signed/pushed58966e0; no current implementation. Start fresh lane/W9-13-finish from THEN main, without importing the old journal branch's unmerged Lead A history. Lead A ownership was respected; no branch or issue was modified.
 
 Options: wait for merged interface or authorize an explicit scope/interface change. Recommendation: wait and reuse main; do not design a parallel source model. [Issue clarification](https://github.com/sqllocks/shape/issues/14#issuecomment-6299575080).
 

@@ -9,12 +9,12 @@ Nine assigned issues: one merged (11.1%), seven ready/reviewed implementations (
 | Issue | Status | PR | Merge SHA |
 |---|---|---|---|
 | #9 Kafka/Event Hubs metadata | Merged | [32](https://github.com/sqllocks/shape/pull/32) | `35addfc4c310b85a62cbe7f315e1d50fb8e426f8` |
-| #10 Kafka/Event Hubs formats | Implemented, ready, independently approved; CI hold pending shared repair | [34](https://github.com/sqllocks/shape/pull/34) | None |
-| #11 dbt | Implemented, ready, independently approved; CI hold pending shared repair | [29](https://github.com/sqllocks/shape/pull/29) | None |
-| #12 Eventhouse | Implemented, ready, independently approved; CI hold pending shared repair | [30](https://github.com/sqllocks/shape/pull/30) | None |
-| #13 Semantic measures/roles | Implemented, ready, independently approved; CI hold pending shared repair | [33](https://github.com/sqllocks/shape/pull/33) | None |
-| #17 Iceberg | Implemented, ready, independently approved; both current-head Windows core jobs passed; shared repair still required | [31](https://github.com/sqllocks/shape/pull/31) | None |
-| #6 Nested profiling | Active compatibility repair after Windows3.14 CI failure; prior source review stands but corrected head needs new review/CI; depends on PR42 | [43](https://github.com/sqllocks/shape/pull/43) | None |
+| #10 Kafka/Event Hubs formats | Implemented, ready, independently approved; exact-head CI running | [34](https://github.com/sqllocks/shape/pull/34) | None |
+| #11 dbt | Implemented, ready, independently approved; exact-head CI running | [29](https://github.com/sqllocks/shape/pull/29) | None |
+| #12 Eventhouse | Implemented, ready, independently approved; exact-head CI running | [30](https://github.com/sqllocks/shape/pull/30) | None |
+| #13 Semantic measures/roles | Implemented, ready, independently approved; exact-head CI running | [33](https://github.com/sqllocks/shape/pull/33) | None |
+| #17 Iceberg | Implemented, ready, independently approved; prior Windows repair passed both versions; current core/Wheels held for next main refresh | [31](https://github.com/sqllocks/shape/pull/31) | None |
+| #6 Nested profiling | Compatibility repair complete at5ae6460, independently approved; fresh CI queued; depends on PR42 | [43](https://github.com/sqllocks/shape/pull/43) | None |
 | #14 BigQuery | Parked: source interface dependency absent from main | None | None |
 | #20 Frozen comparison | Complete three-part fix ready and independently approved; all four value workloads pass; CI/merge/Nightly pending | [42](https://github.com/sqllocks/shape/pull/42) | None |
 
@@ -56,7 +56,7 @@ Merged-head main workflows all completed successfully:
 
 [PR40](https://github.com/sqllocks/shape/pull/40) merged as `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` after independent exact-head approval and all four triggered workflows passed (30 successful jobs; conditional documentation publish skip only). Source-head green links and targeted red/green are in CI-runtime-repair.md. The new main's full gate remains pending; its security/build checks passed.
 
-All seven open lanes were refreshed, signed/pushed and independently approved. Current exact heads are in state.md. Root deliberately canceled lower-priority31 coreCI/Wheels and34 coreCI to release hosted runner slots for first group29/30/33; these are NOT passes and must rerun after next main refresh. Other fresh gates are queued/running, with no observed failure. Merge whichever first-group member is fully green/current/reviewed first; then refresh other lanes, then34/31, then42/43, then14 after35/main interface. No local fulls. Product-code conflict refreshes require only targeted tests.
+All seven open lanes were refreshed, signed/pushed and independently approved. Current exact heads are in state.md. Root deliberately canceled lower-priority31 coreCI/Wheels and34 coreCI to release hosted runner slots for first group29/30/33; these are NOT passes and must rerun after next main refresh. Other fresh gates are queued/running. PR43 had a genuine compatibility failure on the superseded66ace head, repaired and independently approved at5ae6460; fresh CI is required. Merge whichever first-group member is fully green/current/reviewed first; then refresh other lanes, then34/31, then42/43, then14 after35/main interface. No local fulls. Product-code conflict refreshes require only targeted tests.
 
 PR42 at `0b95d31a7f70fcaa2c399b1ff121420b66eb0113` implements recorded-error classification, authenticated name aliases and scoped pre-computation capture-date replay. No original recording/manifest/fixture/numeric value or threshold changed. Reviewer frz_review approved complete exact source. All four previous value failures pass targeted acceptance; final138tests pass eachkernel and static checks pass. It uses Refs20; no closure or main Nightly pass is claimed. PR43 still depends on42 landing and combined exact-head/main checks.
 
@@ -77,6 +77,6 @@ Only #14 remains dependency-blocked: PR35 must merge before reusing W9-01's sour
 
 All owned local implementation commits are pushed. Current branch heads/reviews/next actions are in state.md. Lead A branches/issues and Premium were not modified. This report remains INTERIM while active merge gates run.
 
-PR43 update: Windows3.14 job118909326600 failed in existing nested generation/diff/CLI compatibility tests. Targeted reproduction16failed/92passed; author repairing scalar type traversal, legacy length naming and safe-profile generation defaults, with independent privacy review and no assertion/redaction weakening. Main and first merge group have no observed failure. This is an active implementation repair, not a newly parked issue or completed gate.
+PR43 superseded-head failure: Windows3.14 job118909326600 failed in existing nested generation/diff/CLI compatibility tests; targeted reproduction16failed/92passed. The reviewed repair is described below. Main and the first merge group have no observed failure.
 
 PR43 compatibility repair signed/pushed5ae6460db5f2ce0ee06070434104b71745a63523 and independently APPROVED by frz_resume_review. Targeted16red→170green eachkernel;183changed consumers,24scalar cases and2snapshot/merge cases green; static/mypy705/wording clean. Fixedwidth-only internal exact/HLL support preserves actual distinct statistics without exposing surrogates; legacy length names restored; incomplete safe length models use existing public defaults1–3 without reconstructing private extrema. Fresh exact-head CI and42 dependency remain gates.
