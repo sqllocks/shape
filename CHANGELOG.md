@@ -6,6 +6,9 @@ Status: available.
 
 ## Unreleased
 
+- PostgreSQL sources retain native array element types, and Databricks sources parse declared
+  recursive catalog types. Source URIs refuse writer-only nested options before connecting.
+
 - Delta adds `nested=json` for explicit JSON text storage. Native maps keep their entries
   and normalize nested timestamps to UTC; unsupported nested shapes fail before storage.
 - DuckDB native container roundtrips use the existing read-only Source, with UTC instants.

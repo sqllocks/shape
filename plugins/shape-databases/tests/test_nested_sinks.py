@@ -290,3 +290,35 @@ def test_explicit_legacy_json_option_and_uri_do_not_reach_driver_options(dialect
     connections = [event for event in server.events if event[0] == "connect"]
     assert connections
     assert "nested" not in connections[0][1]
+
+
+def test_postgres_nanosecond_timestamp_array_refused_before_server_precision_loss():
+    sink, uri, server = sink_fixture("postgres")
+    values = pa.array([1767323045123456789], pa.int64()).cast(pa.timestamp("ns", "UTC"))
+    batch = pa.record_batch([pa.ListArray.from_arrays([0, 1], values)], names=["payload"])
+    with pytest.raises(ShapeError, match="payload.*microsecond.*nested=json"):
+        sink.write(uri, "t", [batch])
+    assert not server.events
+
+
+@pytest.mark.parametrize("mode", ["native", "typed", "json"])
+@pytest.mark.parametrize(
+    "kind",
+    [
+        pa.list_(pa.binary()),
+        pa.struct([("blob", pa.binary())]),
+        pa.map_(pa.string(), pa.binary()),
+    ],
+)
+def test_snowflake_nested_binary_requires_explicit_text_encoding_before_connection(mode, kind):
+    sink, uri, server = sink_fixture("snowflake")
+    with pytest.raises(ShapeError, match="payload.*binary.*base64.*string"):
+        sink.write(uri, "t", [], schema=pa.schema([("payload", kind)]), nested=mode)
+    assert not server.events
+
+
+def test_snowflake_parquet_duration_leaf_is_not_silently_relabelled_as_integer():
+    sink, uri, server = sink_fixture("snowflake")
+    with pytest.raises(ShapeError, match="payload.*duration.*JSON string"):
+        sink.write(uri, "t", [], schema=pa.schema([("payload", pa.list_(pa.duration("us")))]))
+    assert not server.events

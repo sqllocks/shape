@@ -43,10 +43,31 @@ def validate_snowflake_shape(kind: pa.DataType, column: str) -> None:
                 "encode the value as a JSON string before writing"
             )
         validate_snowflake_shape(kind.item_type, column)
+    elif pat.is_binary(kind) or pat.is_large_binary(kind) or pat.is_fixed_size_binary(kind):
+        raise ShapeError(
+            f"column {column!r}: nested binary has no verified lossless Snowflake "
+            "Parquet/JSON mapping; preencode base64 values as Arrow strings before writing"
+        )
     elif pat.is_decimal(kind) and (kind.precision > 38 or not 0 <= kind.scale <= kind.precision):
         raise ShapeError(
             f"column {column!r}: Snowflake nested decimals require precision at most 38 "
             "and scale within precision; encode the value as a JSON string before writing"
+        )
+    elif not (
+        pat.is_null(kind)
+        or pat.is_boolean(kind)
+        or pat.is_integer(kind)
+        or pat.is_floating(kind)
+        or pat.is_decimal(kind)
+        or pat.is_string(kind)
+        or pat.is_large_string(kind)
+        or pat.is_date(kind)
+        or pat.is_time(kind)
+        or pat.is_timestamp(kind)
+    ):
+        raise ShapeError(
+            f"column {column!r}: nested leaf {kind} has no supported Snowflake mapping; "
+            "encode the value as a JSON string before writing"
         )
 
 
@@ -200,6 +221,8 @@ def native_type(field: pa.Field, dialect: str) -> str:
         return "DATE"
     if pat.is_timestamp(kind):
         if dialect == "postgres":
+            if kind.unit == "ns":
+                raise _unsupported(field, dialect, "array timestamps have microsecond precision")
             return "TIMESTAMPTZ" if kind.tz else "TIMESTAMP"
         return "TIMESTAMP" if kind.tz else "TIMESTAMP_NTZ"
     if pat.is_time(kind) and dialect == "postgres":

@@ -53,7 +53,8 @@ Snowflake profiles record the warehouse the session actually used in provenance.
 | Snowflake `TIMESTAMP_NTZ`; Databricks `TIMESTAMP_NTZ` | zone-less `timestamp(us)` |
 | Snowflake `TIMESTAMP_TZ` / `TIMESTAMP_LTZ`; Databricks `TIMESTAMP` | `timestamp(us, tz=UTC)` |
 | `DATE` / `TIME` / `BOOLEAN` / `BINARY` | `date32` / `time64(us)` / `bool` / `binary` |
-| Snowflake `VARIANT` / `ARRAY` / `OBJECT`; Databricks `ARRAY` / `STRUCT` / `MAP` | JSON text (`string`) |
+| Snowflake `VARIANT` / `ARRAY` / `OBJECT` | JSON text (`string`) |
+| Databricks `ARRAY` / `STRUCT` / `MAP` | recursive native Arrow types from `full_data_type` |
 
 Catalog nullability and declared primary/foreign keys are retained. Relationships carry
 `evidence: "declared"`, including Snowflake's informational keys. Catalog population row
@@ -183,11 +184,15 @@ connection, with the column's name):
 | `binary`, `large_binary`, `fixed_size_binary` | `BINARY` |
 | `list`, `struct`, `map` | `VARIANT`; `nested=typed` selects `ARRAY` for lists and `OBJECT` for structs/maps |
 
-Timestamps are staged in microseconds (nanoseconds are rounded to them).
+Scalar timestamps are staged in microseconds (nanoseconds are rounded to them).
 Native/typed nested COPY uses `USE_VECTORIZED_SCANNER=TRUE` and logical types to preserve null
 array positions. Parquet object maps require string keys and no duplicate entries; empty
 structs are refused before connecting. Errors name the column and suggest adding fields or
 preencoding a JSON string where the Parquet shape cannot be stored.
+Nested binary requires manually base64-encoding into Arrow strings before writing; its
+Parquet-to-VARIANT binary representation has no verified lossless read-back mapping.
+Top-level binary columns keep their scalar mapping. Other unsupported leaves, including
+durations that Parquet could physically encode as integers, are refused before connecting.
 
 **Transactions and what a failure leaves behind.** Snowflake commits DDL at once. The connection
 runs with `autocommit` off, so the `COPY INTO` is one transaction: a failure rolls the rows back, and
@@ -374,6 +379,8 @@ Python conversion would discard digits. Preencode exact times as Arrow strings f
 `nested=json` also uses Python time values and cannot recover those digits.
 Native Databricks timestamps have microsecond precision; a nested value with nonzero finer
 digits is refused before binding, with `nested=json` as the text-storage alternative.
+PostgreSQL native timestamp array schemas with nanosecond precision are likewise refused;
+JSONB timestamp text and explicit JSON text can retain those extra digits.
 PostgreSQL source array element types come from catalog declarations, including decimal
 scale and timestamp zones, and read as native Arrow lists. Source URIs reject writer-only
 options such as `nested`, `write_mode` and `commit_rows` before connecting.

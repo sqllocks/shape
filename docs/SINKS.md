@@ -327,6 +327,9 @@ Parquet object transport; errors name the column and suggest adding fields or pr
 JSON string. A manually preencoded Arrow string writes as `VARCHAR`; it does not restore a
 native VARIANT/OBJECT automatically. Unsupported Parquet leaves and invalid nested decimal
 precision/scale are also refused before connecting. Duplicate object map keys are refused.
+Nested binary requires manual base64 encoding into Arrow strings before writing: a lossless
+Parquet-to-VARIANT binary read-back mapping has not been verified. This applies to typed
+and legacy modes too; top-level binary columns keep their scalar mapping.
 Live connector validation remains an Owner action.
 
 The explicit `json` mode keeps the earlier text/VARIANT paths: PostgreSQL `TEXT`, MySQL
@@ -335,8 +338,8 @@ JSON text. Delta's explicit `json` mode stores nested columns as UTF-8 JSON text
 Delta maps retain key/value entries and recursively normalize timestamps in map values to
 UTC, using the existing table protocol defaults. Unsupported nested Delta leaves name the
 column and the `nested=json` alternative before storage is accessed.
-Native writes preserve SQL NULL versus empty containers. JSON-backed native columns
-encode decimals as exact text, temporal values as ISO text and binary values as base64; map
+Native writes preserve SQL NULL versus empty containers. PostgreSQL/MySQL JSON values and
+Databricks JSON parameters encode decimals as exact text, temporal values as ISO text and binary values as base64; map
 entries use key/value pairs where the target permits duplicates, and Databricks maps use JSON
 objects. Non-finite numbers are refused by the native JSON transport.
 Nanosecond Arrow time fields cannot cross the PostgreSQL/MySQL Python JSON or array
@@ -344,8 +347,12 @@ transport exactly; these shapes are refused before connecting. Preencode exact t
 as Arrow strings before writing. The JSON fallback also uses Python time values and does
 not recover their discarded nanoseconds. Databricks nested timestamp values with nonzero
 submicroseconds are refused before binding; use JSON text storage to keep their digits.
+PostgreSQL native timestamp arrays likewise require at most microsecond precision;
+nanosecond Arrow timestamp array schemas are refused with the JSON text alternative.
 
-PostgreSQL scalar arrays, DuckDB and Delta have native Arrow read-back types. JSON-backed
+PostgreSQL scalar arrays, Databricks containers, DuckDB and Delta have native Arrow read-back
+types. Databricks child types come from `full_data_type` catalogs, without child profiling.
+JSON-backed
 columns may read as JSON text; restoring their Arrow types requires the original Arrow schema
 from the caller. Automatic child-schema recovery is not promised. Compare parsed values with
 that schema after normalizing map/JSON key order, decimal scale and temporal instants. Corrupt
