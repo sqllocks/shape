@@ -102,3 +102,47 @@ Subsequent commands use /tmp/public-a-run.py and append per-command records.
 | Python setup of `/tmp/public-a-run.py` | 0 | Per-command exit ledger installed outside repository. |
 
 Tools used before shell access: download_file initially failed because workspace was starting; wait_for_environment completed ready; subsequent download_file succeeded. Runtime status/tool-discovery/skill-read calls succeeded. The attachment was read with `cat`, exit 0. These are setup observations, not test results.
+
+- 2026-10-18T16:30:20.506088+00:00 | `git add docs/plans/lane_status/public-a-2026-10-18/ledger.md` | exit 0
+
+- 2026-10-18T16:30:20.905443+00:00 | `git commit -s -m 'chore: expand setup command evidence'` | exit 0
+
+- 2026-10-18T16:30:22.877652+00:00 | `git push origin HEAD` | exit 0
+
+- 2026-10-18T16:30:45.887201+00:00 | `free -h` | exit 0
+
+- 2026-10-18T16:30:46.172445+00:00 | `df -h /workspace` | exit 0
+
+- 2026-10-18T16:30:53.965924+00:00 | `git diff --stat origin/main origin/lane/W9-01` | exit 0
+
+- 2026-10-18T16:30:54.185552+00:00 | `git diff --stat origin/main origin/lane/W9-03` | exit 128
+
+- 2026-10-18T16:31:01.329839+00:00 | `git -C /workspace/public-a-W9-01 diff --stat origin/main` | exit 0
+
+- 2026-10-18T16:31:01.754494+00:00 | `git -C /workspace/public-a-W9-03 diff --stat origin/main` | exit 0
+
+- 2026-10-18T16:31:02.203359+00:00 | `git -C /workspace/public-a-W9-07 diff --stat origin/main` | exit 0
+
+- 2026-10-18T16:31:44.093676+00:00 | `git -C /workspace/public-a-W9-07 diff --numstat origin/main -- docs/specs/requirements.yaml` | exit 0
+
+- 2026-10-18T16:31:44.259696+00:00 | `git -C /workspace/public-a-W9-07 diff -- docs/specs/requirements.yaml` | exit 0
+
+- 2026-10-18T16:32:14.193438+00:00 | `make bootstrap UV=/tmp/public-a-uv/bin/uv` | exit 0
+
+- 2026-10-18T16:32:30.125480+00:00 | `python3 -c 'import subprocess; z=sum(s.startswith("Z") for s in subprocess.check_output(["ps","-eo","stat"],text=True).splitlines()); print("zombies before main make check:",z); assert z<=1000'` | exit 0
+
+- 2026-10-18T16:32:39.330113+00:00 | `sh -c 'umask 022; python3 "$HOME/bin/reap.py" make check UV=/tmp/public-a-uv/bin/uv > /tmp/public-a-main-make-check.log 2>&1; check_status=$?; tail -65 /tmp/public-a-main-make-check.log; python3 -c '"'"'import subprocess; z=sum(s.startswith("Z") for s in subprocess.check_output(["ps","-eo","stat"],text=True).splitlines()); print("zombies after main make check:",z); assert z<=1000'"'"'; exit "$check_status"'` | exit 2
+
+- 2026-10-20T18:25:17.553493+00:00 | `ps -eo stat` | exit 0
+
+- 2026-10-20T18:25:17.616679+00:00 | `df -h /workspace` | exit 0
+
+- 2026-10-20T18:25:18.221102+00:00 | `git fetch origin` | exit 0
+
+- 2026-10-20T18:25:18.326369+00:00 | `python3 -m pip install --target /tmp/public-a-uv uv==0.8.17` | exit 0
+
+- 2026-10-20T18:25:30.472832+00:00 | `make bootstrap UV=/tmp/public-a-uv/bin/uv` | exit 0
+
+- 2026-10-20T18:25:51.676838+00:00 | `python3 -c 'import subprocess; z=sum(s.startswith("Z") for s in subprocess.check_output(["ps","-eo","stat"],text=True).splitlines()); print("zombies before baseline make check:",z); assert z<=1000'` | exit 0
+
+- 2026-10-20T18:26:30.872926+00:00 | `tail -12 /workspace/public-a-evidence/main-make-check.log` | exit 0

@@ -17,6 +17,14 @@ No implementation merged this run. W9-03 alleged signed int8 blocker was already
 
 Existing main Nightly red is assigned to Lead B (#20); no changes made there.
 
-Environment: task-local pinned uv 0.8.17 at /tmp/public-a-uv/bin/uv; root bootstrap running. Every test uses $HOME/bin/reap.py. Initial zombie count 2; observed later 9, below hard stop.
+Environment: task-local pinned uv 0.8.17 at /tmp/public-a-uv/bin/uv; root bootstrap completed 0; resumed bootstrap completed 0 on October 20. Every test uses $HOME/bin/reap.py. Initial zombie count 2; pre-interruption baseline saw 13; resumed environment had 1, below hard stop.
 
 Next: complete baseline setup and verify existing source/type lanes, independent reviews, then PRs and exact-head CI.
+
+## Resume — October 20
+
+Workspace and all five lane worktrees, including uncommitted code, survived. Temporary external uv/logger/test logs were lost. Restored pinned uv and per-command logger; reap.py persisted. Git credential gate again exited 0; main remains d0e64d5. No implementation PR or merge yet.
+
+Assigned resumed agents to W9-01, W9-02, W9-03, W9-04, W9-07 plus independent reviewer. W9-06 and W9-15 await sink/source dependencies. Fresh baseline make check running through subreaper, evidence at /workspace/public-a-evidence/main-make-check.log. Focused pre-interruption results remain provisional until repeated prepared.
+
+Reviewer added credential-redaction malformed-query whitespace/quote regression request to W9-01, alongside canonical sampled sensitivity fix. No issue is parked yet. Continue independently useful lanes while dependent acceptance waits.
