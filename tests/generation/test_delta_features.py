@@ -682,3 +682,75 @@ def test_wanted7_registry_exposes_offline_feature_plan(monkeypatch):
     planned = sink.feature_plan({"deletion_vectors": True})
     assert (planned["min_reader_version"], planned["min_writer_version"]) == (3, 7)
     assert "deletionVectors" in planned["reader_features"]
+
+
+@pytest.mark.parametrize(
+    "key,value",
+    [
+        ("delta.enableChangeDataFeed", "true"),
+        ("delta.enableChangeDataFeed", "false"),
+        ("delta.enableRowTracking", "true"),
+        ("delta.rowTracking.materializedRowIdColumnName", "row_id"),
+        ("delta.universalFormat.enabledFormats", "iceberg"),
+        ("delta.enableIcebergCompatV2", "true"),
+        ("delta.checkpointPolicy", "v2"),
+        ("delta.enableTypeWidening", "true"),
+        ("delta.coordinatedCommits.commitCoordinator-preview", "unity-catalog"),
+        ("delta.enableInCommitTimestamps", "true"),
+        ("delta.futureWriterFeature", "true"),
+        ("DELTA.enableChangeDataFeed", "true"),
+    ],
+)
+def test_wanted1_protocol_properties_require_supported_feature_options(
+    tmp_path, monkeypatch, key, value
+):
+    from shape.builtins.sinks.delta_features import feature_plan
+
+    def no_storage(*args, **kwargs):
+        pytest.fail("out-of-scope properties must be refused before storage")
+
+    options = {"table_properties": {key: value}}
+    with pytest.raises(ValueError, match="table_properties.*writer feature"):
+        feature_plan(options)
+    monkeypatch.setattr(delta, "_location", no_storage)
+    with pytest.raises(ValueError, match="table_properties.*writer feature"):
+        write(tmp_path, **options)
+
+
+def test_wanted1_neutral_properties_keep_advertised_default_protocol(tmp_path):
+    options = {
+        "table_properties": {
+            "owner": "test",
+            "delta.appendOnly": "false",
+            "delta.checkpointInterval": "20",
+            "delta.logRetentionDuration": "interval 30 days",
+        }
+    }
+    planned = delta.feature_plan(options)
+    assert (planned["min_reader_version"], planned["min_writer_version"]) == (1, 2)
+    table = write(tmp_path, **options)
+    assert (table.protocol().min_reader_version, table.protocol().min_writer_version) == (1, 2)
+    assert table.metadata().configuration["owner"] == "test"
+
+
+@pytest.mark.parametrize("mode", ["append", "overwrite"])
+def test_wanted5_existing_plain_table_refuses_new_generated_metadata(tmp_path, mode):
+    original = pa.record_batch({"id": [1], "next_id": [2]})
+    DeltaSink().write(str(tmp_path), "t", [original])
+    before = deltalake.DeltaTable(str(tmp_path / "t")).version()
+    incoming = pa.record_batch({"id": [2], "next_id": [3]})
+    with pytest.raises(ValueError, match="generated_columns.*existing table.*new table"):
+        DeltaSink().write(
+            str(tmp_path),
+            "t",
+            [incoming],
+            mode=mode,
+            generated_columns={"next_id": "id + 1"},
+        )
+    actual = deltalake.DeltaTable(str(tmp_path / "t"))
+    assert actual.version() == before
+    assert read(actual).to_pydict() == original.to_pydict()
+    assert not any(
+        "delta.generationExpression" in field.get("metadata", {})
+        for field in json.loads(actual.schema().to_json())["fields"]
+    )

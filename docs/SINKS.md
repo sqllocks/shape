@@ -328,6 +328,25 @@ The Delta sink's read-only `feature_plan(options)` method returns the minimum
 protocol and feature lists without importing the native writer or opening storage.
 The command-line dry run uses this method through the installed sink plugin.
 
+Custom `table_properties` keys outside the `delta.` namespace are allowed, except
+Shape's reserved fingerprint property. Engine properties are restricted to these
+verified protocol-neutral keys: `delta.appendOnly`, `delta.checkpointInterval`,
+`delta.checkpoint.writeStatsAsJson`, `delta.checkpoint.writeStatsAsStruct`,
+`delta.deletedFileRetentionDuration`, `delta.logRetentionDuration`,
+`delta.setTransactionRetentionDuration`, `delta.dataSkippingNumIndexedCols`,
+`delta.dataSkippingStatsColumns`, `delta.enableExpiredLogCleanup`,
+`delta.targetFileSize`, `delta.randomizeFilePrefixes`, `delta.randomPrefixLength`,
+and `delta.isolationLevel`. The native writer validates their values before a
+requested property reaches the destination. Other engine properties are refused
+before storage opens: use the supported feature options below. This keeps the
+offline protocol plan accurate and prevents properties from enabling unsupported
+change data feed, row tracking, type widening, v2 checkpoints or Iceberg features.
+
+Declare `generated_columns` when creating a new table. Appends retain and enforce
+its existing expressions. Adding or changing generated expressions on an existing
+table is table maintenance and is refused before its version or rows change;
+create a new table with the requested generated columns instead.
+
 | Option | Value and effect | Required protocol |
 |---|---|---|
 | `table_properties` | String-to-string object passed as `configuration` on creation; changed properties are committed after a successful append. Custom properties compose with `shape.fingerprint`. Feature/protocol and fingerprint properties are reserved for their dedicated options. | 1 / 2 for ordinary properties |

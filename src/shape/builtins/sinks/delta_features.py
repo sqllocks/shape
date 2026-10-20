@@ -36,6 +36,26 @@ _RESERVED = (
     "shape.fingerprint",
 )
 _VERIFIED_VERSION = "1.6.6"
+# Delta's property namespace can turn on table features. Only verified protocol-neutral
+# keys belong in this generic map; supported features have explicit, planned opt-ins.
+_NEUTRAL_PROPERTIES = frozenset(
+    {
+        "delta.appendOnly",
+        "delta.checkpointInterval",
+        "delta.checkpoint.writeStatsAsJson",
+        "delta.checkpoint.writeStatsAsStruct",
+        "delta.deletedFileRetentionDuration",
+        "delta.logRetentionDuration",
+        "delta.setTransactionRetentionDuration",
+        "delta.dataSkippingNumIndexedCols",
+        "delta.dataSkippingStatsColumns",
+        "delta.enableExpiredLogCleanup",
+        "delta.targetFileSize",
+        "delta.randomizeFilePrefixes",
+        "delta.randomPrefixLength",
+        "delta.isolationLevel",
+    }
+)
 
 
 def _object(value: Any, name: str) -> dict[str, Any]:
@@ -138,9 +158,12 @@ def parse(options: dict[str, Any]) -> Features:
                 raise ValueError("table_properties need nonempty string keys and string values")
             if key == "delta.appendOnly" and value not in ("true", "false"):
                 raise ValueError("table_properties delta.appendOnly must be true or false")
-            if any(key.startswith(p) for p in _RESERVED):
+            if any(key.startswith(p) for p in _RESERVED) or (
+                key.lower().startswith("delta.") and key not in _NEUTRAL_PROPERTIES
+            ):
                 raise ValueError(
-                    "table_properties cannot set reserved writer feature or fingerprint properties"
+                    "table_properties cannot set reserved or unsupported writer feature "
+                    "or fingerprint properties; use a supported feature opt-in"
                 )
         f.properties = dict(props)
     if "constraints" in options:
@@ -372,6 +395,11 @@ def write_features(
     constraints = {**old_constraints, **features.constraints}
     generated = {**old_generated, **features.generated}
     for name, expression in features.generated.items():
+        if prior is not None and name not in old_generated:
+            raise ValueError(
+                f"generated_columns {name!r}: adding an expression to an existing table "
+                "is table maintenance; create a new table with generated_columns"
+            )
         if name in old_generated and expression != old_generated[name]:
             raise ValueError(
                 f"generated_columns {name!r}: changing an expression is table maintenance"
