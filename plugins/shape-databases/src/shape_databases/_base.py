@@ -425,19 +425,23 @@ class DatabaseSink:
                     f"table {plan.table} already exists; set write_mode to append, truncate "
                     "or replace to write into it"
                 )
+            if (
+                exists
+                and plan.mode != "replace"
+                and any(
+                    plan.options.get(k) for k in ("foreign_keys", "unique", "checks", "defaults")
+                )
+            ):
+                raise ShapeError(
+                    f"existing table {plan.table!r}: requested constraints cannot yet be "
+                    "verified; no data was loaded"
+                )
             if plan.mode == "replace" and exists:
                 cur.execute(_sql.drop_table_sql(plan.schema_name, plan.table, dialect))
                 exists = False
             elif plan.mode == "truncate" and exists:
                 cur.execute(_sql.truncate_sql(plan.schema_name, plan.table, dialect))
             if exists:
-                if any(
-                    plan.options.get(k) for k in ("foreign_keys", "unique", "checks", "defaults")
-                ):
-                    raise ShapeError(
-                        f"existing table {plan.table!r}: requested constraints cannot yet be "
-                        "verified; no data was loaded"
-                    )
                 return False
             if plan.schema_name:
                 cur.execute(self.create_schema_sql(plan.schema_name))

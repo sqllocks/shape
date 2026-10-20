@@ -170,3 +170,19 @@ def test_actual_string_defaults_survive_sql_backslash_modes(database, strict_mod
         )
     finally:
         execute(conn, f"DROP TABLE IF EXISTS {quote(table, dialect)}")
+
+
+def test_existing_constraint_refusal_never_truncates_real_rows(database):
+    from shape.errors import ShapeError
+
+    dialect, conn, sink, uri = database
+    table = "cr_" + uuid.uuid4().hex[:12]
+    quoted = quote(table, dialect)
+    batch = pa.RecordBatch.from_pydict({"id": [1]})
+    try:
+        sink.write(uri, table, [batch])
+        with pytest.raises(ShapeError, match="requested constraints cannot yet be verified"):
+            sink.write(uri, table, [batch], write_mode="truncate", unique=[["id"]])
+        assert list(execute(conn, f"SELECT id FROM {quoted}")) == [(1,)]
+    finally:
+        execute(conn, f"DROP TABLE IF EXISTS {quoted}")

@@ -134,3 +134,13 @@ def test_preparation_refuses_different_auth_before_connecting(flavour):
     assert "fake-first-password" not in str(info.value)
     assert "fake-other-password" not in str(info.value)
     assert server.events == []
+
+
+def test_existing_constraints_refusal_precedes_truncate(flavour):
+    sink, uri, server = flavour
+    sink.write(uri, "child", [batch()])
+    before = list(server.rows("child"))
+    with pytest.raises(ShapeError, match="requested constraints cannot yet be verified"):
+        sink.write(uri, "child", [batch()], write_mode="truncate", **declarations())
+    assert server.rows("child") == before
+    assert not any(sql.startswith("TRUNCATE") for sql in server.statements())
