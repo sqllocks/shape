@@ -42,25 +42,29 @@ def test_dry_run_json_and_a_password_in_the_uri_is_never_printed(capsys):
     assert [t["table"] for t in doc["plan"]["tables"]][:2] == ["customer", "address"]
 
 
-def test_a_script_target_seeds_then_refuses_then_truncates(capsys, tmp_path):
+def test_a_script_target_seeds_then_refuses_then_truncates(capsys, tmp_path, retail_schema):
     out_dir = tmp_path / "scripts"
     target = f"sql://{out_dir}"
-    code, out, _ = run(capsys, "seed", "retail", "--target", target, "--scale", "tiny", "--seed", 2)
+    code, out, _ = run(
+        capsys, "seed", retail_schema, "--target", target, "--scale", "tiny", "--seed", 2
+    )
     assert code == 0 and "seeded 900 rows into 9 tables" in out
     first = {p.name: p.read_bytes() for p in out_dir.iterdir()}
     assert sorted(first)[0] == "01_customer.sql" and len(first) == 9
-    code, out, _ = run(capsys, "seed", "retail", "--target", target, "--scale", "tiny", "--seed", 3)
+    code, out, _ = run(
+        capsys, "seed", retail_schema, "--target", target, "--scale", "tiny", "--seed", 3
+    )
     assert code == 1 and "seed refused" in out and "nothing was written" in out
     assert {p.name: p.read_bytes() for p in out_dir.iterdir()} == first
     code, _, _ = run(
-        capsys, "seed", "retail", "--target", target, "--scale", "tiny", "--seed", 2,
+        capsys, "seed", retail_schema, "--target", target, "--scale", "tiny", "--seed", 2,
         "--mode", "truncate",
     )  # fmt: skip
     assert code == 0
     assert {p.name: p.read_bytes() for p in out_dir.iterdir()} != first  # drop + create added
     again = {p.name: p.read_bytes() for p in out_dir.iterdir()}
     run(
-        capsys, "seed", "retail", "--target", target, "--scale", "tiny", "--seed", 2,
+        capsys, "seed", retail_schema, "--target", target, "--scale", "tiny", "--seed", 2,
         "--mode", "truncate",
     )  # fmt: skip
     assert {p.name: p.read_bytes() for p in out_dir.iterdir()} == again

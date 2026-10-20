@@ -279,7 +279,9 @@ def test_generate_to_one_nonlocal_among_several_refuses_them_all(
 def test_generate_to_dry_run_needs_no_confirmation(
     capsys: Any, schema_file: Path, sockets: list[Any]
 ) -> None:
-    code, _, err = run(capsys, "generate", schema_file, "--to", PG, "--dry-run")
+    code, _, err = run(
+        capsys, "generate", schema_file, "--to", "mssql://sql.example/shape", "--dry-run"
+    )
     assert code == 0, err
     assert sockets == []
 
