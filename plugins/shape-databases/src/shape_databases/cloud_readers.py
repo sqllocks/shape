@@ -7,7 +7,7 @@ from collections.abc import Iterator, Mapping
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-import pyarrow as pa
+import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
 
@@ -63,7 +63,7 @@ class CloudSource(DatabaseSource):
         clean = urlunsplit(
             parts._replace(query=urlencode([(k, v) for k, v in query if k != "table"]))
         )
-        plan = self.sink.plan(clean, table or "shape_catalog", options)
+        plan: Plan = self.sink.plan(clean, table or "shape_catalog", options)
         plan.batch_size = batch_size
         plan.table = table
         plan.schema_name = plan.target.params.get("schema")
@@ -229,7 +229,8 @@ class DatabricksSource(CloudSource):
     def _tables(self, cur: Any, schema: str) -> list[tuple[str, int]]:
         cur.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema=? "
-            "AND table_type='BASE TABLE' ORDER BY table_name",
+            "AND table_type IN ('MANAGED','EXTERNAL','MANAGED_SHALLOW_CLONE',"
+            "'EXTERNAL_SHALLOW_CLONE') ORDER BY table_name",
             (schema,),
         )
         names = [str(row[0]) for row in cur.fetchall()]

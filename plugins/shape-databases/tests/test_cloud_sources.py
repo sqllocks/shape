@@ -1,5 +1,6 @@
 """Cloud source catalog/type acceptance, without a cloud account."""
 
+import json
 from decimal import Decimal
 
 import pyarrow as pa
@@ -127,7 +128,8 @@ def cloud_fixture(dialect):
     else:
         server.catalog_answers[
             "SELECT table_name FROM information_schema.tables WHERE table_schema=? AND "
-            "table_type='BASE TABLE' ORDER BY table_name"
+            "table_type IN ('MANAGED','EXTERNAL','MANAGED_SHALLOW_CLONE',"
+            "'EXTERNAL_SHALLOW_CLONE') ORDER BY table_name"
         ] = (["table_name"], [("items",)])
         server.catalog_answers["DESCRIBE TABLE EXTENDED `demo`.`items`"] = (
             ["col_name", "data_type"],
@@ -260,6 +262,26 @@ def test_databricks_missing_catalog_statistics_is_explicit():
             source._tables(conn.cursor(), schema)
 
 
+def test_databricks_discovers_unity_catalog_managed_and_external_tables():
+    """Unity Catalog table kinds differ from SQL's BASE TABLE spelling."""
+    source, _, _, schema, _ = cloud_fixture("databricks")
+
+    class CatalogCursor:
+        def execute(self, sql, parameters=None):
+            self.sql = sql
+            if sql.startswith("SELECT table_name"):
+                assert parameters == (schema,)
+                assert "'MANAGED'" in sql
+                assert "'EXTERNAL'" in sql
+
+        def fetchall(self):
+            if self.sql.startswith("SELECT table_name"):
+                return [("items",)]
+            return [("Statistics", "40000 bytes, 10000 rows")]
+
+    assert source._tables(CatalogCursor(), schema) == [("items", 10000)]
+
+
 def test_snowflake_profile_persistence_and_sampling(tmp_path):
     """SHAPE-CLOUD-001: catalog/sample fields survive the existing profile format."""
     from shape.profile.reference import load, save
@@ -341,3 +363,34 @@ def test_databricks_unity_catalog_key_queries_are_schema_scoped():
     assert all(parameters == ("demo", "items") for _, parameters in cur.calls)
     assert "information_schema.table_constraints" in cur.calls[0][0]
     assert "position_in_unique_constraint=pk.ordinal_position" in cur.calls[1][0]
+
+
+@pytest.mark.parametrize("dialect", ["snowflake", "databricks"])
+def test_cloud_cli_and_bridge_profile_catalog_counts(dialect, monkeypatch, tmp_path):
+    import shape
+    from shape.bridge.core import Bridge
+    from shape.cli.main import main
+
+    source, server, uri, _, _ = cloud_fixture(dialect)
+    monkeypatch.setattr(
+        source.sink_class, "default_connect", lambda self, **kw: server.connect(**kw)
+    )
+    output = tmp_path / "cloud.shape"
+    assert main(["profile", uri, "--sample-rows", "2", "-o", str(output)]) == 0
+    assert shape.load(output).tables["items"]["sampled_rows"] == 2
+    bridge = Bridge(tmp_path / "jobs")
+    try:
+        result = bridge.handle(
+            {
+                "api_version": "1.2",
+                "command": "profile",
+                "args": {"source": uri, "output": str(output), "sample_rows": 2},
+            }
+        )
+        assert result["ok"], result
+        assert result["result"]["tables"]["items"]["rows"] == 10000
+        artifact = shape.load(output)
+        assert artifact.tables["items"]["sampled_rows"] == 2
+        assert uri not in json.dumps(artifact.to_dict())
+    finally:
+        bridge.close()

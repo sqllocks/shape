@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-import pyarrow as pa
+import pyarrow as pa  # type: ignore[import-untyped]
 
 
 def cloud_arrow_type(
