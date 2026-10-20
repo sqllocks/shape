@@ -4,7 +4,7 @@ Work is continuing. This is not the final completion report. The earlier transie
 
 ## Progress
 
-Nine assigned issues: one merged (11.1%), seven ready/reviewed implementations (77.8%), one dependency-blocked (11.1%). Eight remain unmerged (88.9%). Eight have ready implementation including the merged issue (88.9%). #20 implementation is complete and approved; delivery still requires CI/merge/main Nightly/closure. Supporting PR40 is outside the nine-issue total.
+Nine assigned issues: one merged (11.1%), six ready/reviewed implementations (66.7%), one active compatibility repair (11.1%), one dependency-blocked (11.1%). Eight remain unmerged (88.9%). Seven have ready implementation including the merged issue (77.8%); PR43 has a real CI regression under repair. #20 implementation is complete and approved; delivery still requires CI/merge/main Nightly/closure. Supporting PR40 is outside the nine-issue total.
 
 | Issue | Status | PR | Merge SHA |
 |---|---|---|---|
@@ -14,7 +14,7 @@ Nine assigned issues: one merged (11.1%), seven ready/reviewed implementations (
 | #12 Eventhouse | Implemented, ready, independently approved; CI hold pending shared repair | [30](https://github.com/sqllocks/shape/pull/30) | None |
 | #13 Semantic measures/roles | Implemented, ready, independently approved; CI hold pending shared repair | [33](https://github.com/sqllocks/shape/pull/33) | None |
 | #17 Iceberg | Implemented, ready, independently approved; both current-head Windows core jobs passed; shared repair still required | [31](https://github.com/sqllocks/shape/pull/31) | None |
-| #6 Nested profiling | Ready and independently approved; depends on PR42 and current-main CI | [43](https://github.com/sqllocks/shape/pull/43) | None |
+| #6 Nested profiling | Active compatibility repair after Windows3.14 CI failure; prior source review stands but corrected head needs new review/CI; depends on PR42 | [43](https://github.com/sqllocks/shape/pull/43) | None |
 | #14 BigQuery | Parked: source interface dependency absent from main | None | None |
 | #20 Frozen comparison | Complete three-part fix ready and independently approved; all four value workloads pass; CI/merge/Nightly pending | [42](https://github.com/sqllocks/shape/pull/42) | None |
 
@@ -76,3 +76,5 @@ Only #14 remains dependency-blocked: PR35 must merge before reusing W9-01's sour
 #20 has no pending Owner comparison question after the provenance reconstruction. The two explicit recorded-error workloads never count as passes. Four value workloads now pass unchanged checks. After implementation merges, dispatch Nightly on main and require all five parity shards, parity-publish and sqlserver-e2e green; link the run and close20 only through a subsequent PR. No Nightly was dispatched or claimed yet. [Current issue status](https://github.com/sqllocks/shape/issues/20#issuecomment-6301325664). Exact safeguards and provenance are in questions.md and the reviewed FRZ lane record.
 
 All owned local implementation commits are pushed. Current branch heads/reviews/next actions are in state.md. Lead A branches/issues and Premium were not modified. This report remains INTERIM while active merge gates run.
+
+PR43 update: Windows3.14 job118909326600 failed in existing nested generation/diff/CLI compatibility tests. Targeted reproduction16failed/92passed; author repairing scalar type traversal, legacy length naming and safe-profile generation defaults, with independent privacy review and no assertion/redaction weakening. Main and first merge group have no observed failure. This is an active implementation repair, not a newly parked issue or completed gate.
