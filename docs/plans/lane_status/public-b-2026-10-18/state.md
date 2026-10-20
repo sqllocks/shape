@@ -82,3 +82,7 @@ Independent frz_resume_review found that incoming reference/profile.py catalog p
 ## Catalog depth integration fix complete
 
 Signed/pushed548b97651b169f626d891f94d782dfe697d55cfc, independently APPROVED exact head by frz_resume_review. One source line forwards max_depth through catalog recursion unchanged; new fake-catalog0/1 cases also check sampling metadata. Genuine2red eachkernel against094d;110child+Eventhouse module tests green eachkernel. Ruff/format,mypy705,wording/diff clean. No assertions/gates weakened, no reviewer reruns or local fulls. Counts2merged6ready1dependency-blocked;7unmerged77.8%. Fresh exact-head CI and42dependency remain.
+
+## Runner scheduling hold 2026-10-20 23:56 UTC
+
+Root prioritized remaining firstgroup29/33 by requesting scheduling cancellations of later-priority current31 coreCI39517323914 andWheels39517323900 (edf6789), and34 coreCI39517315974 (8a7d047). These are NOTpasses. Lightweight Docs/Security/DCO/Container/selftests continue. Hold31fullCI/Wheels and34fullCI until BOTH29+33merge and root explicitly advances stage; source refreshes may proceed after eachmainmove, but cancel auto-triggered fulls during this hold.42/43fullCI continues for early harness/nested regression detection. No gate weakened or source changed. New29/33/currentmainCI progressing with no failure.
