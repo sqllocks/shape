@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 import logging
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import replace
 from typing import Any
 
@@ -124,6 +124,23 @@ class OracleSink(DatabaseSink):
                 "the oracle sink requires python-oracledb thin mode; Thick mode is unsupported"
             )
         return driver.connect(**params)
+
+    def _peek(
+        self, batches: Iterable[pa.RecordBatch], plan: Plan
+    ) -> tuple[pa.RecordBatch | None, Iterator[pa.RecordBatch]]:
+        def normalized() -> Iterator[pa.RecordBatch]:
+            for batch in batches:
+                result = _sql.normalize(batch, plan.columns)
+                fields = [
+                    pa.field(old.name, new.type, old.nullable, old.metadata)
+                    for old, new in zip(batch.schema, result.schema, strict=True)
+                ]
+                yield pa.RecordBatch.from_arrays(
+                    result.columns, schema=pa.schema(fields, metadata=batch.schema.metadata)
+                )
+
+        stream = normalized()
+        return next(stream, None), stream
 
     def check_schema(self, schema: pa.Schema, plan: Plan) -> None:
         for field in schema:
@@ -305,6 +322,13 @@ class OracleSink(DatabaseSink):
             cur.setinputsizes(*self._input_sizes(first.schema, plan))
             for batch in chain_batches(first, rest):
                 _sql.check_batch(first.schema, batch, plan.table)
+                for expected, actual in zip(first.schema, batch.schema, strict=True):
+                    if expected.type != actual.type:
+                        raise ShapeError(
+                            f"table {plan.table!r} column {expected.name!r}: "
+                            f"batch type {actual.type} differs from "
+                            f"first batch type {expected.type}"
+                        )
                 offset = 0
                 while offset < batch.num_rows:
                     size = min(plan.batch_size, batch.num_rows - offset)

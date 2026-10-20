@@ -6,6 +6,8 @@ Status: available.
 
 ## Unreleased
 
+- Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
+
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 
 Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).

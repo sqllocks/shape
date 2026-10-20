@@ -258,3 +258,94 @@ def test_oracle_time32_bound_values(unit, value, expected):
     batch = pa.record_batch([pa.array([value], type=pa.time32(unit))], names=["time"])
     OracleSink(connect=fake.connect).write("oracle://shape@localhost/service", "t", [batch])
     assert fake.dml[0][1] == [(expected,)]
+
+
+def test_oracle_dictionary_normalization_preserves_uuid_and_not_null():
+    schema = pa.schema(
+        [
+            pa.field("id", pa.string(), nullable=False, metadata={b"shape.type": b"uuid"}),
+            pa.field("category", pa.dictionary(pa.int8(), pa.string()), nullable=False),
+        ]
+    )
+    batch = pa.RecordBatch.from_arrays(
+        [
+            pa.array(["d6b7ad00-9f1a-4a76-9e9d-464b9e3cfe63"]),
+            pa.array(["a"]).dictionary_encode().cast(schema.field("category").type),
+        ],
+        schema=schema,
+    )
+    fake = FakeOracle()
+    OracleSink(connect=fake.connect).write("oracle://shape@localhost/service", "t", [batch])
+    assert '"id" VARCHAR2(36 CHAR) NOT NULL' in fake.ddl[0]
+    assert '"category" CLOB NOT NULL' in fake.ddl[0]
+
+
+def test_oracle_later_batch_type_change_is_refused_before_second_dml():
+    fake = FakeOracle()
+    with pytest.raises(ShapeError, match="type"):
+        OracleSink(connect=fake.connect).write(
+            "oracle://shape@localhost/service",
+            "t",
+            [pa.record_batch({"value": [1]}), pa.record_batch({"value": [1.5]})],
+        )
+    assert len(fake.dml) == 1
+
+
+def test_oracle_registered_generate_route_uses_bound_values(monkeypatch, tmp_path, capsys):
+    import json
+
+    from shape import generate
+    from shape.cli.main import main
+    from shape.generation.schema import Column, Generation, GenSchema, Model, Table
+
+    schema = GenSchema(
+        Model(name="oracle", seed=7),
+        {
+            "CaseTable": Table(
+                "CaseTable",
+                {
+                    "id": Column("id", "string", {"strategy": "uuid"}, max_length=36),
+                    "value": Column("value", "float", {"strategy": "uniform", "low": 0, "high": 1}),
+                },
+                ["id"],
+            )
+        },
+        generation=Generation(scales={"small": {"CaseTable": 11}}),
+    )
+    path = tmp_path / "schema.json"
+    path.write_text(json.dumps(schema.to_dict()))
+    fake = FakeOracle()
+    monkeypatch.setattr(OracleSink, "default_connect", lambda self, **kw: fake.connect(**kw))
+    uri = "oracle://shape@localhost/service"
+    assert main(["generate", str(path), "--to", uri, "--seed", "7", "--json"]) == 0
+    response = json.loads(capsys.readouterr().out)
+    assert response["targets"][uri] == {"CaseTable": 11}
+    expected = generate(schema, seed=7)["CaseTable"]
+    assert [row for _, rows in fake.dml for row in rows] == list(
+        zip(expected.column("id").to_pylist(), expected.column("value").to_pylist(), strict=True)
+    )
+
+
+def test_oracle_driver_failure_never_persists_password(monkeypatch, tmp_path):
+    import json
+
+    from shape.bridge.core import Bridge
+
+    secret = "oracle-private-password"
+    monkeypatch.setenv("ORACLE_PASSWORD", secret)
+    fake = FakeOracle(fail_connect=f"connection failed {secret}")
+    monkeypatch.setattr(OracleSink, "default_connect", lambda self, **kw: fake.connect(**kw))
+    bridge = Bridge(tmp_path / "jobs")
+    try:
+        result = bridge.handle(
+            {
+                "api_version": "1.2",
+                "command": "profile",
+                "args": {"source": "oracle://shape@localhost/service", "sample_rows": 1},
+            }
+        )
+        assert not result["ok"] and secret not in json.dumps(result)
+        for record in (tmp_path / "jobs").rglob("*.json"):
+            assert secret not in record.read_text()
+    finally:
+        bridge.close()

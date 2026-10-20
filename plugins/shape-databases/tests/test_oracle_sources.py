@@ -206,7 +206,10 @@ def test_oracle_sample_percentage_never_includes_100(population):
     profile = source.profile_database("oracle://shape@localhost/service", sample_rows=1000)
     queries = [sql for sql, _ in fake.statements if "FETCH FIRST" in sql]
     assert len(queries) == 1 and " SAMPLE (100" not in queries[0]
-    assert profile.tables["CaseTable"]["sample_method"] == "whole_table"
+    assert profile.tables["CaseTable"]["sample_method"] == (
+        "whole_table" if population <= 1000 else "oracle_sample"
+    )
+    assert (" SAMPLE (" in queries[0]) == (population > 1000)
 
 
 def test_oracle_mixed_lob_timestamp_ns_fallback_is_lossless():
@@ -229,3 +232,52 @@ def test_oracle_invalid_boolean_and_fractional_integer_never_coerce():
     for field, value in ((pa.field("flag", pa.bool_()), "2"), (pa.field("id", pa.int64()), "1.5")):
         with pytest.raises(ShapeError, match=f"{field.name}.*cannot fit"):
             source._batch([(value,)], pa.schema([field]))
+
+
+@pytest.mark.parametrize("scheme", ["oracle", "tcps", "ORACLE"])
+def test_oracle_public_cli_bridge_routes_keep_artifacts_safe(monkeypatch, tmp_path, scheme):
+    import json
+
+    from shape_databases.oracle import OracleSink
+
+    import shape
+    from shape.bridge.core import Bridge
+    from shape.cli.main import main
+
+    data = pa.table(
+        {
+            "id": ["private-value@example.com"],
+            "amount": ["1.2300"],
+            "at": pa.array([None], type=pa.timestamp("us")),
+        }
+    )
+    _, fake = fake_source(arrow_batches=[data])
+    monkeypatch.setattr(OracleSink, "default_connect", lambda self, **kw: fake.connect(**kw))
+    uri = f"{scheme}://shape@localhost/service"
+    prof = shape.profile(uri, sample_rows=1, tables=["CaseTable"])
+    assert prof.tables["CaseTable"]["sampled_rows"] == 1
+    cli = tmp_path / "cli.shape"
+    assert (
+        main(["profile", uri, "--sample-rows", "1", "--tables", "CaseTable", "-o", str(cli)]) == 0
+    )
+    assert "private-value@example.com" not in json.dumps(shape.load(cli).to_dict())
+    bridge = Bridge(tmp_path / "jobs")
+    try:
+        out = tmp_path / "bridge.shape"
+        response = bridge.handle(
+            {
+                "api_version": "1.2",
+                "command": "profile",
+                "args": {
+                    "source": uri,
+                    "sample_rows": 1,
+                    "tables": ["CaseTable"],
+                    "output": str(out),
+                },
+            }
+        )
+        assert response["ok"], response
+        assert "private-value@example.com" not in json.dumps(response)
+        assert "private-value@example.com" not in json.dumps(shape.load(out).to_dict())
+    finally:
+        bridge.close()

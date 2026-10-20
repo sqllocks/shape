@@ -455,7 +455,8 @@ class OracleSource(DatabaseSource):
                     paths.add("cursor" if self._cursor_path(fields) else "arrow")
                     if requested:
                         percent = max(0.000001, requested * 200.0 / max(int(count), 1))
-                        whole = percent >= 100
+                        whole = int(count) <= requested
+                        percent = min(99.99999999, percent)
                         sample_clause = "" if whole else f" SAMPLE ({percent:.8f})"
                         sql = (
                             self._select(schema, table, fields)
