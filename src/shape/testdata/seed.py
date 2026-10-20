@@ -217,7 +217,10 @@ def seed_target(
     out = SeedResult(plan)
     for name in names:
         table = result.tables[name]
-        options: dict[str, Any] = {**sql_options(schema, name), "schema": table.schema}
+        options: dict[str, Any] = {
+            **sql_options(schema, name, constraints="none"),
+            "schema": table.schema,
+        }
         if plan.sink == "sql":
             options.update(_script_options(mode, dialect, plan))
             uri = str(scripts[name])
