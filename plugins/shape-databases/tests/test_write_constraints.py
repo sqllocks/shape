@@ -190,3 +190,54 @@ def test_mixed_existing_and_new_rerun_refuses_before_any_table_mutation(flavour)
         for sql in server.statements()
         if sql.startswith(("TRUNCATE", "DELETE", "DROP", "CREATE"))
     ]
+
+
+@pytest.mark.parametrize("mode", ["append", "truncate"])
+@pytest.mark.parametrize("actual,wanted", [([], ["id"]), (["id", "code"], ["code", "id"])])
+def test_generation_primary_only_existing_key_is_verified_before_mutation(
+    flavour, mode, actual, wanted
+):
+    sink, uri, server = flavour
+    for table, key in [("a", ["id"]), ("b", actual)]:
+        server.seed(
+            table, [("id", "bigint", False), ("code", "bigint", False)], [(1, 2)], primary_key=key
+        )
+    options = {"schema": pa.schema([("id", pa.int64()), ("code", pa.int64())]), "write_mode": mode}
+    with pytest.raises(ShapeError, match="PRIMARY KEY"):
+        sink.prepare_constraints(
+            uri,
+            {
+                "a": options | {"primary_key": ["id"]},
+                "b": options | {"primary_key": wanted},
+                "missing": options,
+            },
+        )
+    assert server.rows("a") == server.rows("b") == [(1, 2)]
+    assert not [
+        sql
+        for sql in server.statements()
+        if sql.startswith(("TRUNCATE", "DELETE", "DROP", "CREATE"))
+    ]
+
+
+def test_retained_commit_failure_is_scrubbed_write_error_without_driver_context(flavour):
+    sink, uri, server = flavour
+    sentinel = "benign_retained_commit_secret"
+    schema = pa.schema([("id", pa.int64()), ("parent_id", pa.int64())])
+    common = {"schema": schema, "primary_key": ["id"], "password": sentinel}
+    plans = {"parent": common, "child": common | {"foreign_keys": foreign()}}
+    sink.prepare_constraints(uri, plans)
+    transaction = sink.prepare_constraints(
+        uri, {name: options | {"write_mode": "truncate"} for name, options in plans.items()}
+    )
+    assert transaction is not None
+
+    def fail_commit():
+        raise RuntimeError("commit failed " + sentinel)
+
+    transaction.connection.commit = fail_commit
+    with pytest.raises(WriteError) as error:
+        transaction.finish(True)
+    assert sentinel not in str(error.value)
+    assert error.value.rows_committed == 0
+    assert error.value.__context__ is None

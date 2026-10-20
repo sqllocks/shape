@@ -363,7 +363,14 @@ def prepare_constraint_tables(
                     for table, sname, _, _, _, compiled in plans:
                         for clause in compiled.foreign_keys:
                             db.ddl(f"ALTER TABLE {_tsql.qualified(sname, table)} ADD {clause}")
-                return _PreparedTransaction(db.get(), owns_connection=db._injected is None)
+                return _PreparedTransaction(
+                    db.get(),
+                    owns_connection=db._injected is None,
+                    error_factory=lambda exc: WriteError(
+                        f"committing constrained dataset failed: {_tsql.redact(str(exc))}",
+                        rows_committed=0,
+                    ),
+                )
         for table, sname, mode, schema, options, compiled in plans:
             if not db.table_exists(sname, table):
                 continue
@@ -445,12 +452,15 @@ def prepare_table(
         exists
         and mode != "replace"
         and constraint_ddl
-        and any(
-            (
-                constraint_ddl.definitions,
-                constraint_ddl.foreign_keys,
-                constraint_ddl.defaults,
-                constraint_ddl.after_create,
+        and (
+            (defer_foreign_keys and primary_key)
+            or any(
+                (
+                    constraint_ddl.definitions,
+                    constraint_ddl.foreign_keys,
+                    constraint_ddl.defaults,
+                    constraint_ddl.after_create,
+                )
             )
         )
     ):

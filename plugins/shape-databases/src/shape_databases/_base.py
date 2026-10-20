@@ -486,8 +486,12 @@ class DatabaseSink:
             if (
                 exists
                 and plan.mode != "replace"
-                and any(
-                    plan.options.get(k) for k in ("foreign_keys", "unique", "checks", "defaults")
+                and (
+                    (defer_foreign_keys and plan.primary_key)
+                    or any(
+                        plan.options.get(k)
+                        for k in ("foreign_keys", "unique", "checks", "defaults")
+                    )
                 )
             ):
                 self._verify_existing_constraints(conn, plan, schema, first)
@@ -621,7 +625,18 @@ class DatabaseSink:
                         )
                 for target in reversed(targets):
                     cur.execute("DELETE FROM " + target)
-            return _PreparedTransaction(conn, owns_connection=owns_connection)
+            secrets = [secret for plan, _, _ in plans for secret in (plan.secret, *plan.secrets)]
+
+            def commit_error(exc: Exception) -> WriteError:
+                return WriteError(
+                    f"committing constrained dataset at {plans[0][0].target.label} failed "
+                    f"({type(exc).__name__}): {scrub(str(exc), secrets)}",
+                    0,
+                )
+
+            return _PreparedTransaction(
+                conn, owns_connection=owns_connection, error_factory=commit_error
+            )
         finally:
             cur.close()
 
@@ -696,9 +711,12 @@ class DatabaseSink:
                     continue
                 if plan.mode == "create":
                     raise ShapeError(f"table {plan.table!r} already exists")
-                if plan.mode != "replace" and any(
-                    plan.options.get(kind)
-                    for kind in ("foreign_keys", "unique", "checks", "defaults")
+                if plan.mode != "replace" and (
+                    plan.primary_key
+                    or any(
+                        plan.options.get(kind)
+                        for kind in ("foreign_keys", "unique", "checks", "defaults")
+                    )
                 ):
                     self._verify_existing_constraints(conn, plan, schema, first)
                 if plan.mode in {"truncate", "replace"}:

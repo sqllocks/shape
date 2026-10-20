@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 import math
 import threading
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
@@ -24,7 +24,14 @@ _PREPARED_CONSTRAINTS = object()
 class _PreparedTransaction:
     """Transient coordinator state; never an output option supplied by a caller."""
 
-    def __init__(self, connection: Any, *, owns_connection: bool) -> None:
+    def __init__(
+        self,
+        connection: Any,
+        *,
+        owns_connection: bool,
+        error_factory: Callable[[Exception], Exception] | None = None,
+    ) -> None:
+        self.error_factory = error_factory
         self.connection = connection
         self.owns_connection = owns_connection
         self.lock = threading.RLock()
@@ -35,16 +42,21 @@ class _PreparedTransaction:
             if self.finished:
                 return
             self.finished = True
+            failure: BaseException | None = None
             try:
                 if success:
                     try:
                         self.connection.commit()
-                    except BaseException:
+                    except BaseException as exc:
                         try:
                             self.connection.rollback()
                         except Exception:  # noqa: S110  # nosec B110
                             pass  # preserve the original commit failure
-                        raise
+                        failure = (
+                            self.error_factory(exc)
+                            if isinstance(exc, Exception) and self.error_factory is not None
+                            else exc
+                        )
                 else:
                     try:
                         self.connection.rollback()
@@ -56,6 +68,10 @@ class _PreparedTransaction:
                         self.connection.close()
                     except Exception:  # noqa: S110  # nosec B110
                         pass  # closing must preserve the transaction outcome
+            # Outside the driver's except block: its potentially secret-bearing
+            # exception must not remain attached as the public error's context.
+            if failure is not None:
+                raise failure
 
     def __repr__(self) -> str:
         return "<prepared constraint transaction>"

@@ -327,3 +327,30 @@ def test_full_retail_all_constraints_and_named_planted_violation(schema):
         SqlServerSink().write(uri, "product", product.to_batches(), **load_options)
     assert error.value.rows_committed == 0
     assert count(schema, "product") == expected["product"]
+
+
+def test_matching_compound_check_allows_existing_append(schema):
+    """Exercise SQL Server's catalog normalization of generated conjunctions."""
+    options = {
+        **LOGIN,
+        "primary_key": ["id"],
+        "checks": [
+            {
+                "name": "ck_amount_range",
+                "expression": {
+                    "op": "and",
+                    "args": [
+                        {"op": ">=", "left": {"column": "amount"}, "right": {"literal": 0}},
+                        {"op": "<=", "left": {"column": "amount"}, "right": {"literal": 10}},
+                    ],
+                },
+            }
+        ],
+    }
+    sink = SqlServerSink()
+    uri = uri_for(schema)
+    first = pa.RecordBatch.from_pydict({"id": [1], "amount": [3]})
+    second = pa.RecordBatch.from_pydict({"id": [2], "amount": [5]})
+    assert sink.write(uri, "bounded", [first], **options) == 1
+    assert sink.write(uri, "bounded", [second], write_mode="append", **options) == 1
+    assert count(schema, "bounded") == 2

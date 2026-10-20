@@ -95,3 +95,32 @@ def test_mixed_existing_new_preflights_external_references_before_mutation():
         for sql in server.statements[count:]
         if sql.startswith(("TRUNCATE", "DELETE", "DROP", "CREATE"))
     ]
+
+
+def test_retained_fabric_commit_error_is_sanitized(monkeypatch):
+    server = FakeSqlServer()
+    sink = SqlServerSink(connect=server.connect)
+    monkeypatch.setattr("shape.io.targets.sink_for_target", lambda uri: ("sqlserver", sink))
+    uri = "mssql://db.example/tx"
+    initial = engine(1)
+    write_targets(initial, [uri], TargetOptions())
+    generated = engine(10).generate()
+    options = TargetOptions(write_mode="truncate")
+    transaction = sink.prepare_constraints(
+        uri,
+        {
+            table: options.for_sink("sqlserver", initial.schema, table) | {"schema": data.schema}
+            for table, data in generated.tables.items()
+        },
+    )
+    assert transaction is not None
+
+    def fail_commit():
+        raise RuntimeError("commit failed PWD=benign_fabric_commit_secret;")
+
+    transaction.connection.commit = fail_commit
+    with pytest.raises(WriteError) as error:
+        transaction.finish(True)
+    assert "benign_fabric_commit_secret" not in str(error.value)
+    assert error.value.rows_committed == 0
+    assert error.value.__context__ is None
