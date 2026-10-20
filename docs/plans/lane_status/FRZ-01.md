@@ -68,17 +68,35 @@ confirms these four workloads produced values in 0.9.1 and cannot use this categ
 
 The profiler's `dtparse._midnight` uses the current date for date-free time strings; the
 weekday histogram is a compared data value, not a runtime timestamp. The public profiling
-call has no capture-clock context. Forcing the capture date would alter candidate values;
-excluding the histogram would bypass a value comparison. A Tuesday-only green result is
-calendar coincidence and does not resolve portability. No such workaround is implemented.
+call has no capture-clock parameter. Both authenticated time-only records and the manifest
+contain `recorded_utc=2026-10-13T01:47:50Z`. The recorder assigns that timestamp once before
+collecting workers: it establishes capture-session start, not each workload's actual local
+execution date, timezone or clock policy. Faithfully replaying an authenticated execution
+environment would be conceptually different from rewriting output values, but current
+records do not establish that complete clock context. No context is inferred from a histogram
+or expected weekday. Excluding the histogram would bypass a value comparison; a Tuesday-only
+green result is calendar coincidence and does not resolve portability. No context freezing,
+candidate monkeypatch or output normalization is implemented.
 
 Owner commit `904d5d2` intentionally replaced sector and procedure reference contents.
 The domains documentation confirms same row positions and weights but changed dataset ids.
 The domain verifier correctly uses the baseline vocabulary and reference records; changing
 the pool, substituting synthetic scalar values or mapping codes would change what is
-compared. Restoring removed values contradicts the approved data replacement. Renaming a
-reference source cannot restore equality of these data values. No compliant product or
-harness fix preserving both sets of values was identified.
+compared. Restoring removed values contradicts the approved data replacement. The reference
+source aliases and schema column names were retained, so renaming those alone fixes no current
+failure. Explicit display/category-name aliases justified by unchanged sector/industry IDs
+could be partial name-only work while preserving observations, counts and probabilities;
+their metrics would need honest recomputation, not numerical substitution. They do not by
+themselves reconcile the remaining sector/procedure code data. No code-token mapping or
+frequency-fitted mapping is authorized or implemented. No compliant fix for either whole
+generation workload has been established, so all four acceptance workloads remain parked.
+
+## Required main refresh
+
+Merged main `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` after PR 40. Only the additive
+Unreleased changelog entry conflicted; both entries are retained. The certifi lock and
+prepared-browser fixes merge without code conflicts. This refresh includes the read-only
+clock/name clarification above. No local rerun was needed for a source conflict.
 
 Precise remaining decision: retain these value failures under the current contract, or
 separately define a comparison context/policy for date-free clock-derived values and
