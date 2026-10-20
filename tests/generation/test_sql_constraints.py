@@ -89,6 +89,34 @@ def test_none_keeps_primary_only_and_disable_keeps_keys():
         sql_options(schema(), "child", constraints="maybe")
 
 
+@pytest.mark.parametrize(
+    "features",
+    [
+        True,
+        {"not_null": ["id"]},
+        {
+            "check": {
+                "positive": {"op": ">=", "left": {"column": "amount"}, "right": {"literal": 0}}
+            }
+        },
+    ],
+)
+def test_delta_feature_constraints_do_not_replace_generation_policy(features):
+    from shape.generation.output import _options
+
+    options = _options("delta", schema(), "child", {"constraints": features})
+    assert options["constraints"] == features
+    assert options["foreign_keys"]
+
+
+def test_explicit_delta_generation_policy_is_separate_from_feature_mapping():
+    from shape.generation.output import _options
+
+    options = _options("delta", schema(), "child", {"constraints": True, "sql_constraints": "all"})
+    assert options["constraints"] is True
+    assert options["checks"] and options["defaults"]
+
+
 def test_target_options_carries_mode_contract_and_derived_options():
     options = TargetOptions(constraints="all", contract={"columns": {"status": {"unique": True}}})
     found = options.for_sink("postgres", schema(), "child")

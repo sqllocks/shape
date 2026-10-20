@@ -219,10 +219,19 @@ def _options(fmt: str, schema: GenSchema, table: str, options: Mapping[str, Any]
     _refuse_nested(fmt, schema, table)
     merged: dict[str, Any] = dict(options)
     if fmt in ("sql", "delta"):
+        # Delta's ``constraints`` option is its table-feature bool/mapping, not
+        # the generation policy selecting keys/all/none. Keep the namespaces
+        # separate while retaining the SQL sink's policy spelling.
+        policy = options.get("sql_constraints")
+        if policy is None:
+            selection = options.get("constraints")
+            policy = selection if fmt == "sql" or isinstance(selection, str) else "keys"
+        if fmt == "delta" and isinstance(merged.get("constraints"), str):
+            merged.pop("constraints")
         derived = sql_options(
             schema,
             table,
-            constraints=options.get("constraints") or "keys",
+            constraints=policy or "keys",
             contract=options.get("contract"),
         )
         merged = {**derived, **merged}
