@@ -10,11 +10,11 @@ All six PRs were marked ready. PR32 merged via API as a merge commit; every rema
 
 ## Current lanes
 
-Current main:35addfc4c310b85a62cbe7f315e1d50fb8e426f8. Main CI is running/queued; watch for genuine failures under the prompt hard-stop rule.
+Current main:35addfc4c310b85a62cbe7f315e1d50fb8e426f8. Main post-merge CI39483030770 completedSUCCESS with all27jobs passing; Documentation39483030734 and Security39483030728 also completeSUCCESS. Green merged-head links are in W9-08.md. Watch the new main after the next merge.
 
 | Issue | Branch / exact head | PR | Stage |
 |---|---|---|---|
-| #9 W9-08 | lane/W9-08-finish / 91ef6200266bf962246d1553356b26a442be2303 | https://github.com/sqllocks/shape/pull/32 | MERGED35addfc4; all triggered source-head workflows green |
+| #9 W9-08 | lane/W9-08-finish / 91ef6200266bf962246d1553356b26a442be2303 | https://github.com/sqllocks/shape/pull/32 | MERGED35addfc4; all triggered source-head AND post-merge main workflows green |
 | #10 W9-09 | lane/W9-09 / 0b313bba0a74332fa7c5c955fceca4bdb92ae0d4 | https://github.com/sqllocks/shape/pull/34 | ready, refreshed, APPROVED; fresh CI pending |
 | #11 W9-10 | lane/W9-10-finish / e1ae5787c395714f558252ef0190068077d8d4ad | https://github.com/sqllocks/shape/pull/29 | ready, refreshed, APPROVED; fresh CI pending |
 | #12 W9-11 | lane/W9-11-finish / bc98623f582c121cad0bcf56a83a8829fd826437 | https://github.com/sqllocks/shape/pull/30 | ready, refreshed, APPROVED; fresh CI pending |
@@ -99,3 +99,7 @@ PR43 is ready/non-draft and artifact attached by root. Exact39760e6927b36dc32f7d
 All six active assigned issues now have ready independentlyreviewed implementations (29/30/31/33/34/43). Plus merged9, codeimplementationready7/9=77.8%; actualdelivery1/9=11.1%; unmerged8/9=88.9%; blocked/parked20+14=2/9=22.2%. PartialcategoryPR42 is not full #20 delivery. Merge priority remains40first, then29/30/33, then34/31, then42/43, then14after35.
 
 Rootattached43 after childattachmenttool stalled; no further artifact attachment needed. Authorsavailableforrefresh: dbt_recover29; eventhouse_recover30/43; formats_recover34/42; iceberg_recover31; root33. metadata_recover currently watches40 with fresh commands and exactheadreviewunchanged. Mainlast26success/1runningUbuntu3.12; completedDocs/Securitygreen. Userfullcountupdate21:14, nextdue~21:19.
+
+## Metadata merged-head gate complete — 2026-10-20 21:23 UTC
+
+CI39483030770 statuscompleted/conclusionsuccess on main35addfc4, all27jobs passed; Docs39483030734 and Security39483030728 also success. Canonical green merged-head links added to W9-08.md; no raw logs/snapshots. PR40 is24success/6running/1structural skip/no failures at lastread; stillpriorityfirst and unchangedhead3f62547/APPROVED. Nextuserfullcountupdate~21:28UTC.
