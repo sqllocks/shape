@@ -727,6 +727,15 @@ requirements:
   verify: [unit, conformance, compatibility]
   owner: databases
 
+- id: SHAPE-DBS-001
+  title: Bounded PostgreSQL and MySQL catalog profiling
+  level: L1
+  milestone: W9-01
+  priority: MUST
+  text: Database sources stream typed Arrow batches and profile catalog schemas with bounded samples, declared keys, safe capture and no persisted credentials.
+  verify: [database-source-conformance]
+  owner: databases
+
 - id: SHAPE-STREAM-METADATA-001
   title: Broker message metadata
   level: L1
