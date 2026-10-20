@@ -41,7 +41,12 @@ def oracle_type(
     if pa.types.is_decimal(kind) or info.get("type") == "decimal":
         p = kind.precision if pa.types.is_decimal(kind) else info.get("precision")
         s = kind.scale if pa.types.is_decimal(kind) else info.get("scale")
-        if any(isinstance(v, bool) or not isinstance(v, int) for v in (p, s)):
+        if (
+            isinstance(p, bool)
+            or not isinstance(p, int)
+            or isinstance(s, bool)
+            or not isinstance(s, int)
+        ):
             raise ShapeError(f"column {field.name!r}: decimal needs precision and scale")
         if not 1 <= p <= 38 or not -84 <= s <= 127:
             raise ShapeError(f"column {field.name!r}: Oracle decimals hold at most 38 digits")

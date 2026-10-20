@@ -247,3 +247,14 @@ def test_oracle_nanoseconds_and_null_first_batch_keep_declared_binds():
     assert "234567891" in fake.dml[1][1][0][0]
     assert "234567891" in fake.dml[1][1][0][1]
     assert fake.input_sizes == [(64, 64)]
+
+
+@pytest.mark.parametrize(
+    "unit,value,expected",
+    [("s", 1, "+0 00:00:01.000000000"), ("ms", 1234, "+0 00:00:01.234000000")],
+)
+def test_oracle_time32_bound_values(unit, value, expected):
+    fake = FakeOracle()
+    batch = pa.record_batch([pa.array([value], type=pa.time32(unit))], names=["time"])
+    OracleSink(connect=fake.connect).write("oracle://shape@localhost/service", "t", [batch])
+    assert fake.dml[0][1] == [(expected,)]

@@ -220,9 +220,10 @@ class OracleSink(DatabaseSink):
         for field, column in zip(batch.schema, batch.columns, strict=True):
             info = plan.columns.get(field.name, {})
             if pa.types.is_timestamp(field.type) or pa.types.is_time(field.type):
+                integer = pa.int32() if pa.types.is_time32(field.type) else pa.int64()
                 values = [
                     None if v is None else temporal_text(v, field.type)
-                    for v in column.cast(pa.int64()).to_pylist()
+                    for v in column.cast(integer).to_pylist()
                 ]
             else:
                 values = []
