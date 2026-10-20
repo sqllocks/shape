@@ -473,10 +473,15 @@ def _render_constraint_preview(
             table_prefix=prefix,
         )
         if dialect == "duckdb":
+            from importlib import import_module
+
             import pyarrow as pa  # type: ignore[import-untyped]
-            from shape_databases.duckdb_sink import create_table_sql
 
             from shape.generation.engine import arrow_type
+
+            # This renderer belongs to the optional plugin, loaded at the same runtime
+            # boundary as its sink rather than as a typed dependency of core.
+            create_table_sql = import_module("shape_databases.duckdb_sink").create_table_sql
 
             arrow_schema = pa.schema(
                 [
