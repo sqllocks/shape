@@ -717,3 +717,12 @@ requirements:
   text: "Security claims distinguish technical capability from external certification/accreditation."
   verify: [specification-review]
   status: registered-not-independently-certified
+
+- id: SHAPE-SINK-003
+  title: Native nested database values
+  level: L1
+  milestone: W9-06
+  priority: MUST
+  text: DuckDB writes recursive list, struct and map columns through native Arrow scans, preserves null and empty containers, applies documented temporal normalization recursively, and refuses unsupported nested shapes before connecting with the column and JSON alternative named. JSON mode preserves exact decimal and temporal text.
+  verify: [unit, conformance]
+  owner: databases

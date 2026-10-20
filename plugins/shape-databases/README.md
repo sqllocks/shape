@@ -246,7 +246,8 @@ DuckDbSink().write(
 `duckdb:///PATH.duckdb` is relative to the working directory, `duckdb:////abs/path.duckdb`
 absolute (Windows: `duckdb:///C:/data/x.duckdb`); a host, a password, no path and `:memory:` are
 refused. `?schema=` (or `schema_name=`) is the DuckDB schema, created when missing in a step of its
-own. Each Arrow batch is scanned by DuckDB as an Arrow table: no value is converted in Python.
+own. In the default native mode, each Arrow batch is scanned by DuckDB as an Arrow table:
+no value is converted in Python.
 
 | Arrow type | DuckDB column |
 |---|---|
@@ -261,14 +262,28 @@ own. Each Arrow batch is scanned by DuckDB as an Arrow table: no value is conver
 | time32 / time64 | `TIME` (nanoseconds cut to microseconds) |
 | timestamp, no zone: s / ms / us / ns | `TIMESTAMP_S` / `TIMESTAMP_MS` / `TIMESTAMP` / `TIMESTAMP_NS` |
 | timestamp with a zone | `TIMESTAMPTZ` |
+| list, large list, fixed-size list | `T[]`, recursively |
+| struct | `STRUCT("field" T, ...)`, recursively |
+| map | `MAP(K, V)`, recursively |
 
-Nested values and durations are refused with the column named. `primary_key` becomes a `PRIMARY KEY`;
+`nested="native"` is the default. `nested="json"` (also `?nested=json`) stores every nested
+column as JSON text in `VARCHAR`. This explicit fallback converts values in Python; decimal
+and temporal values retain their exact text, including decimal scale and timezone offsets.
+Maps use ordered key/value pairs, including non-string keys. SQL NULL containers stay NULL.
+Map order and JSON object key order do not affect equality. Native lists read back as variable
+lists; nested time and zoned timestamp values follow the scalar microsecond normalization,
+and zoned timestamp comparisons use UTC.
+
+Empty structs, repeated struct field names (case-insensitive) and unsupported nested leaves
+are refused before connecting, naming the column and `nested=json` alternative. Durations
+outside a nested JSON column are refused with the column named. `primary_key` becomes a `PRIMARY KEY`;
 a key column, or one whose `columns` entry says `"nullable": false`, is `NOT NULL`.
 
 | option | meaning |
 |---|---|
 | `write_mode` (or `?write_mode=`; the option wins) | `create` (default: an existing table is an error), `append` (create if missing), `truncate` (`DELETE`, then add; create if missing), `replace` (drop and create), `upsert` (`INSERT OR REPLACE` on the primary key; none: `upsert needs a primary key on <table>`) |
 | `commit_rows` | commit every N rows (rounded up to a batch) so another connection sees them |
+| `nested` | `native` (default), or `json` to store nested values as JSON text |
 | `schema_name`, `columns`, `primary_key`, `schema` | as above, as for the other sinks |
 
 One table is one transaction: a failure rolls back the rows, the table this call created and a

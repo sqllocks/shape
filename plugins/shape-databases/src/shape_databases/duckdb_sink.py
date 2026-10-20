@@ -27,9 +27,18 @@ time32 / time64                        ``TIME`` (nanoseconds are cut to microsec
 timestamp, no zone: s / ms / us / ns   ``TIMESTAMP_S`` / ``TIMESTAMP_MS`` / ``TIMESTAMP`` /
                                        ``TIMESTAMP_NS``
 timestamp with a zone                  ``TIMESTAMPTZ`` (microseconds)
+list (including large/fixed lists)     ``T[]`` recursively
+struct                                ``STRUCT("field" T, ...)`` recursively
+map                                   ``MAP(K, V)`` recursively
 =====================================  ====================================================
 
-Anything else (nested values, durations) is refused with the column named: convert it first. The
+Nested values use native Arrow scans by default (``nested="native"``). ``nested="json"``
+stores nested columns as JSON text in ``VARCHAR``; maps are ordered key/value pairs. Map order
+and JSON key order do not affect value equality. Empty structs, duplicate struct field names
+and unsupported nested leaves are refused before connecting, naming ``nested=json`` as the
+alternative. Lists read back as variable lists; times and zoned timestamps, including nested
+ones, use microseconds, and zoned timestamps read back in the session zone (UTC for comparison).
+Anything else (for example durations) is refused with the column named: convert it first. The
 primary key (``primary_key``) is a ``PRIMARY KEY`` constraint; a column is ``NOT NULL`` when it is
 a key column or its ``columns`` entry says ``"nullable": false``. Reading the table back gives
 the same ``shape.repro.dataset_id`` as the tables that were written.
@@ -70,6 +79,7 @@ from shape.errors import ShapeError
 from . import _sql
 from ._base import as_int, as_text, one_of, parse_uri
 from .errors import WriteError
+from .nested import is_nested, json_batch, nested_mode
 
 log = logging.getLogger("shape_databases")
 
@@ -109,11 +119,36 @@ def _qualified(schema_name: str, table: str) -> str:
     return f"{_quote(schema_name)}.{_quote(table)}"
 
 
-def duckdb_type(field: pa.Field, meta: Mapping[str, Any]) -> str:
+def duckdb_type(field: pa.Field, meta: Mapping[str, Any], *, nested: str = "native") -> str:
     """The DuckDB column type that holds Arrow ``field`` (see the module docstring)."""
     kind = field.type
     if pat.is_dictionary(kind):
         kind = kind.value_type
+    if is_nested(kind):
+        if nested == "json":
+            return "VARCHAR"
+        try:
+            if pat.is_list(kind) or pat.is_large_list(kind) or pat.is_fixed_size_list(kind):
+                item = pa.field(field.name, kind.value_type)
+                return f"{duckdb_type(item, {})}[]"
+            if pat.is_struct(kind):
+                names = [child.name.lower() for child in kind]
+                if not names or len(names) != len(set(names)):
+                    raise ShapeError("struct needs non-empty, distinct field names")
+                parts = [
+                    f"{_quote(_check_name(child.name, 'struct field'))} "
+                    f"{duckdb_type(pa.field(field.name, child.type), {})}"
+                    for child in kind
+                ]
+                return "STRUCT(" + ", ".join(parts) + ")"
+            key = duckdb_type(pa.field(field.name, kind.key_type), {})
+            value = duckdb_type(pa.field(field.name, kind.item_type), {})
+            return f"MAP({key}, {value})"
+        except ShapeError as exc:
+            raise ShapeError(
+                f"column {field.name!r}: nested type {kind} cannot be stored natively "
+                f"({exc}); use nested=json"
+            ) from None
     if pat.is_boolean(kind):
         return "BOOLEAN"
     if pat.is_integer(kind):
@@ -147,6 +182,7 @@ def create_table_sql(
     *,
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
+    nested: str = "native",
 ) -> str:
     columns = columns or {}
     unknown = [c for c in primary_key if c not in schema.names]
@@ -156,13 +192,39 @@ def create_table_sql(
     for field in schema:
         meta = columns.get(field.name, {})
         required = field.name in primary_key or not bool(meta.get("nullable", True))
+        sql_type = duckdb_type(field, meta, nested=nested)
         lines.append(
-            f"  {_quote(_check_name(field.name, 'column'))} {duckdb_type(field, meta)}"
+            f"  {_quote(_check_name(field.name, 'column'))} {sql_type}"
             f"{' NOT NULL' if required else ''}"
         )
     if primary_key:
         lines.append(f"  PRIMARY KEY ({', '.join(_quote(c) for c in primary_key)})")
     return f"CREATE TABLE {_qualified(schema_name, table)} (\n" + ",\n".join(lines) + "\n)"
+
+
+def _normalized_type(kind: pa.DataType) -> pa.DataType:
+    if pat.is_dictionary(kind):
+        return _normalized_type(kind.value_type)
+    if pat.is_list(kind) or pat.is_large_list(kind) or pat.is_fixed_size_list(kind):
+        field = kind.value_field.with_type(_normalized_type(kind.value_type))
+        if pat.is_fixed_size_list(kind):
+            return pa.list_(field, kind.list_size)
+        return pa.large_list(field) if pat.is_large_list(kind) else pa.list_(field)
+    if pat.is_struct(kind):
+        return pa.struct([child.with_type(_normalized_type(child.type)) for child in kind])
+    if pat.is_map(kind):
+        return pa.map_(
+            kind.key_field.with_type(_normalized_type(kind.key_type)),
+            kind.item_field.with_type(_normalized_type(kind.item_type)),
+            keys_sorted=kind.keys_sorted,
+        )
+    if pat.is_time64(kind) and kind.unit == "ns":
+        return pa.time64("us")
+    if pat.is_float16(kind):
+        return pa.float32()
+    if pat.is_timestamp(kind) and kind.tz is not None and kind.unit != "us":
+        return pa.timestamp("us", kind.tz)
+    return kind
 
 
 def normalize(batch: pa.RecordBatch) -> pa.RecordBatch:
@@ -171,18 +233,18 @@ def normalize(batch: pa.RecordBatch) -> pa.RecordBatch:
     arrays = []
     changed = False
     for column in batch.columns:
-        kind = column.type
-        if pat.is_dictionary(kind):
-            column, kind = column.cast(kind.value_type), kind.value_type
-            changed = True
-        if pat.is_time(kind) and kind.bit_width == 64 and kind.unit == "ns":
-            column, changed = column.cast(pa.time64("us"), safe=False), True
-        elif pat.is_float16(kind):
-            column, changed = column.cast(pa.float32()), True
-        elif pat.is_timestamp(kind) and kind.tz is not None and kind.unit != "us":
-            column, changed = column.cast(pa.timestamp("us", kind.tz), safe=False), True
+        target = _normalized_type(column.type)
+        if target != column.type:
+            column, changed = column.cast(target, safe=False), True
         arrays.append(column)
-    return pa.RecordBatch.from_arrays(arrays, names=batch.schema.names) if changed else batch
+    fields = [
+        field.with_type(column.type) for field, column in zip(batch.schema, arrays, strict=True)
+    ]
+    return (
+        pa.RecordBatch.from_arrays(arrays, schema=pa.schema(fields, metadata=batch.schema.metadata))
+        if changed
+        else batch
+    )
 
 
 def _file_path(uri: str, allowed: Mapping[str, Any]) -> tuple[str, dict[str, Any]]:
@@ -223,10 +285,12 @@ class DuckDbSink:
         "schema": as_text,
         "write_mode": one_of(*WRITE_MODES),
         "commit_rows": as_int,
+        "nested": one_of("native", "json"),
     }
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         path, query = _file_path(uri, self.uri_params)
+        nested = nested_mode(options.get("nested", query.get("nested", "native")))
         mode = options.get("write_mode", query.get("write_mode", "create"))
         if mode not in WRITE_MODES:
             raise ShapeError(f"unknown write mode {mode!r}; choose one of {', '.join(WRITE_MODES)}")
@@ -254,9 +318,24 @@ class DuckDbSink:
             raise ShapeError(
                 f"table {table!r} has no batches and no schema: pass schema= to create it empty"
             )
+        # The complete first schema is known before importing the driver or opening a file.
+        create_table_sql(
+            schema_name, table, use_schema, columns=meta, primary_key=key, nested=nested
+        )
         duckdb = _driver()
         return self._write(
-            duckdb, path, schema_name, table, mode, use_schema, first, it, meta, key, commit_rows
+            duckdb,
+            path,
+            schema_name,
+            table,
+            mode,
+            use_schema,
+            first,
+            it,
+            meta,
+            key,
+            commit_rows,
+            nested,
         )
 
     def _write(
@@ -272,6 +351,7 @@ class DuckDbSink:
         meta: Mapping[str, Mapping[str, Any]],
         key: list[str],
         commit_rows: int | None,
+        nested: str,
     ) -> int:
         try:
             with _CONNECTION_LOCK:
@@ -286,12 +366,21 @@ class DuckDbSink:
                     with _SCHEMA_LOCK:
                         con.execute(f"CREATE SCHEMA IF NOT EXISTS {_quote(schema_name)}")
                 con.begin()
-                self._prepare(con, schema_name, table, mode, schema, meta, key)
+                self._prepare(con, schema_name, table, mode, schema, meta, key, nested)
                 if commit_rows:
                     con.commit()  # the table is there for readers before the first rows
                     con.begin()
                 rows = self._load(
-                    con, schema_name, table, mode, first, rest, schema, commit_rows, committed
+                    con,
+                    schema_name,
+                    table,
+                    mode,
+                    first,
+                    rest,
+                    schema,
+                    commit_rows,
+                    committed,
+                    nested,
                 )
                 con.commit()
                 log.debug("wrote %d rows to %s in %s", rows, table, path)
@@ -337,6 +426,7 @@ class DuckDbSink:
         schema: pa.Schema,
         meta: Mapping[str, Mapping[str, Any]],
         key: Sequence[str],
+        nested: str,
     ) -> None:
         name = _qualified(schema_name, table)
         exists = self._exists(con, schema_name, table)
@@ -351,7 +441,11 @@ class DuckDbSink:
         elif mode == "truncate" and exists:
             con.execute(f"DELETE FROM {name}")  # nosec B608 - quoted names only
         if not exists:
-            con.execute(create_table_sql(schema_name, table, schema, columns=meta, primary_key=key))
+            con.execute(
+                create_table_sql(
+                    schema_name, table, schema, columns=meta, primary_key=key, nested=nested
+                )
+            )
 
     def _load(
         self,
@@ -364,6 +458,7 @@ class DuckDbSink:
         schema: pa.Schema,
         commit_rows: int | None,
         committed: list[int],
+        nested: str,
     ) -> int:
         if first is None:
             return 0
@@ -389,7 +484,8 @@ class DuckDbSink:
                 )
             if raw.num_rows == 0:
                 continue
-            con.register(_VIEW, pa.Table.from_batches([normalize(raw)]))
+            ready = json_batch(raw) if nested == "json" else normalize(raw)
+            con.register(_VIEW, pa.Table.from_batches([ready]))
             try:
                 con.execute(sql)
             finally:

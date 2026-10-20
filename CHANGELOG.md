@@ -6,6 +6,11 @@ Status: available.
 
 ## Unreleased
 
+- DuckDB writes Arrow lists, structs and maps natively by default. The new `nested=json`
+  option stores nested values as JSON text; unsupported native shapes fail before connection
+  with their column and the JSON alternative named. Nested temporal values use the same
+  documented microsecond normalization as scalar values.
+
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 
 Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
