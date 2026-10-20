@@ -100,12 +100,13 @@ def test_databricks_round_trip():
 
 def _source_round_trip(source, sink, uri, options):
     table = f"shape_source_{uuid.uuid4().hex[:8]}"
+    table_uri = uri + ("&" if "?" in uri else "?") + "table=" + table
     expected = pa.table({"id": pa.array([1, 2, 3], type=pa.int32())})
     try:
         assert sink.write(uri, table, iter(expected.to_batches()), **options) == 3
-        actual = pa.Table.from_batches(list(source.read(uri + "&table=" + table, **options)))
+        actual = pa.Table.from_batches(list(source.read(table_uri, **options)))
         assert sorted(actual.column("id").to_pylist()) == [1, 2, 3]
-        assert actual.schema == source.schema(uri + "&table=" + table, **options)
+        assert actual.schema == source.schema(table_uri, **options)
         # Snowflake NUMBER precision determines the source width: NUMBER(10,0)
         # needs int64 for its complete range even when written from Arrow int32.
         assert dataset_id(actual) == dataset_id(expected.cast(actual.schema))
