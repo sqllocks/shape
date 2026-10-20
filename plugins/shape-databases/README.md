@@ -359,6 +359,11 @@ are refused before any connection, naming the column. No key width is guessed. S
 8000-character limit. The previous VARCHAR(255) default
 and first-batch string sizing are removed; a short first batch cannot truncate a later one.
 
+T-SQL declared strings beyond 4000 characters and Warehouse declared strings beyond
+8000 characters use their unbounded `MAX` types. Such widths on key columns are
+refused before connecting because `MAX` columns cannot be indexed. Declared widths
+are preserved without clamping; backend limits on actual index values still apply.
+
 `shape generate schema.json --to postgresql://user@host/db --dry-run` prints the
 resolved CREATE TABLE statements without generating rows, signing in, connecting or
 writing. `--json` adds a `ddl` list to the generation plan, each with `target`, `table`

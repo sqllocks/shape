@@ -107,3 +107,26 @@ def test_wanted2_indexed_string_refused_before_connection(warehouse):
     batch = pa.RecordBatch.from_pydict({"customer_id": ["one"]})
     with pytest.raises(ShapeError, match="column 'customer_id'.*max_length"):
         writer.write_table("rows", [batch], primary_key=["customer_id"])
+
+
+@pytest.mark.parametrize("warehouse,limit", [(False, 4000), (True, 8000)])
+def test_wanted2_indexed_oversize_width_refused_before_connection(warehouse, limit):
+    from shape.errors import ShapeError
+
+    def connect(*args, **kwargs):
+        pytest.fail("oversized indexed string was not refused before connection")
+
+    writer = SqlDatabaseWriter(
+        "Server=localhost;Database=shape", warehouse=warehouse, connect=connect
+    )
+    batch = pa.RecordBatch.from_pydict({"customer_id": ["one"]})
+    assert _tsql.column_type(batch.schema[0], {"max_length": limit}, warehouse=warehouse).endswith(
+        f"({limit})"
+    )
+    with pytest.raises(ShapeError, match="column 'customer_id'.*max_length"):
+        writer.write_table(
+            "rows",
+            [batch],
+            primary_key=["customer_id"],
+            columns={"customer_id": {"max_length": limit + 1}},
+        )

@@ -84,7 +84,7 @@ def test_the_golden_bytes_match_without_numpys_avx512_code(kernel: str) -> None:
         pytest.importorskip("shape._kernel")
     done = _run([str(ROOT / "scripts" / "golden_bytes.py")], {"SHAPE_KERNEL": kernel, **NO_AVX512})
     assert done.returncode == 0, done.stdout + done.stderr
-    assert "files match the golden byte corpus" in done.stdout
+    assert "390 files and 28 named refusals match the golden byte corpus" in done.stdout
 
 
 # ---- the tripwire -------------------------------------------------------------------------------

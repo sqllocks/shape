@@ -151,6 +151,10 @@ def column_type(
             limit = 8000 if warehouse else 4000  # VARCHAR and NVARCHAR hold at most this
             if declared <= limit:
                 return f"{char}({declared})"
+            if key:
+                raise ShapeError(
+                    f"column {field.name!r}: indexed string max_length {declared} exceeds {limit}"
+                )
             if warehouse and synapse:
                 raise ShapeError(
                     f"column {field.name!r}: a Warehouse string holds at most 8000 characters "

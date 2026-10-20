@@ -256,6 +256,13 @@ def _column_type(
             raise ValueError(f"column {field.name!r}: {exc}") from None
         if length < 1:
             raise ValueError(f"column {field.name!r}: max_length must be positive")
+        limit = {"tsql": 4000, "tsql-fabric-warehouse": 8000}.get(dialect)
+        if limit is not None and length > limit:
+            if key:
+                raise ValueError(
+                    f"column {field.name!r}: indexed string max_length {length} exceeds {limit}"
+                )
+            return "NVARCHAR(MAX)" if dialect == "tsql" else "VARCHAR(MAX)"
         return _TYPES[dialect]["string"].format(length=length)
     return _TYPES[dialect][logical]
 

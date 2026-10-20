@@ -216,3 +216,12 @@ def test_wanted2_indexed_string_requires_declared_width(dialect, tmp_path):
         columns={"customer_id": {"max_length": 64}},
     )
     assert "VARCHAR(64)" in (tmp_path / "bounded.sql").read_text()
+
+
+@pytest.mark.parametrize("dialect,limit", [("tsql", 4000), ("tsql-fabric-warehouse", 8000)])
+def test_wanted2_declared_width_boundaries(dialect, limit):
+    field = pa.field("customer_id", pa.string())
+    assert _column_type(field, {"max_length": limit}, dialect).endswith(f"({limit})")
+    assert _column_type(field, {"max_length": limit + 1}, dialect).endswith("(MAX)")
+    with pytest.raises(ValueError, match="column 'customer_id'.*max_length"):
+        _column_type(field, {"max_length": limit + 1}, dialect, key=True)

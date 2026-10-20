@@ -10,7 +10,7 @@ CREATE TABLE "app"."t" (
     "id"                           BIGINT               NOT NULL,
     "name"                         VARCHAR(40)          NULL,
     "amount"                       NUMERIC(10,2)        NULL,
-    "created"                      TIMESTAMP            NULL,
+    "created"                      TIMESTAMP(6)         NULL,
     CONSTRAINT "PK_t" PRIMARY KEY ("id")
 );
 
