@@ -441,6 +441,8 @@ create a new table with the requested generated columns instead.
 | `generated_columns` | `{"day": "CAST(ts AS DATE)"}` writes `delta.generationExpression`. The batch must supply the column with exactly the expression's result, including null semantics; disagreement is refused naming the column. | reader 1 / writer 4; `generatedColumns` |
 | `timestamp_ntz` | `true` retains zone-less timestamps; zoned timestamps keep their zone-aware instant. False retains the default UTC rewrite. | reader 3 / writer 7; `timestampNtz` |
 
+Native `map<timestamp_ntz>` with `column_mapping=name` is refused before storage access: no verified deltalake release supports this combination (verified feature minimum 1.6.6). Use `timestamp_ntz=false` for native UTC values or `nested=json`. Unmapped native timestamp maps are supported; `delta.appendOnly=true` is applied to the empty initialized table before user rows are written.
+
 Protocols compose by taking the highest reader/writer version; writer 7 advertises
 feature lists. Delta-rs may add supporting features to the stored protocol. The
 installed version's public APIs are checked before writing. The implementation is

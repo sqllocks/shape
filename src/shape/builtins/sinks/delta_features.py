@@ -271,7 +271,9 @@ def _has_parameter(call: Any, parameter: str) -> bool:
         return False
 
 
-def require_capabilities(dl: Any, options: dict[str, Any], features: Features) -> None:
+def require_capabilities(
+    dl: Any, options: dict[str, Any], features: Features, schema: pa.Schema | None = None
+) -> None:
     """Refuse an unavailable public API before a directory, table or commit is created."""
     table = getattr(dl, "DeltaTable", None)
     alter = getattr(getattr(dl, "table", None), "TableAlterer", None)
@@ -310,6 +312,13 @@ def require_capabilities(dl: Any, options: dict[str, Any], features: Features) -
         "timestamp_ntz": features.ntz,
     }
     installed = str(getattr(dl, "__version__", "unknown"))
+    if schema is not None and features.ntz and features.mapping and _map_timestamp_ntz(schema):
+        raise ValueError(
+            "nested=native map<timestamp_ntz> with column_mapping=name: "
+            f"installed deltalake {installed}; verified feature minimum {_VERIFIED_VERSION}; "
+            "no verified release supports this combination. "
+            "Use timestamp_ntz=false (native UTC) or nested=json"
+        )
     release = re.fullmatch(
         r"(\d+)\.(\d+)\.(\d+)(?:\+[A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)*)?", installed
     )
@@ -505,11 +514,15 @@ def _create_table(
         from shape.builtins.sinks.delta import _utc_timestamps
 
         create_schema = _utc_timestamps(schema)
+    create_configuration = dict(configuration or {})
+    append_only = bootstrap and create_configuration.get("delta.appendOnly") == "true"
+    if append_only:
+        del create_configuration["delta.appendOnly"]
     table = dl.DeltaTable.create(
         location,
         create_schema,
         partition_by=partition_by,
-        configuration=configuration,
+        configuration=create_configuration or None,
         storage_options=storage,
         raise_if_key_not_exists=False,
     )
@@ -526,6 +539,10 @@ def _create_table(
             storage_options=storage,
         )
         table = dl.DeltaTable(location, storage_options=storage)
+        if append_only:
+            table.alter.set_table_properties(
+                {"delta.appendOnly": "true"}, raise_if_not_exists=False
+            )
     return table
 
 
@@ -538,8 +555,8 @@ def write_features(
     storage: dict[str, str] | None,
 ) -> None:
     features = parse(options)
-    require_capabilities(dl, options, features)
     schema = features.schema(schema)
+    require_capabilities(dl, options, features, schema)
     prior = existing_table(dl, location, storage)
     old_constraints, old_generated = persisted_rules(prior)
     mode = options.get("mode", "overwrite")

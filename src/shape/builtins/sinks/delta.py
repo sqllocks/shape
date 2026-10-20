@@ -200,7 +200,7 @@ class DeltaTableWriter:
         self._write = self._dl.write_deltalake
         self._options = dict(options)
         self._features = features.parse(options)
-        features.require_capabilities(self._dl, options, self._features)
+        features.require_capabilities(self._dl, options, self._features, schema)
         self._location = location
         self._schema = schema if self._features.ntz else _utc_timestamps(schema)
         self._storage = storage
@@ -384,7 +384,7 @@ class DeltaSink:
         schema = _nested_schema(schema, nested_mode(options.get("nested", "native")))
         feature_options = features.parse(options)
         schema = feature_options.schema(schema)
-        features.require_capabilities(_deltalake(), options, feature_options)
+        features.require_capabilities(_deltalake(), options, feature_options, schema)
         location, storage = _location(uri, table, options)
         return DeltaTableWriter(location, schema, options, storage)
 
@@ -402,7 +402,7 @@ class DeltaSink:
         feature_options = features.parse(options)
         schema = feature_options.schema(schema)
         dl = _deltalake()
-        features.require_capabilities(dl, options, feature_options)
+        features.require_capabilities(dl, options, feature_options, schema)
         schema = schema if feature_options.ntz else _utc_timestamps(schema)
         if options.get("fingerprint") and (
             options.get("commit_rows") or options.get("commit_seconds")
