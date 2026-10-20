@@ -68,3 +68,8 @@ Original capture run38332677511/job115085741837: full capture step2026-10-13T01:
 
 
 Generation fix signed/pushed da5fefe24e5c4cb6e54dcbf7ab5cccaae3f711ad on42; frz_review APPROVED this INTERMEDIATE exact head. Actual healthcare80/80columns and capital64/64 pass full existing clausesa-f with all5original seed digests authenticated. Prior verifier on the SAME authenticated outputs reproduces14original flags and exits1 for both; corrected verifier exits0. Focused53passed3.73s; static/wording clean. No numeric/reference/record/threshold changes. Clock delta remains in progress/uncommitted, final exact-source review and new CI still required. Bounded watcher renewals through23:15: metadata main+34; dbt29/30; iceberg31; eventhouse33/43. formats implements42; frz reviews42.
+
+
+## Hosted runner scheduling
+
+Root intentionally canceled PR31 CI39504110302/Wheels39504110292 and PR34 CI39504158279 to release hosted runner slots for first Owner merge group29/30/33. Required29 jobs were still queued after substantial wait. These lower-priority heads must absorb the next main merge and rerun anyway. Cancellations are NOT passing evidence; do not retry until next main refresh. Their source and exact independent approvals are unchanged. Main53 validation and first-group/new-source43 CI remain running. Docs/Security feedback on31/34 remains relevant, but complete merge gates will be fresh after refresh. No local fulls or scope/gate changes.
