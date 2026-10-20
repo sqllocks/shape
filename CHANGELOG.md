@@ -2058,3 +2058,10 @@ Converting a full capture to the safe form now gives a different content ID when
 - W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
   catalog row counts and whole-database profiles through the KQL endpoint.
   Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
+
+### W9-08: broker message metadata
+
+- Kafka and Event Hubs support column/composite keys, user headers, partition
+  controls and event-time message timestamps; replay keys remain available.
+- Stream sources expose message metadata on request and drift ignores it by
+  default. The CLI exposes both write and read metadata options.
