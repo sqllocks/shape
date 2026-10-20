@@ -24,6 +24,8 @@ class FakeEvent:
         self.sequence_number = sequence_number
         self.body = body
         self.enqueued_time = enqueued
+        self.properties: dict[str, Any] = {}
+        self.partition_key: str | None = None
 
     def body_as_str(self) -> str:
         return self.body

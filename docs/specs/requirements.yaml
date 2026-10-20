@@ -726,3 +726,12 @@ requirements:
   text: Database sinks support documented native list, struct and map types, preserve null and empty containers, apply explicit temporal normalization, and refuse unsupported nested shapes before connecting with the column and truthful alternative named. JSON transports preserve decimal and temporal text, reject ambiguous object map keys and non-finite values, and retain an explicit legacy JSON mode. Matching sources retain native physical types; JSON-backed restoration requires the original Arrow schema, parses once and refuses ambiguous data or precision loss.
   verify: [unit, conformance]
   owner: databases
+
+- id: SHAPE-STREAM-METADATA-001
+  title: Broker message metadata
+  level: L1
+  milestone: W9-08
+  priority: MUST
+  text: Kafka and Event Hubs support column keys and headers, preserve replay identity, refuse reserved header names and unknown metadata columns before sending, and optionally decode broker metadata outside default drift comparisons.
+  verify: [conformance]
+  owner: streaming
