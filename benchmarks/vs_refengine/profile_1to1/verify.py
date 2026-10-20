@@ -13,6 +13,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 import baseline_dump as sd  # noqa: E402 (harness path bootstrap)
+from comparison_contract import NOT_COMPARABLE_EXIT, not_comparable_reason  # noqa: E402
 from paths import PROFILE_DATA_DIR  # noqa: E402 (harness path bootstrap)
 from recorded_store import RecordingError, load, sha256  # noqa: E402 (harness path bootstrap)
 
@@ -272,6 +273,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("datasets", nargs="*")
     a = ap.parse_args(argv)
     total = 0
+    not_comparable = 0
     for ds in a.datasets or ALL:
         try:
             baseline = baseline_profile(ds)
@@ -283,6 +285,11 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         matrix: dict[str, Any] = {}
         failures: list[str] = []
+        reason = not_comparable_reason("profile:" + ds, baseline)
+        if reason is not None:
+            print(f"NOT COMPARABLE profile:{ds}: {reason}")
+            not_comparable += 1
+            continue
         if "__error__" in baseline:
             try:
                 shape_profile(ds)
@@ -306,7 +313,8 @@ def main(argv: list[str] | None = None) -> int:
             print("MISMATCH", failure)
         total += len(failures)
     print(str(total) + " mismatches")
-    return int(total > 0)
+    print(str(not_comparable) + " not comparable (not passes)")
+    return 1 if total else NOT_COMPARABLE_EXIT if not_comparable else 0
 
 
 if __name__ == "__main__":

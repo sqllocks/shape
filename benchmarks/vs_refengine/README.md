@@ -3,11 +3,33 @@
 The baseline is the last published Shape release, initially **Shape 0.9.1**, at the commit
 named by `v0.9.1`. The candidate is the checkout under test. The reference engine is archived
 and is never installed or run. T-20 is historical; T-21 clauses (g) and (h) are retired.
-T-21 (a)–(f), T-22, fixed seeds and all comparator tolerances remain unchanged.
+T-21 (a)–(f), T-22, fixed seeds and all numeric comparator tolerances remain unchanged.
 
-The builder delivers tools and offline tests only. There are **no real recordings or manifest
-on this branch**. Missing recordings return exit 2, never a pass. The lead captures, reviews
-and commits the release recordings before running the real acceptance commands.
+## Recorded errors are not comparable
+
+The Owner's 2026-10-20 decision permits a separate category only when the authenticated
+0.9.1 recording itself contains an error or unsupported result. The reviewed workload
+and reason list is `comparison_contract.py`: `profile:edge/x_pq_list.parquet` recorded
+`TypeError` for a list column, and `profile:edge/x_pq_nested.parquet` recorded `TypeError`
+for a struct column. These recordings contain no baseline profile values.
+
+The profile verifier authenticates the recording and input digests before classification,
+prints `NOT COMPARABLE` with the workload and reason, and exits 3. The runner records
+`verifier.status=not_comparable`, exit code 3, the workload and reason. It does not run a
+timing worker or count the result as a pass. Nightly reauthenticates the recorded refusal,
+reports the category in its separate `not_comparable` list and history, and rejects an
+unregistered workload, wrong reason, wrong exit code or timing attributed to this category.
+An overall green verdict can account for these reviewed refusals while `passed` excludes them.
+
+Successful recorded outputs continue to compare with every existing rule and threshold.
+In particular, time-only weekday histograms are data values, not runtime timestamps;
+sector names and procedure codes/descriptions are data values, not reference-source names.
+Neither is excluded, remapped or re-recorded. Their unresolved cross-release differences
+still fail the value comparisons; this category does not make the full acceptance run green.
+
+The committed manifest identifies capture time `2026-10-13T01:47:50Z` and release commit
+`d09731e59b630fac11b7127c812c47ccca8ab64f`. Missing or tampered recordings return exit 2,
+never a pass. The original recordings and manifest remain unchanged.
 
 ## Environment and baseline installation
 

@@ -6,6 +6,10 @@ Status: available.
 
 ## Unreleased
 
+- Report the two reviewed Shape 0.9.1 nested-input errors as not comparable in the release
+  regression harness, separately from passes and without timing them; value comparisons
+  and thresholds are unchanged.
+
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 
 Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
