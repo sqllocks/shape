@@ -5,6 +5,8 @@ from decimal import Decimal
 import pyarrow as pa
 import pytest
 
+from shape.errors import ShapeError
+
 
 def cloud_arrow_type(*args):
     # Import when the case executes so the main-baseline run records every refusal,
@@ -171,6 +173,16 @@ def test_source_default_batch_size_does_not_inherit_sink_write_batches(dialect):
     assert not server.events
 
 
+@pytest.mark.conformance
+@pytest.mark.parametrize("dialect", ["snowflake", "databricks"])
+def test_cloud_source_conforms_to_source_v1(dialect):
+    """SHAPE-CLOUD-001: declared schemas and repeatable Arrow reads satisfy Source v1."""
+    from shape.plugins import kit
+
+    source, _, uri, _, _ = cloud_fixture(dialect)
+    kit.check_source(source, uri + "&table=items")
+
+
 @pytest.mark.parametrize("dialect", ["snowflake", "databricks"])
 @pytest.mark.parametrize(
     "suffix", ["&password=never-in-uri", "&token=never-in-uri", "&table=", "&table=x&table=y"]
@@ -180,6 +192,36 @@ def test_source_refuses_before_connection(dialect, suffix):
     with pytest.raises(Exception) as exc:
         list(source.read(uri + suffix))
     assert "never-in-uri" not in str(exc.value)
+    assert not server.events
+
+
+@pytest.mark.parametrize("dialect", ["snowflake", "databricks"])
+@pytest.mark.parametrize(
+    "options,reason",
+    [
+        ({"batch_size": 0}, "batch_size"),
+        ({"batch_size": True}, "batch_size"),
+        ({"sample_rows": -1}, "sample_rows"),
+        ({"sample_rows": 1.5}, "sample_rows"),
+        ({"tables": []}, "tables"),
+        ({"tables": "items"}, "tables"),
+        ({"unexpected": "do-not-print"}, "unknown source option"),
+    ],
+)
+def test_source_options_fail_before_connection(dialect, options, reason):
+    source, server, uri, _, _ = cloud_fixture(dialect)
+    with pytest.raises(ShapeError, match=reason):
+        list(source.read(uri + "&table=items", **options))
+    assert not server.events
+
+
+@pytest.mark.parametrize("dialect", ["snowflake", "databricks"])
+def test_missing_table_and_unknown_uri_option_fail_before_connection(dialect):
+    source, server, uri, _, _ = cloud_fixture(dialect)
+    with pytest.raises(ShapeError, match="table"):
+        source.schema(uri)
+    with pytest.raises(ShapeError, match="unknown"):
+        list(source.read(uri + "&table=items&unsupported=do-not-print"))
     assert not server.events
 
 

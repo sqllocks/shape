@@ -105,25 +105,34 @@ def _source_round_trip(source, sink, uri, options):
         assert sink.write(uri, table, iter(expected.to_batches()), **options) == 3
         actual = pa.Table.from_batches(list(source.read(uri + "&table=" + table, **options)))
         assert sorted(actual.column("id").to_pylist()) == [1, 2, 3]
-        assert actual.schema.field("id").type == pa.int32()
+        assert actual.schema == source.schema(uri + "&table=" + table, **options)
+        # Snowflake NUMBER precision determines the source width: NUMBER(10,0)
+        # needs int64 for its complete range even when written from Arrow int32.
+        assert dataset_id(actual) == dataset_id(expected.cast(actual.schema))
     finally:
         _drop(sink, uri, table, options)
+
+
+def _source_settings(*names):
+    missing = [name for name in names if not os.environ.get(name)]
+    assert not missing, f"live source test needs {', '.join(missing)}"
+    return [os.environ[name] for name in names]
 
 
 def test_snowflake_source_round_trip():
     from shape_databases.cloud_readers import SnowflakeSource
 
-    (uri,) = need("SHAPE_TEST_SNOWFLAKE_URI")
+    (uri,) = _source_settings("SHAPE_TEST_SNOWFLAKE_URI")
     options = {}
     if os.environ.get("SHAPE_TEST_SNOWFLAKE_PRIVATE_KEY"):
         options["private_key"] = os.environ["SHAPE_TEST_SNOWFLAKE_PRIVATE_KEY"]
     else:
-        need("SNOWFLAKE_PASSWORD")
+        _source_settings("SNOWFLAKE_PASSWORD")
     _source_round_trip(SnowflakeSource(), SnowflakeSink(), uri, options)
 
 
 def test_databricks_source_round_trip():
     from shape_databases.cloud_readers import DatabricksSource
 
-    (uri, _) = need("SHAPE_TEST_DATABRICKS_URI", "DATABRICKS_TOKEN")
+    (uri, _) = _source_settings("SHAPE_TEST_DATABRICKS_URI", "DATABRICKS_TOKEN")
     _source_round_trip(DatabricksSource(), DatabricksSink(), uri, {})
