@@ -6,6 +6,11 @@ Status: available.
 
 ## Unreleased
 
+- SQL writes preserve Arrow integer widths, decimal dimensions, float32 and temporal precision.
+  Zoned values keep their instant to the microsecond and normalize to UTC; zone names are not
+  preserved. Undeclared strings are now unbounded instead of VARCHAR(255), and database writers
+  no longer size strings from the first batch. `shape generate --to ... --dry-run` includes the
+  resolved DDL without connecting or generating values. See `docs/SINKS.md`.
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 
 Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).

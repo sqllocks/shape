@@ -717,3 +717,14 @@ requirements:
   text: "Security claims distinguish technical capability from external certification/accreditation."
   verify: [specification-review]
   status: registered-not-independently-certified
+
+- id: SHAPE-SINK-001
+  title: SQL write type fidelity
+  text: SQL sinks resolve supported Arrow widths, temporal units and UTC instants, explicit decimal dimensions and declared or unbounded string widths consistently in writes and offline DDL previews.
+  verify: [sql-write-type-conformance]
+  tests:
+    - tests/builtins/test_w9_03_types.py
+    - tests/cli/test_w9_03_ddl.py
+    - plugins/shape-databases/tests/test_w9_03.py
+    - plugins/shape-fabric/tests/test_w9_03.py
+  owner: generation

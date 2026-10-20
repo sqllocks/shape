@@ -107,21 +107,21 @@ def test_postgres_allows_a_percent_because_copy_takes_no_parameters():
 
 # -- type mapping --------------------------------------------------------------------------
 TYPES = [
-    (pa.int8(), "BIGINT", "BIGINT"),
+    (pa.int8(), "SMALLINT", "TINYINT"),
     (pa.int64(), "BIGINT", "BIGINT"),
     (pa.uint32(), "BIGINT", "BIGINT"),
-    (pa.float32(), "DOUBLE PRECISION", "DOUBLE"),
+    (pa.float32(), "REAL", "FLOAT"),
     (pa.float64(), "DOUBLE PRECISION", "DOUBLE"),
     (pa.decimal128(12, 3), "NUMERIC(12,3)", "DECIMAL(12,3)"),
     (pa.bool_(), "BOOLEAN", "TINYINT(1)"),
     (pa.date32(), "DATE", "DATE"),
-    (pa.timestamp("us"), "TIMESTAMP", "DATETIME(6)"),
-    (pa.timestamp("us", tz="UTC"), "TIMESTAMP", "DATETIME(6)"),
-    (pa.time64("us"), "TIME", "TIME(6)"),
+    (pa.timestamp("us"), "TIMESTAMP(6)", "DATETIME(6)"),
+    (pa.timestamp("us", tz="UTC"), "TIMESTAMPTZ(6)", "TIMESTAMP(6)"),
+    (pa.time64("us"), "TIME(6)", "TIME(6)"),
     (pa.binary(), "BYTEA", "LONGBLOB"),
     (pa.large_binary(), "BYTEA", "LONGBLOB"),
-    (pa.string(), "VARCHAR(255)", "VARCHAR(255)"),
-    (pa.large_string(), "VARCHAR(255)", "VARCHAR(255)"),
+    (pa.string(), "TEXT", "TEXT"),
+    (pa.large_string(), "TEXT", "TEXT"),
     (pa.list_(pa.int64()), "TEXT", "LONGTEXT"),
     (pa.struct([("a", pa.int64())]), "TEXT", "LONGTEXT"),
 ]
@@ -159,7 +159,7 @@ def test_column_metadata_overrides_like_the_script_sink():
     schema = pa.schema([pa.field("s", pa.string()), pa.field("d", pa.decimal128(5, 1))])
     meta = {"s": {"max_length": 40, "nullable": False}, "d": {"precision": 9, "scale": 4}}
     ddl = _sql.create_table_sql(None, "t", schema, "postgres", columns=meta)
-    assert '"s" VARCHAR(40) NOT NULL' in ddl and "NUMERIC(9,4)" in ddl
+    assert '"s" VARCHAR(40) NOT NULL' in ddl and "NUMERIC(5,1)" in ddl
 
 
 # -- the statements -------------------------------------------------------------------------

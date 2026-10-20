@@ -326,7 +326,8 @@ _SF_PUT = re.compile(
     rf"PUT '((?:[^'\\]|\\.|'')*)' {_SF_STAGE} AUTO_COMPRESS = FALSE OVERWRITE = TRUE\Z"
 )
 _SF_COPY = re.compile(
-    rf"COPY INTO {_QUALIFIED} FROM {_SF_STAGE} FILE_FORMAT = \(TYPE = PARQUET\) "
+    rf"COPY INTO {_QUALIFIED} FROM {_SF_STAGE} "
+    r"FILE_FORMAT = \(TYPE = PARQUET(?: USE_LOGICAL_TYPE = TRUE)?\) "
     r"MATCH_BY_COLUMN_NAME = CASE_SENSITIVE PURGE = TRUE\Z"
 )
 _SF_REMOVE = re.compile(rf"REMOVE {_SF_STAGE} PATTERN = '(.*)'\Z")
@@ -411,7 +412,7 @@ class FakeSnowflakeCursor:
         self._result = rows
 
     def execute(self, sql: str, params: Sequence[Any] | None = None) -> None:
-        import pyarrow.parquet as pq
+        import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
         s = self.server
         s.events.append(("execute", sql, tuple(params) if params is not None else None))

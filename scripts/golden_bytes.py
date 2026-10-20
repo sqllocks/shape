@@ -111,9 +111,12 @@ def _writable(result: Any, fmt: str) -> Any:
     )
 
 
-def write_all(out: Path, names: list[str] | None = None) -> dict[str, bytes]:
+def write_all(
+    out: Path, names: list[str] | None = None, *, refusals: dict[str, str] | None = None
+) -> dict[str, bytes]:
     """Write every spec of the corpus (or ``names``) in every output under ``out``; the bytes of
-    each file, keyed ``<spec>/<table>.<suffix>``."""
+    each file, keyed ``<spec>/<table>.<suffix>``. Missing decimal dimensions are recorded
+    in ``refusals`` under the same key, with the original input unchanged."""
     from shape.generation.output import write_result
 
     files: dict[str, bytes] = {}
@@ -125,8 +128,36 @@ def write_all(out: Path, names: list[str] | None = None) -> dict[str, bytes]:
                 if not written.tables:
                     continue
                 folder = out / name / suffix
-                for path in write_result(written, fmt, folder, max_workers=1, **options):
-                    files[f"{name}/{path.stem}.{suffix}"] = path.read_bytes()
+                for table in written.generation_order:
+                    one = replace(
+                        written,
+                        tables={table: written.tables[table]},
+                        generation_order=[table],
+                        row_counts={table: written.row_counts[table]},
+                    )
+                    try:
+                        paths = write_result(one, fmt, folder, max_workers=1, **options)
+                    except ValueError as exc:
+                        # Only the expressly required, named missing-dimension refusal is a
+                        # corpus outcome. Every other writer error remains an error.
+                        message = str(exc)
+                        missing = any(
+                            c.type == "decimal" and (c.precision is None or c.scale is None)
+                            for c in written.schema.tables[table].columns.values()
+                        )
+                        if not (
+                            fmt == "sql"
+                            and missing
+                            and message.startswith("column ")
+                            and ("precision" in message or "scale" in message)
+                            and "got None" in message
+                        ):
+                            raise
+                        if refusals is not None:
+                            refusals[f"{name}/{table}.{suffix}"] = message
+                        continue
+                    for path in paths:
+                        files[f"{name}/{path.stem}.{suffix}"] = path.read_bytes()
     return dict(sorted(files.items()))
 
 
@@ -135,7 +166,9 @@ def line_digests(data: bytes) -> str:
     return " ".join(hashlib.sha256(line).hexdigest()[:LINE_DIGEST] for line in data.split(b"\n"))
 
 
-def corpus_of(files: Mapping[str, bytes]) -> tuple[dict[str, Any], dict[str, Any]]:
+def corpus_of(
+    files: Mapping[str, bytes], *, refusals: Mapping[str, str] | None = None
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """``hashes.json`` and ``lines.json`` for ``files``."""
     import shape
 
@@ -147,6 +180,8 @@ def corpus_of(files: Mapping[str, bytes]) -> tuple[dict[str, Any], dict[str, Any
         "shape_version": shape.__version__,
         "files": {k: hashlib.sha256(v).hexdigest() for k, v in files.items()},
     }
+    if refusals:
+        hashes["refusals"] = dict(sorted(refusals.items()))
     lines = {
         "format": LINES_FORMAT,
         "version": VERSION,
@@ -168,6 +203,14 @@ def _check(doc: Any, fmt: str, where: str) -> dict[str, Any]:
         )
     if not isinstance(doc.get("files"), dict):
         raise CorpusError(f"{where} has no files map")
+    refusals = doc.get("refusals", {})
+    if not isinstance(refusals, dict) or any(
+        not isinstance(k, str) or not k.endswith(".sql") or not isinstance(v, str)
+        for k, v in refusals.items()
+    ):
+        raise CorpusError(f"{where} has an invalid refusals map")
+    if set(refusals) & set(doc["files"]):
+        raise CorpusError(f"{where} has files that are also refusals")
     return doc
 
 
@@ -186,15 +229,28 @@ def load_corpus(
 
 
 def differences(
-    hashes: Mapping[str, Any], lines: Mapping[str, Any], files: Mapping[str, bytes]
+    hashes: Mapping[str, Any],
+    lines: Mapping[str, Any],
+    files: Mapping[str, bytes],
+    *,
+    refusals: Mapping[str, str] | None = None,
 ) -> list[str]:
     """One report per file that differs from the corpus: a missing or unexpected file, or the
     first line that differs (its number, the line written now and the committed line's digest)."""
     import shape
 
     want: Mapping[str, str] = hashes["files"]
+    expected_refusals: Mapping[str, str] = hashes.get("refusals", {})
+    actual_refusals = refusals or {}
     reports = [f"{k}: in the corpus but not written" for k in sorted(set(want) - set(files))]
     reports += [f"{k}: written but not in the corpus" for k in sorted(set(files) - set(want))]
+    for key in sorted(set(expected_refusals) | set(actual_refusals)):
+        if key not in actual_refusals:
+            reports.append(f"{key}: expected refusal not observed")
+        elif key not in expected_refusals:
+            reports.append(f"{key}: unexpected refusal: {actual_refusals[key]}")
+        elif actual_refusals[key] != expected_refusals[key]:
+            reports.append(f"{key}: refusal differs: {actual_refusals[key]!r}")
     for key in sorted(set(want) & set(files)):
         data = files[key]
         if hashlib.sha256(data).hexdigest() == want[key]:
@@ -236,20 +292,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--update", action="store_true", help="rewrite the corpus")
     args = parser.parse_args(argv)
     with tempfile.TemporaryDirectory() as tmp:
-        files = write_all(Path(tmp))
+        refusals: dict[str, str] = {}
+        files = write_all(Path(tmp), refusals=refusals)
     if args.update:
-        hashes, lines = corpus_of(files)
+        hashes, lines = corpus_of(files, refusals=refusals)
         HASHES.write_text(_dump(hashes), encoding="utf-8", newline="\n")
         LINES.write_text(_dump(lines), encoding="utf-8", newline="\n")
         print(f"wrote {len(files)} file digests to {HASHES.relative_to(ROOT).as_posix()}")
         return 0
     hashes, lines = load_corpus(HASHES, LINES)
-    reports = differences(hashes, lines, files)
+    reports = differences(hashes, lines, files, refusals=refusals)
     for report in reports:
         print(report)
     if reports:
         return 1
-    print(f"{len(files)} files match the golden byte corpus")
+    count = f"{len(files)} files"
+    if refusals:
+        count += f" and {len(refusals)} named refusals"
+    print(f"{count} match the golden byte corpus")
     return 0
 
 
