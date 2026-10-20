@@ -345,11 +345,13 @@ transfer the entire table to the client. Catalog row counts are estimates (`relt
 and stale counts may affect the sampling strategy. Primary keys and foreign keys are exact
 catalog declarations; relationships carry `evidence: "declared"`.
 `sampled_rows`, `sample_method` and dataset `sampling` distinguish sample statistics from
-catalog counts. Null rates and uniqueness are unknown when no rows are sampled.
+catalog counts. Each table's sampling record keeps both the catalog population and the
+actual sampled rows; safe capture evaluates observed statistics using those sampled rows.
+Null rates and uniqueness are unknown when no rows are sampled.
 Saved profiles use the existing versioned `.shape` format and safe capture by default.
 
 Service checks: `pytest -m emulator plugins/shape-databases/tests/test_sources_services.py`
 uses PostgreSQL 16 and MySQL 8.4 from the emulator compose file. Opt-in live checks use
 `SHAPE_TEST_POSTGRES_URI` / `SHAPE_POSTGRES_PASSWORD` or
-`SHAPE_TEST_MYSQL_URI` / `SHAPE_MYSQL_PASSWORD`; a missing setting is named in the skip reason.
+`SHAPE_TEST_MYSQL_URI` / `SHAPE_MYSQL_PASSWORD`; each check names any missing required setting.
 Offline fake-server source acceptance runs on every PR.
