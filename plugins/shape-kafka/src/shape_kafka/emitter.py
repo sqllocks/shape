@@ -315,7 +315,10 @@ class KafkaEmitter:
         marker = [(HEADER_SYNTHETIC, b"true")] if synthetic else []
         for batch in batches:
             reasons = (
-                batch.column(FIELD_DEAD_REASON).to_pylist()
+                {
+                    f"{r[FIELD_TABLE]}/{r[FIELD_SEQ]}": r[FIELD_DEAD_REASON]
+                    for r in batch.to_pylist()
+                }
                 if FIELD_DEAD_REASON in batch.schema.names
                 else None
             )
@@ -340,10 +343,12 @@ class KafkaEmitter:
                     batch, event_format, topic, subject_strategy, registry
                 )
                 rejected.extend(refused)
-            for i, event in enumerate(events):
+            for event in events:
                 headers = [(HEADER_TABLE, event.table.encode("utf-8")), *marker]
                 if reasons is not None:
-                    headers.append((HEADER_DEAD_LETTER_REASON, str(reasons[i]).encode("utf-8")))
+                    headers.append(
+                        (HEADER_DEAD_LETTER_REASON, str(reasons[event.key]).encode("utf-8"))
+                    )
                 while True:
                     try:
                         producer.produce(

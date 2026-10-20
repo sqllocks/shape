@@ -818,3 +818,24 @@ def test_avro_uuid_normalization_does_not_change_nonfinite_read_values():
     fastavro.schemaless_writer(buf, json.loads(text), {"value": float("nan")})
     c = BinaryCodec("avro", text)
     assert math.isnan(c.decode(buf.getvalue())["value"])
+
+
+@pytest.mark.parametrize("fmt", ["avro", "protobuf"])
+def test_binary_encode_rejection_keeps_dead_letter_reason_aligned(tmp_path, fmt):
+    from shape_kafka.testing import EmitterHarness
+
+    from shape.streaming.emit import RejectedEvents
+    from shape.streaming.emit.formats import with_event_fields
+
+    path = tmp_path / ("events.avsc" if fmt == "avro" else "events.proto")
+    path.write_text(AVRO if fmt == "avro" else PROTO)
+    batch = with_event_fields(
+        pa.RecordBatch.from_pylist([{**ROW, "id": None}, {**ROW, "id": 8}], schema=SCHEMA),
+        "orders",
+        0,
+    ).append_column("_shape_dead_letter_reason", pa.array(["refused-row", "sent-row"]))
+    h = EmitterHarness()
+    with pytest.raises(RejectedEvents):
+        h.make().emit(h.uri, [batch], event_format=fmt, schema_file=str(path), message="shop.Order")
+    assert len(h.store.log) == 1
+    assert dict(h.store.log[0][3])["shape-dead-letter-reason"] == b"sent-row"
