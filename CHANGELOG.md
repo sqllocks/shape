@@ -7,6 +7,7 @@ Status: available.
 ## Unreleased
 
 - Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
+- Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.
 
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 
