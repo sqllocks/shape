@@ -129,11 +129,11 @@ def _load_profile(path: str, ctx: Context) -> Any:
     """Load a ``.shape`` profile. The notice that it is not signed is a warning of the response."""
     import warnings
 
-    import shape
+    from shape.profile.reference.sources import profile_or_load
 
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        loaded = shape.load(path)
+        loaded = profile_or_load(path)
     for item in caught:
         if item.category.__name__ == "ArtifactNotVerifiedWarning":
             ctx.warn("artifact_not_verified", str(item.message))
