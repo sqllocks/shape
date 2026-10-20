@@ -4,7 +4,7 @@ Updated 2026-10-20 after PR40 merged and all own open lanes refreshed. Work cont
 
 ## Progress
 
-Nine assigned issues:1merged11.1%,6active-ready66.7%,2blocked-or-partially-parked22.2%;8unmerged88.9%. Seven ready implementations including the merged issue77.8%. Partial #20 category is not full delivery. Supporting PR40 is outside the nine-issue denominator. Give full count updates every five minutes plus merge/blocker milestones; last full update approximately22:03UTC.
+Nine assigned issues:1merged11.1%,6active-ready66.7%,1active-partial11.1%,1dependency-blocked11.1%;8unmerged88.9%. Seven ready implementations including the merged issue77.8%. Partial #20 category is not full delivery. Supporting PR40 is outside the nine-issue denominator. Give full count updates every five minutes plus merge/blocker milestones; last full update approximately22:03UTC.
 
 Current main: `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` from PR40. Its post-merge workflows CI39504029294, Documentation39504029094 and Security39504029453 are still queued/running; no observed failures, no complete main-green claim. Metadata agent watches. Prior main35addfc4 had all workflows green, recorded in W9-08.md.
 
@@ -60,3 +60,8 @@ No skips/xfail/deleted/weakened tests, loosened gates/tolerances, tags/releases/
 ## Generation interpretation corrected — 2026-10-20
 
 Independent frz_review reassessment: earlier blanket parking of code-shaped category names was too broad. All14 known generation flags can potentially be addressed by permitted fixed provenance/lineage-backed name aliases, preserving counts/weights/probabilities/numeric charges and unchanged checks. formats_recover implementing targeted tests-first on42; frz_review reviews exact result. No green claim yet. Two time-only workloads remain parked; #20 remains open/partial, no Nightly dispatch or closure. Updated questions.md supersedes the earlier four-workload/new-decision rationale above. Keep all input/recording hashes unchanged. Existing isolated history0.9.1 reference pools match recorded-release dataset blobs, but Arrow26 differs from frozen environment, so no whole-environment equivalence claim.
+
+
+## Clock provenance recovered; all FRZ remaining work ACTIVE
+
+Original capture run38332677511/job115085741837: full capture step2026-10-13T01:47:38Z–02:17:06Z; session recorded_utc01:47:50Z and local machine.started01:47:50 agree. Original e41a67ea workflow/recorder has no timezone override and inherits environment. Whole-window same-day evidence establishes implicit date independently of compared histograms. frz_review independently supports narrowly authenticated PRE-computation implicit-date replay for only2time fixtures, with unchanged values/checks and matching timing context. formats_recover implementing after generation aliases. Therefore earlier #20 parking statements above are HISTORICAL/superseded: all4remaining workloads now ACTIVE, not proven green yet. No new Owner decision required. Questions.md and issuecomment6301325664 corrected. #14 is now the sole blocked issue.
