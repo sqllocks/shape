@@ -20,6 +20,9 @@ Current main:35addfc4c310b85a62cbe7f315e1d50fb8e426f8. Main CI is running/queued
 | #12 W9-11 | lane/W9-11-finish / bc98623f582c121cad0bcf56a83a8829fd826437 | https://github.com/sqllocks/shape/pull/30 | ready, refreshed, APPROVED; fresh CI pending |
 | #13 W9-12 | lane/W9-12-finish / 170ce0dd549eaca5898d368b7fc3715ccc1a5d53 | https://github.com/sqllocks/shape/pull/33 | ready, refreshed, APPROVED; fresh CI pending |
 | #17 W9-16 | lane/W9-16-finish / 8c9fa927dc31540f19755827641b0dbc9a8a3668 | https://github.com/sqllocks/shape/pull/31 | ready, refreshed, APPROVED; fresh CI pending |
+| #6 W9-05 | lane/W9-05 / 39760e6927b36dc32f7d0bd7f4977a36719f70ac | https://github.com/sqllocks/shape/pull/43 | ready, independently APPROVED; depends on PR42/main refresh/combined exact-head CI |
+| #20 FRZ-01 | lane/FRZ-01-finish / 8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4 | https://github.com/sqllocks/shape/pull/42 | error category ready and APPROVED; four remaining value workloads parked; no closure |
+| #14 W9-13 | lane/W9-13 / 58966e0 | none | journal only; dependency-blocked until PR35/main source interface |
 
 PR34 old7a head had an unchanged macOS cancellation-test timing failure; new0b head CI supersedes it. Do not weaken/edit the unowned test. Iceberg Windows local-file URI fix remains in8c,128targeted pass each mode+16current/minimumSDK tests; actual Windows freshCI pending. The old font failure was in unchanged branded-site tests; no assertion edited.
 
@@ -28,7 +31,7 @@ PR34 old7a head had an unchanged macOS cancellation-test timing failure; new0b h
 Throughput decision-log row is committed on scratch cf68ff1 and included in dbt PR29 e1ae578 for main. Premium process05/08 edits are owned by Premium Build A; do not touch that repo or another session's PRs. Semantic/dbt explicit Owner-actions headings were added during refresh. Pending service validation is already listed in each lane record; no live success claimed. Semantic fixture/measure/role expected-results decision remains Owner work.
 
 PARTIAL READY / REMAINING ACCEPTANCE PARKED #20: approved error category implemented in PR42 at8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4, independently APPROVED. Four value-recording workloads remain blocked under unchanged value rules; exact question/options/recommendation in questions.md and issuecomment6301325664. Do not count #20 delivered or close it. Value comparisons/recordings/thresholds unchanged.
-ACTIVE #6: Owner2026-10-20 approves Wanted5 under the same category as #20. eventhouse_recover owns child-field implementation, coordinating with formats_recover for the shared harness category. Refreshed signed/pushed branch lane/W9-05 headbc4b903.
+READY #6: Owner2026-10-20 approval implemented in PR43, independently APPROVED exact39760e6927b36dc32f7d0bd7f4977a36719f70ac. Depends on shared category PR42 landing and a combined main refresh; no harness code copied. eventhouse_recover owns refreshes; frz_review approved full diff.
 Parked #14: waiting only for W9-01 source interface on main; do not inspect Lead A branches/issues. Decimal0<=scale<=precision refusal was ALREADY approved in issuecomment6072817299, no further decision needed. Current pushed journal lane/W9-13 head58966e0. Updated clarification: issuecomment6299575080; no new decimal decision is pending.
 
 Exact questions/options/recommendations remain in questions.md. #6 is active; #20 has a ready category PR with remaining value acceptance parked; #14 remains dependency-blocked. All three remain open; no product PR/merge yet.
@@ -88,3 +91,11 @@ Iceberg PR31 exact8c9fa927: BOTH Windows3.11job118837250256 and3.14job1188372500
 Read-only #20 context/name reanalysis retains4parkedwholeworkloads. Authenticatedcapture-session timestamp exists but faithfulper-workloadclockcontext is unproven; display-namealiases couldpartiallynormalize nameswithstableIDs but codedata stillblockswholegenworkloads. Questions.md capturesprecisedistinction. AtnextmandatoryPR42mainrefresh, clarifyjournalratherthanextraCIchurnnow.
 
 PR40 latest23success/7running/1structural skip/no failures; main35 latest26success/1running/no failures. Remainingjobsareactivelytestingmulti-phase suites, not provisioning; minversions alone took42m47s withtwo full light suites. No relaxedgate is authorized. Userfullcountupdate21:09UTC; nextdueapproximately21:14UTC.
+
+## Ready child-profile PR — 2026-10-20 21:14 UTC
+
+PR43 is ready/non-draft and artifact attached by root. Exact39760e6927b36dc32f7d0bd7f4977a36719f70ac signed/pushed, clean worktree, independent frz_review APPROVED. Refreshed-main initial14red bothmodes; review boundary regressionsred→green. Finaltargeted221inclboth1GBheavy, Python220nonheavy, consumer235, child35, capsules171, conformance39, and directsafe-capture131 allpass; configuredchanged-source mypy19/Ruff/format/wording/requirements/CLI/stableAPI clean. No full local run. Existingfull-roundtripassertion retained with explicitcapture=full; independentdefaultsafe/leaktests added. Childcheckpointpolicy unchanged and no new private-state/profile-capsule leak found.
+
+All six active assigned issues now have ready independentlyreviewed implementations (29/30/31/33/34/43). Plus merged9, codeimplementationready7/9=77.8%; actualdelivery1/9=11.1%; unmerged8/9=88.9%; blocked/parked20+14=2/9=22.2%. PartialcategoryPR42 is not full #20 delivery. Merge priority remains40first, then29/30/33, then34/31, then42/43, then14after35.
+
+Rootattached43 after childattachmenttool stalled; no further artifact attachment needed. Authorsavailableforrefresh: dbt_recover29; eventhouse_recover30/43; formats_recover34/42; iceberg_recover31; root33. metadata_recover currently watches40 with fresh commands and exactheadreviewunchanged. Mainlast26success/1runningUbuntu3.12; completedDocs/Securitygreen. Userfullcountupdate21:14, nextdue~21:19.
