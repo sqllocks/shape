@@ -38,6 +38,14 @@ Documentation prerequisites were prepared before the directive: default dbt pack
 
 Public CI already runs both core kernel modes in its min-versions job, plus native/heavy/kernel/drift/docs/Fabric/pure-wheel jobs. Changed DB plugin modules were also checked locally in both modes. All triggered exact-head checks remain required.
 
+## Shared CI blocker
+
+Security audits on the current baseline found certifi2026.7.22 GHSA-6q48-6c7w-9gw2; fixed version is2026.10.19. Lead B owns the existing certificate/browser fix PR40. Do not edit, refresh or merge its branch. All five owned ready PR heads still pin the vulnerable baseline; their unfinished workflows were cancelled deliberately to free capacity for the shared fix. No gate was bypassed: after the fix reaches main, merge that main once into each owned ready branch and push, then require every triggered exact-head check green. Independent implementation approvals remain valid subject to reviewing any refresh conflicts.
+
+Parked #8 now stacks actual #5 helper at34abd39 and finishes independent AST integration; #5 has a fresh agent finishing unblocked writer/CLI portions on20252df, preserving DuckDB Owner blocker. Neither is unparked or approved for a PR/main merge. Shared file ownership is coordinated; no helper copies.
+
+A transient scratch push authentication error recovered on a dry-run and actual retry; latest git read/write credential checks passed. No config or credential changes.
+
 ## Next
 
-Merge reviewed PRs #35/#36 and dependent #37/#38/#39 promptly as each reaches green CI and current main. Merge the resulting main into open implementation lanes once; do not repeat local tests for a clean refresh. Stack actual #2 branch into #3/#16 for real integration now; open ready dependent PRs after targeted checks. Earlier waiting-for-main integration interpretation was unnecessarily conservative; merge order remains unchanged. Continue #7 in parallel. Preserve parked checkpoints until genuine Owner decisions arrive. Final report is required when all seven issues are merged or parked, or another hard stop occurs.
+Await the other-owned shared dependency fix on main, then refresh all owned ready PRs once and let full CI rerun. Merge reviewed PRs #35/#36 and dependent #37/#38/#39 promptly as each reaches green CI and current main. Merge the resulting main into open implementation lanes once; do not repeat local tests for a clean refresh. Stack actual #2 branch into #3/#16 for real integration now; open ready dependent PRs after targeted checks. Earlier waiting-for-main integration interpretation was unnecessarily conservative; merge order remains unchanged. Continue #7 in parallel. Preserve parked checkpoints until genuine Owner decisions arrive. Final report is required when all seven issues are merged or parked, or another hard stop occurs.
