@@ -144,3 +144,20 @@ def test_existing_constraints_refusal_precedes_truncate(flavour):
         sink.write(uri, "child", [batch()], write_mode="truncate", **declarations())
     assert server.rows("child") == before
     assert not any(sql.startswith("TRUNCATE") for sql in server.statements())
+
+
+@pytest.mark.parametrize("mode", ["replace", "truncate"])
+def test_referenced_table_refusal_names_constraint_and_preserves_rows(flavour, mode):
+    sink, uri, server = flavour
+    server.seed("parent", [("id", "bigint", False)], [(1,)], primary_key=["id"])
+    server.seed(
+        "child",
+        [("parent_id", "bigint", False)],
+        [],
+        foreign_keys=[("parent", ["id"], ["parent_id"])],
+    )
+    rows = pa.RecordBatch.from_pydict({"id": [2]})
+    with pytest.raises(ShapeError, match="fk_child_0"):
+        sink.write(uri, "parent", [rows], write_mode=mode)
+    assert server.rows("parent") == [(1,)]
+    assert not any(sql.startswith(("DROP TABLE", "TRUNCATE")) for sql in server.statements())

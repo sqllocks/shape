@@ -278,6 +278,18 @@ class FakeCursor:
     def _execute(self, sql: str, params: Sequence[Any] | None) -> None:
         s = self.server
         s.events.append(("execute", sql, tuple(params) if params is not None else None))
+        if " AS inbound_constraint_name " in sql:
+            assert params is not None
+            target_schema, target = s.key(*params)
+            self._result = sorted(
+                {
+                    (f"fk_{child}_{index}",)
+                    for (schema, child), refs in s.foreign_keys.items()
+                    for index, (parent, _, _) in enumerate(refs)
+                    if schema == target_schema and parent == target
+                }
+            )
+            return
         if sql in ("SELECT current_schema()", "SELECT DATABASE()"):
             self._result = [(s.default_schema,)]
             return

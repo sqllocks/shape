@@ -186,3 +186,27 @@ def test_existing_constraint_refusal_never_truncates_real_rows(database):
         assert list(execute(conn, f"SELECT id FROM {quoted}")) == [(1,)]
     finally:
         execute(conn, f"DROP TABLE IF EXISTS {quoted}")
+
+
+@pytest.mark.parametrize("mode", ["replace", "truncate"])
+def test_referenced_parent_refused_before_real_ddl(database, mode):
+    from shape.errors import ShapeError
+
+    dialect, conn, sink, uri = database
+    suffix = uuid.uuid4().hex[:12]
+    parent, child, name = "rp_" + suffix, "rc_" + suffix, "fk_" + suffix
+    qp, qc, qn = (quote(value, dialect) for value in (parent, child, name))
+    try:
+        execute(conn, f"CREATE TABLE {qp} (id BIGINT PRIMARY KEY)")
+        execute(conn, f"INSERT INTO {qp} (id) VALUES (1)")
+        execute(
+            conn,
+            f"CREATE TABLE {qc} (parent_id BIGINT, CONSTRAINT {qn} "
+            f"FOREIGN KEY (parent_id) REFERENCES {qp} (id))",
+        )
+        with pytest.raises(ShapeError, match=name):
+            sink.write(uri, parent, [pa.RecordBatch.from_pydict({"id": [2]})], write_mode=mode)
+        assert list(execute(conn, f"SELECT id FROM {qp}")) == [(1,)]
+    finally:
+        execute(conn, f"DROP TABLE IF EXISTS {qc}")
+        execute(conn, f"DROP TABLE IF EXISTS {qp}")

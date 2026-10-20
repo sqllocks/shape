@@ -83,6 +83,13 @@ class MySqlSink(DatabaseSink):
         "WHERE table_schema = COALESCE(%s, DATABASE()) AND table_name = %s"
     )
 
+    incoming_constraints_sql = (
+        "SELECT DISTINCT k.CONSTRAINT_NAME AS inbound_constraint_name "
+        "FROM information_schema.KEY_COLUMN_USAGE k "
+        "WHERE k.REFERENCED_TABLE_SCHEMA = COALESCE(%s, DATABASE()) "
+        "AND k.REFERENCED_TABLE_NAME = %s ORDER BY inbound_constraint_name"
+    )
+
     def create_schema_sql(self, schema_name: str) -> str:
         # In MySQL a schema is a database (created, like a PostgreSQL schema, when missing).
         return f"CREATE DATABASE IF NOT EXISTS {_sql.quote(schema_name, self.dialect)}"

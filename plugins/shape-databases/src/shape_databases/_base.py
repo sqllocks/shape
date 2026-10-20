@@ -179,6 +179,7 @@ class DatabaseSink:
     uri_params: Mapping[str, Callable[[str], Any]] = {}
     # ``SELECT 1`` when the table exists; parameters are (schema or None, table).
     exists_sql = ""
+    incoming_constraints_sql = ""
 
     def __init__(self, connect: Callable[..., Any] | None = None) -> None:
         self._connect = connect
@@ -436,6 +437,14 @@ class DatabaseSink:
                     f"existing table {plan.table!r}: requested constraints cannot yet be "
                     "verified; no data was loaded"
                 )
+            if exists and plan.mode in ("replace", "truncate") and self.incoming_constraints_sql:
+                cur.execute(self.incoming_constraints_sql, (plan.schema_name, plan.table))
+                reference = cur.fetchone()
+                if reference is not None:
+                    raise ShapeError(
+                        f"cannot {plan.mode} referenced table {plan.table!r}: "
+                        f"foreign key {reference[0]!r} must be preserved; no data was loaded"
+                    )
             if plan.mode == "replace" and exists:
                 cur.execute(_sql.drop_table_sql(plan.schema_name, plan.table, dialect))
                 exists = False

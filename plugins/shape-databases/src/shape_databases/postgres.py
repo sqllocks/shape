@@ -71,6 +71,14 @@ class PostgresSink(DatabaseSink):
         "WHERE table_schema = COALESCE(%s::text, current_schema()::text) AND table_name = %s"
     )
 
+    incoming_constraints_sql = (
+        "SELECT DISTINCT con.conname AS inbound_constraint_name FROM pg_catalog.pg_constraint con "
+        "JOIN pg_catalog.pg_class parent ON parent.oid = con.confrelid "
+        "JOIN pg_catalog.pg_namespace ns ON ns.oid = parent.relnamespace "
+        "WHERE con.contype = 'f' AND ns.nspname = COALESCE(%s::text, current_schema()::text) "
+        "AND parent.relname = %s ORDER BY inbound_constraint_name"
+    )
+
     def connect_params(self, plan: Plan) -> dict[str, Any]:
         t = plan.target
         params: dict[str, Any] = {k: v for k, v in t.params.items()}
