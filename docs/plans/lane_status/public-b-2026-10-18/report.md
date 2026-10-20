@@ -4,7 +4,7 @@ Work is continuing. This is not the final completion report. The earlier transie
 
 ## Progress
 
-Nine assigned issues: two merged (22.2%), five ready/reviewed (55.6%), one active integration fix (11.1%), one dependency-blocked (11.1%). Seven remain unmerged (77.8%). PR43 needs a targeted catalog recursion fix after main refresh; the independent reviewer held approval. Supporting PR40 is outside the denominator.
+Nine assigned issues: two merged (22.2%), six ready/reviewed (66.7%), one dependency-blocked (11.1%). Seven remain unmerged (77.8%). Eight have ready implementations including the merged issues (88.9%). PR43 catalog integration repair is signed, pushed and independently approved; fresh CI and42 dependency remain. Supporting PR40 is outside the denominator.
 
 | Issue | Status | PR | Merge SHA |
 |---|---|---|---|
@@ -14,7 +14,7 @@ Nine assigned issues: two merged (22.2%), five ready/reviewed (55.6%), one activ
 | #12 Eventhouse | Merged; all6 source-head workflows green, merged-head gate pending | [30](https://github.com/sqllocks/shape/pull/30) | `5c6d46ff1703db9fd2307bc4ebd4fb087e9af733` |
 | #13 Semantic measures/roles | Implemented, ready, independently approved; exact-head CI running | [33](https://github.com/sqllocks/shape/pull/33) | None |
 | #17 Iceberg | Implemented, ready, independently approved; prior Windows repair passed both versions; current core/Wheels held for next main refresh | [31](https://github.com/sqllocks/shape/pull/31) | None |
-| #6 Nested profiling | Catalog max_depth integration fix active after refresh; reviewer held094d9cf; depends on PR42 | [43](https://github.com/sqllocks/shape/pull/43) | None |
+| #6 Nested profiling | Catalog max_depth fix complete at548b976, independently approved; fresh CI pending; depends on PR42 | [43](https://github.com/sqllocks/shape/pull/43) | None |
 | #14 BigQuery | Parked: source interface dependency absent from main | None | None |
 | #20 Frozen comparison | Complete three-part fix ready and independently approved; all four value workloads pass; CI/merge/Nightly pending | [42](https://github.com/sqllocks/shape/pull/42) | None |
 
@@ -84,3 +84,5 @@ PR43 compatibility repair signed/pushed5ae6460db5f2ce0ee06070434104b71745a63523 
 ## PR30 merged; new integration gate
 
 PR30 merged2026-10-20T23:47:06Z as5c6d46ff1703db9fd2307bc4ebd4fb087e9af733. Exact reviewed headcad8cfd had all6 workflows green: [CI](https://github.com/sqllocks/shape/actions/runs/39504103202), [Documentation](https://github.com/sqllocks/shape/actions/runs/39504103156), [Security](https://github.com/sqllocks/shape/actions/runs/39504103173), [DCO](https://github.com/sqllocks/shape/actions/runs/39504103258), [Container](https://github.com/sqllocks/shape/actions/runs/39504103180), [action-selftest](https://github.com/sqllocks/shape/actions/runs/39504103224). Acceptance collection/CLI red→46green eachkernel; live/emulator pending as above. New-main [CI](https://github.com/sqllocks/shape/actions/runs/39517243088), [Documentation](https://github.com/sqllocks/shape/actions/runs/39517243016), [Security](https://github.com/sqllocks/shape/actions/runs/39517243183) pending. Prior main53 CI automatically canceled on base move, not a pass. All6 remaining implementations refreshed/signed/pushed; reviews29/33/31/34/42 APPROVED. PR43 review found catalog recursion omitsmax_depth; targeted fake catalog0/1 fix in progress. No full local reruns.
+
+PR43 catalog integration repair completed: exact548b97651b169f626d891f94d782dfe697d55cfc signed/pushed and independently APPROVED. New fake catalog0/1 cases genuine2red eachkernel→110green child+Eventhouse eachkernel; static/mypy705/wording clean. Forwards max_depth unchanged and preserves sampling metadata. No full local or reviewer reruns.
