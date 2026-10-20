@@ -641,12 +641,18 @@ class FakeSqlCursor:
             self._alter(text)
         elif text.startswith("SELECT kc.name, col.name, ic.key_ordinal"):
             table = server.tables[self._key(params[0])]
-            self._result = [
-                (constraint.name, column, index + 1)
-                for constraint in table.constraints
-                if constraint.kind in ("unique", "info_unique")
-                for index, column in enumerate(constraint.columns)
-            ]
+            if "kc.type = 'PK'" in text:
+                self._result = [
+                    ("PK_" + self._key(params[0])[1], column, index + 1)
+                    for index, column in enumerate(table.primary_key)
+                ]
+            else:
+                self._result = [
+                    (constraint.name, column, index + 1)
+                    for constraint in table.constraints
+                    if constraint.kind in ("unique", "info_unique")
+                    for index, column in enumerate(constraint.columns)
+                ]
         elif text.startswith("SELECT fk.name, cc.name, OBJECT_SCHEMA_NAME"):
             table = server.tables[self._key(params[0])]
             self._result = [
@@ -657,6 +663,7 @@ class FakeSqlCursor:
                     constraint.parent[1],
                     target,
                     constraint.disabled,
+                    not constraint.trusted,
                 )
                 for constraint in table.constraints
                 if constraint.kind in ("fk", "info_fk") and constraint.parent is not None
@@ -664,10 +671,17 @@ class FakeSqlCursor:
                     constraint.columns, constraint.parent_columns, strict=True
                 )
             ]
-        elif text.startswith("SELECT name, definition, is_disabled FROM sys.check_constraints"):
+        elif text.startswith(
+            "SELECT name, definition, is_disabled, is_not_trusted FROM sys.check_constraints"
+        ):
             table = server.tables[self._key(params[0])]
             self._result = [
-                (constraint.name, constraint.expression, constraint.disabled)
+                (
+                    constraint.name,
+                    constraint.expression,
+                    constraint.disabled,
+                    not constraint.trusted,
+                )
                 for constraint in table.constraints
                 if constraint.kind == "check" and constraint.expression is not None
             ]
@@ -957,6 +971,8 @@ class FakeSqlCursor:
                 constraint = SqlConstraint(_unbracket(match[3]), "info_unique", tuple(names))
                 constraint.disabled = True
                 key_table.constraints.append(constraint)
+            else:
+                key_table.primary_key = tuple(names)
             return  # informational only: Warehouse does not enforce uniqueness
         match = re.match(
             rf"ALTER TABLE {_NAME}\.{_NAME} (NOCHECK|WITH CHECK CHECK|CHECK) CONSTRAINT "

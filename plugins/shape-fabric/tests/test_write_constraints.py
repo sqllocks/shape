@@ -166,3 +166,93 @@ def test_changed_sqlserver_default_refused_before_truncate():
         with pytest.raises(ShapeError, match="DEFAULT.*amount"):
             writer.write_table("child", [batch()], write_mode="truncate", defaults={"amount": 3})
     assert server.rows("dbo", "child") == [(1, 1, 3)]
+
+
+@pytest.mark.parametrize("kind", ["check", "fk"])
+def test_untrusted_existing_constraints_refuse_before_append(kind):
+    server = FakeSqlServer()
+    sink = SqlServerSink(connect=server.connect)
+    opts = {"schema": batch().schema, "primary_key": ["id"]}
+    child = {
+        **opts,
+        **declarations(),
+        "foreign_keys": [
+            {
+                "name": "fk_child_parent",
+                "columns": ["parent_id"],
+                "ref_table": "parent",
+                "ref_columns": ["id"],
+            }
+        ],
+    }
+    sink.prepare_constraints("mssql://db.example/app", {"parent": opts, "child": child})
+    target = server.tables[("dbo", "child")]
+    constraint = next(c for c in target.constraints if c.kind == kind)
+    constraint.trusted = False
+    server.snapshot()
+    before = list(server.statements)
+    with pytest.raises(ShapeError, match="ck_amount" if kind == "check" else "fk_child_parent"):
+        sink.prepare_constraints(
+            "mssql://db.example/app", {"child": {**child, "write_mode": "append"}}
+        )
+    assert target.rows == []
+    assert not any(
+        s.startswith(("INSERT", "DELETE", "TRUNCATE", "DROP", "ALTER"))
+        for s in server.statements[len(before) :]
+    )
+
+
+@pytest.mark.parametrize("actual", [(), ("parent_id", "id")])
+def test_requested_existing_primary_key_is_verified_in_order(actual):
+    server = FakeSqlServer()
+    sink = SqlServerSink(connect=server.connect)
+    opts = {"schema": batch().schema, "primary_key": ["id", "parent_id"], **declarations()}
+    sink.prepare_constraints("mssql://db.example/app", {"child": opts})
+    server.tables[("dbo", "child")].primary_key = actual
+    server.snapshot()
+    with pytest.raises(ShapeError, match="PRIMARY KEY"):
+        sink.prepare_constraints(
+            "mssql://db.example/app", {"child": {**opts, "write_mode": "append"}}
+        )
+
+
+def test_catalog_grouping_does_not_conflate_different_boolean_or_arithmetic_expressions():
+    from shape_fabric._constraint_catalog import expression_tokens
+
+    assert expression_tokens("(([a]=1 OR [b]=2) AND [c]=3)") != expression_tokens(
+        "([a]=1 OR ([b]=2 AND [c]=3))"
+    )
+    assert expression_tokens("(([a]+[b])*[c])") != expression_tokens("([a]+([b]*[c]))")
+    assert expression_tokens("([a] = 1") != expression_tokens("[a] = 1")
+    assert expression_tokens("[a] = TRUE") != expression_tokens("[a] = [TRUE]")
+
+
+def test_warehouse_informational_fk_need_not_be_trusted_or_enabled():
+    from shape_fabric.sqldb import prepare_constraint_tables
+    from shape_fabric.testing import MemoryFS
+    from shape_fabric.warehouse import WarehouseWriter
+
+    server = FakeSqlServer(warehouse=True)
+    parent = {"schema": batch().schema, "primary_key": ["id"]}
+    child = {
+        **parent,
+        "foreign_keys": [
+            {
+                "name": "fk_child_parent",
+                "columns": ["parent_id"],
+                "ref_table": "parent",
+                "ref_columns": ["id"],
+            }
+        ],
+    }
+    with WarehouseWriter(
+        "Server=x;Database=d",
+        "onelake://ws/lh/Files/stage",
+        connect=server.connect,
+        filesystem=MemoryFS(),
+    ) as writer:
+        prepare_constraint_tables(writer.db, {"parent": parent, "child": child})
+        key = next(c for c in server.tables[("dbo", "child")].constraints if c.kind == "info_fk")
+        key.trusted = False
+        server.snapshot()
+        prepare_constraint_tables(writer.db, {"child": {**child, "write_mode": "append"}})

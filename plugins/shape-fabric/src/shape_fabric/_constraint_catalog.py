@@ -15,12 +15,12 @@ from . import _tsql
 
 _TOKEN = re.compile(
     r"N?'(?:[^']|'')*'|\[(?:[^\]]|\]\])*\]|\"(?:[^\"]|\"\")*\"|>=|<=|<>|!="
-    r"|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|[A-Za-z_][A-Za-z_0-9]*|[=><,+*/%-]"
+    r"|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|[A-Za-z_][A-Za-z_0-9]*|[()=><,+*/%-]"
 )
 
 
 def expression_tokens(sql: str) -> tuple[str, ...]:
-    """Ignore redundant grouping/spacing, preserving each quoted literal's exact contents.
+    """Ignore spacing and whole/atomic grouping, preserving meaningful inner grouping.
 
     This is only a conservative equality comparison with a generated, already validated
     expression. No catalog text is executed; an unfamiliar spelling refuses the load.
@@ -28,12 +28,65 @@ def expression_tokens(sql: str) -> tuple[str, ...]:
     tokens: list[str] = []
     offset = 0
     for match in _TOKEN.finditer(sql):
-        if re.sub(r"[\s()]", "", sql[offset : match.start()]):
+        if sql[offset : match.start()].strip():
             return ("unrecognized catalog expression", sql)
         tokens.append(match[0])
         offset = match.end()
-    if re.sub(r"[\s()]", "", sql[offset:]):
+    if sql[offset:].strip():
         return ("unrecognized catalog expression", sql)
+    depth = 0
+    for token in tokens:
+        depth += (token == "(") - (token == ")")
+        if depth < 0:
+            return ("unrecognized catalog expression", sql)
+    if depth:
+        return ("unrecognized catalog expression", sql)
+    # SQL Server wraps DEFAULT literals and CHECK operands in redundant parentheses.
+    # Remove only a single atomic token or a group enclosing the entire expression.
+    # Flattening arbitrary inner groups could accept a different Boolean/arithmetic rule.
+    changed = True
+    while changed:
+        changed = False
+        for index in range(len(tokens) - 2):
+            if (
+                tokens[index] == "("
+                and tokens[index + 2] == ")"
+                and tokens[index + 1]
+                not in {
+                    "(",
+                    ")",
+                    "AND",
+                    "OR",
+                    "NOT",
+                    "IN",
+                    "IS",
+                    ",",
+                    "=",
+                    ">",
+                    "<",
+                    ">=",
+                    "<=",
+                    "<>",
+                    "!=",
+                    "+",
+                    "-",
+                    "*",
+                    "/",
+                    "%",
+                }
+            ):
+                tokens[index : index + 3] = [tokens[index + 1]]
+                changed = True
+                break
+        if tokens and tokens[0] == "(" and tokens[-1] == ")":
+            depth = 0
+            for _index, token in enumerate(tokens):
+                depth += (token == "(") - (token == ")")
+                if depth == 0:
+                    break
+            if _index == len(tokens) - 1:
+                tokens = tokens[1:-1]
+                changed = True
     return tuple(tokens)
 
 
@@ -46,6 +99,21 @@ def verify_constraints(
 ) -> None:
     qualified = _tsql.qualified(schema_name, table)
     warehouse = db.warehouse
+    if options.get("primary_key"):
+        rows = db.execute(
+            "SELECT kc.name, col.name, ic.key_ordinal FROM sys.key_constraints kc "
+            "JOIN sys.index_columns ic ON ic.object_id = kc.parent_object_id "
+            "AND ic.index_id = kc.unique_index_id "
+            "JOIN sys.columns col ON col.object_id = ic.object_id AND col.column_id = ic.column_id "
+            "WHERE kc.parent_object_id = OBJECT_ID(?) AND kc.type = 'PK' "
+            "ORDER BY kc.name, ic.key_ordinal",
+            qualified,
+        ).fetchall()
+        primary_keys: dict[str, list[str]] = defaultdict(list)
+        for name, column, _ in rows:
+            primary_keys[name].append(column)
+        if list(options["primary_key"]) not in primary_keys.values():
+            raise ShapeError(f"existing table {table!r}: PRIMARY KEY differs")
     if options.get("unique"):
         rows = db.execute(
             "SELECT kc.name, col.name, ic.key_ordinal FROM sys.key_constraints kc "
@@ -65,7 +133,7 @@ def verify_constraints(
     if options.get("foreign_keys"):
         rows = db.execute(
             "SELECT fk.name, cc.name, OBJECT_SCHEMA_NAME(fk.referenced_object_id), "
-            "OBJECT_NAME(fk.referenced_object_id), pc.name, fk.is_disabled "
+            "OBJECT_NAME(fk.referenced_object_id), pc.name, fk.is_disabled, fk.is_not_trusted "
             "FROM sys.foreign_keys fk JOIN sys.foreign_key_columns fkc "
             "ON fkc.constraint_object_id = fk.object_id "
             "JOIN sys.columns cc ON cc.object_id = fk.parent_object_id "
@@ -76,8 +144,8 @@ def verify_constraints(
             qualified,
         ).fetchall()
         refs: dict[str, tuple[list[str], str, str, list[str]]] = {}
-        for name, column, parent_schema, parent, target, disabled in rows:
-            if disabled and not warehouse:
+        for name, column, parent_schema, parent, target, disabled, untrusted in rows:
+            if (disabled or untrusted) and not warehouse:
                 continue
             reference_parts = refs.setdefault(name, ([], parent_schema, parent, []))
             reference_parts[0].append(column)
@@ -88,11 +156,15 @@ def verify_constraints(
                 raise ShapeError(f"existing table {table!r}: foreign key {ref['name']!r} differs")
     if options.get("checks") and not warehouse:
         rows = db.execute(
-            "SELECT name, definition, is_disabled FROM sys.check_constraints "
+            "SELECT name, definition, is_disabled, is_not_trusted FROM sys.check_constraints "
             "WHERE parent_object_id = OBJECT_ID(?)",
             qualified,
         ).fetchall()
-        checks = {expression_tokens(definition) for _, definition, disabled in rows if not disabled}
+        checks = {
+            expression_tokens(definition)
+            for _, definition, disabled, untrusted in rows
+            if not disabled and not untrusted
+        }
         for check in options["checks"]:
             expression = render_expression(
                 check["expression"],
