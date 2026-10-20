@@ -30,8 +30,8 @@ is data minimisation, not anonymisation.
 **Instead.** Review capture policy and access controls before sharing an artifact.
 **Recorded in.** [Privacy model](PRIVACY_MODEL.md).
 
-## Snowflake and Databricks profiling
+## Databricks cluster profiling
 
-**Why.** The shipped database adapters for these targets write tables; they do not read profiles.
-**Instead.** Profile a supported local extract where your handling policy permits it.
+**Why.** The Databricks source connects to SQL warehouses through the SQL connector.
+**Instead.** Use a SQL warehouse and Unity Catalog, or profile an approved local extract.
 **Recorded in.** [Database adapters](databases/index.md).

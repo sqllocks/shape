@@ -294,6 +294,18 @@ the policy.
   golden records; `shape resolve synth FILE -o OUT` plants seeded duplicates and writes the true
   clusters. See [RESOLVE.md](RESOLVE.md). Bad options or an unreadable file exit 2.
 
+## Cloud database profiling
+
+With the databases plugin installed, `shape profile` accepts
+`snowflake://USER@ACCOUNT/DATABASE/SCHEMA?warehouse=WH&table=T` and
+`databricks://HOST/sql/1.0/warehouses/ID?catalog=C&schema=S&table=T`.
+Omit `table` to profile a schema; `--tables A,B` selects tables and
+`--sample-rows N` bounds distributions (default 1000; zero reads catalogs only).
+Catalog population counts and declared keys accompany sampled statistics. Snowflake
+provenance records the actual warehouse. Credentials use source options and references,
+never URI passwords or tokens. See the [Snowflake](databases/snowflake.md) and
+[Databricks](databases/databricks.md) source guides for authentication, types and limits.
+
 ## Cloud and Fabric options
 
 Three options reach cloud destinations and sources. Their help text, as `shape --help` prints it:

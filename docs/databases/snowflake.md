@@ -20,7 +20,34 @@ idempotency decision.
 
 Evidence: `plugins/shape-databases/src/shape_databases/snowflake.py` and shared adapter helpers.
 The integrations source definitions are in `plugins/shape-integrations/src/shape_integrations/`.
-Snowflake and Databricks are write targets; Shape does not profile from them yet.
+Snowflake also profiles tables and schema catalogs through the source described below.
+
+## Profile a table or schema
+
+The source URI is `snowflake://USER@ACCOUNT/DATABASE/SCHEMA?table=T&warehouse=WH&role=R`.
+Omit `table` to profile every table in the schema. `shape profile` and the bridge profile
+handler accept this URI. The optional `sample_rows` control bounds distributions; catalog
+row counts describe the population and `sampled_rows` describes the sample. `sampling`
+records the requested bound. Zero requested rows reads the catalog only.
+
+Reads use the connector's `fetch_arrow_batches`; sampling uses `TABLESAMPLE` with a limit.
+Declared primary and foreign keys come from `SHOW PRIMARY KEYS` and `SHOW IMPORTED KEYS`.
+Relationships record `evidence: "declared"`: Snowflake keys are informational. Provenance
+records the actual `CURRENT_WAREHOUSE()`, including a session default warehouse.
+
+`NUMBER(p,0)` uses int8 for p ≤ 2, int16 for p ≤ 4, int32 for p ≤ 9 and int64
+for p ≤ 18; larger values use decimal128(p,0), including decimal128(38,0).
+Scaled NUMBER uses decimal128(p,s). FLOAT uses float64. TIMESTAMP_NTZ has no timezone;
+TIMESTAMP_TZ and TIMESTAMP_LTZ use UTC timestamps. DATE, TIME, BOOLEAN and BINARY retain
+their Arrow equivalents. VARIANT, ARRAY and OBJECT are JSON text at the source boundary.
+
+Authentication follows the sink rules above: password or key pair through source options
+or the supported environment/reference settings. A URI password or credential query key,
+invalid identifier or invalid sampling bound fails before connecting. Driver errors are
+scrubbed. The optional connector loads only when a connection opens.
+
+Offline fake catalogs and Arrow results cover this behavior. Live profiling remains an
+Owner action requiring an account; the write receipt below does not validate reads.
 
 ## Write receipt
 

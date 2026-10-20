@@ -335,7 +335,7 @@ shape plugins doctor
       shape.detectors:presidio   unloaded [sqllocks-shape-integrations]
       shape.detectors:us_ssn     unloaded [sqllocks-shape]
     shape: error: no plugin 'shape.detectors:iban' (see `shape plugins list`)
-    plugin API 1.0: 182 plugin(s)
+    plugin API 1.0: 184 plugin(s)
       ok    shape.behaviors:entity_lifecycle [sqllocks-shape-behavior]
       ok    shape.behaviors:equipment_maintenance [sqllocks-shape-behavior]
       ok    shape.behaviors:event_sequence [sqllocks-shape-behavior]
@@ -462,6 +462,7 @@ shape plugins doctor
       ok    shape.sinks:x12-837p [sqllocks-shape-healthcare-standards]
       ok    shape.sources:abfss [sqllocks-shape]
       ok    shape.sources:csv [sqllocks-shape]
+      ok    shape.sources:databricks [sqllocks-shape-databases]
       ok    shape.sources:delta [sqllocks-shape]
       ok    shape.sources:duckdb [sqllocks-shape-integrations]
       ok    shape.sources:hl7v2 [sqllocks-shape-healthcare-standards]
@@ -475,6 +476,7 @@ shape plugins doctor
       ok    shape.sources:postgres [sqllocks-shape-databases]
       ok    shape.sources:postgresql [sqllocks-shape-databases]
       ok    shape.sources:semantic-model [sqllocks-shape-fabric]
+      ok    shape.sources:snowflake [sqllocks-shape-databases]
       ok    shape.sources:x12 [sqllocks-shape-healthcare-standards]
       ok    shape.sources:xml [sqllocks-shape]
       ok    shape.strategies:address [sqllocks-shape]

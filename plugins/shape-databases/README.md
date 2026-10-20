@@ -29,6 +29,46 @@ is opened, so core and the rest of Shape never carry them (the Snowflake and Dat
 are extras of this plugin only, not of core). A sink without its driver fails with the
 `pip install` line above, exit 2 on the command line.
 
+## Cloud sources
+
+The `shape.sources` entries `snowflake` and `databricks` read tables and profile schema
+catalogs. Use the sink URI with `table=T` for one table; omit `table` for a schema profile:
+
+- `snowflake://USER@ACCOUNT/DATABASE/SCHEMA?table=T&warehouse=WH&role=R`
+- `databricks://HOST/sql/1.0/warehouses/ID?catalog=C&schema=S&table=T`
+
+`schema(uri)` returns the declared Arrow schema. `read(uri, batch_size=65536)` uses the
+connector's `fetch_arrow_batches` (Snowflake) or `fetchall_arrow` (Databricks), splitting
+results at the requested row bound. `profile_database(uri, sample_rows=1000, tables=[...])`
+reads catalog keys/counts and bounded distributions; `sample_rows=0` reads only catalogs.
+`shape profile --sample-rows N --tables A,B` and the bridge `profile` command use this path.
+Snowflake profiles record the warehouse the session actually used in provenance.
+
+| Catalog type | Arrow type |
+|---|---|
+| Snowflake `NUMBER(p,0)` | `int8` for p≤2, `int16` for p≤4, `int32` for p≤9, `int64` for p≤18, else `decimal128(p,0)` |
+| Snowflake scaled `NUMBER(p,s)`; Databricks `DECIMAL(p,s)` | `decimal128(p,s)` |
+| Snowflake `FLOAT` | `float64` |
+| Databricks `TINYINT` / `SMALLINT` / `INT` / `BIGINT` | `int8` / `int16` / `int32` / `int64` |
+| Snowflake `TIMESTAMP_NTZ`; Databricks `TIMESTAMP_NTZ` | zone-less `timestamp(us)` |
+| Snowflake `TIMESTAMP_TZ` / `TIMESTAMP_LTZ`; Databricks `TIMESTAMP` | `timestamp(us, tz=UTC)` |
+| `DATE` / `TIME` / `BOOLEAN` / `BINARY` | `date32` / `time64(us)` / `bool` / `binary` |
+| Snowflake `VARIANT` / `ARRAY` / `OBJECT`; Databricks `ARRAY` / `STRUCT` / `MAP` | JSON text (`string`) |
+
+Catalog nullability and declared primary/foreign keys are retained. Relationships carry
+`evidence: "declared"`, including Snowflake's informational keys. Catalog population row
+counts, `sampled_rows`, `sample_method` and `sampling` identify which statistics describe the
+bounded `TABLESAMPLE` distribution. Databricks population counts require table statistics
+from `DESCRIBE TABLE EXTENDED`; missing statistics fail with an instruction to ask the table
+owner to collect them. Shape does not collect or modify them.
+
+Reads use the same password/key-pair or token/OAuth rules as the corresponding sink.
+Credentials in a URI, unknown options, invalid identifiers and invalid sample/batch bounds
+are refused before connection. Profiles and errors exclude sign-in material. Drivers are
+optional and load only when connecting. Databricks sources support SQL warehouses.
+Offline catalogs and Arrow fixtures test reads; live read validation remains pending Owner
+account settings. Existing write receipts do not validate source reads.
+
 ## TLS by default
 
 Like the SQL Server sink (`Encrypt=yes`), these sinks verify TLS for a host that is not loopback:

@@ -23,6 +23,8 @@ Status: available.
   with their column and the JSON alternative named. Nested temporal values use the same
   documented microsecond normalization as scalar values.
 
+- Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.
+
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 
 Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).

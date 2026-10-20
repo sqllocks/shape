@@ -487,6 +487,8 @@ class FakeSnowflake:
         purge_fails: bool = False,
     ) -> None:
         self.default_schema = default_schema
+        self.catalog_answers: dict[str, tuple[list[str], list[tuple[Any, ...]]]] = {}
+        self.arrow_results: dict[str, Any] = {}
         self.tables: dict[Key, list[tuple[Any, ...]]] = {}
         self.columns: dict[Key, list[str]] = {}
         self.stages: dict[Key, dict[str, Any]] = {}
@@ -536,6 +538,7 @@ class FakeSnowflake:
 class FakeSnowflakeCursor:
     def __init__(self, server: FakeSnowflake) -> None:
         self.server = server
+        self._read_sql = ""
         self._result: list[tuple[Any, ...]] = []
         self.description: list[tuple[str]] | None = None
 
@@ -548,6 +551,14 @@ class FakeSnowflakeCursor:
 
         s = self.server
         s.events.append(("execute", sql, tuple(params) if params is not None else None))
+        self._read_sql = sql
+        if sql in s.catalog_answers:
+            catalog_names, rows = s.catalog_answers[sql]
+            self.description = [(name,) for name in catalog_names]
+            self._result = list(rows)
+            return
+        if sql in s.arrow_results:
+            return
         self._set((), [])
         if s.fail_on is not None:
             s.fail_on(sql)
@@ -638,6 +649,17 @@ class FakeSnowflakeCursor:
     def close(self) -> None:
         pass
 
+    def fetch_arrow_batches(self) -> Any:
+        """Snowflake connector Arrow result iterator, configured by ``arrow_results``."""
+        self.server.events.append(("fetch_arrow_batches", self._read_sql))
+        table = self.server.arrow_results[self._read_sql]
+        return iter(()) if table is None else iter((table,))
+
+    def fetchall_arrow(self) -> Any:
+        """Databricks connector Arrow result, configured by ``arrow_results``."""
+        self.server.events.append(("fetchall_arrow", self._read_sql))
+        return self.server.arrow_results[self._read_sql]
+
 
 class FakeSnowflakeConnection:
     def __init__(self, server: FakeSnowflake) -> None:
@@ -673,6 +695,8 @@ class FakeDatabricks:
         fail_message: str = "simulated driver failure",
     ) -> None:
         self.default_schema = default_schema
+        self.catalog_answers: dict[str, tuple[list[str], list[tuple[Any, ...]]]] = {}
+        self.arrow_results: dict[str, Any] = {}
         self.tables: dict[Key, list[tuple[Any, ...]]] = {}
         self.columns: dict[Key, list[str]] = {}
         self.events: list[tuple[Any, ...]] = []
@@ -723,11 +747,20 @@ def _top_level_groups(text: str) -> list[str]:
 class FakeDatabricksCursor:
     def __init__(self, server: FakeDatabricks) -> None:
         self.server = server
+        self._read_sql = ""
         self._result: list[tuple[Any, ...]] = []
 
     def execute(self, sql: str, parameters: Sequence[Any] | None = None) -> None:
         s = self.server
         s.events.append(("execute", sql, list(parameters) if parameters is not None else None))
+        self._read_sql = sql
+        if sql in s.catalog_answers:
+            names, rows = s.catalog_answers[sql]
+            self.description = [(name,) for name in names]
+            self._result = list(rows)
+            return
+        if sql in s.arrow_results:
+            return
         if sql.startswith("SELECT 1 FROM information_schema.tables"):
             assert parameters is not None
             schema, table = parameters
@@ -782,6 +815,21 @@ class FakeDatabricksCursor:
 
     def close(self) -> None:
         pass
+
+    def fetchall(self) -> list[tuple[Any, ...]]:
+        rows, self._result = self._result, []
+        return rows
+
+    def fetch_arrow_batches(self) -> Any:
+        """Snowflake connector Arrow result iterator, configured by ``arrow_results``."""
+        self.server.events.append(("fetch_arrow_batches", self._read_sql))
+        table = self.server.arrow_results[self._read_sql]
+        return iter(()) if table is None else iter((table,))
+
+    def fetchall_arrow(self) -> Any:
+        """Databricks connector Arrow result, configured by ``arrow_results``."""
+        self.server.events.append(("fetchall_arrow", self._read_sql))
+        return self.server.arrow_results[self._read_sql]
 
 
 class FakeDatabricksConnection:

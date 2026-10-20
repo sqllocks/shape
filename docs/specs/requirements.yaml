@@ -727,6 +727,15 @@ requirements:
   verify: [unit, conformance]
   owner: databases
 
+- id: SHAPE-CLOUD-001
+  title: Cloud database catalog and Arrow sources
+  level: L1
+  milestone: W9-02
+  priority: MUST
+  text: Snowflake and Databricks sources preserve declared Arrow widths, decimals and zones, expose catalog counts and declared keys with bounded samples, refuse URI credentials before connection, and record Snowflake warehouse provenance.
+  verify: [unit, conformance, compatibility]
+  owner: databases
+
 - id: SHAPE-DBS-001
   title: Bounded PostgreSQL and MySQL catalog profiling
   level: L1
