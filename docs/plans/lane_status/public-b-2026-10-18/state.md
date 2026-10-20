@@ -78,3 +78,13 @@ PR42 ready, signed/pushed8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4; independent f
 PR40 last snapshot21success/9running/1structural skip/no failures; exact3f62547 unchanged and APPROVED. Iceberg PR31 current8c9fa927 Windows3.14 fullcorejob118837250058 SUCCESS; Windows3.11 stillrunning. Existing be2 fix supersedes old create_table failures; do not edit source speculatively. Main35 Documentation/Security complete success; CI last23success/4running/no failures.
 
 Issue counts:1/9merged11.1%,6/9active66.7%,2/9blocked-or-parked22.2%,8/9unmerged88.9%. The ready #20 category PR is partial implementation, not full delivery. Continue user count updates every five minutes plus merge/blocker changes.
+
+## Source-validation milestones — 2026-10-20 21:10 UTC
+
+Iceberg PR31 exact8c9fa927: BOTH Windows3.11job118837250256 and3.14job118837250058 completedSUCCESS. Old create_table failures are resolved on that head. No speculativeextraWindowsfix or localrerun. Prepared-browserfontfix remains in PR40 and both docs jobs pass there; absorb on mandatorymainrefresh.
+
+#6 author/reviewer collaboration corrected privacy/path/closed-contract/engine/literal-glob boundaries with targetedred→green. Arrow25 ParquetFile read-ahead caused file-wide1GBretention; explicit pre_buffer=False preserves batches/order and fixes it. Both1GB cases pass with unchanged256MiBgrowthbound; focused/changed-module selection221passed52.37s. Measurement childprocess is fresh, fixturewriteroutsideit, actualfile>=1GB; no high-water masking. FinalPython/static/normativechecks and independent exactSHAreview pending. OpenreadyPRwith explicitdependencyPR42 onceownchecks pass; don'twaitfor42mainjusttostartCI, but MUSTNOTmerge6before42/currentmaincombinedgates. No harness copying/cherrypicking.
+
+Read-only #20 context/name reanalysis retains4parkedwholeworkloads. Authenticatedcapture-session timestamp exists but faithfulper-workloadclockcontext is unproven; display-namealiases couldpartiallynormalize nameswithstableIDs but codedata stillblockswholegenworkloads. Questions.md capturesprecisedistinction. AtnextmandatoryPR42mainrefresh, clarifyjournalratherthanextraCIchurnnow.
+
+PR40 latest23success/7running/1structural skip/no failures; main35 latest26success/1running/no failures. Remainingjobsareactivelytestingmulti-phase suites, not provisioning; minversions alone took42m47s withtwo full light suites. No relaxedgate is authorized. Userfullcountupdate21:09UTC; nextdueapproximately21:14UTC.
