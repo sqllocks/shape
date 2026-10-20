@@ -1357,7 +1357,8 @@ There is no second implementation: a command calls what the matching command lin
 ## Security
 
 `profile` opens a database connection when its `source` is a database URI.
-PostgreSQL (`postgresql://`, also `postgres://`) and MySQL (`mysql://`) profile a schema
+PostgreSQL (`postgresql://`, also `postgres://`), MySQL (`mysql://`), Snowflake
+(`snowflake://`) and Databricks (`databricks://`) profile a schema
 or a URI-selected table. Optional `tables` is an array of table names; `sample_rows` is
 a non-negative integer (default 1000; 0 is catalog only). These database artifacts use
 safe capture for sampled values. Use password environment variables or credential references;

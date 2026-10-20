@@ -414,3 +414,58 @@ def test_cloud_cli_and_bridge_profile_catalog_counts(dialect, monkeypatch, tmp_p
         assert uri not in json.dumps(artifact.to_dict())
     finally:
         bridge.close()
+
+
+@pytest.mark.parametrize("dialect", ["snowflake", "databricks"])
+@pytest.mark.parametrize("uppercase", [False, True])
+@pytest.mark.parametrize("explicit_output", [False, True])
+def test_cloud_bridge_artifact_uses_safe_capture(
+    dialect, uppercase, explicit_output, monkeypatch, tmp_path
+):
+    import shape
+    from shape.bridge.core import Bridge
+
+    source, server, uri, schema, _ = cloud_fixture(dialect)
+    columns = next(q for q in server.catalog_answers if q.startswith("SELECT column_name"))
+    names, rows = server.catalog_answers[columns]
+    server.catalog_answers[columns] = (
+        names,
+        [*rows, ("email", "VARCHAR", "YES", None, None)],
+    )
+    fields = source.schema(uri + "&table=items")
+    query = source._select(schema, "items", fields)
+    sensitive = "person@example.com"
+    server.arrow_results[
+        query
+        + (
+            " TABLESAMPLE (0.04) LIMIT 2"
+            if dialect == "snowflake"
+            else " TABLESAMPLE (0.04 PERCENT) LIMIT 2"
+        )
+    ] = pa.table({"id": pa.array([1, 2], type=pa.int32()), "email": [sensitive] * 2})
+    monkeypatch.setattr(
+        source.sink_class, "default_connect", lambda self, **kw: server.connect(**kw)
+    )
+    if uppercase:
+        uri = uri.replace(dialect, dialect.upper(), 1)
+    output = tmp_path / "safe-cloud.shape"
+    bridge = Bridge(tmp_path / "jobs")
+    try:
+        args = {"source": uri, "sample_rows": 2}
+        if explicit_output:
+            args["output"] = str(output)
+        result = bridge.handle(
+            {
+                "api_version": "1.2",
+                "command": "profile",
+                "args": args,
+            }
+        )
+        assert result["ok"], result
+        artifact = shape.load(result["result"]["path"])
+        assert artifact.tables["items"]["sampled_rows"] == 2
+        assert artifact.tables["items"]["row_count"] == 10000
+        assert sensitive not in json.dumps(artifact.to_dict())
+        assert sensitive not in json.dumps(result)
+    finally:
+        bridge.close()
