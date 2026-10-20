@@ -16,10 +16,10 @@ Current main:35addfc4c310b85a62cbe7f315e1d50fb8e426f8. Main post-merge CI3948303
 |---|---|---|---|
 | #9 W9-08 | lane/W9-08-finish / 91ef6200266bf962246d1553356b26a442be2303 | https://github.com/sqllocks/shape/pull/32 | MERGED35addfc4; all triggered source-head AND post-merge main workflows green |
 | #10 W9-09 | lane/W9-09 / 0b313bba0a74332fa7c5c955fceca4bdb92ae0d4 | https://github.com/sqllocks/shape/pull/34 | ready, refreshed, APPROVED; fresh CI pending |
-| #11 W9-10 | lane/W9-10-finish / e1ae5787c395714f558252ef0190068077d8d4ad | https://github.com/sqllocks/shape/pull/29 | ready, refreshed, APPROVED; fresh CI pending |
-| #12 W9-11 | lane/W9-11-finish / bc98623f582c121cad0bcf56a83a8829fd826437 | https://github.com/sqllocks/shape/pull/30 | ready, refreshed, APPROVED; fresh CI pending |
-| #13 W9-12 | lane/W9-12-finish / 170ce0dd549eaca5898d368b7fc3715ccc1a5d53 | https://github.com/sqllocks/shape/pull/33 | ready, refreshed, APPROVED; fresh CI pending |
-| #17 W9-16 | lane/W9-16-finish / 8c9fa927dc31540f19755827641b0dbc9a8a3668 | https://github.com/sqllocks/shape/pull/31 | ready, refreshed, APPROVED; fresh CI pending |
+| #11 W9-10 | lane/W9-10-finish / 00d648ce65c9f58ae003168f38a1a8dd46db78aa | https://github.com/sqllocks/shape/pull/29 | ready, refreshed, APPROVED; fresh CI pending |
+| #12 W9-11 | lane/W9-11-finish / cad8cfd96a18453cb426de5b1d22e1cff9f9147a | https://github.com/sqllocks/shape/pull/30 | ready, refreshed, APPROVED; fresh CI pending |
+| #13 W9-12 | lane/W9-12-finish / 1535427ec055eb5e197c91a86e10df17347a3be3 | https://github.com/sqllocks/shape/pull/33 | ready, refreshed, APPROVED; fresh CI pending |
+| #17 W9-16 | lane/W9-16-finish / 81cff73ea799039a70b5c584ea7cbfd1e3ec1749 | https://github.com/sqllocks/shape/pull/31 | ready, refreshed, APPROVED; fresh CI pending |
 | #6 W9-05 | lane/W9-05 / 4704c7118966e9e17aa61a230744e51a8275d448 | https://github.com/sqllocks/shape/pull/43 | ready, independently APPROVED; depends on PR42/main refresh/combined exact-head CI |
 | #20 FRZ-01 | lane/FRZ-01-finish / 8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4 | https://github.com/sqllocks/shape/pull/42 | error category ready and APPROVED; four remaining value workloads parked; no closure |
 | #14 W9-13 | lane/W9-13 / 58966e0 | none | journal only; dependency-blocked until PR35/main source interface |
@@ -109,3 +109,10 @@ CI39483030770 statuscompleted/conclusionsuccess on main35addfc4, all27jobs passe
 PR43 signed/pushed currenthead4704c7118966e9e17aa61a230744e51a8275d448, independent frz_review reboundAPPROVED, cleanworktree. Deltaonly22observedwarning430→436 references across7docpages, INSTALLisolatedbareconformance-list correction(retainingSH2-033), and laneacceptance. No productsource/assertion/normalizer/gate/tolerancechange. CI8pagesred; localPROFILING_NOTESred;7targetpagespassedbatch andSIGNINGpassedalone after editable-buildsetup race; all8actualpagesgreen. No full suite rerun. Sourceimplementationproof from39760e6 remainsvalid. CIsecurity/audit/build failures onoldheadwereeachconfirmedonlyknowncertifiadvisory; resolvevia40/mainrefresh.
 
 PR40 exact3f62547 latest28success/2running/1structural skip/no failures. RemainingUbuntu3.12 andWindows3.11. Sourceapprovalunchanged, main35fullygreen/currentbasecontainedlastcheck. Mergeas soon as alljobs/workflowscompletegreen andfreshmainancestryisverified. Userlastfullcountupdate21:28,nextdue~21:33; blockermilestone21:30. Countsremain1merged,6active-ready,2blocked/parkedof9.
+
+
+## Certificate blocker MERGED — 2026-10-20
+
+PR40 merged as main53d3d0c1a740fcca0665c216c3ebdabaaac95e49 after exact3f62547 independent approval, all4 workflows SUCCESS and30successful jobs (only conditional documentation publish skip). Source-head links in CI-runtime-repair.md; new main CI39504029294/Documentation39504029094/Security39504029453 running, not yet complete. Old priority paragraphs above are historical.
+
+Parallel refreshes underway for all own open lanes. PR29 now00d648ce, PR30 cad8cfd9, PR31 81cff73e independently APPROVED exact heads. Root PR33 now1535427e, review pending; only additive changelog conflict, source auto-merged, old dirty commands file preserved unstaged. No local reruns. Remaining34/42/43 author refreshes in progress. Merge order29 then30/33 then34/31 then42/43. All need fresh all-triggered CI and current main. Assigned counts still1merged/6active-ready/2blocked-or-parked of9. PR35 remainsOPEN; #14 still dependency-blocked. Latest interim report6e399a4 is current, not final.
