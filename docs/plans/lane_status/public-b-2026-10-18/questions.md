@@ -1,4 +1,13 @@
-# Parked Owner questions
+# Owner decisions and remaining dependencies
+
+## Current status — Owner directive2026-10-20
+
+The comparison-category decision for #20/#6 is now APPROVED under the exact constraints below; both lanes are ACTIVE. Their older questions below are historical. #14 remains dependency-blocked solely until PR35 merges into main; its decimal policy is resolved.
+
+> Approve explicit, tested "not comparable" handling, ONLY where the recorded0.9.1 result is itself an error or "unsupported". List each such workload by name, with its reason, in a reviewed file committed to the repo. Report them separately. They never count as a pass. Every workload where0.9.1 produced values still compares with unchanged thresholds. No re-recording. Capture-clock fields may be excluded only where they are runtime timestamps. Reference-label substitutions are normalized by name only, never by value. Implement Wanted5 of #6 under the same category. Close #20 only through its PR, and only once a Nightly dispatched on main is green on all five parity shards, parity-publish and sqlserver-e2e; link that run.
+
+#14: Owner reconfirms the2026-10-09 decision to check `0 <= scale <= precision` before connecting and name the column. Unpark after #2/W9-01 PR35 merges; reuse that main source interface. No separate decimal approval is pending.
+
 
 ## #20 FRZ-01: comparison contract for authenticated 0.9.1 recordings
 

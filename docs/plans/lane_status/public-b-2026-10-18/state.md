@@ -27,11 +27,11 @@ PR34 old7a head had an unchanged macOS cancellation-test timing failure; new0b h
 
 Throughput decision-log row is committed on scratch cf68ff1 and included in dbt PR29 e1ae578 for main. Premium process05/08 edits are owned by Premium Build A; do not touch that repo or another session's PRs. Semantic/dbt explicit Owner-actions headings were added during refresh. Pending service validation is already listed in each lane record; no live success claimed. Semantic fixture/measure/role expected-results decision remains Owner work.
 
-Parked #20: comparison-contract decision, authenticated artifacts retrieved and exact failures/root cause in FRZ-01-evidence.md. Do not re-record, restore obsolete errors/labels, or change pass rules. Latest issuecomment6252771902.
-Parked #6: Wanted5 unsupported-baseline classification conflicts with frozen comparison policy; Owner decision required. Existing implementation/test-first branch3de70e3. Updated clarification: issuecomment6299574643; artifact access is resolved.
-Parked #14: waiting only for W9-01 source interface on main; do not inspect Lead A branches/issues. Decimal0<=scale<=precision refusal was ALREADY approved in issuecomment6072817299, no further decision needed. Existing journal branch1249af9. Updated clarification: issuecomment6299575080; no new decimal decision is pending.
+ACTIVE #20: Owner2026-10-20 approves narrowly scoped not-comparable handling for recorded errors/unsupported only. formats_recover owns comparison harness/registry and tests-first implementation. Exact constraints are in questions.md and its lane record. Value-based workloads retain unchanged thresholds, no rerecording.
+ACTIVE #6: Owner2026-10-20 approves Wanted5 under the same category as #20. eventhouse_recover owns child-field implementation, coordinating with formats_recover for the shared harness category. Refreshed signed/pushed branch lane/W9-05 headbc4b903.
+Parked #14: waiting only for W9-01 source interface on main; do not inspect Lead A branches/issues. Decimal0<=scale<=precision refusal was ALREADY approved in issuecomment6072817299, no further decision needed. Current pushed journal lane/W9-13 head58966e0. Updated clarification: issuecomment6299575080; no new decimal decision is pending.
 
-Exact questions/options/recommendations remain in questions.md. All three issues remain open; no product PR/merge for them.
+Exact questions/options/recommendations remain in questions.md. #20/#6 are now active and #14 remains dependency-blocked. All three remain open; no product PR/merge yet.
 
 ## Next actions
 
@@ -47,7 +47,7 @@ The newly surfaced certifi advisory GHSA-6q48-6c7w-9gw2 blocks active PR audit/b
 
 To free runner slots, root intentionally canceled remaining CI runs on current feature heads PR29, PR30 and PR33: these unchanged-code refreshes must absorb repair main and rerun CI anyway. Their canceled checks are NOT passing. Only the Iceberg CI workflow remains running on a feature head, to validate the new Windows code. Formats CI and the redundant Iceberg Wheels workflow were also intentionally canceled to prioritize the shared repair; all feature heads require fresh checks after the repair merges. Main CI also remains running; completed jobs have no observed failures. PR30's queued one-job REPORT_CARD teardown retry was canceled as part of this deliberate hold; no passing retry claimed. Do not retry old feature jobs before the repair lands.
 
-Next: merge PR40 promptly when all exact-head CI is green and it contains current main, then merge new main into all five feature lanes and push. Run local targeted tests only for any actual code conflicts. Keep tests/assertions/gates unchanged. Continue main CI monitoring and park #6/#14/#20 as recorded.
+Next: merge PR40 promptly when all exact-head CI is green and it contains current main, then merge new main into all five feature lanes and push. Run local targeted tests only for any actual code conflicts. Keep tests/assertions/gates unchanged. Continue main CI monitoring; #20/#6 are ACTIVE under the new Owner decision and #14 remains conditional on PR35.
 
 ## HARD STOP — 2026-10-20 20:33 UTC
 
@@ -56,3 +56,15 @@ GitHub GraphQL PR40 polling returned HTTP401 Bad credentials. This is the prompt
 ## RESUMED — 2026-10-20 20:35 UTC
 
 Fresh commands authenticated successfully to GitHub REST and GraphQL without any authentication/settings change. The401 was confined to the inherited environment of the long-running watcher, now stopped; do not use long-lived shell processes for GitHub polling. Use fresh exec commands each cycle so current runtime credentials apply. The scratch checkpoint was pushed successfully as108f18f. report.md is marked interim/resolved, not final. Latest PR40 snapshot:19success/11running/1conditional skip/no failures, exact3f62547 unchanged and APPROVED. Continue required CI/merge/refresh work. User requests full count updates every five minutes plus merge/blocker changes. Latest complete issue counts remain1/9merged11.1%,5/9active55.6%,3/9parked33.3%.
+
+## Owner resumption directive — 2026-10-20
+
+Push audit: all owned implementation/scratch commits were already reachable on origin; no unpublished commit remained. Historical placeholder branch refs differ from old lane remotes but contain zero commits absent from all origin refs; no force push was used. A non-fast-forward rejection on historical lane/W9-11 was not a credential failure. Current implementation tips are in the lane table; support3f62547 and scratch10af006 were already pushed at the audit. New #14 decision journal58966e0 was signed/pushed.
+
+Record the exact #20/#6 approval from questions.md in each lane. Both lanes are unparked and running in parallel while CI gates PR40. No reference data/threshold/value rewriting is approved. #14 decimal policy is resolved; PR35 is OPEN and the lane remains dependency-blocked. Do not inspect or edit Lead A's implementation.
+
+Merge order now: PR40 first (Lead A also depends on it); then PR29/30/33 (PR32 already merged); then34/31; then20/6; then14 after PR35/main dependency. Refresh each own open lane once from main and let exact-head CI run; no local reruns except targeted tests for code conflicts. All PRs ready, all applicable triggered CI jobs including both kernels, independent review and current main required.
+
+Credential rule REPLACED:401/403/failed push is a hard stop only if persistent. Retry git ls-remote origin plus one gh api call at5,10,20minutes, doing local work between attempts; stop only if all three fail. Never print tokens or modify authentication settings. Use fresh command environments for polling.
+
+Current counts after unpark:9total,1merged11.1%,7active77.8%,1dependency-blocked11.1%,8unmerged88.9%. Continue full user count updates every five minutes plus merge/blocker changes. report.md is an interim historical checkpoint and will be rewritten at final completion.
