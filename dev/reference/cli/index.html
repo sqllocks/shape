@@ -10669,16 +10669,16 @@ Exit codes:
 </code></pre></div>
 <h2 id="shape-stream-profile"><code>shape stream-profile</code><a class="headerlink" href="#shape-stream-profile" title="Permanent link">&para;</a></h2>
 <p>Stability: <strong>experimental</strong>.</p>
-<div class="highlight"><pre><span></span><code>usage: shape stream-profile [-h] [-o OUT.json] [--window {global,tumbling,sliding,session}]
-                            [--windows OUT.jsonl] [--size DURATION] [--slide DURATION]
-                            [--gap DURATION] [--allowed-lateness DURATION]
-                            [--max-partition-skew DURATION] [--partition-idle-timeout SECONDS]
-                            [--event-time FIELD] [--event-time-unit {s,ms,us}]
-                            [--order {file,event-time}] [--start {earliest,latest}] [--follow]
-                            [--max-events N] [--idle-timeout SECONDS] [--batch-size N]
-                            [--checkpoint FILE] [--checkpoint-every N] [--max-reconnects N]
-                            [--name NAME] [--top-n N] [--option KEY=VALUE]
-                            [--options-file FILE.json] [--json] [--dry-run]
+<div class="highlight"><pre><span></span><code>usage: shape stream-profile [-h] [-o OUT.json] [--with-key] [--with-headers] [--with-timestamp]
+                            [--window {global,tumbling,sliding,session}] [--windows OUT.jsonl]
+                            [--size DURATION] [--slide DURATION] [--gap DURATION]
+                            [--allowed-lateness DURATION] [--max-partition-skew DURATION]
+                            [--partition-idle-timeout SECONDS] [--event-time FIELD]
+                            [--event-time-unit {s,ms,us}] [--order {file,event-time}]
+                            [--start {earliest,latest}] [--follow] [--max-events N]
+                            [--idle-timeout SECONDS] [--batch-size N] [--checkpoint FILE]
+                            [--checkpoint-every N] [--max-reconnects N] [--name NAME] [--top-n N]
+                            [--option KEY=VALUE] [--options-file FILE.json] [--json] [--dry-run]
                             URI
 
 (experimental)
@@ -10693,6 +10693,9 @@ options:
   -h, --help            show this help message and exit
   -o OUT.json, --output OUT.json
                         the global profile
+  --with-key            include broker message keys
+  --with-headers        include headers and Event Hubs properties
+  --with-timestamp      include message timestamp
   --window {global,tumbling,sliding,session}
                         global: one profile of the whole stream (default); the others write
                         --windows
@@ -11797,11 +11800,13 @@ Exit codes:
 </code></pre></div>
 <h2 id="shape-emit"><code>shape emit</code><a class="headerlink" href="#shape-emit" title="Permanent link">&para;</a></h2>
 <p>Stability: <strong>experimental</strong>.</p>
-<div class="highlight"><pre><span></span><code>usage: shape emit [-h] [--mode {3nf,star}] [--scale PRESET] [--seed SEED] [--table NAME]
-                  [--sink SINK] [--auth {cli,msi,spn,sql,device-code,fabric,kerberos}]
-                  [--tenant-id GUID] [--client-id GUID] [--client-secret REF] [--sql-user NAME]
-                  [--sql-password REF] [--keytab REF] [--principal NAME@REALM]
-                  [--connection-string STR|REF] [-o FILE] [--envelope {flat,cloudevents}]
+<div class="highlight"><pre><span></span><code>usage: shape emit [-h] [--key KEY] [--header HEADER] [--partition PARTITION]
+                  [--partition-key PARTITION_KEY] [--timestamp {broker,event_time}]
+                  [--mode {3nf,star}] [--scale PRESET] [--seed SEED] [--table NAME] [--sink SINK]
+                  [--auth {cli,msi,spn,sql,device-code,fabric,kerberos}] [--tenant-id GUID]
+                  [--client-id GUID] [--client-secret REF] [--sql-user NAME] [--sql-password REF]
+                  [--keytab REF] [--principal NAME@REALM] [--connection-string STR|REF] [-o FILE]
+                  [--envelope {flat,cloudevents}]
                   [--event-format {json,avro,protobuf,json-schema}] [--realtime | --no-realtime]
                   [--rate N] [--burst START:DURATION:MULT] [--ramp START:DURATION:FROM:TO]
                   [--daily-curve NAME|FILE] [--arrivals {constant,poisson}] [--max-rate N]
@@ -11837,6 +11842,14 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
+  --key KEY             broker key: column or columns joined by | (default idempotency)
+  --header HEADER       broker header name=value or name=@column
+  --partition PARTITION
+                        Kafka partition number or by_key
+  --partition-key PARTITION_KEY
+                        Event Hubs table, none or column
+  --timestamp {broker,event_time}
+                        broker time or event time
   --mode {3nf,star}     the schema mode of a domain
   --scale PRESET        the scale preset (see `shape presets`)
   --seed SEED           the seed (default: the schema's)
@@ -12049,9 +12062,11 @@ Exit codes:
 </code></pre></div>
 <h2 id="shape-stream"><code>shape stream</code><a class="headerlink" href="#shape-stream" title="Permanent link">&para;</a></h2>
 <p>Stability: <strong>experimental</strong>.</p>
-<div class="highlight"><pre><span></span><code>usage: shape stream [-h] [--mode {3nf,star}] [--scale PRESET] [--seed SEED] --table NAME
-                    [--sink SINK] [--auth {cli,msi,spn,sql,device-code,fabric,kerberos}]
-                    [--tenant-id GUID] [--client-id GUID] [--client-secret REF] [--sql-user NAME]
+<div class="highlight"><pre><span></span><code>usage: shape stream [-h] [--key KEY] [--header HEADER] [--partition PARTITION]
+                    [--partition-key PARTITION_KEY] [--timestamp {broker,event_time}]
+                    [--mode {3nf,star}] [--scale PRESET] [--seed SEED] --table NAME [--sink SINK]
+                    [--auth {cli,msi,spn,sql,device-code,fabric,kerberos}] [--tenant-id GUID]
+                    [--client-id GUID] [--client-secret REF] [--sql-user NAME]
                     [--sql-password REF] [--keytab REF] [--principal NAME@REALM]
                     [--connection-string STR|REF] [-o FILE] [--envelope {flat,cloudevents}]
                     [--event-format {json,avro,protobuf,json-schema}] [--realtime | --no-realtime]
@@ -12090,6 +12105,14 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
+  --key KEY             broker key: column or columns joined by | (default idempotency)
+  --header HEADER       broker header name=value or name=@column
+  --partition PARTITION
+                        Kafka partition number or by_key
+  --partition-key PARTITION_KEY
+                        Event Hubs table, none or column
+  --timestamp {broker,event_time}
+                        broker time or event time
   --mode {3nf,star}, -m {3nf,star}
                         the schema mode of a domain
   --scale PRESET, -s PRESET

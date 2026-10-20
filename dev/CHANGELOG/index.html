@@ -6363,6 +6363,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#w9-08-broker-message-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W9-08: broker message metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6615,6 +6626,17 @@
     <span class="md-ellipsis">
       
         Fixed (security review)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#w9-08-broker-message-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W9-08: broker message metadata
       
     </span>
   </a>
@@ -8807,6 +8829,13 @@
 <li>The fidelity e-mail format pattern runs in linear time (#293).</li>
 <li>The kql scale sink percent-encodes its database name (#295); Spark job and <code>COPY INTO</code> checks
   take whole values, and backticks in Spark column names are doubled (#300).</li>
+</ul>
+<h3 id="w9-08-broker-message-metadata">W9-08: broker message metadata<a class="headerlink" href="#w9-08-broker-message-metadata" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Kafka and Event Hubs support column/composite keys, user headers, partition
+  controls and event-time message timestamps; replay keys remain available.</li>
+<li>Stream sources expose message metadata on request and drift ignores it by
+  default. The CLI exposes both write and read metadata options.</li>
 </ul>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Changelog&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FCHANGELOG%2F">Report a problem with this page</a></p>
 

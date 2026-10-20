@@ -2972,6 +2972,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#message-metadata-w9-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message metadata (W9-08)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6775,6 +6786,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#message-metadata-w9-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message metadata (W9-08)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -8666,6 +8688,44 @@ shape emit: live fidelity 76.34 over 9 tables, 3 alerts, FAILED: overall score 7
 </code></pre></div>
 </details>
 <p>This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.</p>
+<h3 id="message-metadata-w9-08">Message metadata (W9-08)<a class="headerlink" href="#message-metadata-w9-08" title="Permanent link">&para;</a></h3>
+<p>Both broker emitters accept <code>key="column"</code> or <code>key="a|b"</code> (values joined with
+<code>|</code>; null components become empty strings), and <code>headers=["name=value",
+"name=@column"]</code>. A mapping of header names to static values or <code>@column</code>
+references is also accepted. Unknown columns fail before sending the batch.
+The default key remains <code>&lt;table&gt;/&lt;seq&gt;</code>. A column key moves that replay key to
+<code>shape-key</code>; Event Hubs retains its established <code>shape_key</code> property name for
+the selected key. User headers cannot replace reserved <code>shape-*</code> or <code>shape_*</code>
+metadata. Synthetic and dead-letter headers retain their established names.</p>
+<p>Kafka <code>partition=0</code> selects one partition; <code>partition="by_key"</code> uses the broker's
+key partitioner. Event Hubs <code>partition_key</code> accepts <code>table</code> (default), <code>none</code>,
+or a column. <code>timestamp="broker"</code> leaves timestamp assignment to the transport.
+<code>timestamp="event_time"</code> takes <code>_shape_event_time</code>: Kafka receives producer
+milliseconds, and Event Hubs receives AMQP creation time in milliseconds. Event
+Hubs enqueue time is always assigned by the service. Null event times leave the
+transport timestamp unset; submillisecond precision is truncated.</p>
+<p>Sources accept <code>with_key</code>, <code>with_headers</code>, <code>with_timestamp</code>. They add binary
+<code>_shape_key</code>, map<string,binary> <code>_shape_headers</code>, and UTC-microsecond
+<code>_shape_timestamp</code>. Event Hubs also includes <code>_shape_properties</code> and
+<code>_shape_partition_key</code> when key/header metadata is requested. Its message
+timestamp uses creation time when present, otherwise service enqueue time.
+<code>nested=False</code> writes header/property maps as JSON text with hex-encoded binary
+values (nulls remain null). Missing metadata stays null or an empty map.
+Message metadata columns are excluded from drift by default; explicitly select
+one with <code>only_columns</code> to compare it.</p>
+<p>CLI: <code>shape emit ... --key customer_id --header trace=@trace_id --partition 0
+--timestamp event_time</code> (Kafka); use <code>--partition-key customer_id</code> for Event
+Hubs. <code>shape stream-profile URI --with-key --with-headers --with-timestamp</code>
+reads metadata. The existing <code>--option nested=false</code> selects JSON-text maps.</p>
+<p>Keyed emulator rehearsal (one Kafka partition preserves key order):</p>
+<div class="highlight"><pre><span></span><code>shape<span class="w"> </span>emit<span class="w"> </span>retail<span class="w"> </span>--table<span class="w"> </span>order<span class="w"> </span>--max-events<span class="w"> </span><span class="m">10</span><span class="w"> </span>--to<span class="w"> </span>kafka://localhost:9092/orders<span class="w"> </span>--key<span class="w"> </span>order_id<span class="w"> </span>--partition<span class="w"> </span><span class="m">0</span><span class="w"> </span>--header<span class="w"> </span><span class="nv">rehearsal</span><span class="o">=</span>yes
+shape<span class="w"> </span>stream-profile<span class="w"> </span>kafka://localhost:9092/orders<span class="w"> </span>--with-key<span class="w"> </span>--with-headers<span class="w"> </span>--with-timestamp<span class="w"> </span>-o<span class="w"> </span>keyed-profile.json
+</code></pre></div>
+<p>Use a topic created by the existing emulator rehearsal. Read offsets in partition
+0 increase in send order; each record has its column key plus the <code>shape-key</code>
+replay header. Run the marked keyed round-trip tests against both emulators with
+<code>pytest -m emulator plugins/shape-kafka/tests/test_emitter_emulator.py
+plugins/shape-eventhubs/tests/test_emitter_emulator.py</code>.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Emitting+events&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FEMIT%2F">Report a problem with this page</a></p>
 
 
