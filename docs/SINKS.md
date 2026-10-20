@@ -335,8 +335,12 @@ Live connector validation remains an Owner action.
 The explicit `json` mode keeps the earlier text/VARIANT paths: PostgreSQL `TEXT`, MySQL
 `LONGTEXT`, Databricks `STRING`, Snowflake's existing VARIANT staging; DuckDB uses `VARCHAR`
 JSON text. Delta's explicit `json` mode stores nested columns as UTF-8 JSON text too. Native
-Delta maps retain key/value entries and recursively normalize timestamps in map values to
-UTC, using the existing table protocol defaults. Unsupported nested Delta leaves name the
+Delta maps retain key/value entries. Native Delta timestamps at every nesting depth read
+back in UTC with microsecond precision, matching its scalar and list behavior; submicrosecond
+precision is not retained. For example, timestamp nanoseconds `1767323045123456789` read back
+as timestamp microseconds `1767323045123456`, including inside map values. Compare native
+Delta values after this explicit UTC/microsecond normalization. Delta uses the existing
+table protocol defaults. Unsupported nested Delta leaves name the
 column and the `nested=json` alternative before storage is accessed.
 Native writes preserve SQL NULL versus empty containers. PostgreSQL/MySQL JSON values and
 Databricks JSON parameters encode decimals as exact text, temporal values as ISO text and binary values as base64; map

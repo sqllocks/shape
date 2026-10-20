@@ -64,6 +64,31 @@ def test_delta_native_map_duplicate_entries_are_preserved_where_representable(tm
     assert actual.to_pylist() == expected.to_pylist()
 
 
+@pytest.mark.conformance
+@pytest.mark.parametrize("zone", [None, "UTC", "America/New_York"])
+def test_delta_nanosecond_map_timestamps_match_scalar_and_list_microsecond_normalization(
+    tmp_path, zone
+):
+    """SHAPE-SINK-003: compare native Source integers after Delta's explicit normalization."""
+    nanos = 1767323045123456789
+    times = pa.array([nanos], pa.int64()).cast(pa.timestamp("ns", zone))
+    expected = pa.table(
+        {
+            "scalar": times,
+            "list": pa.ListArray.from_arrays([0, 1], times),
+            "map": pa.MapArray.from_arrays([0, 1], pa.array(["at"]), times),
+        }
+    )
+    assert DeltaSink().write(str(tmp_path), "data", expected.to_batches()) == 1
+    actual = read(tmp_path / "data")
+    scalar = actual.column("scalar").combine_chunks()
+    list_items = actual.column("list").combine_chunks().values
+    map_values = actual.column("map").combine_chunks().items
+    for values in (scalar, list_items, map_values):
+        assert values.type == pa.timestamp("us", "UTC")
+        assert values.cast(pa.int64()).to_pylist() == [1767323045123456]
+
+
 def test_delta_json_mode_stores_json_text_and_retains_null_vs_empty(tmp_path):
     table = nested_table()
     assert DeltaSink().write(str(tmp_path), "data", table.to_batches(), nested="json") == 3

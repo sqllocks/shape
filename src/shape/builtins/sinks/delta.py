@@ -281,12 +281,12 @@ def _check_nested_type(kind: pa.DataType, column: str) -> None:
 
 
 def _utc_timestamps(schema: pa.Schema) -> pa.Schema:
-    """``schema`` with every time-zone-less timestamp (at any nesting depth) made a UTC one."""
+    """``schema`` with timestamps at every nesting depth represented in UTC."""
     return pa.schema([f.with_type(_utc_type(f.type)) for f in schema], metadata=schema.metadata)
 
 
 def _utc_type(t: pa.DataType) -> pa.DataType:
-    if pa.types.is_timestamp(t) and t.tz is None:
+    if pa.types.is_timestamp(t) and t.tz != "UTC":
         return pa.timestamp(t.unit, tz="UTC")
     if pa.types.is_list(t) or pa.types.is_large_list(t) or pa.types.is_fixed_size_list(t):
         item = t.value_field.with_type(_utc_type(t.value_type))
