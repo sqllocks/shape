@@ -299,3 +299,31 @@ def test_upsert_with_identity_keep_keeps_the_generated_identity_values(schema):
     table = f"{_tsql.ident(schema)}.[customer]"
     keys = [r[0] for r in query(f"SELECT customer_id FROM {table} ORDER BY customer_id")]
     assert keys == [1000 + 5 * i for i in range(10)]
+
+
+def test_full_retail_all_constraints_and_named_planted_violation(schema):
+    """W9-04 Wanted 5, on the real SQL Server used by the existing nightly job."""
+    from shape.generation.domains import load_domain
+    from shape.generation.engine import Engine
+    from shape.generation.output import TargetOptions, write_targets
+
+    definition = load_domain("retail").schema
+    engine = Engine(definition, scale="small", seed=1042)
+    contract = {"tables": {"product": {"columns": {"unit_price": {"min": 0, "default": 1}}}}}
+    options = TargetOptions(constraints="all", contract=contract, extra={"sqlserver": LOGIN})
+    uri = uri_for(schema)
+    expected = dict(engine.row_counts)
+    assert len(expected) == 9 and sum(expected.values()) == 21750
+    assert write_targets(engine, [uri], options, max_workers=1) == {uri: expected}
+    assert {name: count(schema, name) for name in expected} == expected
+    product = Engine(definition, scale="small", seed=1042).generate().tables["product"].slice(0, 1)
+    key = product.schema.get_field_index("product_id")
+    cost = product.schema.get_field_index("cost")
+    product = product.set_column(key, "product_id", pa.array([1000000], type=pa.int64()))
+    product = product.set_column(cost, "cost", product.column("unit_price"))
+    load_options = options.for_sink("sqlserver", definition, "product")
+    load_options["write_mode"] = "append"
+    with pytest.raises(WriteError, match="cost_less_than_price") as error:
+        SqlServerSink().write(uri, "product", product.to_batches(), **load_options)
+    assert error.value.rows_committed == 0
+    assert count(schema, "product") == expected["product"]
