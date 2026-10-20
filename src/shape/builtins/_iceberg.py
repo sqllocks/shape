@@ -8,7 +8,7 @@ import os
 import re
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlparse
+from urllib.parse import quote, unquote, urlparse
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
@@ -66,8 +66,9 @@ def catalog(
             warehouse.mkdir(parents=True, exist_ok=True)
         config = {
             "type": "sql",
-            "uri": f"sqlite:///{(warehouse / 'catalog.db').as_posix()}",
+            "uri": f"sqlite:///{quote((warehouse / 'catalog.db').as_posix(), safe='/:')}",
             "warehouse": warehouse.as_uri(),
+            "py-io-impl": "shape.builtins._iceberg_local_io.LocalFileIO",
         }
     else:
         kind = options.get("catalog_type")
@@ -90,7 +91,13 @@ def catalog(
             if options.get(key) is not None:
                 config[key] = resolve_reference(str(options[key]))
     try:
-        return dependency().load_catalog(name, **config), identifier
+        loaded = dependency().load_catalog(name, **config)
+        properties = getattr(loaded, "properties", None)
+        if isinstance(properties, dict):
+            location = urlparse(str(properties.get("warehouse", "")))
+            if location.scheme == "file" and location.netloc in ("", "localhost"):
+                properties.setdefault("py-io-impl", "shape.builtins._iceberg_local_io.LocalFileIO")
+        return loaded, identifier
     except ImportError:
         raise
     except Exception:
