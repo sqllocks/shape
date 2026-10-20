@@ -2059,3 +2059,10 @@ Converting a full capture to the safe form now gives a different content ID when
   named catalogs, native nested types, width restoration, partition transforms,
   snapshot micro-batches/fingerprints, time travel and namespace profiling. CLI
   URI targets and additive bridge API 1.2 target arguments are supported.
+
+### W9-08: broker message metadata
+
+- Kafka and Event Hubs support column/composite keys, user headers, partition
+  controls and event-time message timestamps; replay keys remain available.
+- Stream sources expose message metadata on request and drift ignores it by
+  default. The CLI exposes both write and read metadata options.
