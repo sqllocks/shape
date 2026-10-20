@@ -472,6 +472,31 @@ def _render_constraint_preview(
             schema_name=schema_name,
             table_prefix=prefix,
         )
+        if dialect == "duckdb":
+            import pyarrow as pa  # type: ignore[import-untyped]
+            from shape_databases.duckdb_sink import create_table_sql
+
+            from shape.generation.engine import arrow_type
+
+            arrow_schema = pa.schema(
+                [
+                    (column.name, arrow_type(column))
+                    for column in schema.tables[table].columns.values()
+                ]
+            )
+            result.append(
+                create_table_sql(
+                    schema_name or "main",
+                    prefix + table,
+                    arrow_schema,
+                    columns=derived.get("columns"),
+                    primary_key=derived.get("primary_key") or [],
+                    nested=derived.get("nested", "native"),
+                    constraints=plan,
+                )
+                + ";"
+            )
+            continue
         qualified = (identifier(schema_name, dialect) + ".") if schema_name else ""
         qualified += identifier(prefix + table, dialect)
         result.extend("-- NOTE: " + note for note in plan.notes)

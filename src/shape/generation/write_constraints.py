@@ -102,9 +102,9 @@ def compile_constraints(
 ) -> ConstraintDDL:
     """Build supported constraints, refusing malformed data before any connection.
 
-    Foreign keys always form a separate phase after every table exists. DuckDB
-    callers must refuse that phase: this function does not grant an inline-FK
-    exception to the requested write order.
+    Foreign keys are separate from other definitions for the post-create phase.
+    The Owner-approved DuckDB exception consumes them inline in parent-first
+    CREATE statements, while still preparing every table before loading rows.
     """
     if dialect not in _DIALECTS:
         raise ValueError(f"unsupported constraint dialect {dialect!r}")
