@@ -50,6 +50,9 @@ duckdb = "shape_databases:DuckDbSink"
 [project.entry-points."shape.sources"]
 snowflake = "shape_databases.cloud_readers:SnowflakeSource"
 databricks = "shape_databases.cloud_readers:DatabricksSource"
+postgresql = "shape_databases.sources:PostgresSource"
+postgres = "shape_databases.sources:PostgresAliasSource"
+mysql = "shape_databases.sources:MySqlSource"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -57,7 +60,3 @@ where = ["src"]
 [tool.uv.sources]
 sqllocks-shape = { workspace = true }
 
-[project.entry-points."shape.sources"]
-postgresql = "shape_databases.sources:PostgresSource"
-postgres = "shape_databases.sources:PostgresAliasSource"
-mysql = "shape_databases.sources:MySqlSource"

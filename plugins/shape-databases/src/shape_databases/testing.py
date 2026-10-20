@@ -502,8 +502,8 @@ class FakeSnowflakeCursor:
         s.events.append(("execute", sql, tuple(params) if params is not None else None))
         self._read_sql = sql
         if sql in s.catalog_answers:
-            names, rows = s.catalog_answers[sql]
-            self.description = [(name,) for name in names]
+            catalog_names, rows = s.catalog_answers[sql]
+            self.description = [(name,) for name in catalog_names]
             self._result = list(rows)
             return
         if sql in s.arrow_results:

@@ -135,7 +135,27 @@ def cloud_fixture(dialect):
             ["col_name", "data_type"],
             [("Statistics", "40000 bytes, 10000 rows")],
         )
-        # Constraint queries get explicit empty catalog answers below.
+        server.catalog_answers[
+            "SELECT k.column_name FROM information_schema.table_constraints t JOIN "
+            "information_schema.key_column_usage k USING (constraint_catalog, "
+            "constraint_schema, constraint_name) "
+            "WHERE t.table_schema=? AND t.table_name=? AND t.constraint_type='PRIMARY KEY' "
+            "ORDER BY k.ordinal_position"
+        ] = (["column_name"], [("id",)])
+        server.catalog_answers[
+            "SELECT fk.constraint_name, pk.table_name, pk.column_name, fk.column_name "
+            "FROM information_schema.referential_constraints r JOIN "
+            "information_schema.key_column_usage fk "
+            "ON r.constraint_catalog=fk.constraint_catalog AND "
+            "r.constraint_schema=fk.constraint_schema "
+            "AND r.constraint_name=fk.constraint_name JOIN information_schema.key_column_usage pk "
+            "ON r.unique_constraint_catalog=pk.constraint_catalog AND "
+            "r.unique_constraint_schema=pk.constraint_schema "
+            "AND r.unique_constraint_name=pk.constraint_name AND "
+            "fk.position_in_unique_constraint=pk.ordinal_position "
+            "WHERE fk.table_schema=? AND fk.table_name=? ORDER BY "
+            "fk.constraint_name,fk.ordinal_position"
+        ] = (["constraint_name", "table_name", "column_name", "column_name"], [])
     fields = pa.schema(
         [
             pa.field(
