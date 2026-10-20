@@ -726,3 +726,12 @@ requirements:
   text: Database sources stream typed Arrow batches and profile catalog schemas with bounded samples, declared keys, safe capture and no persisted credentials.
   verify: [database-source-conformance]
   owner: databases
+
+- id: SHAPE-STREAM-METADATA-001
+  title: Broker message metadata
+  level: L1
+  milestone: W9-08
+  priority: MUST
+  text: Kafka and Event Hubs support column keys and headers, preserve replay identity, refuse reserved header names and unknown metadata columns before sending, and optionally decode broker metadata outside default drift comparisons.
+  verify: [conformance]
+  owner: streaming

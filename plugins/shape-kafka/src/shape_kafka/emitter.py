@@ -1,7 +1,7 @@
 """The ``kafka://`` emitter (P5-02).
 
 ``kafka://broker1:9092,broker2:9092/topic`` sends each event as one message: the body is the
-event's JSON (flat, or the CloudEvents envelope), the **message key is the D-12 idempotency key**
+event's JSON (flat, or the CloudEvents envelope), the **default key is the D-12 idempotency key**
 ``<table>/<seq>`` (so a replay of a row lands in the same partition with the same key, and a
 log-compacted topic keeps one message per row), and the header ``shape-table`` names the table.
 
@@ -60,6 +60,7 @@ from shape.streaming.emit.formats import (
     encode_events,
     poison_body,
 )
+from shape.streaming.emit.metadata import metadata
 
 from .formats import EVENT_FORMATS, EncodeError, TableCodec, make_codec, wire
 from .registry import SUBJECT_STRATEGIES, RegistryClient, Transport, subject_name
@@ -88,11 +89,13 @@ _POLL = 0.05  # seconds one wait for a full queue to drain
 def parse_uri(uri: str) -> tuple[str, str]:
     """``(bootstrap servers, topic)`` of a ``kafka://`` URI."""
     parts = urlsplit(uri)
+    if parts.username is not None or parts.password is not None:
+        raise ShapeError("credentials must be supplied outside the URI")
     if parts.scheme != "kafka" or not parts.netloc:
-        raise ShapeError(f"not a kafka URI: {uri!r} (kafka://host:9092[,host2:9092]/topic)")
+        raise ShapeError("not a kafka URI: the supplied URI (kafka://host:9092[,host2:9092]/topic)")
     topic = unquote(parts.path.lstrip("/"))
     if not topic or "/" in topic:
-        raise ShapeError(f"the kafka URI needs one topic name: {uri!r}")
+        raise ShapeError("the kafka URI needs one topic name: the supplied URI")
     return parts.netloc, topic
 
 
@@ -119,7 +122,7 @@ def _confluent_producer(config: dict[str, Any]) -> Any:
 
 
 class KafkaEmitter:
-    """Events to a Kafka topic, keyed by the idempotency key.
+    """Events to a Kafka topic, with the idempotency key retained on replay.
 
     ``producer_factory(config)`` is for tests: it stands in for ``confluent_kafka.Producer``.
     """
@@ -251,6 +254,10 @@ class KafkaEmitter:
         subject_strategy: str = "topic",
         schema_registry_username: str | None = None,
         schema_registry_password: str | None = None,
+        key: str | None = None,
+        headers: Mapping[str, Any] | list[str] | None = None,
+        partition: int | str = "by_key",
+        timestamp: str = "broker",
         **options: Any,
     ) -> int:
         """Send every batch; return the number of events, after the broker acknowledged them."""
@@ -282,6 +289,15 @@ class KafkaEmitter:
             registry = self._registry(
                 schema_registry_url, schema_registry_username, schema_registry_password
             )
+        if partition != "by_key":
+            if isinstance(partition, bool) or not isinstance(partition, int | str):
+                raise ShapeError("partition must be a nonnegative number or 'by_key'")
+            try:
+                partition = int(partition)
+            except (ValueError, TypeError):
+                raise ShapeError("partition must be a nonnegative number or 'by_key'") from None
+            if isinstance(partition, bool) or partition < 0:
+                raise ShapeError("partition must be a nonnegative number or 'by_key'")
         servers, topic = parse_uri(uri)
         producer = self._producer(servers, config)
         failures: list[Any] = []
@@ -299,6 +315,11 @@ class KafkaEmitter:
         sent = 0
         marker = [(HEADER_SYNTHETIC, b"true")] if synthetic else []
         for batch in batches:
+            meta = metadata(batch, key=key, headers=headers, timestamp=timestamp)
+            by_event = {
+                f"{r[FIELD_TABLE]}/{r[FIELD_SEQ]}": m
+                for r, m in zip(batch.to_pylist(), meta, strict=True)
+            }
             reasons = (
                 batch.column(FIELD_DEAD_REASON).to_pylist()
                 if FIELD_DEAD_REASON in batch.schema.names
@@ -312,16 +333,33 @@ class KafkaEmitter:
                 )
                 rejected.extend(refused)
             for i, event in enumerate(events):
-                headers = [(HEADER_TABLE, event.table.encode("utf-8")), *marker]
+                message_key, user_headers, when, _ = by_event[event.key]
+                event_headers = [
+                    (HEADER_TABLE, event.table.encode("utf-8")),
+                    *marker,
+                    *user_headers,
+                ]
+                if message_key is not None:
+                    event_headers.append(("shape-key", event.key.encode()))
+                extra = {}
+                if partition != "by_key":
+                    extra["partition"] = partition
+                if when is not None:
+                    extra["timestamp"] = when
                 if reasons is not None:
-                    headers.append((HEADER_DEAD_LETTER_REASON, str(reasons[i]).encode("utf-8")))
+                    event_headers.append(
+                        (HEADER_DEAD_LETTER_REASON, str(reasons[i]).encode("utf-8"))
+                    )
                 while True:
                     try:
                         producer.produce(
                             topic,
                             value=event.body,
-                            key=event.key.encode("utf-8"),
-                            headers=headers,
+                            key=message_key
+                            if message_key is not None
+                            else event.key.encode("utf-8"),
+                            headers=event_headers,
+                            **extra,
                             on_delivery=partial(reported, event.key, event.body),
                         )
                         break

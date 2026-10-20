@@ -2063,3 +2063,10 @@ Converting a full capture to the safe form now gives a different content ID when
   keys and bounded spread samples. `--tables` and `--sample-rows` select CLI tables/sample size;
   bridge arguments are `tables` and `sample_rows`. Catalog-only capture uses sample size zero.
 - Database profiles and bridge database artifacts use existing safe capture rules.
+
+### W9-08: broker message metadata
+
+- Kafka and Event Hubs support column/composite keys, user headers, partition
+  controls and event-time message timestamps; replay keys remain available.
+- Stream sources expose message metadata on request and drift ignores it by
+  default. The CLI exposes both write and read metadata options.
