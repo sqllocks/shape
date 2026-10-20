@@ -10,6 +10,7 @@ Status: available.
   preserve nested Arrow fields, and count malformed or incompatible rows. Kafka
   Avro reads resolve writer schema ids with a per-read cache; Event Hubs supports
   Azure Schema Registry Avro through its optional schema-registry extra.
+- Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.
 
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 
