@@ -146,3 +146,51 @@ Tools used before shell access: download_file initially failed because workspace
 - 2026-10-20T18:25:51.676838+00:00 | `python3 -c 'import subprocess; z=sum(s.startswith("Z") for s in subprocess.check_output(["ps","-eo","stat"],text=True).splitlines()); print("zombies before baseline make check:",z); assert z<=1000'` | exit 0
 
 - 2026-10-20T18:26:30.872926+00:00 | `tail -12 /workspace/public-a-evidence/main-make-check.log` | exit 0
+
+- 2026-10-20T18:26:49.472484+00:00 | `git add docs/plans/lane_status/public-a-2026-10-18` | exit 0
+
+- 2026-10-20T18:26:49.778792+00:00 | `git commit -s -m 'chore: record public A recovery and resumed verification'` | exit 0
+
+- 2026-10-20T18:26:51.491911+00:00 | `git push origin HEAD` | exit 0
+
+- 2026-10-20T18:27:01.416510+00:00 | `tail -15 /workspace/public-a-evidence/main-make-check.log` | exit 0
+
+- 2026-10-20T18:27:14.716765+00:00 | `tail -15 /workspace/public-a-evidence/main-make-check.log` | exit 0
+
+- 2026-10-20T18:27:15.951301+00:00 | `gh pr list --repo sqllocks/shape --state open --json number,title,headRefName,url` | exit 0
+
+- 2026-10-20T18:28:01.019593+00:00 | `tail -12 /workspace/public-a-evidence/main-make-check.log` | exit 0
+
+- 2026-10-20T18:28:21.764590+00:00 | `tail -8 /workspace/public-a-evidence/main-make-check.log` | exit 0
+
+- 2026-10-20T18:29:16.851285+00:00 | `tail -10 /workspace/public-a-evidence/main-make-check.log` | exit 0
+
+- 2026-10-20T18:30:37.418214+00:00 | `gh pr create --repo sqllocks/shape --base main --head lane/W9-01 --draft --title 'W9-01: stream PostgreSQL and MySQL sources and profile catalogs' --body-file /workspace/public-a-evidence/W9-01-pr-body.md` | exit 0
+
+- 2026-10-20T18:30:56.412022+00:00 | `gh issue comment 4 --repo sqllocks/shape --body-file /workspace/public-a-evidence/W9-03-park-comment.md` | exit 0
+
+- 2026-10-20T18:32:17.810183+00:00 | `python3 -` | exit 0
+
+- 2026-10-20T18:32:17.905174+00:00 | `sh -c 'umask 022; export PATH=/tmp/public-a-uv/bin:$PATH; python3 "$HOME/bin/reap.py" make check UV=/tmp/public-a-uv/bin/uv > /workspace/public-a-evidence/main-make-check.log 2>&1; check_status=$?; tail -65 /workspace/public-a-evidence/main-make-check.log; python3 -c '"'"'import subprocess; z=sum(s.startswith("Z") for s in subprocess.check_output(["ps","-eo","stat"],text=True).splitlines()); print("zombies after main make check:",z); assert z<=1000'"'"'; exit "$check_status"'` | exit 241
+
+- 2026-10-20T18:32:24.512140+00:00 | `gh pr checks 35 --repo sqllocks/shape --json name,state,link` | exit 1
+
+- 2026-10-20T18:32:46.988528+00:00 | `gh api repos/sqllocks/shape/commits/f0265dd2e7368cd7e50487d78405d958eac8c462/check-runs --jq '.check_runs[] \| {name,status,conclusion,html_url}'` | exit 0
+
+- 2026-10-20T18:32:47.870460+00:00 | `gh api repos/sqllocks/shape/commits/f0265dd2e7368cd7e50487d78405d958eac8c462/status --jq '{state,statuses:[.statuses[] \| {context,state,target_url}]}'` | exit 0
+
+- 2026-10-20T18:34:20.701265+00:00 | `tail -8 /workspace/public-a-evidence/W9-01/make-check.log` | exit 0
+
+- 2026-10-20T18:34:20.757892+00:00 | `git -C /workspace/public-a-W9-03 log -1 '--format=%H %s'` | exit 0
+
+- 2026-10-20T18:34:21.201133+00:00 | `git -C /workspace/public-a-W9-06 status --short` | exit 0
+
+- 2026-10-20T18:34:53.916706+00:00 | `gh api 'repos/sqllocks/shape/commits/f0265dd2e7368cd7e50487d78405d958eac8c462/check-runs?per_page=100' --jq '{total_count,summary:(.check_runs \| group_by(.status+":"+(.conclusion//"pending")) \| map({state:(.[0].status+":"+(.[0].conclusion//"pending")),count:length})),failures:[.check_runs[] \| select(.conclusion=="failure" or .conclusion=="cancelled" or .conclusion=="timed_out") \| {name,conclusion,html_url}]}'` | exit 0
+
+- 2026-10-20T18:34:54.094200+00:00 | `ps -eo pid,pcpu,pmem,etime,comm` | exit 0
+
+- 2026-10-20T18:35:49.618742+00:00 | `gh api 'repos/sqllocks/shape/commits/f0265dd2e7368cd7e50487d78405d958eac8c462/check-runs?per_page=100' --jq '{total_count,summary:(.check_runs \| group_by(.status+":"+(.conclusion//"pending")) \| map({state:(.[0].status+":"+(.[0].conclusion//"pending")),count:length})),failures:[.check_runs[] \| select(.conclusion=="failure" or .conclusion=="cancelled" or .conclusion=="timed_out") \| {name,conclusion,html_url}]}'` | exit 0
+
+- 2026-10-20T18:37:31.155578+00:00 | `gh issue comment 5 --repo sqllocks/shape --body-file /workspace/public-a-evidence/W9-04-park-comment.md` | exit 0
+
+- 2026-10-20T18:37:32.681019+00:00 | `gh issue comment 8 --repo sqllocks/shape --body-file /workspace/public-a-evidence/W9-07-park-comment.md` | exit 0
