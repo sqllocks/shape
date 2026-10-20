@@ -325,6 +325,7 @@ class DeltaSink:
         if schema is None:
             raise ValueError("a Delta table needs a schema: pass `schema`")
         feature_options = features.parse(options)
+        schema = feature_options.schema(schema)
         features.require_capabilities(_deltalake(), options, feature_options)
         location, storage = _location(uri, table, options)
         return DeltaTableWriter(location, schema, options, storage)
@@ -339,6 +340,7 @@ class DeltaSink:
                 "a Delta table needs a schema: pass `schema` when there are no batches"
             )
         feature_options = features.parse(options)
+        schema = feature_options.schema(schema)
         dl = _deltalake()
         features.require_capabilities(dl, options, feature_options)
         schema = schema if feature_options.ntz else _utc_timestamps(schema)

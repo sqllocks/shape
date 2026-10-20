@@ -350,7 +350,8 @@ create a new table with the requested generated columns instead.
 | Option | Value and effect | Required protocol |
 |---|---|---|
 | `table_properties` | String-to-string object passed as `configuration` on creation; changed properties are committed after a successful append. Custom properties compose with `shape.fingerprint`. Feature/protocol and fingerprint properties are reserved for their dedicated options. | 1 / 2 for ordinary properties |
-| `constraints` | `{"not_null": ["id"], "check": {"positive": "amount >= 0"}}`; SQL check expressions are evaluated by delta-rs. `true` derives not-null checks from nonnullable Arrow fields. Checks are added after the first data commit. | reader 1 / writer 3; `checkConstraints` |
+| `constraints` | `not_null` is a list of column names; `check` maps names to the structured expressions below. Raw SQL checks are refused. `true` derives not-null checks from nonnullable Arrow fields and `columns` metadata. Checks are added after the first data commit. | reader 1 / writer 3; `checkConstraints` |
+| `checks` | A list of `{name, expression}` objects produced by the shared generation-schema and contract derivation. Uses the same structured-expression validation as `constraints.check`. | reader 1 / writer 3; `checkConstraints` |
 | `column_mapping` | `"name"` creates a mapped table with stable physical names and positive ids in each field's metadata. Conversion of an existing unmapped table and renaming are table maintenance by another engine. | reader 2 / writer 5; `columnMapping` |
 | `deletion_vectors` | `true` enables `delta.enableDeletionVectors` and its reader/writer feature. This opt-in adds no deletion-vector actions, deletes, merges or upserts. Another engine may later update the table. | reader 3 / writer 7; `deletionVectors` |
 | `generated_columns` | `{"day": "CAST(ts AS DATE)"}` writes `delta.generationExpression`. The batch must supply the column with exactly the expression's result, including null semantics; disagreement is refused naming the column. | reader 1 / writer 4; `generatedColumns` |
@@ -380,8 +381,36 @@ DeltaSink().write(
     "lake", "events", batches,
     generated_columns={"day": "CAST(ts AS DATE)"},
     partition_by=["day"],
-    constraints={"not_null": ["ts"], "check": {"recent": "day >= DATE '2026-01-01'"}},
+    constraints={"not_null": ["ts"]},
     table_properties={"owner": "analytics"},
+)
+```
+
+Checks use the same constrained expression vocabulary as SQL sink derivation.
+An operand is `{"column": "amount"}` or `{"literal": 0}`. Comparisons have
+`op` (`=`, `<`, `<=`, `>` or `>=`), `left` and `right`; `and` has an `args` list;
+`in` has `left` and scalar `values`; `is_null` has `left`. Literal values are
+strings, booleans, null or finite numbers. Unknown columns, extra members, compound
+literals, trees deeper than 32 levels and trees over 1,024 nodes are refused.
+Column identifiers and literals are quoted separately before native validation.
+
+For example, an amount bound is structured data:
+
+```python
+positive = {"op": ">=", "left": {"column": "amount"}, "right": {"literal": 0}}
+DeltaSink().write("lake", "orders", batches, constraints={"check": {"positive": positive}})
+```
+
+The existing `sql_options` derivation can supply schema business rules and a
+contract's numeric bounds or accepted values without accepting SQL text:
+
+```python
+from shape.generation.output import sql_options
+
+derived = sql_options(schema, "events", constraints="all", contract=contract)
+DeltaSink().write(
+    "lake", "events", batches,
+    checks=derived["checks"], columns=derived["columns"], constraints=True,
 )
 ```
 

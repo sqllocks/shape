@@ -21,6 +21,10 @@ def batch(ids=(1, 2)):
     return pa.record_batch({"id": list(ids), "label": ["a"] * len(ids)})
 
 
+def comparison(op, value, *, column="id"):
+    return {"op": op, "left": {"column": column}, "right": {"literal": value}}
+
+
 def read(table):
     # DataFusion's deltalake reader supports mapped columns and advertised DV tables.
     return pa.table(
@@ -72,7 +76,7 @@ def test_wanted1_properties_invalid_or_reserved(tmp_path, properties):
 @pytest.mark.conformance
 def test_wanted2_constraints_and_violating_append_atomic(tmp_path):
     """SHAPE-SINK-002: rule diagnostics and persisted-version atomicity."""
-    constraints = {"not_null": ["id"], "check": {"positive": "id > 0"}}
+    constraints = {"not_null": ["id"], "check": {"positive": comparison(">", 0)}}
     t = write(tmp_path, constraints=constraints)
     assert t.metadata().configuration["delta.constraints.positive"] == "id > 0"
     assert t.protocol().min_writer_version == 3
@@ -100,7 +104,7 @@ def test_wanted2_new_constraint_checks_existing_before_write(tmp_path):
             "t",
             [batch((10,))],
             mode="append",
-            constraints={"check": {"large": "id > 5"}},
+            constraints={"check": {"large": comparison(">", 5)}},
         )
     assert deltalake.DeltaTable(str(tmp_path / "t")).version() == t.version()
     assert read(deltalake.DeltaTable(str(tmp_path / "t"))).num_rows == 2
@@ -110,9 +114,9 @@ def test_wanted2_new_constraint_checks_existing_before_write(tmp_path):
     "constraints",
     [
         {"not_null": ["missing"]},
-        {"check": {"bad": "unknown > 0"}},
-        {"check": {"bad": "id >"}},
-        {"check": {"": "id > 0"}},
+        {"check": {"bad": comparison(">", 0, column="unknown")}},
+        {"check": {"bad": {"op": ">", "left": {"column": "id"}}}},
+        {"check": {"": comparison(">", 0)}},
         {"not_null": "id"},
     ],
 )
@@ -123,7 +127,7 @@ def test_wanted2_invalid_constraints_leave_no_table(tmp_path, constraints):
 
 
 def test_wanted2_boundary_empty_null_check_and_schema_derivation(tmp_path):
-    t = write(tmp_path, constraints={"check": {"boundary": "id >= 1"}})
+    t = write(tmp_path, constraints={"check": {"boundary": comparison(">=", 1)}})
     assert read(t).num_rows == 2
     root = tmp_path / "derived"
     b = pa.record_batch(
@@ -231,7 +235,7 @@ def test_wanted7_combined_plan_and_doctor(tmp_path):
         "column_mapping": "name",
         "deletion_vectors": True,
         "timestamp_ntz": True,
-        "constraints": {"check": {"positive": "id > 0"}},
+        "constraints": {"check": {"positive": comparison(">", 0)}},
         "generated_columns": {"x": "id + 1"},
     }
     plan = delta.feature_plan(options)
@@ -284,6 +288,7 @@ def test_wanted7_cli_dry_run_reports_features_without_writing(tmp_path, capsys):
     [
         ("table_properties", {"owner": "a"}),
         ("constraints", {"not_null": ["id"]}),
+        ("checks", [{"name": "positive", "expression": comparison(">", 0)}]),
         ("column_mapping", "name"),
         ("deletion_vectors", True),
         ("generated_columns", {"label": "'a'"}),
@@ -353,14 +358,14 @@ def test_generated_failure_with_feature_creates_no_destination(tmp_path, feature
 
 
 def test_constraint_conflicting_name_and_property_failure_atomic(tmp_path):
-    t = write(tmp_path, constraints={"check": {"positive": "id > 0"}})
+    t = write(tmp_path, constraints={"check": {"positive": comparison(">", 0)}})
     with pytest.raises(ValueError, match="positive"):
         DeltaSink().write(
             str(tmp_path),
             "t",
             [batch((3,))],
             mode="append",
-            constraints={"check": {"positive": "id >= 0"}},
+            constraints={"check": {"positive": comparison(">=", 0)}},
         )
     assert deltalake.DeltaTable(str(tmp_path / "t")).version() == t.version()
     with pytest.raises(ValueError, match="table_properties"):
@@ -381,7 +386,7 @@ def test_combined_features_real_protocol_and_native_readback(tmp_path):
         "deletion_vectors": True,
         "timestamp_ntz": True,
         "generated_columns": {"twice": "id * 2"},
-        "constraints": {"not_null": ["id"], "check": {"positive": "id > 0"}},
+        "constraints": {"not_null": ["id"], "check": {"positive": comparison(">", 0)}},
         "table_properties": {"owner": "combined"},
     }
     DeltaSink().write(str(tmp_path), "t", [b], **options)
@@ -417,7 +422,7 @@ def test_mapping_nullable_values_and_logical_schema(tmp_path):
     "feature,options",
     [
         ("columnMapping", {"column_mapping": "name"}),
-        ("checkConstraints", {"constraints": {"check": {"positive": "id > 0"}}}),
+        ("checkConstraints", {"constraints": {"check": {"positive": comparison(">", 0)}}}),
         ("generatedColumns", {"generated_columns": {"label": "'a'"}}),
     ],
 )
@@ -637,6 +642,7 @@ def test_streaming_declared_nonnullable_null_names_constraint(tmp_path):
     [
         ("table_properties", {"owner": "a"}),
         ("constraints", {"not_null": ["id"]}),
+        ("checks", [{"name": "positive", "expression": comparison(">", 0)}]),
         ("column_mapping", "name"),
         ("deletion_vectors", True),
         ("generated_columns", {"label": "'a'"}),

@@ -9,7 +9,7 @@ from __future__ import annotations
 import inspect
 import json
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -20,6 +20,7 @@ FEATURE_OPTIONS = frozenset(
     {
         "table_properties",
         "constraints",
+        "checks",
         "column_mapping",
         "deletion_vectors",
         "generated_columns",
@@ -87,10 +88,46 @@ def _expressions(value: Any, name: str) -> dict[str, str]:
     return dict(obj)
 
 
+def _structured_checks(value: Any, name: str) -> dict[str, dict[str, Any]]:
+    from shape.security.sqltext import check_identifier
+
+    obj = _object(value, name)
+    for key, expression in obj.items():
+        if not isinstance(key, str) or not key.strip() or not isinstance(expression, dict):
+            raise ValueError(
+                f"{name} requires nonempty names and structured constraint expressions"
+            )
+        check_identifier(key)
+    return dict(obj)
+
+
+def _derived_checks(value: Any) -> dict[str, dict[str, Any]]:
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except ValueError:
+            raise ValueError("constraint checks must be a list of structured expressions") from None
+    if not isinstance(value, list):
+        raise ValueError("constraint checks must be a list of structured expressions")
+    out = {}
+    for check in value:
+        if not isinstance(check, dict) or set(check) != {"name", "expression"}:
+            raise ValueError("constraint checks require name and structured expression")
+        name = check["name"]
+        if not isinstance(name, str):
+            raise ValueError("constraint checks require nonempty string names")
+        parsed = _structured_checks({name: check["expression"]}, "constraint checks")
+        if name in out:
+            raise ValueError(f"constraint {name!r} is specified twice")
+        out.update(parsed)
+    return out
+
+
 @dataclass
 class Features:
     properties: dict[str, str] = field(default_factory=dict)
     constraints: dict[str, str] = field(default_factory=dict)
+    checks: dict[str, dict[str, Any]] = field(default_factory=dict)
     generated: dict[str, str] = field(default_factory=dict)
     mapping: bool = False
     vectors: bool = False
@@ -99,16 +136,32 @@ class Features:
     not_null: list[str] = field(default_factory=list)
 
     def schema(self, schema: pa.Schema) -> pa.Schema:
-        for name in self.not_null:
+        self.constraints = {}
+        if self.checks:
+            from shape.builtins.sinks.sql import _literal
+            from shape.generation.sql_constraints import render_expression
+
+            for name, expression in self.checks.items():
+                try:
+                    self.constraints[name] = render_expression(
+                        expression,
+                        quote=lambda n: '"' + n.replace('"', '""') + '"',
+                        literal=lambda value: _literal(value, "postgres"),
+                        columns=schema.names,
+                    )
+                except ValueError as exc:
+                    raise ValueError(f"constraint {name!r}: {exc}") from None
+        not_null = dict.fromkeys(self.not_null)
+        if self.derive_constraints:
+            not_null.update({f.name: None for f in schema if not f.nullable})
+        for name in not_null:
             if name not in schema.names:
                 raise ValueError(f"constraint not_null_{name}: column does not exist")
+            constraint_name = f"not_null_{name}"
+            if constraint_name in self.constraints:
+                raise ValueError(f"constraint {constraint_name!r} is specified twice")
             escaped = name.replace('"', '""')
-            self.constraints[f"not_null_{name}"] = f'"{escaped}" IS NOT NULL'
-        if self.derive_constraints:
-            for f in schema:
-                if not f.nullable:
-                    escaped = f.name.replace('"', '""')
-                    self.constraints[f"not_null_{f.name}"] = f'"{escaped}" IS NOT NULL'
+            self.constraints[constraint_name] = f'"{escaped}" IS NOT NULL'
         for name in self.generated:
             if name not in schema.names:
                 raise ValueError(f"generated_columns: column {name!r} does not exist")
@@ -132,6 +185,7 @@ class Features:
         return bool(
             self.properties
             or self.constraints
+            or self.checks
             or self.generated
             or self.mapping
             or self.vectors
@@ -180,7 +234,19 @@ def parse(options: dict[str, Any]) -> Features:
             if not isinstance(nn, list) or any(not isinstance(n, str) or not n for n in nn):
                 raise ValueError("constraint not_null must be a list of column names")
             f.not_null = list(nn)
-            f.constraints = _expressions(c.get("check", {}), "constraint check")
+            f.checks = _structured_checks(c.get("check", {}), "constraint check")
+    if "checks" in options:
+        checks = _derived_checks(options["checks"])
+        duplicate = f.checks.keys() & checks.keys()
+        if duplicate:
+            raise ValueError(f"constraint {sorted(duplicate)[0]!r} is specified twice")
+        f.checks.update(checks)
+    if f.derive_constraints and isinstance(options.get("columns"), Mapping):
+        f.not_null.extend(
+            name
+            for name, info in options["columns"].items()
+            if isinstance(info, Mapping) and info.get("nullable") is False
+        )
     if "column_mapping" in options:
         if options["column_mapping"] not in ("name", "none"):
             raise ValueError("column_mapping must be name or none")
@@ -228,11 +294,16 @@ def require_capabilities(dl: Any, options: dict[str, Any], features: Features) -
         and _has_parameter(getattr(dl, "write_deltalake", None), "schema_mode")
         and _has_parameter(getattr(alter, "add_feature", None), "allow_protocol_versions_increase"),
     }
+    checks["checks"] = checks["constraints"]
     active = {
         "table_properties": bool(features.properties),
         "constraints": bool(
-            features.constraints or features.not_null or features.derive_constraints
+            features.constraints
+            or features.checks
+            or features.not_null
+            or features.derive_constraints
         ),
+        "checks": bool(features.checks),
         "column_mapping": features.mapping,
         "deletion_vectors": features.vectors,
         "generated_columns": bool(features.generated),
@@ -258,7 +329,7 @@ def feature_plan(options: dict[str, Any]) -> dict[str, Any]:
     reader, writer = 1, 2
     rf: set[str] = set()
     wf: set[str] = set()
-    if f.constraints or f.derive_constraints or f.not_null:
+    if f.constraints or f.checks or f.derive_constraints or f.not_null:
         writer = 3
         wf.add("checkConstraints")
     if f.generated:

@@ -92,7 +92,17 @@ def test_delta_commits_per_micro_batch() -> None:
     "feature,options",
     [
         ("properties", {"table_properties": {"owner": "shape-live"}}),
-        ("constraints", {"constraints": {"not_null": ["id"], "check": {"positive": "id > 0"}}}),
+        (
+            "constraints",
+            {
+                "constraints": {
+                    "not_null": ["id"],
+                    "check": {
+                        "positive": {"op": ">", "left": {"column": "id"}, "right": {"literal": 0}}
+                    },
+                }
+            },
+        ),
         ("mapping", {"column_mapping": "name"}),
         ("vectors", {"deletion_vectors": True}),
         ("generated", {"generated_columns": {"day": "CAST(ts AS DATE)"}, "partition_by": ["day"]}),
