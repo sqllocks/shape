@@ -2,7 +2,7 @@
 
 ## #4 W9-03 — unbounded indexed strings need an Owner decision
 
-Status: parked pending Owner decision; independent reviewer confirmed the conflict.
+Status: RESOLVED by Owner Option 1 on 2026-10-20; lane unparked. Historical question and options follow.
 
 Wanted2 requires string lengths only from declared max_length/schema width, otherwise unbounded. SQL Server cannot use VARCHAR(MAX)/NVARCHAR(MAX) in a PRIMARY KEY. Existing live Fabric code instead guesses 450 for undeclared indexed strings; retaining that fallback conflicts with Wanted2 and script/live equivalence.
 
@@ -19,7 +19,7 @@ No gate, tolerance, existing input, or unapproved corpus refusal was changed to 
 
 ## #5 W9-04 — DuckDB foreign-key phase needs an Owner amendment
 
-Status: parked; installed DuckDB 1.5.6 and independent reviewer both reproduce NotImplementedException for ALTER TABLE child ADD CONSTRAINT FOREIGN KEY after parent and child exist. Parent-first CREATE TABLE child with an inline foreign key is supported and enforces on load.
+Status: RESOLVED by Owner Option 1 on 2026-10-20; lane unparked. Historical evidence: installed DuckDB 1.5.6 and independent reviewer both reproduce NotImplementedException for ALTER TABLE child ADD CONSTRAINT FOREIGN KEY after parent and child exist. Parent-first CREATE TABLE child with an inline foreign key is supported and enforces on load.
 
 Question: may DuckDB create foreign keys inline when creating each child after its parents, as a documented dialect exception to Wanted3's requirement that foreign keys be added after both tables exist?
 
@@ -32,7 +32,7 @@ Concrete partial work: safe constraint derivation/rendering and bounded schema-p
 
 ## #8 W9-07 — blocked on the earlier W9-04 decision
 
-Status: parked on the preceding #5 Owner decision. Wanted2 explicitly reuses W9-04's constraint derivation, and the run requires an earlier issue to merge before a dependent one. W9-04 cannot currently merge under its literal DuckDB phase requirement.
+Status: RESOLVED by Owner on 2026-10-20; lane unparked, final integration waits for #5 to merge. Historical dependency: the preceding #5 Owner decision. Wanted2 explicitly reuses W9-04's constraint derivation, and the run requires an earlier issue to merge before a dependent one. W9-04 cannot currently merge under its literal DuckDB phase requirement.
 
 Question: approve the recommended DuckDB exception for #5 so its safe constraint helper can merge, then merge the already-stacked helper into main before #8?
 
