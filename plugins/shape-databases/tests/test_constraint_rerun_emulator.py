@@ -155,7 +155,12 @@ def test_incompatible_chunk_commits_refuse_before_coordinated_mutation(rerun_dat
     assert rows() == before
 
 
-def test_external_incoming_foreign_key_is_named_and_every_table_is_preserved(rerun_database):
+@pytest.mark.parametrize(
+    "rerun_database,mode",
+    [("postgres", "truncate"), ("postgres", "replace"), ("mysql", "truncate")],
+    indirect=["rerun_database"],
+)
+def test_external_incoming_foreign_key_is_named_and_every_table_is_preserved(rerun_database, mode):
     uri, prefix, execute, rows, options, q = rerun_database
     execute(
         f"CREATE TABLE {q(prefix + 'external')} (parent_id BIGINT, CONSTRAINT fk_external_ref "
@@ -164,7 +169,7 @@ def test_external_incoming_foreign_key_is_named_and_every_table_is_preserved(rer
     execute(f"INSERT INTO {q(prefix + 'external')} VALUES (1)")
     before = rows()
     with pytest.raises(ShapeError, match="fk_external_ref"):
-        write_targets(engine(10), [uri], options(write_mode="truncate"))
+        write_targets(engine(10), [uri], options(write_mode=mode))
     assert rows() == before
     assert list(execute(f"SELECT parent_id FROM {q(prefix + 'external')}")) == [(1,)]
 
