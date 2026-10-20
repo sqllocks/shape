@@ -26,11 +26,9 @@ Options: wait for the dependency to merge and reuse its interface; or authorize 
 
 Issue comment: https://github.com/sqllocks/shape/issues/14#issuecomment-6252276474
 
-## #14 W9-13: decimal native boundaries
+## #14 W9-13: decimal boundary clarification resolved
 
-The prior own journal also documents decimal128(10,-1) and decimal128(2,3): they satisfy the literal Wanted NUMERIC inequalities, but BigQuery rejects negative scale or precision below scale.
-
-Options: authorize refusal outside native0<=s<=p; authorize a specified widening/rescaling policy; or retain the literal, unimplementable mapping. Recommendation: refuse invalid native boundaries while naming the column, and preserve precision/scale for accepted types. No implementation is shipped while the source dependency remains absent.
+Existing issuecomment6072817299 (2026-10-09) already requires0<=scale<=precision, refusing invalid decimals before connection while naming the column/rule. It resolves the prior journal's question. No further Ownerdecision is needed; #14 remains parked solely for the missing W9-01 source interface.
 
 ## Pending service validation after offline acceptance
 

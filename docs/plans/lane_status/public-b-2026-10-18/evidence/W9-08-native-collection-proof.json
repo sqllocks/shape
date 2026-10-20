@@ -1,0 +1,133 @@
+{
+  "commands": [
+    {
+      "name": "full-core",
+      "command": [
+        "/workspace/.onboarding/tools/bin/python",
+        "/home/agent/bin/reap.py",
+        "/workspace/.onboarding/tools/bin/uv",
+        "run",
+        "--locked",
+        "--group",
+        "docs",
+        "--group",
+        "dbt",
+        "--group",
+        "benchmark",
+        "pytest",
+        "--collect-only",
+        "-q",
+        "-m",
+        "not emulator and not live",
+        "--ignore=tests/demo/fabric"
+      ],
+      "exit": 0
+    },
+    {
+      "name": "make-light",
+      "command": [
+        "/workspace/.onboarding/tools/bin/python",
+        "/home/agent/bin/reap.py",
+        "/workspace/.onboarding/tools/bin/uv",
+        "run",
+        "--locked",
+        "--group",
+        "docs",
+        "--group",
+        "dbt",
+        "--group",
+        "benchmark",
+        "pytest",
+        "--collect-only",
+        "-q",
+        "-m",
+        "not emulator and not live and not heavy",
+        "--ignore=tests/demo/fabric",
+        "--ignore=tests/demo/content"
+      ],
+      "exit": 0
+    },
+    {
+      "name": "make-heavy",
+      "command": [
+        "/workspace/.onboarding/tools/bin/python",
+        "/home/agent/bin/reap.py",
+        "/workspace/.onboarding/tools/bin/uv",
+        "run",
+        "--locked",
+        "--group",
+        "docs",
+        "--group",
+        "dbt",
+        "--group",
+        "benchmark",
+        "pytest",
+        "--collect-only",
+        "-q",
+        "-m",
+        "heavy",
+        "tests/kernel",
+        "tests/profile",
+        "tests/streaming"
+      ],
+      "exit": 0
+    },
+    {
+      "name": "extra-heavy",
+      "command": [
+        "/workspace/.onboarding/tools/bin/python",
+        "/home/agent/bin/reap.py",
+        "/workspace/.onboarding/tools/bin/uv",
+        "run",
+        "--locked",
+        "--group",
+        "docs",
+        "--group",
+        "dbt",
+        "--group",
+        "benchmark",
+        "pytest",
+        "--collect-only",
+        "-q",
+        "-m",
+        "heavy and not emulator and not live",
+        "tests/joint"
+      ],
+      "exit": 0
+    },
+    {
+      "name": "content",
+      "command": [
+        "/workspace/.onboarding/tools/bin/python",
+        "/home/agent/bin/reap.py",
+        "/workspace/.onboarding/tools/bin/uv",
+        "run",
+        "--locked",
+        "--group",
+        "docs",
+        "--group",
+        "dbt",
+        "--group",
+        "benchmark",
+        "pytest",
+        "--collect-only",
+        "-q",
+        "-m",
+        "not emulator and not live",
+        "tests/demo/content"
+      ],
+      "exit": 0
+    }
+  ],
+  "counts": {
+    "full-core": 18867,
+    "make-light": 18768,
+    "make-heavy": 52,
+    "extra-heavy": 1,
+    "content": 46
+  },
+  "missing": [],
+  "unexpected": [],
+  "equal": true,
+  "fabric": "separate Arrow19 full-directory runs in both modes"
+}
