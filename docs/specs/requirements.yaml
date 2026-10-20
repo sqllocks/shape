@@ -725,6 +725,7 @@ requirements:
   tests:
     - tests/builtins/test_w9_03_types.py
     - tests/cli/test_w9_03_ddl.py
+    - plugins/shape-databases/tests/test_w9_03_ddl.py
     - plugins/shape-databases/tests/test_w9_03.py
     - plugins/shape-fabric/tests/test_w9_03.py
   owner: generation
