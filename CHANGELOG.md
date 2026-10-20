@@ -13,6 +13,9 @@ Status: available.
   resolved DDL without connecting or generating values. T-SQL and Warehouse string key columns
   require explicit `max_length`; missing widths are refused before connecting, naming the column.
   See `docs/SINKS.md`.
+
+- Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.
+
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 
 Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
