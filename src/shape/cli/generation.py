@@ -74,6 +74,11 @@ def _run_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "-o", "--output", "--out", metavar="DIR", help="the output directory (needed to write)"
     )
+    parser.add_argument(
+        "--contract",
+        metavar="FILE",
+        help="JSON or YAML contract for write keys, checks and defaults",
+    )
     parser.add_argument("--dry-run", action="store_true", help="plan the run; generate nothing")
     parser.add_argument("--json", action="store_true", help="print the result or the plan as JSON")
     parser.add_argument(
@@ -286,6 +291,15 @@ def _sink_options(a: argparse.Namespace) -> dict[str, Any]:
     """The writer options the command line sets (only those given)."""
     fmt = a.format
     options: dict[str, Any] = {}
+    if fmt in ("sql", "delta"):
+        from shape.cli.to import constraint_contract
+
+        policy = getattr(a, "sql_constraints", None)
+        if policy is not None:
+            options["sql_constraints"] = policy
+        contract = constraint_contract(a)
+        if contract is not None:
+            options["contract"] = contract
     if fmt == "sql":
         options["sql_dialect"] = a.sql_dialect
         for key, value in (

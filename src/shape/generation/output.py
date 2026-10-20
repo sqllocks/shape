@@ -592,7 +592,19 @@ class TargetOptions:
                     sql_options(
                         schema,
                         table,
-                        constraints=self.constraints or "keys",
+                        constraints=(self.constraints or "keys")
+                        if name
+                        in {
+                            "postgres",
+                            "mysql",
+                            "duckdb",
+                            "sqlserver",
+                            "sql-database",
+                            "warehouse",
+                            "snowflake",
+                            "databricks",
+                        }
+                        else "none",
                         contract=self.contract,
                     )
                 )
@@ -710,7 +722,7 @@ def write_targets(
     preparing = {
         i: prepare
         for i, (_, _, sink) in enumerate(sinks)
-        if options.constraints != "none"
+        if options.constraints not in ("none", "keep")
         and callable(prepare := getattr(sink, "prepare_constraints", None))
     }
     sources: dict[str, Iterator[pa.RecordBatch]] = {}

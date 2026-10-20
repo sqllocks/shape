@@ -924,6 +924,10 @@
      "choices": null,
      "takes_value": true
     },
+    "--contract": {
+     "choices": null,
+     "takes_value": true
+    },
     "--delta-mode": {
      "choices": [
       "append",
@@ -3013,6 +3017,10 @@
      "takes_value": true
     },
     "--connection-string": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--contract": {
      "choices": null,
      "takes_value": true
     },

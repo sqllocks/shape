@@ -99,6 +99,14 @@ def test_legacy_keep_retains_primary_only_while_omitted_policy_defaults_to_keys(
     assert set(legacy) == {"primary_key", "columns"}
 
 
+@pytest.mark.parametrize("sink", ["synapse", "kql"])
+def test_default_does_not_add_constraints_to_targets_outside_the_requested_scope(sink):
+    definition = schema()
+    actual = TargetOptions().for_sink(sink, definition, "child")
+    assert actual == TargetOptions(constraints="none").for_sink(sink, definition, "child")
+    assert set(actual) == {"primary_key", "columns"}
+
+
 @pytest.mark.parametrize(
     "features",
     [
