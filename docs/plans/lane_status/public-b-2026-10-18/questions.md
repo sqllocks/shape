@@ -1,62 +1,33 @@
 # Owner decisions and remaining dependencies
 
-## Current status — Owner directive2026-10-20
-
-The comparison-category decision for #20/#6 is now APPROVED under the exact constraints below; #6 is ACTIVE; the approved #20 category is implemented in PR42, while four remaining value-based workloads are parked as described below. Their older questions below are historical. #14 remains dependency-blocked solely until PR35 merges into main; its decimal policy is resolved.
+## Current decisions — Owner2026-10-20
 
 > Approve explicit, tested "not comparable" handling, ONLY where the recorded0.9.1 result is itself an error or "unsupported". List each such workload by name, with its reason, in a reviewed file committed to the repo. Report them separately. They never count as a pass. Every workload where0.9.1 produced values still compares with unchanged thresholds. No re-recording. Capture-clock fields may be excluded only where they are runtime timestamps. Reference-label substitutions are normalized by name only, never by value. Implement Wanted5 of #6 under the same category. Close #20 only through its PR, and only once a Nightly dispatched on main is green on all five parity shards, parity-publish and sqlserver-e2e; link that run.
 
-#14: Owner reconfirms the2026-10-09 decision to check `0 <= scale <= precision` before connecting and name the column. Unpark after #2/W9-01 PR35 merges; reuse that main source interface. No separate decimal approval is pending.
+The error-category registry in [PR42](https://github.com/sqllocks/shape/pull/42) names `profile:edge/x_pq_list.parquet` and `profile:edge/x_pq_nested.parquet`, both recorded TypeError with no result values. Both are separate NOT COMPARABLE results and never pass/timing credit. Targeted red/green and independent review are recorded in its lane. #6 is implemented in [PR43](https://github.com/sqllocks/shape/pull/43), independently approved, with Wanted5 using that category; it depends on PR42 landing and combined current-main checks.
 
+## #20 generation names — ACTIVE under existing approval
 
-## #20 FRZ-01: comparison contract for authenticated 0.9.1 recordings
+Earlier parking of both generation workloads was too broad. Independent reassessment confirms all14 known generation flags are categorical vocabulary/TVD or record-coherence checks on deliberately renamed reference labels. Code-shaped strings can be reference-category names; the approved fixed-name normalization need not alter any numeric value or observation.
 
-Both requested artifacts and original job logs are now retrieved through the GitHub connector. The initial artifact-access problem is resolved and is no longer a blocker. See [exact evidence](FRZ-01-evidence.md) for artifact hashes, all six failing workloads, all 14 generation flags and recorded/observed values.
+Author formats_recover is implementing tests-first fixed field/domain-scoped bijections for `generate:capital_markets:medium` and `generate:healthcare:medium`. Reviewer frz_review requires authenticated original/new reference provenance and exact stable-ID/procedure-ordinal lineage, never pairing by generated frequencies, numeric charge similarity or generated output order. Preserve every row, null, count, probability, numeric charge, seed and threshold; recompute the existing checks, including code-description/charge association and corruption negatives. No clinical/taxonomy semantic-equivalence claim. No implementation/acceptance green is claimed yet. No new Owner decision is needed just to implement permitted name aliases.
 
-The four profile mismatches compare recorded nested-input TypeError failures against intentionally added nested support, or capture-Tuesday weekday statistics against Sunday for time-only values with no calendar date. Reconstructed input hashes match the authenticated recordings and the unchanged verifier reproduces all four. The two generation workloads compare approved synthetic reference labels against the older 0.9.1 labels; Owner commit904d5d2 deliberately replaced those labels and the domain documentation warns that fixtures change. No real product regression or fix preserving the current comparison rules was identified.
+Root located `/workspace/shape-history/.venv/bin/python` (Shape0.9.1, Arrow26). Its three relevant reference IPC blobs equal recorded-release commitd09731e exactly; use authenticated identical pools only, without claiming the whole environment matches the frozen recording environment. Do not alter that history environment or re-record.
 
-Decision: how should equivalence handle newly supported baseline inputs, missing capture-clock context, and intentionally substituted reference labels? Options: keep the present strict contract and its red result; authorize explicit, tested noncomparability handling for these cases while retaining recorded values and numeric thresholds; or separately authorize and justify a new baseline policy. Recommendation: define explicit noncomparability handling with tests, preserving all recordings and numeric tolerances. That changes a current pass rule and is prohibited in this run, so no implementation, re-recording, tolerance change, product PR, merge or Nightly dispatch is made. Issue20 remains open and parked.
+## #20 time-only context — PARKED remaining acceptance
 
-Issue evidence comment: https://github.com/sqllocks/shape/issues/20#issuecomment-6252771902
+`profile:edge/x_time_only.csv` and `profile:edge/x_time_ampm.csv` produced values and cannot use the error category. The mismatches are weekday-histogram values, not runtime timestamps: capture-Tuesday versus later Sunday. Both records authenticate `recorded_utc=2026-10-13T01:47:50Z`; recorder code copies one session-start timestamp to every record. It does not explicitly record each workload's execution date/timezone/clock policy. Faithful replay of established recording context would differ from rewriting compared values, but no such per-workload replay contract is established. Do not infer Tuesday from expected histograms, rotate them, exclude them, loosen comparisons or re-record.
 
-## #6 W9-05: unsupported nested-baseline clause
+Question: retain strict clock-derived value failures, or define the exact recorded execution context/policy for date-free values? Recommendation: keep these two workloads parked with recordings/thresholds/comparisons unchanged until the precise context is established or decided. A Tuesday-only match is a calendar coincidence, not portable acceptance. No qualifying main Nightly is claimed and #20 stays open. [Original evidence](FRZ-01-evidence.md); [current issue status](https://github.com/sqllocks/shape/issues/20#issuecomment-6301325664).
 
-Wanted5 explicitly asks to report nested baseline inputs as unsupported rather than differences. The existing recorded-error equivalence rule instead fails when current Shape succeeds on an input that the baseline rejected. The merged FIX-NESTED dependency intentionally supports those inputs. Current comparison reproductions and exact matching input hashes are in lane/W9-05 (updated journal3de70e3) and FRZ-01-evidence.md. Ten tests were recorded red against main, but no child-feature implementation is shipped.
+## #14 merged source dependency — PARKED
 
-Options: defer Wanted5 and retain strict exception matching; or authorize explicit unsupported-baseline classification together with the #20 comparison-contract decision. Recommendation: explicit authorized classification, preserving recordings and numeric thresholds. Restoring obsolete nested TypeError failures would regress merged functionality. The lane's Owner action is explicit; no live execution is claimed.
+Owner reconfirms Oct9 decision: check `0 <= scale <= precision` BEFORE connecting and name the column. No new decimal decision is pending. Reuse W9-01 source catalog/sampling interface only after [PR35](https://github.com/sqllocks/shape/pull/35) merges into main; it remains open at latest22:18 read. Decision journal signed/pushed58966e0; no current implementation. Start fresh lane/W9-13-finish from THEN main, without importing the old journal branch's unmerged Lead A history. Lead A branches/issues were not inspected or modified.
 
-Issue comment: https://github.com/sqllocks/shape/issues/6#issuecomment-6299574643
-
-## #14 W9-13: merged source dependency
-
-The issue explicitly depends on W9-01 and requires reusing its source catalog/sampling model. Latest verified main 35addfc4 still has only database-plugin sink modules. No Lead A branch or issue was inspected or modified. The preserved own lane/W9-13 journal1249af9 contains no implementation.
-
-Options: wait for the dependency to merge and reuse its interface; or authorize an explicit scope/interface change. Recommendation: wait for the merged interface. This run does not design a parallel source model.
-
-Issue comment: https://github.com/sqllocks/shape/issues/14#issuecomment-6299575080
-
-## #14 W9-13: decimal boundary clarification resolved
-
-Existing issuecomment6072817299 (2026-10-09) already requires0<=scale<=precision, refusing invalid decimals before connection while naming the column/rule. It resolves the prior journal's question. No further Ownerdecision is needed; #14 remains parked solely for the missing W9-01 source interface.
+Options: wait for merged interface or authorize an explicit scope/interface change. Recommendation: wait and reuse main; do not design a parallel source model. [Issue clarification](https://github.com/sqllocks/shape/issues/14#issuecomment-6299575080).
 
 ## Pending service validation after offline acceptance
 
-These are future Owner actions, not unclaimed passing tests or blockers to the specified offline acceptance: Kafka/Event Hubs account round trips (#9/#10), Azure Schema Registry Avro round trip (#10), Eventhouse account read-back (#12), a semantic model containing a measure and role (#13), and nightly emulator services where images can be pulled (#9/#10/#12/#17). No live test has been run or claimed. dbt introduces no account-dependent live requirement.
+Future Owner actions, not claimed passing tests: Kafka/Event Hubs account round trips (#9/#10), Azure Schema Registry Avro round trip (#10; scope already approved), Eventhouse account read-back (#12), a semantic fixture containing a measure/role with expected metadata and visible rows (#13), and nightly emulator services (#9/#10/#12/#17). No live success is claimed. dbt introduces no account-dependent live requirement. Details in each lane record.
 
 Generated by Codex
-
-## #20 remaining value acceptance — after approved error-category implementation
-
-[PR42](https://github.com/sqllocks/shape/pull/42), exact `8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4`, is ready and independently APPROVED. It implements the two authenticated recorded-error workloads and rejects false pass credit, identity/reason/timing forgeries and unknown or value-recording cases. It uses Refs#20 and does not close the issue.
-
-The four remaining workloads produced values and cannot use the approved error category: `profile:edge/x_time_only.csv`, `profile:edge/x_time_ampm.csv`, `generate:capital_markets:medium`, `generate:healthcare:medium`. The weekday histograms are compared data values, not runtime timestamps; the other differences concern intentionally replaced synthetic data values, not only reference names. No compliant product/harness fix preserving both sets of values was identified. A Tuesday-only match is explicitly tested as calendar coincidence.
-
-Options: retain these value failures under the current strict contract, or separately define a comparison context/policy for date-free clock-derived values and intentionally replaced reference-data values. Recommendation: park the remaining acceptance with comparisons/recordings/thresholds intact until that precise additional decision. No such extra permission is inferred from the recorded-error authorization.
-
-[Updated issue comment](https://github.com/sqllocks/shape/issues/20#issuecomment-6301325664). The exact registry/reasons and red→green output are committed in the PR lane record. Nightly has not been dispatched; all-five-shard/parity-publish/sqlserver-e2e green is not claimed.
-
-### Remaining #20 context/name analysis (read-only, no extra authorization assumed)
-
-Both time-only recordings authenticate `recorded_utc=2026-10-13T01:47:50Z`; the recorder copies a single capture-session start into every record. This does not establish each workload's execution date/timezone/clock policy. Faithfully replaying a genuinely recorded execution environment would differ from rewriting compared values, but no such replay is established from current metadata; do not infer Tuesday from the expected histogram. A possible future policy must explicitly define date-free execution context before any change.
-
-The replacement reference tables retain stable numeric sector/industry IDs, rows and weights. Explicit display-name aliases tied to those unchanged IDs could be a partial name-only normalization, with frequencies/coherence recomputed unchanged. Source/column aliases already match, and code/data values still differ; no whole generation workload fix follows from display-name aliases. Do not map procedure/sector code values or fit mappings by frequencies/rank/charges. The four remaining workloads therefore remain parked. At PR42's next mandatory main refresh, clarify these facts in its journal; no extra code or comparison permission is inferred.
