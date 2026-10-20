@@ -108,3 +108,30 @@ The PR uses `Refs #20`. Issue 20 stays open: closure requires a later PR only af
 dispatched on main is green on profile, stream, generate-1/2/3, parity-publish and sqlserver-e2e,
 with that run linked. No Nightly dispatch or merge is performed by this lane, and no full
 Nightly/live success is claimed.
+
+## Approved generation name normalization: implementation and proof
+
+Further independent review clarified the Owner's phrase: code-shaped category names can
+participate in fixed name aliases when linked by approved reference-row lineage. Blanket
+parking because those labels occur as scalar strings was too strong. The new explicit
+registry pins complete source/target reference-row digests, unchanged sector/industry IDs
+and procedure replacement ordinals. Source names appear only as SHA-256 digests. Each
+association is validated against the same lineage entry, not just a bijection. There is
+no frequency fitting, numeric/charge matching or generated-row-order matching.
+
+Only field-specific names are canonicalized in memory after authenticating all five
+original baseline seeds. Vocabulary pools and reference-coherence name components use
+the same contract; numeric/coherence inputs, counts, weights, probabilities and thresholds
+are unchanged. Tests reject unknown labels, wrong scope/provenance, collisions/permutations,
+changed weights/numerics, skewed frequencies, mismatched descriptions and reassigned charges.
+
+Initial new controls: 13 red against the base without the contract. The actual unchanged
+verifier on authenticated cached generation outputs reproduced both original workload
+failures and all 14 flags (exit 1 each). With the reviewed name contract, actual targeted
+`healthcare:medium` passed 80/80 columns and `capital_markets:medium` passed 64/64 columns,
+all original clauses a–f. The existing isolated 0.9.1 interpreter uses Arrow 26 rather than
+the historical Arrow 25 environment; every generated baseline seed nevertheless matched
+the original recorded digests before comparison. This is value-equivalence proof, not a
+claim of frozen-environment timing equivalence. Reports went to `/dev/null`; no raw archive
+or recording was created. The two time-only cases remain active for authenticated clock
+replay work; no full Nightly or issue closure is claimed.

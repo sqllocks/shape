@@ -39,6 +39,7 @@ from recorded_store import (  # noqa: E402 (harness path bootstrap)
     manifest,
     sha256,
 )
+from reference_names import for_domain  # noqa: E402
 
 REF_SEED = 42
 BASELINE_SEEDS = (43, 44, 45, 46)
@@ -693,7 +694,13 @@ def compare_runs(
     candidate: tuple[Any, ...],
     others: list[tuple[Any, ...]],
     pools: Any,
+    aliases: Any = None,
 ) -> dict[str, Any]:
+    if aliases is not None:
+        ref = (aliases.normalize_frames(ref[0]), *ref[1:])
+        candidate = (aliases.normalize_frames(candidate[0]), *candidate[1:])
+        others = [(aliases.normalize_frames(o[0]), *o[1:]) for o in others]
+        pools = aliases.wrap_pools(pools)
     SP, ts, order_sp = ref
     IM, ti, order_im = candidate
     fks = foreign_keys(raw)
@@ -791,6 +798,7 @@ def negative_controls(
     candidate: tuple[Any, ...],
     others: list[tuple[Any, ...]],
     pools: Any,
+    aliases: Any = None,
 ) -> dict[str, bool]:
     frames, types, _ = candidate
     numeric = [
@@ -810,7 +818,12 @@ def negative_controls(
     def check(name: str, mutate: Callable[[Any], Any], clause: str) -> bool:
         bad = copy.deepcopy(candidate)
         mutate(bad)
-        result = compare_runs(raw, ref, bad, others, pools)
+        try:
+            result = compare_runs(raw, ref, bad, others, pools, aliases)
+        except RecordingError as exc:
+            if clause == "d" and "unknown reference NAME" in str(exc):
+                return True
+            raise
         return any("(" + clause + ")" in message for message in result["flagged"])
 
     def scaled(b: Any, t: str, c: str) -> None:
@@ -914,10 +927,11 @@ def main(argv: list[str] | None = None) -> int:
         others = [load_run("baseline", a.domain, a.scale, s, tables) for s in BASELINE_SEEDS]
         candidate = load_run(candidate_impl, a.domain, a.scale, 1042, tables)
         pools = Pools(a.domain, record.get("identifier_forms", []))
-        report = compare_runs(raw, ref, candidate, others, pools)
+        aliases = for_domain(a.domain, pools)
+        report = compare_runs(raw, ref, candidate, others, pools, aliases)
         report["baseline"]["commit"] = manifest()["shape_commit"]
         if a.negative_control:
-            controls = negative_controls(raw, ref, candidate, others, pools)
+            controls = negative_controls(raw, ref, candidate, others, pools, aliases)
             report["negative_control"] = controls
             for name, caught in controls.items():
                 print(name + ": " + ("caught" if caught else "MISSED"))

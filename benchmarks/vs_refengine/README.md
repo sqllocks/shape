@@ -23,9 +23,9 @@ An overall green verdict can account for these reviewed refusals while `passed` 
 
 Successful recorded outputs continue to compare with every existing rule and threshold.
 In particular, time-only weekday histograms are data values, not runtime timestamps;
-sector names and procedure codes/descriptions are data values, not reference-source names.
-Neither is excluded, remapped or re-recorded. Their unresolved cross-release differences
-still fail the value comparisons; this category does not make the full acceptance run green.
+weekday statistics are not excluded or re-recorded. Approved reference category-name changes
+use the explicit lineage contract below; neither error classification nor name aliases
+permit substituting numeric values or bypassing comparisons.
 
 The committed manifest identifies capture time `2026-10-13T01:47:50Z` and release commit
 `d09731e59b630fac11b7127c812c47ccca8ab64f`. Missing or tampered recordings return exit 2,
@@ -220,3 +220,21 @@ selectors are replaced during this capture; formatting and provider selection st
 the release implementation. Verification uses exact recorded literals and component sets,
 never broader hand-written patterns. A changed frozen setting needs its matching re-record;
 a missing form fails closed. The component-overlap threshold remains `>= 0.999`.
+
+## Approved reference category-name aliases
+
+`reference_name_aliases.json` records the 2026-10-20 Owner-approved name-only interpretation
+of the reference replacement in commit `904d5d2ed46bdd2e79c0ffb243ff82821134c4d2`.
+It binds the exact 0.9.1 reference rows and current reference rows by digest, and lists
+field-specific bijections from SHA-256 digests of old UTF-8 names to explicit synthetic names.
+Old reference labels are not redistributed. Sector and industry associations use unchanged
+IDs; procedures use the approved source-row ordinal and deterministic replacement ordinal.
+No frequency, numeric similarity or generated-row ordering infers an association.
+
+The verifier authenticates every original baseline seed against its untouched recording
+before applying in-memory name aliases. Scoped categorical observations, vocabulary pools
+and name components of coherence tuples use the same aliases. All rows, nulls, counts,
+probabilities, weights, charges, other numeric values, fixed seeds and thresholds remain
+unchanged; existing clauses a–f recompute their results. Unknown scoped names, mismatched
+provenance, incomplete/nonbijective/permuted associations and changed reference rows fail
+closed. No clinical or taxonomy semantic equivalence is asserted.
