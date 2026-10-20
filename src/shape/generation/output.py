@@ -68,7 +68,13 @@ def writer_format_versions(formats: Iterable[str]) -> dict[str, int]:
     return out
 
 
-def sql_options(schema: GenSchema, table: str) -> dict[str, Any]:
+def sql_options(
+    schema: GenSchema,
+    table: str,
+    *,
+    constraints: str = "keys",
+    contract: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     """The per-table options the ``sql`` sink takes from the generation schema."""
     tdef = schema.tables[table]
     columns: dict[str, dict[str, Any]] = {}
@@ -88,7 +94,13 @@ def sql_options(schema: GenSchema, table: str) -> dict[str, Any]:
                 "step": int(c.generator.get("step", 1)),
             }
         columns[c.name] = meta
-    return {"primary_key": list(tdef.primary_key), "columns": columns}
+    from shape.generation.sql_constraints import derive_constraints
+
+    return {
+        "primary_key": list(tdef.primary_key),
+        "columns": columns,
+        **derive_constraints(schema, table, constraints=constraints, contract=contract),
+    }
 
 
 def identity_references(schema: GenSchema, table: str) -> list[dict[str, str]]:
@@ -205,8 +217,15 @@ def _refuse_nested(fmt: str, schema: GenSchema, table: str) -> None:
 def _options(fmt: str, schema: GenSchema, table: str, options: Mapping[str, Any]) -> dict[str, Any]:
     _refuse_nested(fmt, schema, table)
     merged: dict[str, Any] = dict(options)
+    if fmt in ("sql", "delta"):
+        derived = sql_options(
+            schema,
+            table,
+            constraints=options.get("constraints") or "keys",
+            contract=options.get("contract"),
+        )
+        merged = {**derived, **merged}
     if fmt == "sql":
-        merged = {**sql_options(schema, table), **merged}
         model = schema.model
         merged.setdefault(
             "header",
@@ -500,6 +519,7 @@ class TargetOptions:
         manifest: bool = False,
         partition_by: list[str] | None = None,
         constraints: str | None = None,
+        contract: Mapping[str, Any] | None = None,
         extra: Mapping[str, Mapping[str, Any]] | None = None,
     ) -> None:
         self.fmt = fmt
@@ -514,6 +534,7 @@ class TargetOptions:
         self.manifest = manifest
         self.partition_by = partition_by
         self.constraints = constraints
+        self.contract = contract
         #: the generation schema when ``for_sink`` is not given it (``shape emit``): a SQL Server
         #: target takes only what ``upsert`` and identity columns need from it, so the tables an
         #: emit creates keep the DDL they always had
@@ -554,9 +575,14 @@ class TargetOptions:
                     raise ValueError(f"unknown --write-mode {self.write_mode!r} for a database")
                 out["write_mode"] = db_mode
             if schema is not None:
-                db = sql_options(schema, table)
-                out["primary_key"] = db["primary_key"]
-                out["columns"] = db["columns"]
+                out.update(
+                    sql_options(
+                        schema,
+                        table,
+                        constraints=self.constraints or "keys",
+                        contract=self.contract,
+                    )
+                )
             if name == "sqlserver":
                 self._sqlserver(out, schema, table)
             elif (
@@ -566,6 +592,12 @@ class TargetOptions:
                 and table in self.schema_hint.tables
             ):  # an emit has no schema here: an upsert still needs the key to match rows on
                 out["primary_key"] = list(self.schema_hint.tables[table].primary_key)
+        if name == "delta" and schema is not None:
+            out.update(
+                sql_options(
+                    schema, table, constraints=self.constraints or "keys", contract=self.contract
+                )
+            )
         if self.constraints == "disable":
             if name != "sqlserver":
                 raise ValueError("--sql-constraints disable applies to mssql:// targets only")
