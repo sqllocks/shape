@@ -726,3 +726,11 @@ requirements:
   text: Local Avro and Protobuf events have no registry prefix, retain nested types, and reject incompatible reader rows without coercion. Registry Avro readers resolve and cache each writer schema id.
   verify: [conformance, tests/streaming/test_binary_formats.py]
   owner: streaming
+- id: SHAPE-STREAM-METADATA-001
+  title: Broker message metadata
+  level: L1
+  milestone: W9-08
+  priority: MUST
+  text: Kafka and Event Hubs support column keys and headers, preserve replay identity, refuse reserved header names and unknown metadata columns before sending, and optionally decode broker metadata outside default drift comparisons.
+  verify: [conformance]
+  owner: streaming

@@ -58,3 +58,14 @@ def test_azure_schema_registry_avro_roundtrip():
     )
     encoded = codec.encode({"id": 1})
     assert codec.decode(encoded["content"], encoded["content_type"]) == {"id": 1}
+
+
+def test_keyed_metadata_round_trip_live():
+    h = new_harness()
+    batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 3)
+    emitter = h.make()
+    emitter.emit(
+        h.uri, [batch], key="_shape_table", partition_key="_shape_table", headers=["rehearsal=yes"]
+    )
+    emitter.close()
+    assert [key for key, _ in h.delivered()] == ["order_line"] * 3

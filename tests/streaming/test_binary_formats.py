@@ -821,6 +821,113 @@ def test_avro_uuid_normalization_does_not_change_nonfinite_read_values():
 
 
 @pytest.mark.parametrize("fmt", ["avro", "protobuf"])
+def test_integration_binary_reader_rejection_keeps_transport_metadata_aligned(fmt):
+    c = codec(fmt)
+    stats = DecodeStats()
+    messages = [
+        StreamMessage(
+            "0",
+            i,
+            c.encode({**ROW, "id": value}),
+            100 + i,
+            key=f"key-{i}".encode(),
+            headers={"trace": bytes([i])},
+        )
+        for i, value in enumerate([7, 999, 8])
+    ]
+    reader = SCHEMA.set(0, pa.field("id", pa.int8())).append(
+        pa.field("_shape_event_time", pa.timestamp("us", tz="UTC"))
+    )
+    batch = decode_messages(
+        messages,
+        decoder=c.decode,
+        schema=reader,
+        stats=stats,
+        with_key=True,
+        with_headers=True,
+        with_timestamp=True,
+    )
+    assert batch.column("id").to_pylist() == [7, 8]
+    assert batch.column("child").type == SCHEMA.field("child").type
+    assert batch.column("_shape_key").to_pylist() == [b"key-0", b"key-2"]
+    assert batch.column("_shape_headers").to_pylist() == [
+        [("trace", b"\x00")],
+        [("trace", b"\x02")],
+    ]
+    assert batch.column("_shape_timestamp").cast(pa.int64()).to_pylist() == [100, 102]
+    assert stats.to_dict() == {"messages": 3, "rows": 2, "undecodable": 0, "rejected": 1}
+
+
+@pytest.mark.parametrize("fmt", ["avro", "protobuf"])
+@pytest.mark.parametrize("transport", ["kafka", "eventhubs"])
+@pytest.mark.parametrize("selected_key", [None, "id"])
+def test_integration_plain_binary_emit_preserves_selected_key_headers_and_replay(
+    tmp_path, fmt, transport, selected_key
+):
+    from shape.streaming.emit.formats import with_event_fields
+
+    if transport == "kafka":
+        from shape_kafka.testing import EmitterHarness
+    else:
+        from shape_eventhubs.testing import EmitterHarness
+    path = tmp_path / ("events.avsc" if fmt == "avro" else "events.proto")
+    path.write_text(AVRO if fmt == "avro" else PROTO)
+    batch = with_event_fields(pa.RecordBatch.from_pylist([ROW], schema=SCHEMA), "orders", 0)
+    h = EmitterHarness()
+    assert (
+        h.make().emit(
+            h.uri,
+            [batch, batch],
+            event_format=fmt,
+            schema_file=str(path),
+            message="shop.Order",
+            key=selected_key,
+            headers=["trace=@id"],
+        )
+        == 2
+    )
+    if transport == "kafka":
+        _, key, body, headers = h.store.log[0]
+        assert [entry[1] for entry in h.store.log] == [b"7" if selected_key else b"orders/0"] * 2
+        assert key == (b"7" if selected_key else b"orders/0")
+        assert dict(headers)["trace"] == b"7"
+        if selected_key:
+            assert dict(headers)["shape-key"] == b"orders/0"
+    else:
+        event = h.hub.batches[0].events[0]
+        from shape_eventhubs.source import _body
+
+        body = _body(event)
+        assert event.content_type == f"application/{fmt}"
+        assert event.properties["shape_key"] == (b"7" if selected_key else "orders/0")
+        assert event.properties["trace"] == b"7"
+        if selected_key:
+            assert event.properties["shape-key"] == "orders/0"
+    assert codec(fmt).decode(body) == ROW
+
+
+@pytest.mark.parametrize("fmt", ["avro", "protobuf"])
+def test_integration_binary_encode_rejection_keeps_dead_letter_reason_aligned(tmp_path, fmt):
+    from shape_kafka.testing import EmitterHarness
+
+    from shape.streaming.emit import RejectedEvents
+    from shape.streaming.emit.formats import with_event_fields
+
+    path = tmp_path / ("events.avsc" if fmt == "avro" else "events.proto")
+    path.write_text(AVRO if fmt == "avro" else PROTO)
+    batch = with_event_fields(
+        pa.RecordBatch.from_pylist([{**ROW, "id": None}, {**ROW, "id": 8}], schema=SCHEMA),
+        "orders",
+        0,
+    ).append_column("_shape_dead_letter_reason", pa.array(["refused-row", "sent-row"]))
+    h = EmitterHarness()
+    with pytest.raises(RejectedEvents):
+        h.make().emit(h.uri, [batch], event_format=fmt, schema_file=str(path), message="shop.Order")
+    assert len(h.store.log) == 1
+    assert dict(h.store.log[0][3])["shape-dead-letter-reason"] == b"sent-row"
+
+
+@pytest.mark.parametrize("fmt", ["avro", "protobuf"])
 def test_binary_encode_rejection_keeps_dead_letter_reason_aligned(tmp_path, fmt):
     from shape_kafka.testing import EmitterHarness
 

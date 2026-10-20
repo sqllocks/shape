@@ -206,3 +206,18 @@ def test_plain_binary_nested_read_write(tmp_path, fmt):
         writer.close()
     out = list(KafkaStreamSource().read(uri, format=fmt, schema_file=str(path), message="E"))
     assert [r["child"] for _, b in out for r in b.to_pylist()] == [row["child"]]
+
+
+def test_keyed_metadata_round_trip_emulator():
+    topic = make_topic()
+    batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 3)
+    emitter = KafkaEmitter()
+    emitter.emit(
+        f"kafka://{SERVERS}/{topic}",
+        [batch],
+        key="_shape_table",
+        partition=0,
+        headers=["rehearsal=yes"],
+    )
+    emitter.close()
+    assert [key for key, _ in consume_all(topic)] == ["order_line"] * 3
