@@ -29,6 +29,8 @@ import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.builtins.sinks import delta_features as features
 from shape.builtins.sources.files import output_path
+from shape.errors import ShapeError
+from shape.io.nested_values import is_nested, json_batch, nested_mode, validate_json_shape
 from shape.plugins.schemes import require_scheme
 
 CLOUD_PREFIX = "delta+"
@@ -192,6 +194,8 @@ class DeltaTableWriter:
         options: dict[str, Any],
         storage: dict[str, str] | None,
     ) -> None:
+        self._nested = nested_mode(options.get("nested", "native"))
+        schema = _nested_schema(schema, self._nested)
         self._dl = _deltalake()
         self._write = self._dl.write_deltalake
         self._options = dict(options)
@@ -215,6 +219,8 @@ class DeltaTableWriter:
 
     def write_batch(self, batch: pa.RecordBatch) -> None:
         if batch.num_rows:
+            if self._nested == "json":
+                batch = json_batch(batch)
             self._pending.append(batch)
             self._pending_rows += batch.num_rows
         if self.commit_rows is None and self.commit_seconds is None:
@@ -276,13 +282,64 @@ def _schema_mode(mode: str) -> dict[str, str]:
     return {"schema_mode": "overwrite"} if mode == "overwrite" else {}
 
 
+def _nested_schema(schema: pa.Schema, mode: str) -> pa.Schema:
+    fields = []
+    for field in schema:
+        if is_nested(field.type):
+            validate_json_shape(field.type, field.name)
+            if mode == "native":
+                _check_nested_type(field.type, field.name)
+            else:
+                field = field.with_type(pa.string())
+        fields.append(field)
+    return schema if mode == "native" else pa.schema(fields, metadata=schema.metadata)
+
+
+def _check_nested_type(kind: pa.DataType, column: str) -> None:
+    if pa.types.is_dictionary(kind):
+        _check_nested_type(kind.value_type, column)
+        return
+    if pa.types.is_struct(kind) and len(kind):
+        for child in kind:
+            _check_nested_type(child.type, column)
+        return
+    if pa.types.is_list(kind) or pa.types.is_large_list(kind) or pa.types.is_fixed_size_list(kind):
+        _check_nested_type(kind.value_type, column)
+        return
+    if pa.types.is_map(kind):
+        _check_nested_type(kind.key_type, column)
+        _check_nested_type(kind.item_type, column)
+        return
+    supported = (
+        pa.types.is_signed_integer(kind)
+        or pa.types.is_boolean(kind)
+        or pa.types.is_string(kind)
+        or pa.types.is_large_string(kind)
+        or pa.types.is_binary(kind)
+        or pa.types.is_large_binary(kind)
+        or pa.types.is_fixed_size_binary(kind)
+        or pa.types.is_date(kind)
+        or pa.types.is_timestamp(kind)
+        or pa.types.is_float32(kind)
+        or pa.types.is_float64(kind)
+        or (
+            pa.types.is_decimal(kind) and kind.precision <= 38 and 0 <= kind.scale <= kind.precision
+        )
+    )
+    if not supported:
+        raise ShapeError(
+            f"column {column!r}: nested leaf {kind} cannot be stored natively in Delta; "
+            "use nested=json"
+        )
+
+
 def _utc_timestamps(schema: pa.Schema) -> pa.Schema:
-    """``schema`` with every time-zone-less timestamp (at any nesting depth) made a UTC one."""
+    """``schema`` with timestamps at every nesting depth represented in UTC."""
     return pa.schema([f.with_type(_utc_type(f.type)) for f in schema], metadata=schema.metadata)
 
 
 def _utc_type(t: pa.DataType) -> pa.DataType:
-    if pa.types.is_timestamp(t) and t.tz is None:
+    if pa.types.is_timestamp(t) and t.tz != "UTC":
         return pa.timestamp(t.unit, tz="UTC")
     if pa.types.is_list(t) or pa.types.is_large_list(t) or pa.types.is_fixed_size_list(t):
         item = t.value_field.with_type(_utc_type(t.value_type))
@@ -324,6 +381,7 @@ class DeltaSink:
             schema = options.get("schema")
         if schema is None:
             raise ValueError("a Delta table needs a schema: pass `schema`")
+        schema = _nested_schema(schema, nested_mode(options.get("nested", "native")))
         feature_options = features.parse(options)
         schema = feature_options.schema(schema)
         features.require_capabilities(_deltalake(), options, feature_options)
@@ -332,6 +390,7 @@ class DeltaSink:
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         require_scheme(self, uri)
+        nested = nested_mode(options.get("nested", "native"))
         stream = iter(batches)
         first = next(stream, None)
         schema = first.schema if first is not None else options.get("schema")
@@ -339,6 +398,7 @@ class DeltaSink:
             raise ValueError(
                 "a Delta table needs a schema: pass `schema` when there are no batches"
             )
+        schema = _nested_schema(schema, nested)
         feature_options = features.parse(options)
         schema = feature_options.schema(schema)
         dl = _deltalake()
@@ -380,13 +440,13 @@ class DeltaSink:
             nonlocal rows
             if first is not None:
                 rows += first.num_rows
-                cast = first.cast(schema)
+                cast = (json_batch(first) if nested == "json" else first).cast(schema)
                 if stamp:
                     kept.append(cast)
                 yield cast
             for batch in stream:
                 rows += batch.num_rows
-                cast = batch.cast(schema)
+                cast = (json_batch(batch) if nested == "json" else batch).cast(schema)
                 if stamp:
                     kept.append(cast)
                 yield cast

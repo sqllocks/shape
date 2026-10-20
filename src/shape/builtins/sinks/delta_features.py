@@ -388,6 +388,8 @@ def preflight(
     constraints: dict[str, str],
     existing: Any,
     generated: dict[str, str],
+    *,
+    timestamp_ntz: bool = False,
 ) -> dict[str, str]:
     """Validate requested checks against existing and incoming rows before destination writes."""
     if not constraints and not generated:
@@ -395,12 +397,22 @@ def preflight(
     with TemporaryDirectory(prefix="shape-delta-constraints-") as scratch:
         incoming = pa.Table.from_batches(batches, schema=schema)
         if existing is not None:
-            old = pa.table(
-                dl.QueryBuilder().register("t", existing).execute("SELECT * FROM t").read_all()
-            )
-            incoming = pa.concat_tables([old.cast(schema), incoming])
+            try:
+                old = pa.table(
+                    dl.QueryBuilder().register("t", existing).execute("SELECT * FROM t").read_all()
+                )
+                incoming = pa.concat_tables([old.cast(schema), incoming])
+            except Exception:
+                raise ValueError(
+                    f"constraint {', '.join(sorted(constraints))}: "
+                    "existing rows could not be validated"
+                ) from None
         try:
-            dl.write_deltalake(scratch, incoming)
+            if timestamp_ntz and _map_timestamp_ntz(schema):
+                _create_table(dl, scratch, schema, timestamp_ntz=True)
+                dl.write_deltalake(scratch, incoming, mode="append")
+            else:
+                dl.write_deltalake(scratch, incoming)
         except Exception:
             if generated:
                 raise ValueError(
@@ -439,6 +451,82 @@ def _explicit_mapping(dl: Any, table: Any) -> None:
         and "columnMapping" not in (protocol.reader_features or [])
     ):
         _add_feature(dl, table, dl.TableFeatures.ColumnMapping, "column_mapping")
+
+
+def _map_timestamp_ntz(schema: pa.Schema) -> bool:
+    def has_ntz(kind: pa.DataType) -> bool:
+        if pa.types.is_timestamp(kind):
+            return kind.tz is None
+        if pa.types.is_struct(kind):
+            return any(has_ntz(child.type) for child in kind)
+        if pa.types.is_map(kind):
+            return has_ntz(kind.key_type) or has_ntz(kind.item_type)
+        if (
+            pa.types.is_list(kind)
+            or pa.types.is_large_list(kind)
+            or pa.types.is_fixed_size_list(kind)
+        ):
+            return has_ntz(kind.value_type)
+        return False
+
+    def visit(kind: pa.DataType) -> bool:
+        if pa.types.is_map(kind):
+            return has_ntz(kind)
+        if pa.types.is_struct(kind):
+            return any(visit(child.type) for child in kind)
+        if (
+            pa.types.is_list(kind)
+            or pa.types.is_large_list(kind)
+            or pa.types.is_fixed_size_list(kind)
+        ):
+            return visit(kind.value_type)
+        return False
+
+    return any(visit(field.type) for field in schema)
+
+
+def _create_table(
+    dl: Any,
+    location: str,
+    schema: pa.Schema,
+    *,
+    configuration: dict[str, str] | None = None,
+    partition_by: Any = None,
+    storage: dict[str, str] | None = None,
+    timestamp_ntz: bool = False,
+) -> Any:
+    bootstrap = (
+        timestamp_ntz
+        and _map_timestamp_ntz(schema)
+        and (configuration or {}).get("delta.columnMapping.mode") != "name"
+    )
+    create_schema = schema
+    if bootstrap:
+        from shape.builtins.sinks.delta import _utc_timestamps
+
+        create_schema = _utc_timestamps(schema)
+    table = dl.DeltaTable.create(
+        location,
+        create_schema,
+        partition_by=partition_by,
+        configuration=configuration,
+        storage_options=storage,
+        raise_if_key_not_exists=False,
+    )
+    if bootstrap:
+        # The native creator misses timestampNtz inside maps. Establish its protocol on
+        # an empty table, then replace only that empty schema through supported APIs.
+        _add_feature(dl, table, dl.TableFeatures.TimestampWithoutTimezone, "timestamp_ntz")
+        dl.write_deltalake(
+            location,
+            pa.Table.from_batches([], schema=schema),
+            mode="overwrite",
+            schema_mode="overwrite",
+            partition_by=partition_by,
+            storage_options=storage,
+        )
+        table = dl.DeltaTable(location, storage_options=storage)
+    return table
 
 
 def write_features(
@@ -513,6 +601,7 @@ def write_features(
             features.constraints,
             prior if mode == "append" and features.constraints else None,
             generated,
+            timestamp_ntz=features.ntz,
         )
     except ValueError:
         raise
@@ -532,8 +621,8 @@ def write_features(
     if configuration:
         with TemporaryDirectory(prefix="shape-delta-properties-") as scratch:
             try:
-                staged_configuration = dl.DeltaTable.create(
-                    scratch, schema, configuration=configuration, raise_if_key_not_exists=False
+                staged_configuration = _create_table(
+                    dl, scratch, schema, configuration=configuration, timestamp_ntz=features.ntz
                 )
                 _explicit_mapping(dl, staged_configuration)
             except Exception:
@@ -541,34 +630,34 @@ def write_features(
                     "table_properties or writer feature configuration is invalid"
                 ) from None
     creating = prior is None
-    if creating and configuration:
+    create_table = creating and (
+        bool(configuration) or (features.ntz and _map_timestamp_ntz(schema))
+    )
+    if create_table:
         try:
-            prior = dl.DeltaTable.create(
+            prior = _create_table(
+                dl,
                 location,
                 schema,
                 partition_by=options.get("partition_by") or None,
                 configuration=configuration,
-                storage_options=storage,
-                raise_if_key_not_exists=False,
+                storage=storage,
+                timestamp_ntz=features.ntz,
             )
         except Exception:
             raise ValueError(
                 "Delta table creation failed; check the schema, path and sign-in"
             ) from None
-    if creating and configuration:
+    if create_table:
         _explicit_mapping(dl, prior)
     try:
         dl.write_deltalake(
             location,
             pa.RecordBatchReader.from_batches(schema, kept),
-            mode="append" if creating and configuration else mode,
+            mode="append" if create_table else mode,
             partition_by=options.get("partition_by") or None,
             storage_options=storage,
-            **(
-                {"schema_mode": "overwrite"}
-                if mode == "overwrite" and not (creating and configuration)
-                else {}
-            ),
+            **({"schema_mode": "overwrite"} if mode == "overwrite" and not create_table else {}),
         )
     except Exception:
         if generated:

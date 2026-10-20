@@ -121,3 +121,76 @@ def test_wanted2_compound_constraint_names_refused_before_storage(tmp_path, monk
     expression = {"op": ">", "left": {"column": "id"}, "right": {"literal": 0}}
     with pytest.raises(ValueError, match="constraint"):
         write(tmp_path, checks=[{"name": name, "expression": expression}])
+
+
+@pytest.mark.parametrize("nested", ["native", "json"])
+def test_stacked_nested_modes_compose_with_mapping_constraints_and_ntz(tmp_path, nested):
+    from datetime import datetime
+
+    at = datetime(2026, 1, 2, 3, 4, 5, 123456)
+    rows = pa.record_batch(
+        {
+            "id": [1, 2, 3],
+            "payload": pa.array([[("at", at)], [], None], pa.map_(pa.string(), pa.timestamp("us"))),
+        }
+    )
+    DeltaSink().write(
+        str(tmp_path),
+        "t",
+        [rows],
+        nested=nested,
+        column_mapping="name",
+        timestamp_ntz=True,
+        constraints={"not_null": ["id"]},
+    )
+    table = deltalake.DeltaTable(str(tmp_path / "t"))
+    assert (table.protocol().min_reader_version, table.protocol().min_writer_version) == (3, 7)
+    assert "delta.constraints.not_null_id" in table.metadata().configuration
+    actual = read(table)
+    assert actual.column("id").to_pylist() == [1, 2, 3]
+    if nested == "native":
+        assert actual.column("payload").to_pylist() == [[("at", at)], [], None]
+        assert actual.schema.field("payload").type.item_type.tz is None
+    else:
+        import json
+
+        payload = actual.column("payload").to_pylist()
+        assert json.loads(payload[0]) == [["at", str(at)]]
+        assert payload[1:] == ["[]", None]
+
+
+def test_unmapped_nested_timestamp_ntz_bootstrap_preserves_values(tmp_path):
+    from datetime import datetime
+
+    at = datetime(2026, 1, 2, 3, 4, 5, 123456)
+    rows = pa.record_batch(
+        {
+            "id": [1, 2],
+            "payload": pa.array([[("at", at)], None], pa.map_(pa.string(), pa.timestamp("us"))),
+        }
+    )
+    DeltaSink().write(
+        str(tmp_path), "t", [rows], timestamp_ntz=True, constraints={"not_null": ["id"]}
+    )
+    table = deltalake.DeltaTable(str(tmp_path / "t"))
+    assert (table.protocol().min_reader_version, table.protocol().min_writer_version) == (3, 7)
+    assert "timestampNtz" in table.protocol().reader_features
+    assert read(table).to_pydict() == rows.to_pydict()
+    assert read(table).schema.field("payload").type.item_type.tz is None
+
+
+def test_constraint_existing_schema_cast_error_omits_row_values(tmp_path):
+    original = pa.record_batch({"id": ["private-old-row-value"], "label": ["a"]})
+    DeltaSink().write(str(tmp_path), "t", [original])
+    table = deltalake.DeltaTable(str(tmp_path / "t"))
+    expression = {"op": ">", "left": {"column": "id"}, "right": {"literal": 0}}
+    with pytest.raises(ValueError, match="constraint.*positive") as error:
+        DeltaSink().write(
+            str(tmp_path),
+            "t",
+            [batch((1,))],
+            mode="append",
+            checks=[{"name": "positive", "expression": expression}],
+        )
+    assert "private-old-row-value" not in str(error.value)
+    assert deltalake.DeltaTable(str(tmp_path / "t")).version() == table.version()

@@ -310,6 +310,9 @@ def _source_options(args: Any) -> dict[str, Any]:
     if args.event_time:
         options["event_time_field"] = args.event_time
         options["event_time_unit"] = args.event_time_unit
+    for name in ("with_key", "with_headers", "with_timestamp"):
+        if getattr(args, name, False):
+            options[name] = True
     options["batch_size"] = args.batch_size
     if args.order:
         options["order"] = args.order

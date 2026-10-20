@@ -74,7 +74,13 @@ def _connect(target: DuckDbUri) -> Any:
     if not Path(target.path).is_file():
         raise FileNotFoundError(f"DuckDB file not found: {target.path}")
     duckdb = require("duckdb", "ibis", name="DuckDB")
-    return duckdb.connect(target.path, read_only=True)
+    con = duckdb.connect(target.path, read_only=True)
+    try:
+        con.execute("SET TimeZone='UTC'")
+    except Exception:
+        con.close()
+        raise
+    return con
 
 
 def _check_table(con: Any, target: DuckDbUri) -> None:

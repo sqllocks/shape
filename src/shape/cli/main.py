@@ -476,6 +476,8 @@ def _cmd_profile(a):
     source = _profile_source(a)
     options = dict(
         name=_profile_name(a),
+        sample_rows=getattr(a, "sample_rows", None),
+        tables=getattr(a, "tables", None).split(",") if getattr(a, "tables", None) else None,
         version=a.delta_version,
         as_of=a.as_of,
         delimiter=fmt.delimiter,
@@ -1356,6 +1358,11 @@ def _stream_profile_arguments(parser):
         "lines (what `shape emit` and `shape stream` write), CSV or Parquet",
     )
     parser.add_argument("-o", "--output", metavar="OUT.json", help="the global profile")
+    parser.add_argument("--with-key", action="store_true", help="include broker message keys")
+    parser.add_argument(
+        "--with-headers", action="store_true", help="include headers and Event Hubs properties"
+    )
+    parser.add_argument("--with-timestamp", action="store_true", help="include message timestamp")
     parser.add_argument(
         "--window",
         choices=("global", "tumbling", "sliding", "session"),
@@ -1755,6 +1762,12 @@ def _build_parser(plugin_commands=()):
         action="store_true",
         help="SRC is an .xlsx workbook: read its hidden sheets too (they are always reported)",
     )
+    pr.add_argument(
+        "--sample-rows",
+        type=int,
+        help="database: sampled rows per table (default 1000; 0 catalog only)",
+    )
+    pr.add_argument("--tables", help="database: comma-separated table names in the schema")
     pr.add_argument(
         "--sample",
         metavar="N|P%",
