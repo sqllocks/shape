@@ -726,3 +726,12 @@ requirements:
   text: Semantic model profiles preserve declared measures, read-only roles and hidden columns; role reads use native DAX filters, profile exports retain metadata, and metadata diffs do not contribute to numeric gates.
   verify: [unit, conformance, roundtrip]
   owner: fabric
+
+- id: SHAPE-STREAM-METADATA-001
+  title: Broker message metadata
+  level: L1
+  milestone: W9-08
+  priority: MUST
+  text: Kafka and Event Hubs support column keys and headers, preserve replay identity, refuse reserved header names and unknown metadata columns before sending, and optionally decode broker metadata outside default drift comparisons.
+  verify: [conformance]
+  owner: streaming
