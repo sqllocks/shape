@@ -407,6 +407,43 @@ class DatabaseSink:
         finally:
             cur.close()
 
+    def _verify_existing_constraints(
+        self,
+        conn: Any,
+        plan: Plan,
+        schema: pa.Schema,
+        first: pa.RecordBatch | None,
+    ) -> None:
+        if self.dialect in {"postgres", "mysql"}:
+            from ._constraint_catalog import verify_existing_constraints
+
+            verify_existing_constraints(
+                conn,
+                dialect=self.dialect,
+                schema_name=plan.schema_name,
+                table=plan.table,
+                schema=schema,
+                columns=plan.columns,
+                primary_key=plan.primary_key,
+                options=plan.options,
+                first=first,
+            )
+            return
+        raise ShapeError(
+            f"existing table {plan.table!r}: requested constraints cannot yet be verified"
+        )
+
+    def _incoming_constraint(self, conn: Any, plan: Plan) -> str | None:
+        if not self.incoming_constraints_sql:
+            return None
+        cursor = conn.cursor()
+        try:
+            cursor.execute(self.incoming_constraints_sql, (plan.schema_name, plan.table))
+            row = cursor.fetchone()
+            return str(row[0]) if row is not None else None
+        finally:
+            cursor.close()
+
     def _prepare(
         self, conn: Any, plan: Plan, schema: pa.Schema, first: pa.RecordBatch | None
     ) -> bool:
@@ -442,17 +479,13 @@ class DatabaseSink:
                     plan.options.get(k) for k in ("foreign_keys", "unique", "checks", "defaults")
                 )
             ):
-                raise ShapeError(
-                    f"existing table {plan.table!r}: requested constraints cannot yet be "
-                    "verified; no data was loaded"
-                )
-            if exists and plan.mode in ("replace", "truncate") and self.incoming_constraints_sql:
-                cur.execute(self.incoming_constraints_sql, (plan.schema_name, plan.table))
-                reference = cur.fetchone()
+                self._verify_existing_constraints(conn, plan, schema, first)
+            if exists and plan.mode in ("replace", "truncate"):
+                reference = self._incoming_constraint(conn, plan)
                 if reference is not None:
                     raise ShapeError(
                         f"cannot {plan.mode} referenced table {plan.table!r}: "
-                        f"foreign key {reference[0]!r} must be preserved; no data was loaded"
+                        f"foreign key {reference!r} must be preserved; no data was loaded"
                     )
             if plan.mode == "replace" and exists:
                 cur.execute(_sql.drop_table_sql(plan.schema_name, plan.table, dialect))

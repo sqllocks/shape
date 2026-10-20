@@ -190,7 +190,7 @@ def test_existing_constraint_refusal_never_truncates_real_rows(database):
     batch = pa.RecordBatch.from_pydict({"id": [1]})
     try:
         sink.write(uri, table, [batch])
-        with pytest.raises(ShapeError, match="requested constraints cannot yet be verified"):
+        with pytest.raises(ShapeError, match="UNIQUE"):
             sink.write(uri, table, [batch], write_mode="truncate", unique=[["id"]])
         assert list(execute(conn, f"SELECT id FROM {quoted}")) == [(1,)]
     finally:

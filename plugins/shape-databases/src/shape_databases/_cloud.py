@@ -196,7 +196,10 @@ def create_table_sql(
             + ("" if nullable else " NOT NULL")
         )
     if primary_key:
-        lines.append(f"  PRIMARY KEY ({', '.join(_sql.quote(c, dialect) for c in primary_key)})")
+        suffix = " NOT ENFORCED" if dialect == "databricks" else ""
+        lines.append(
+            f"  PRIMARY KEY ({', '.join(_sql.quote(c, dialect) for c in primary_key)}){suffix}"
+        )
     if constraints:
         lines.extend("  " + clause for clause in constraints.definitions)
     body = ",\n".join(lines)

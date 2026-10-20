@@ -141,6 +141,22 @@ class SnowflakeSink(DatabaseSink):
         "WHERE table_schema = COALESCE(%s, CURRENT_SCHEMA()) AND table_name = %s"
     )
 
+    def _incoming_constraint(self, conn: Any, plan: Plan) -> str | None:
+        from ._cloud_constraint_catalog import incoming_constraint
+
+        return incoming_constraint(conn, plan, self.dialect)
+
+    def _verify_existing_constraints(
+        self,
+        conn: Any,
+        plan: Plan,
+        schema: pa.Schema,
+        first: pa.RecordBatch | None,
+    ) -> None:
+        from ._cloud_constraint_catalog import verify_existing_constraints
+
+        verify_existing_constraints(conn, plan, schema, self.dialect)
+
     # -- plan --------------------------------------------------------------------------------
     def parse_target(self, uri: str) -> Target:
         target = _split_path(parse_uri(uri, self.schemes, self.uri_params))
