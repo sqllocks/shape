@@ -30,6 +30,44 @@ def sink_fixture(dialect):
     return DatabricksSink(connect=server.connect), "databricks://host/warehouse?schema=demo", server
 
 
+def test_databricks_submicrosecond_timestamp_refused_before_connection():
+    sink, uri, server = sink_fixture("databricks")
+    values = pa.array([1767323045123456789], pa.int64()).cast(pa.timestamp("ns", "UTC"))
+    batch = pa.record_batch([pa.ListArray.from_arrays([0, 1], values)], names=["payload"])
+    with pytest.raises(ShapeError, match="payload.*precision.*nested=json"):
+        sink.write(uri, "t", [batch])
+    assert not server.events
+
+
+def test_databricks_later_submicrosecond_timestamp_keeps_prior_committed_rows():
+    sink, uri, server = sink_fixture("databricks")
+
+    def batch(value):
+        items = pa.array([value], pa.int64()).cast(pa.timestamp("ns", "UTC"))
+        return pa.record_batch([pa.ListArray.from_arrays([0, 1], items)], names=["payload"])
+
+    with pytest.raises(WriteError, match="payload.*precision.*nested=json") as error:
+        sink.write(
+            uri, "t", [batch(1767323045123456000), batch(1767323045123456789)], commit_rows=1
+        )
+    assert error.value.rows_committed == 1
+    assert len(server.rows("t")) == 1
+
+
+@pytest.mark.parametrize("dialect", ["postgres", "mysql"])
+@pytest.mark.parametrize("shape", ["list", "struct", "map"])
+def test_native_json_nanosecond_time_shape_refused_before_pylist_or_connection(dialect, shape):
+    sink, uri, server = sink_fixture(dialect)
+    kind = {
+        "list": pa.list_(pa.time64("ns")),
+        "struct": pa.struct([("time", pa.time64("ns"))]),
+        "map": pa.map_(pa.string(), pa.time64("ns")),
+    }[shape]
+    with pytest.raises(ShapeError, match="payload.*nanosecond.*exact.*string"):
+        sink.write(uri, "t", [], schema=pa.schema([("payload", kind)]))
+    assert not server.events
+
+
 @pytest.mark.conformance
 @pytest.mark.parametrize(
     "kind,expected",

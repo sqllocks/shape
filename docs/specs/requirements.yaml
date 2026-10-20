@@ -723,6 +723,6 @@ requirements:
   level: L1
   milestone: W9-06
   priority: MUST
-  text: Database sinks support documented native list, struct and map types, preserve null and empty containers, apply explicit temporal normalization, and refuse unsupported nested shapes before connecting with the column and truthful alternative named. JSON transports preserve decimal and temporal text, reject ambiguous object map keys and non-finite values, and retain an explicit legacy JSON mode.
+  text: Database sinks support documented native list, struct and map types, preserve null and empty containers, apply explicit temporal normalization, and refuse unsupported nested shapes before connecting with the column and truthful alternative named. JSON transports preserve decimal and temporal text, reject ambiguous object map keys and non-finite values, and retain an explicit legacy JSON mode. Matching sources retain native physical types; JSON-backed restoration requires the original Arrow schema, parses once and refuses ambiguous data or precision loss.
   verify: [unit, conformance]
   owner: databases

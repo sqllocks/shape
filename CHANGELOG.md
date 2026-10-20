@@ -8,6 +8,9 @@ Status: available.
 
 - Delta adds `nested=json` for explicit JSON text storage. Native maps keep their entries
   and normalize nested timestamps to UTC; unsupported nested shapes fail before storage.
+- The DuckDB Source reads native Arrow containers from local files in read-only mode.
+  JSON-backed read-back can restore caller-supplied Arrow types with strict one-pass parsing;
+  ambiguous JSON and temporal precision loss are refused.
 
 - Database sinks now default to native nested types: PostgreSQL scalar arrays/JSONB, MySQL
   JSON and recursive Databricks ARRAY/STRUCT/MAP. `nested=json` preserves earlier text paths;

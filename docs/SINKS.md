@@ -291,6 +291,12 @@ commits every N rows so another connection sees them. A database file locked by 
 exit 2 with DuckDB's message. Reading the tables back gives the same `shape.repro.dataset_id` as
 the generated tables.
 
+The matching `shape.sources` DuckDB reader opens the file read-only:
+`duckdb:////abs/path.duckdb?schema=main&table=NAME`. In Python,
+`DuckDbSource().read(uri, batch_size=65536)` yields the stored Arrow types and values;
+`schema(uri)` reads the table schema. It uses UTC for timestamp instants. A missing file
+is refused without creating it; writer-only URI parameters are refused before opening.
+
 ### Native nested database values
 
 The database writers and Delta accept `nested=native` (default) or `nested=json`. Database
@@ -332,6 +338,11 @@ Native writes preserve SQL NULL versus empty containers. JSON-backed native colu
 encode decimals as exact text, temporal values as ISO text and binary values as base64; map
 entries use key/value pairs where the target permits duplicates, and Databricks maps use JSON
 objects. Non-finite numbers are refused by the native JSON transport.
+Nanosecond Arrow time fields cannot cross the PostgreSQL/MySQL Python JSON or array
+transport exactly; these shapes are refused before connecting. Preencode exact time values
+as Arrow strings before writing. The JSON fallback also uses Python time values and does
+not recover their discarded nanoseconds. Databricks nested timestamp values with nonzero
+submicroseconds are refused before binding; use JSON text storage to keep their digits.
 
 PostgreSQL scalar arrays, DuckDB and Delta have native Arrow read-back types. JSON-backed
 columns may read as JSON text; restoring their Arrow types requires the original Arrow schema
@@ -343,6 +354,12 @@ and JSON-looking string children remain strings. Native DuckDB lists read back
 as variable lists; nested time and zoned timestamps use the documented scalar microsecond
 normalization, with UTC for instant comparisons. Exact duplicate struct field names must be
 renamed; they cannot be represented unambiguously by the JSON fallback either.
+
+`shape_databases.nested_readback.restore_json_column(raw_values, original_field)` performs
+that strict schema-guided JSON restoration. It preserves exact decimal values and nanosecond
+timestamps/times where the original type can hold them, and refuses precision loss. This
+helper applies to JSON-backed physical columns; native Databricks catalog child types and
+PostgreSQL array element types must be read directly rather than reconstructed from JSON.
 
 ## Secrets
 

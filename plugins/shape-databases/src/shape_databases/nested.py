@@ -80,6 +80,43 @@ def _unsupported(field: pa.Field, dialect: str, detail: str = "") -> ShapeError:
     )
 
 
+def _json_shape(kind: pa.DataType, column: str) -> None:
+    """The Python JSON boundary must not silently trim Arrow-only precision."""
+    if pat.is_dictionary(kind):
+        _json_shape(kind.value_type, column)
+    elif pat.is_struct(kind):
+        for child in kind:
+            _json_shape(child.type, column)
+    elif pat.is_list(kind) or pat.is_large_list(kind) or pat.is_fixed_size_list(kind):
+        _json_shape(kind.value_type, column)
+    elif pat.is_map(kind):
+        _json_shape(kind.key_type, column)
+        _json_shape(kind.item_type, column)
+    elif pat.is_time64(kind) and kind.unit == "ns":
+        raise ShapeError(
+            f"column {column!r}: nanosecond time cannot cross the Python JSON/array "
+            "transport exactly; preencode exact time values as Arrow strings before writing"
+        )
+    elif not (
+        pat.is_null(kind)
+        or pat.is_boolean(kind)
+        or pat.is_integer(kind)
+        or pat.is_floating(kind)
+        or pat.is_decimal(kind)
+        or pat.is_string(kind)
+        or pat.is_large_string(kind)
+        or pat.is_binary(kind)
+        or pat.is_large_binary(kind)
+        or pat.is_fixed_size_binary(kind)
+        or pat.is_date(kind)
+        or pat.is_time(kind)
+        or pat.is_timestamp(kind)
+    ):
+        raise ShapeError(
+            f"column {column!r}: nested leaf {kind} cannot use native JSON; use nested=json"
+        )
+
+
 def native_type(field: pa.Field, dialect: str) -> str:
     """Resolve a native container's SQL type; scalar writers keep their existing maps."""
     from . import _sql
@@ -90,12 +127,15 @@ def native_type(field: pa.Field, dialect: str) -> str:
     validate_json_shape(kind, field.name)
     lists = pat.is_list(kind) or pat.is_large_list(kind) or pat.is_fixed_size_list(kind)
     if dialect == "mysql" and is_nested(kind):
+        _json_shape(kind, field.name)
         return "JSON"
     if dialect == "postgres":
         if pat.is_struct(kind) or pat.is_map(kind):
+            _json_shape(kind, field.name)
             return "JSONB"
         if lists:
             if pat.is_struct(kind.value_type):
+                _json_shape(kind, field.name)
                 return "JSONB"
             if is_nested(kind.value_type):
                 raise _unsupported(field, dialect, "arrays require scalar elements")
@@ -163,6 +203,7 @@ def native_type(field: pa.Field, dialect: str) -> str:
             return "TIMESTAMPTZ" if kind.tz else "TIMESTAMP"
         return "TIMESTAMP" if kind.tz else "TIMESTAMP_NTZ"
     if pat.is_time(kind) and dialect == "postgres":
+        _json_shape(kind, field.name)
         return "TIME(6)"
     raise _unsupported(field, dialect)
 
@@ -195,6 +236,12 @@ def _json_value(value: Any, kind: pa.DataType, dialect: str, column: str) -> Any
                 )
             return dict(pairs)
         return pairs
+    if pat.is_timestamp(kind) and dialect == "databricks" and kind.unit == "ns":
+        if pa.scalar(value, type=kind).value % 1000:
+            raise ValueError(
+                f"column {column!r}: Databricks timestamp precision is microseconds; "
+                "use nested=json"
+            )
     if isinstance(value, (dt.datetime, dt.date, dt.time)):
         return value.isoformat()
     if isinstance(value, Decimal):
@@ -206,6 +253,8 @@ def _json_value(value: Any, kind: pa.DataType, dialect: str, column: str) -> Any
 
 def native_json(value: Any, field: pa.Field, dialect: str) -> str | None:
     """JSON data with lossless decimal/temporal text and binary base64 encoding."""
+    if dialect in ("postgres", "mysql"):
+        _json_shape(field.type, field.name)
     if value is None:
         return None
     encoded = _json_value(value, field.type, dialect, field.name)

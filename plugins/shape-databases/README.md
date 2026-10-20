@@ -324,6 +324,24 @@ automatic child-schema inference. PostgreSQL scalar arrays and DuckDB's native c
 retain their declared read-back types. Map and JSON object key order are normalized for
 comparisons; temporal comparisons use the documented microsecond and UTC normalization.
 
+For JSON-backed source output, use
+`shape_databases.nested_readback.restore_json_column(raw_values, original_field)` with the
+original Arrow field. It parses exactly once, refuses duplicate object fields, quoted JSON
+in place of containers, corrupt values and schema mismatches, and leaves JSON-looking child
+strings unchanged. Exact decimal and temporal precision is retained or explicitly refused.
+PostgreSQL/MySQL native nested nanosecond time fields are refused before connection: the
+Python conversion would discard digits. Preencode exact times as Arrow strings first;
+`nested=json` also uses Python time values and cannot recover those digits.
+Native Databricks timestamps have microsecond precision; a nested value with nonzero finer
+digits is refused before binding, with `nested=json` as the text-storage alternative.
+
+The local DuckDB `shape.sources` reader is
+`shape_databases.duckdb_source.DuckDbSource`. Use
+`duckdb:////abs/path.duckdb?schema=main&table=NAME`, then `schema(uri)` or
+`read(uri, batch_size=65536)` for native Arrow data, with UTC timestamp instants. It opens
+read-only, refuses writer options and never creates missing files. No catalog profiling
+capability is claimed for this local reader.
+
 ## Credentials
 
 A password is never accepted in the URI (it would reach logs and shell history): a URI
