@@ -41,7 +41,15 @@ groups, and no dependency synchronization. No local full run or raw archive was 
 - Stronger old-behavior check: with only the new registry present, restoring base verifier,
   runner, Nightly and schema produced exactly 3 red behavior cases; candidate bytes restored.
 - Independent review identified kind/dataset identity controls: 2 red before the guard.
-- Focused contract/profile/Nightly/timing/domain/store suite: 106 passed in 2.61 seconds.
+- Independent review also identified an ordinary-pass claim for a registered recorded error:
+  1 red before the guard. It now fails instead of receiving pass credit. The old Nightly
+  synthetic value fixtures explicitly model successful recordings in a module-local fixture;
+  their assertions are unchanged. Real-refusal tests use both authenticated error recordings.
+- Final focused contract/profile/Nightly/timing/domain/store suite: 107 passed in 2.75 seconds.
+- The preceding focused suite passed 106 cases in Python mode; final category controls were
+  rerun in Python mode after the review corrections.
+- Ruff and format checks pass for all six changed Python files. Configured mypy passes for
+  703 source files; documentation wording has zero hits and the user-facing check is clean.
 - Deterministic Tuesday/Sunday time-only parsing control preserves the differing weekday
   values despite the current date (Tuesday) coinciding with the capture weekday.
 

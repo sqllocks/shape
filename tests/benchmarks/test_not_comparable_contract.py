@@ -126,6 +126,7 @@ def test_time_only_weekday_is_a_value_even_when_current_weekday_matches_capture(
         "dataset",
         "tampered_record",
         "single_thread_timing",
+        "registered_error_as_pass",
     ],
 )
 def test_nightly_reports_refusal_separately_and_rejects_forgery(tmp_path, monkeypatch, control):
@@ -143,6 +144,17 @@ def test_nightly_reports_refusal_separately_and_rejects_forgery(tmp_path, monkey
     def mutate(name, result):
         if name != "profile":
             return
+        for registered, entry in c.NOT_COMPARABLE_WORKLOADS.items():
+            refused = result["shape"]["workloads"][registered]
+            refused.update(median_s=None, runs_s=[], ratio_vs_baseline=None)
+            refused.pop("baseline_median_s", None)
+            refused["verifier"] = {
+                "status": "not_comparable",
+                "exit_code": 3,
+                "command": "verify.py",
+                "workload": registered,
+                "reason": entry["reason"],
+            }
         wid = "profile:d1.csv" if control == "forged_name" else WORKLOAD
         rec = result["shape"]["workloads"][wid]
         rec.update(median_s=None, runs_s=[], ratio_vs_baseline=None)
@@ -172,17 +184,17 @@ def test_nightly_reports_refusal_separately_and_rejects_forgery(tmp_path, monkey
             rec["dataset"] = "d1.csv"
         if control == "single_thread_timing":
             rec["median_s_1t"] = 1.0
+        if control == "registered_error_as_pass":
+            rec["verifier"].update(status="pass", exit_code=0)
+            rec.update(median_s=1.0, runs_s=[1.0], ratio_vs_baseline=1.0)
 
     _, verdict = nightly.merge(_write_night(tmp_path, mutate=mutate), run=run)
     assert verdict["green"] == (control == "valid")
     if control == "valid":
-        assert verdict["passed"] == verdict["required"] - 1
+        assert verdict["passed"] == verdict["required"] - 2
         assert verdict["not_comparable"] == [
-            {
-                "implementation": "shape",
-                "workload": WORKLOAD,
-                "reason": c.NOT_COMPARABLE_WORKLOADS[WORKLOAD]["reason"],
-            }
+            {"implementation": "shape", "workload": wid, "reason": entry["reason"]}
+            for wid, entry in sorted(c.NOT_COMPARABLE_WORKLOADS.items())
         ]
     else:
         assert verdict["failed"]

@@ -46,7 +46,10 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from comparison_contract import reported_not_comparable  # noqa: E402
+from comparison_contract import (  # noqa: E402
+    recorded_not_comparable_reason,
+    reported_not_comparable,
+)
 from recorded_store import RecordingError  # noqa: E402
 
 RUN_PY = HERE / "run.py"
@@ -224,6 +227,11 @@ def merge(
         recs = (merged or {}).get(impl, {}).get("workloads", {})
         for wid in sorted(need[impl]):
             rec = recs.get(wid)
+            try:
+                recorded_refusal = recorded_not_comparable_reason(wid)
+            except RecordingError:
+                failed.append(f"{impl} {wid} (untrustworthy recorded refusal)")
+                continue
             if rec is None:
                 missing.append(f"{impl} {wid}")
             elif (rec.get("verifier") or {}).get("status") == "not_comparable":
@@ -237,6 +245,8 @@ def merge(
                     not_comparable.append(
                         {"implementation": impl, "workload": wid, "reason": reason}
                     )
+            elif recorded_refusal is not None:
+                failed.append(f"{impl} {wid} (recorded refusal must not count as a pass)")
             elif not verifier_passed(rec) or rec.get("median_s") is None:
                 status = (rec.get("verifier") or {}).get("status")
                 failed.append(f"{impl} {wid} (verifier {status})")
