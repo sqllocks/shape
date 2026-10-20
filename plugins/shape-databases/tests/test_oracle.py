@@ -293,6 +293,8 @@ def test_oracle_later_batch_type_change_is_refused_before_second_dml():
 
 def test_oracle_registered_generate_route_uses_bound_values(monkeypatch, tmp_path, capsys):
     import json
+    import sys
+    from types import SimpleNamespace
 
     from shape import generate
     from shape.cli.main import main
@@ -315,11 +317,20 @@ def test_oracle_registered_generate_route_uses_bound_values(monkeypatch, tmp_pat
     path = tmp_path / "schema.json"
     path.write_text(json.dumps(schema.to_dict()))
     fake = FakeOracle()
-    monkeypatch.setattr(OracleSink, "default_connect", lambda self, **kw: fake.connect(**kw))
+    monkeypatch.setitem(
+        sys.modules,
+        "oracledb",
+        SimpleNamespace(
+            connect=fake.connect,
+            is_thin_mode=lambda: True,
+            DB_TYPE_BINARY_DOUBLE="DB_TYPE_BINARY_DOUBLE",
+        ),
+    )
     uri = "oracle://shape@localhost/service"
     assert main(["generate", str(path), "--to", uri, "--seed", "7", "--json"]) == 0
     response = json.loads(capsys.readouterr().out)
     assert response["targets"][uri] == {"CaseTable": 11}
+    assert fake.input_sizes == [(36, "DB_TYPE_BINARY_DOUBLE")]
     expected = generate(schema, seed=7)["CaseTable"]
     assert [row for _, rows in fake.dml for row in rows] == list(
         zip(expected.column("id").to_pylist(), expected.column("value").to_pylist(), strict=True)
