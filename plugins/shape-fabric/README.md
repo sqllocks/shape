@@ -225,8 +225,8 @@ float32 `REAL` and temporal precision. Zoned SQL database timestamps use
 `DATETIMEOFFSET(p)` and are normalized to UTC; Warehouse stages UTC instants in
 `DATETIME2(6)`. Read-back values are UTC-aware; the original zone name is not kept.
 Declared generation-schema widths are forwarded as `columns.max_length`; SQL database
-strings without a width remain `NVARCHAR(MAX)`. Warehouse uses `VARCHAR(MAX)` (the service stores up to 16 MB); indexed keys remain
-bounded. Synapse retains its separate columnstore-compatible string limits. See [the complete map](../../docs/SINKS.md#sql-type-fidelity-on-write).
+strings without a width remain `NVARCHAR(MAX)`. Warehouse uses `VARCHAR(MAX)` (the service stores up to 16 MB); string key columns require explicit `max_length`. An undeclared key width is
+refused before any connection, naming the column; no key width is guessed. Synapse retains its separate columnstore-compatible string limits. See [the complete map](../../docs/SINKS.md#sql-type-fidelity-on-write).
 
 `shape generate schema.json --to mssql://host/db --dry-run` prints the resolved DDL
 without generating rows, signing in or connecting. `--json` includes the same statements

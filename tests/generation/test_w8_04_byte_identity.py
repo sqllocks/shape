@@ -677,7 +677,7 @@ def test_the_golden_bytes_are_unchanged(kernel: str, tmp_path: Path) -> None:
     hashes, lines = gb.load_corpus()
     refusals: dict[str, str] = {}
     files = gb.write_all(tmp_path, refusals=refusals)
-    assert len(files) == 394 and len(refusals) == 24
+    assert len(files) == 390 and len(refusals) == 28
     reports = gb.differences(hashes, lines, files, refusals=refusals)
     assert reports == [], "\n".join(reports)
 
@@ -773,7 +773,7 @@ def test_update_rewrites_the_corpus_and_check_reads_it(
         ROOT / "tests/generation/golden_bytes/lines.json"
     ).read_bytes()
     assert gb.main([]) == 0
-    assert "394 files and 24 named refusals match the golden byte corpus" in capsys.readouterr().out
+    assert "390 files and 28 named refusals match the golden byte corpus" in capsys.readouterr().out
     doc = json.loads((tmp_path / "hashes.json").read_text("utf-8"))
     key = sorted(doc["files"])[0]
     doc["files"][key] = "0" * 64
@@ -824,7 +824,7 @@ def test_the_corpus_matches_in_a_foreign_environment(child_kernel: str) -> None:
         cwd=ROOT,
     )
     assert done.returncode == 0, done.stdout + done.stderr
-    assert "394 files and 24 named refusals match the golden byte corpus" in done.stdout
+    assert "390 files and 28 named refusals match the golden byte corpus" in done.stdout
 
 
 # ---- 6. the version guard -----------------------------------------------------------------------
@@ -991,3 +991,18 @@ def test_w9_03_corpus_refusal_map_is_validated(tmp_path: Path, refusals: Any) ->
     line_path.write_text(json.dumps(lines))
     with pytest.raises(gb.CorpusError, match="refusals"):
         gb.load_corpus(h, line_path)
+
+
+def test_w9_03_corpus_enforces_exact_indexed_string_refusals(tmp_path: Path) -> None:
+    refusals: dict[str, str] = {}
+    gb.write_all(tmp_path, ["derived", "foreign_key"], refusals=refusals)
+    assert refusals == {
+        f"{spec}/{table}.{dialect}.sql": (
+            f"column {column!r}: indexed string requires explicit max_length"
+        )
+        for spec, table, column in [
+            ("derived", "customer", "customer_id"),
+            ("foreign_key", "e", "eid"),
+        ]
+        for dialect in ("tsql", "tsql-fabric-warehouse")
+    }

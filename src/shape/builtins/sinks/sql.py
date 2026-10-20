@@ -160,7 +160,9 @@ def _identity_number(value: Any, what: str) -> int:
     return int(value)
 
 
-def _column_type(field: pa.Field, meta: Mapping[str, Any], dialect: str) -> str:
+def _column_type(
+    field: pa.Field, meta: Mapping[str, Any], dialect: str, *, key: bool = False
+) -> str:
     """Resolve a declared column without inspecting data or guessing decimal dimensions."""
     t = field.type
     if pat.is_dictionary(t):
@@ -238,6 +240,10 @@ def _column_type(field: pa.Field, meta: Mapping[str, Any], dialect: str) -> str:
         if length is None and not (pat.is_string(t) or pat.is_large_string(t)):
             return _TYPES[dialect]["string"].format(length=255)
         if length is None:
+            if key and dialect.startswith("tsql"):
+                raise ValueError(
+                    f"column {field.name!r}: indexed string requires explicit max_length"
+                )
             return {
                 "tsql": "NVARCHAR(MAX)",
                 "tsql-fabric-warehouse": "VARCHAR(MAX)",
@@ -476,7 +482,7 @@ class SqlSink:
         for field in schema:
             info = meta.get(field.name, {})
             nullable = bool(info.get("nullable", True)) and field.name not in key
-            sql_type = _column_type(field, info, type_dialect)
+            sql_type = _column_type(field, info, type_dialect, key=field.name in key)
             if info.get("identity") and dialect == "tsql" and not fabric:
                 spec = info["identity"] if isinstance(info["identity"], Mapping) else {}
                 seed = _identity_number(spec.get("start", 1), "identity start")

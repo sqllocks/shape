@@ -192,3 +192,27 @@ def test_wanted3_mysql_script_sets_utc_session(tmp_path):
 def test_wanted1_uuid_catalog_metadata(metadata_key, dialect, expected):
     field = pa.field("id", pa.string(), metadata={metadata_key: b"uuid"})
     assert _column_type(field, {}, dialect) == expected
+
+
+@pytest.mark.parametrize("dialect", ["tsql", "tsql-fabric-warehouse"])
+def test_wanted2_indexed_string_requires_declared_width(dialect, tmp_path):
+    from shape.builtins.sinks.sql import SqlSink
+
+    batch = pa.RecordBatch.from_pydict({"customer_id": ["one"]})
+    with pytest.raises(ValueError, match="column 'customer_id'.*max_length"):
+        SqlSink().write(
+            str(tmp_path / "rows.sql"),
+            "rows",
+            [batch],
+            sql_dialect=dialect,
+            primary_key=["customer_id"],
+        )
+    SqlSink().write(
+        str(tmp_path / "bounded.sql"),
+        "rows",
+        [batch],
+        sql_dialect=dialect,
+        primary_key=["customer_id"],
+        columns={"customer_id": {"max_length": 64}},
+    )
+    assert "VARCHAR(64)" in (tmp_path / "bounded.sql").read_text()

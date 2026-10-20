@@ -145,13 +145,27 @@ def write_all(
                             c.type == "decimal" and (c.precision is None or c.scale is None)
                             for c in written.schema.tables[table].columns.values()
                         )
-                        if not (
-                            fmt == "sql"
-                            and missing
+                        decimal_refusal = (
+                            missing
                             and message.startswith("column ")
                             and ("precision" in message or "scale" in message)
                             and "got None" in message
-                        ):
+                        )
+                        # Owner-approved exact indexed-string corpus refusals only.
+                        indexed = {
+                            ("derived", "customer"): "customer_id",
+                            ("foreign_key", "e"): "eid",
+                        }
+                        indexed_refusal = (
+                            (name, table) in indexed
+                            and options.get("sql_dialect") in ("tsql", "tsql-fabric-warehouse")
+                            and message
+                            == (
+                                f"column {indexed.get((name, table))!r}: "
+                                "indexed string requires explicit max_length"
+                            )
+                        )
+                        if not (fmt == "sql" and (decimal_refusal or indexed_refusal)):
                             raise
                         if refusals is not None:
                             refusals[f"{name}/{table}.{suffix}"] = message

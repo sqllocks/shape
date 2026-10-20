@@ -351,7 +351,8 @@ String lengths come from `columns.max_length` (generation-schema declared widths
 forwarded there). Unspecified strings are unbounded: TEXT for PostgreSQL/MySQL,
 NVARCHAR(MAX) for T-SQL, VARCHAR(MAX) in script Warehouse DDL, VARCHAR for Snowflake,
 and STRING for Databricks. The live Warehouse writer also uses VARCHAR(MAX) (the service stores up to 16 MB);
-indexed key columns remain bounded. Synapse retains its separate columnstore-compatible
+T-SQL and Warehouse string key columns require explicit `max_length`; an undeclared
+width is refused before any connection, naming the column. Shape never guesses a key width. Synapse retains its separate columnstore-compatible
 8000-character limit. The previous VARCHAR(255) default
 and first-batch string sizing are removed; a short first batch cannot truncate a later one.
 

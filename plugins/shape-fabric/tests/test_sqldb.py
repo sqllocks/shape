@@ -277,9 +277,12 @@ def test_declared_lengths_keys_and_unsupported_types():
         w.create_ddl("t", schema)
     ok = pa.schema([("code", pa.string()), ("k", pa.string())])
     ddl = w.create_ddl(
-        "t", ok, columns={"code": {"max_length": 2, "nullable": False}}, primary_key=["k"]
+        "t",
+        ok,
+        columns={"code": {"max_length": 2, "nullable": False}, "k": {"max_length": 32}},
+        primary_key=["k"],
     )
-    assert "[code] NVARCHAR(2) NOT NULL" in ddl and "[k] NVARCHAR(450) NOT NULL" in ddl
+    assert "[code] NVARCHAR(2) NOT NULL" in ddl and "[k] NVARCHAR(32) NOT NULL" in ddl
     with pytest.raises(ShapeError, match="primary key column"):
         w.create_ddl("t", ok, primary_key=["nope"])
 

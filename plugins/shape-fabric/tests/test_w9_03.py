@@ -92,3 +92,18 @@ def test_wanted1_decimal_scale_above_precision_is_refused(warehouse):
 def test_wanted1_uuid_catalog_metadata(metadata_key, warehouse, expected):
     field = pa.field("id", pa.string(), metadata={metadata_key: b"uuid"})
     assert _tsql.column_type(field, warehouse=warehouse) == expected
+
+
+@pytest.mark.parametrize("warehouse", [False, True])
+def test_wanted2_indexed_string_refused_before_connection(warehouse):
+    from shape.errors import ShapeError
+
+    def connect(*args, **kwargs):
+        pytest.fail("indexed string was not refused before connection")
+
+    writer = SqlDatabaseWriter(
+        "Server=localhost;Database=shape", warehouse=warehouse, connect=connect
+    )
+    batch = pa.RecordBatch.from_pydict({"customer_id": ["one"]})
+    with pytest.raises(ShapeError, match="column 'customer_id'.*max_length"):
+        writer.write_table("rows", [batch], primary_key=["customer_id"])

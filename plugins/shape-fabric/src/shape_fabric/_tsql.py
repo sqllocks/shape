@@ -29,7 +29,6 @@ from .errors import AuthError, optional_plugin
 WAREHOUSE_HOSTS = (".datawarehouse.fabric.microsoft.com",)
 MAX_IDENT = 128
 ACCESS_TOKEN_ATTR = 1256  # SQL_COPT_SS_ACCESS_TOKEN
-_KEY_COLUMN_LENGTH = 450  # the longest string a key column can index
 
 
 def _sql() -> Any:
@@ -159,7 +158,7 @@ def column_type(
                 )
             return f"{char}(MAX)"
         if key:
-            return f"{char}({_KEY_COLUMN_LENGTH})"
+            raise ShapeError(f"column {field.name!r}: indexed string requires explicit max_length")
         return (
             "VARCHAR(8000)"
             if warehouse and synapse

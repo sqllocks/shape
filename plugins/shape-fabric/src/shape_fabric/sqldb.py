@@ -439,6 +439,15 @@ class SqlDatabaseWriter:
                 f"table {table!r} has only identity columns: identity=server has no column to "
                 "insert; use identity=keep"
             )
+        # Resolve every declared type before opening a connection or mutating a target.
+        _tsql.create_table_sql(
+            sname,
+            table,
+            use_schema,
+            warehouse=self.db.warehouse,
+            columns=columns,
+            primary_key=primary_key,
+        )
         created = False
         disabled = False
         db = self.db
