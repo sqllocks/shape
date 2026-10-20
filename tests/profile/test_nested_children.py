@@ -257,6 +257,37 @@ def test_dataset_depth_and_sample_children() -> None:
     assert data["columns"]["items"]["children"][0]["row_count"] == 2
 
 
+@pytest.mark.parametrize("depth", [0, 1])
+def test_catalog_expansion_keeps_requested_child_depth(
+    depth: int, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from types import SimpleNamespace
+
+    import shape.plugins.host as host_module
+
+    class Catalog:
+        def can_open(self, source: str) -> bool:
+            return source.startswith("eventhouse://")
+
+        def profile_tables(self, source: str, **options: object) -> tuple[dict, dict]:
+            return {"t": fixture()}, {"t": {"sampled": False}}
+
+    reader = Catalog()
+    host = SimpleNamespace(
+        records=lambda group: [SimpleNamespace(group=group, name="catalog")],
+        try_get=lambda group, name: reader,
+    )
+    monkeypatch.setattr(host_module, "default_host", lambda: host)
+    doc = shape.profile("eventhouse://example.test/db", max_depth=depth, joint=False).to_dict()
+    col = doc["tables"]["t"]["columns"]["items"]
+    if depth == 0:
+        assert "children" not in col
+    else:
+        assert "children" in col
+        assert "children" not in col["children"][0]
+    assert doc["tables"]["t"]["source_sampling"] == {"sampled": False}
+
+
 def test_child_add_remove_length_distribution_and_explain() -> None:
     before = shape.profile(pa.table({"x": pa.array([{"a": [0, 1]}] * 40)}), joint=False)
     after = shape.profile(

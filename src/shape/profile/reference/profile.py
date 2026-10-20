@@ -750,6 +750,7 @@ def _profile(
                 validators,
                 multivariate,
                 time_column,
+                max_depth,
             )
             for table_name, record in metadata.items():
                 result._data["tables"][table_name]["source_sampling"] = record
