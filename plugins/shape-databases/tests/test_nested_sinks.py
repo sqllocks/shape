@@ -188,7 +188,16 @@ def test_snowflake_nested_copy_preserves_null_array_positions_with_vectorized_sc
     assert server.rows("t") == [([1, None, 2],)]
 
 
-@pytest.mark.parametrize("kind", [pa.struct([]), pa.map_(pa.int16(), pa.string())])
+@pytest.mark.parametrize(
+    "kind",
+    [
+        pa.struct([]),
+        pa.map_(pa.int16(), pa.string()),
+        pa.list_(pa.union([pa.field("a", pa.int32()), pa.field("b", pa.string())], mode="dense")),
+        pa.list_(pa.decimal256(50, 2)),
+        pa.list_(pa.decimal128(3, 5)),
+    ],
+)
 @pytest.mark.parametrize("mode", ["native", "json", "typed"])
 def test_snowflake_unrepresentable_parquet_shapes_refuse_before_connection(kind, mode):
     sink, uri, server = sink_fixture("snowflake")

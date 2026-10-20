@@ -6,6 +6,9 @@ Status: available.
 
 ## Unreleased
 
+- Delta adds `nested=json` for explicit JSON text storage. Native maps keep their entries
+  and normalize nested timestamps to UTC; unsupported nested shapes fail before storage.
+
 - Database sinks now default to native nested types: PostgreSQL scalar arrays/JSONB, MySQL
   JSON and recursive Databricks ARRAY/STRUCT/MAP. `nested=json` preserves earlier text paths;
   Snowflake also accepts `nested=typed` for ARRAY/OBJECT and uses vectorized nested Parquet

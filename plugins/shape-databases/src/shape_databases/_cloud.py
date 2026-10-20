@@ -18,6 +18,7 @@ from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import pyarrow.types as pat  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
@@ -95,6 +96,15 @@ def snowflake_type(
         return "TIMESTAMP_NTZ" if t.tz is None else "TIMESTAMP_TZ"
     if is_nested(t):
         validate_snowflake_shape(t, field.name)
+        try:
+            with pa.BufferOutputStream() as target:
+                with pq.ParquetWriter(target, pa.schema([field])):
+                    pass
+        except (pa.ArrowException, ValueError):
+            raise ShapeError(
+                f"column {field.name!r}: this nested shape cannot use Parquet; "
+                "encode the value as a JSON string before writing"
+            ) from None
         if nested == "typed":
             return (
                 "ARRAY"

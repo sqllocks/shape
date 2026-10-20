@@ -293,9 +293,10 @@ the generated tables.
 
 ### Native nested database values
 
-The database writers accept `nested=native` (default) or `nested=json`, including as a URI
-parameter. On the command line use `--sink-config postgres.nested=json`, substituting the
-sink name. This option does not change the `sql` script sink or SQL Server/Fabric targets.
+The database writers and Delta accept `nested=native` (default) or `nested=json`. Database
+writers also accept it as a URI parameter. On the command line use
+`--sink-config postgres.nested=json`, substituting the sink name (including `delta`).
+This option does not change the `sql` script sink or SQL Server/Fabric targets.
 
 | Arrow container | PostgreSQL | MySQL | Databricks | DuckDB | Snowflake |
 |---|---|---|---|---|---|
@@ -316,12 +317,18 @@ Snowflake keeps `VARIANT` by default; `nested=typed` selects unstructured `ARRAY
 Native/typed Parquet COPY explicitly uses the vectorized scanner and logical types so null
 array entries retain their positions. Empty structs and non-string map keys cannot use this
 Parquet object transport; errors name the column and suggest adding fields or preencoding a
-JSON string. Duplicate object map keys are refused. Live connector validation remains an
-Owner action.
+JSON string. A manually preencoded Arrow string writes as `VARCHAR`; it does not restore a
+native VARIANT/OBJECT automatically. Unsupported Parquet leaves and invalid nested decimal
+precision/scale are also refused before connecting. Duplicate object map keys are refused.
+Live connector validation remains an Owner action.
 
 The explicit `json` mode keeps the earlier text/VARIANT paths: PostgreSQL `TEXT`, MySQL
 `LONGTEXT`, Databricks `STRING`, Snowflake's existing VARIANT staging; DuckDB uses `VARCHAR`
-JSON text. Native writes preserve SQL NULL versus empty containers. JSON-backed native columns
+JSON text. Delta's explicit `json` mode stores nested columns as UTF-8 JSON text too. Native
+Delta maps retain key/value entries and recursively normalize timestamps in map values to
+UTC, using the existing table protocol defaults. Unsupported nested Delta leaves name the
+column and the `nested=json` alternative before storage is accessed.
+Native writes preserve SQL NULL versus empty containers. JSON-backed native columns
 encode decimals as exact text, temporal values as ISO text and binary values as base64; map
 entries use key/value pairs where the target permits duplicates, and Databricks maps use JSON
 objects. Non-finite numbers are refused by the native JSON transport.
@@ -330,7 +337,9 @@ PostgreSQL scalar arrays, DuckDB and Delta have native Arrow read-back types. JS
 columns may read as JSON text; restoring their Arrow types requires the original Arrow schema
 from the caller. Automatic child-schema recovery is not promised. Compare parsed values with
 that schema after normalizing map/JSON key order, decimal scale and temporal instants. Corrupt
-or schema-mismatched JSON must be refused, rather than coerced. Native DuckDB lists read back
+or schema-mismatched JSON must be refused, rather than coerced. Parse the source JSON exactly
+once: a quoted JSON string is not an object or array, duplicate object fields are ambiguous,
+and JSON-looking string children remain strings. Native DuckDB lists read back
 as variable lists; nested time and zoned timestamps use the documented scalar microsecond
 normalization, with UTC for instant comparisons. Exact duplicate struct field names must be
 renamed; they cannot be represented unambiguously by the JSON fallback either.
