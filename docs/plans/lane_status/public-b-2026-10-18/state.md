@@ -20,7 +20,7 @@ Current main: `5c6d46ff1703db9fd2307bc4ebd4fb087e9af733`, PR30 merged2026-10-20T
 | #17 W9-16 | lane/W9-16-finish / edf678977bb10ede4f26e0f340eb70499e8a8e82 | https://github.com/sqllocks/shape/pull/31 | Ready; main5c6d46 contained; exact independent APPROVAL metadata; fresh CI pending |
 | #6 W9-05 | lane/W9-05 / 548b97651b169f626d891f94d782dfe697d55cfc | https://github.com/sqllocks/shape/pull/43 | Ready; contains main5c6d46; catalog max_depth fix independently APPROVED frz_resume_review exact head; freshCI pending; depends42 |
 | #20 FRZ-01 | lane/FRZ-01-finish / 4eb7f38f2b20875d6854e5983a732d7c06d6fbe9 | https://github.com/sqllocks/shape/pull/42 | Complete3-part fix independently APPROVED exact head; all4value acceptance green; freshCI/merge/mainNightly pending; no closure |
-| #14 W9-13 | lane/W9-13 / 58966e09218ef3a8c2cdb96ad22ccbcf6fbd6033 | none | Decision journal only; source-interface dependency blocked until Lead A35 merges |
+| #14 W9-13 | lane/W9-13 / 58966e09218ef3a8c2cdb96ad22ccbcf6fbd6033 | none | Decision journal only; source-interface dependency blocked until Lead A45 (replacement for35) merges |
 
 Worktrees: `/workspace/shape-w9-08`, `-09`, `-10`, `-11`, `-12`, `-16`, `-05`; `/workspace/shape-frz-01` for42. Current authors/watchers: dbt_watch29; eventhouse_watch30/43; root33; formats_watch34/42. Restore a31 author in the free slot when main next moves; metadata_watch independently reviews31/34. All tracked trees clean except root33's old owned `docs/plans/lane_status/W9-12-commands.md` unstaged changes; preserve those, do not commit old raw commands. dbt has known empty untracked `not-json.tmp`; leave it.
 
@@ -35,7 +35,7 @@ PR40 https://github.com/sqllocks/shape/pull/40 merged as main53d3d0c after indep
 ## Next merge actions
 
 1. First group29/33 (30 now merged): merge whichever is fully green, independently approved and current first; do not hold a green group member waiting for another. PR32 and PR30 already merged.
-2. Then34/31; then42/43 (43 depends42); then14 after35/main source interface.
+2. Then34/31; then42/43 (43 depends42); then14 after45/main source interface.
 3. Every merge requires nonempty complete applicable exact-head checks, ALL triggered workflows successful, current main contained, independent approval. Use PR merge API with exact SHA, merge commit and DCO. No direct main push.
 4. After each main move, refresh other own lanes, push, rebind reviews and let CI run. Local targeted tests only for actual product-code conflicts. Preserve additive changelog/requirements entries. No local full pytest/makecheck.
 5. Watch new main after each merge. Genuine main failure: one small repair PR if possible; otherwise revert own merge through PR and stop as original prompt requires.
@@ -86,3 +86,7 @@ Signed/pushed548b97651b169f626d891f94d782dfe697d55cfc, independently APPROVED ex
 ## Runner scheduling hold 2026-10-20 23:56 UTC
 
 Root prioritized remaining firstgroup29/33 by requesting scheduling cancellations of later-priority current31 coreCI39517323914 andWheels39517323900 (edf6789), and34 coreCI39517315974 (8a7d047). These are NOTpasses. Lightweight Docs/Security/DCO/Container/selftests continue. Hold31fullCI/Wheels and34fullCI until BOTH29+33merge and root explicitly advances stage; source refreshes may proceed after eachmainmove, but cancel auto-triggered fulls during this hold.42/43fullCI continues for early harness/nested regression detection. No gate weakened or source changed. New29/33/currentmainCI progressing with no failure.
+
+## Dependency routing update 2026-10-20 23:59 UTC
+
+PR35 CLOSED UNMERGED, superseded by LeadA PR45 with identical source tree and corrected DCO trailers, per https://github.com/sqllocks/shape/pull/35#issuecomment-6304433722. Issue2 remains OPEN. Watch PR45 state/mergedAt instead; unpark14 only when that W9-01 source interface merges, then start fresh from currentmain and reuse it. No LeadA branch/issue modified. Decimal decision unchanged.

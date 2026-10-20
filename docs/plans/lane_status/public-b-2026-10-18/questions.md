@@ -24,7 +24,7 @@ Both actual time-only fixtures now pass every original comparison, exit0/0mismat
 
 ## #14 merged source dependency — PARKED
 
-Owner reconfirms Oct9 decision: check `0 <= scale <= precision` BEFORE connecting and name the column. No new decimal decision is pending. Reuse W9-01 source catalog/sampling interface only after [PR35](https://github.com/sqllocks/shape/pull/35) merges into main; it remains open at latest23:22 read. Decision journal signed/pushed58966e0; no current implementation. Start fresh lane/W9-13-finish from THEN main, without importing the old journal branch's unmerged Lead A history. Lead A ownership was respected; no branch or issue was modified.
+Owner reconfirms Oct9 decision: check `0 <= scale <= precision` BEFORE connecting and name the column. No new decimal decision is pending. Reuse W9-01 source catalog/sampling interface only after [PR45](https://github.com/sqllocks/shape/pull/45) merges into main. PR35 closed unmerged and was superseded by45 with identical source tree and corrected DCO trailers; issue2 remains open, per [Lead A supersession comment](https://github.com/sqllocks/shape/pull/35#issuecomment-6304433722). Decision journal signed/pushed58966e0; no current implementation. Start fresh lane/W9-13-finish from THEN main, without importing the old journal branch's unmerged Lead A history. Lead A ownership was respected; no branch or issue was modified.
 
 Options: wait for merged interface or authorize an explicit scope/interface change. Recommendation: wait and reuse main; do not design a parallel source model. [Issue clarification](https://github.com/sqllocks/shape/issues/14#issuecomment-6299575080).
 
