@@ -66,6 +66,7 @@ warehouse = "shape_fabric:WarehouseSink"
 synapse = "shape_fabric:SynapseSink"
 
 [project.entry-points."shape.sources"]
+eventhouse = "shape_fabric.eventhouse_source:EventhouseSource"
 onelake = "shape_fabric:LakehouseSource"
 semantic-model = "shape_fabric.semantic_source:SemanticModelSource"
 

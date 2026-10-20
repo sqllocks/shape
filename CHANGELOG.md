@@ -2065,6 +2065,9 @@ Converting a full capture to the safe form now gives a different content ID when
   keys and bounded spread samples. `--tables` and `--sample-rows` select CLI tables/sample size;
   bridge arguments are `tables` and `sample_rows`. Catalog-only capture uses sample size zero.
 - Database profiles and bridge database artifacts use existing safe capture rules.
+- W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+  catalog row counts and whole-database profiles through the KQL endpoint.
+  Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
 
 ### W9-08: broker message metadata
 
