@@ -214,3 +214,42 @@ def test_huge_numeric_exponent_refused():
     ]
     with pytest.raises(ValueError, match="huge"):
         sql_options(definition, "child", constraints="all")
+
+
+def test_foreign_key_names_and_column_pairs_are_unambiguous():
+    definition = schema()
+    definition.relationships.append(Relationship("child_parent", "parent", "child", ["id"], ["id"]))
+    with pytest.raises(ValueError, match="duplicate.*child_parent"):
+        sql_options(definition, "child")
+    definition = schema()
+    definition.relationships[0].child_columns = ["parent_id", "parent_id"]
+    definition.relationships[0].parent_columns = ["id", "id"]
+    with pytest.raises(ValueError, match="child_parent"):
+        sql_options(definition, "child")
+
+
+@pytest.mark.parametrize("tables", [[], "child", 1])
+def test_contract_table_container_must_be_an_object(tables):
+    with pytest.raises(ValueError, match="contract tables"):
+        sql_options(schema(), "child", constraints="all", contract={"tables": tables})
+
+
+def test_numeric_literals_are_bounded_before_sql_rendering():
+    expression = {
+        "op": "=",
+        "left": {"column": "amount"},
+        "right": {"literal": Decimal("1e999999999")},
+    }
+    with pytest.raises(ValueError, match="exponent"):
+        render(expression)
+
+
+def test_ast_node_limit_counts_operands_and_enum_values():
+    comparison = {"op": "=", "left": {"column": "amount"}, "right": {"literal": 1}}
+    with pytest.raises(ValueError, match="nodes"):
+        render({"op": "and", "args": [comparison] * 342})
+    enum = {"op": "in", "left": {"column": "status"}, "values": list(range(1023))}
+    with pytest.raises(ValueError, match="nodes"):
+        render(enum)
+    # One conjunction plus 341 expressions and 682 operands is exactly 1024 nodes.
+    assert render({"op": "and", "args": [comparison] * 341}).count('"amount"') == 341

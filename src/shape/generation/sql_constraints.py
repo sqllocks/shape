@@ -35,6 +35,8 @@ def _literal(value: Any) -> Any:
     if isinstance(value, float) and math.isfinite(value):
         return value
     if isinstance(value, Decimal) and value.is_finite():
+        if abs(value.adjusted()) > 1000:
+            raise ValueError("numeric literal exponent is too large")
         return value
     raise ValueError("a constraint literal must be a finite scalar, never SQL text or an object")
 
@@ -54,12 +56,19 @@ def render_expression(
     known = set(columns)
     remaining = 1024
 
+    def count() -> None:
+        nonlocal remaining
+        remaining -= 1
+        if remaining < 0:
+            raise ValueError("constraint expression has too many nodes")
+
     def mapping(node: Any, keys: set[str]) -> Mapping[str, Any]:
         if not isinstance(node, Mapping) or set(node) != keys:
             raise ValueError("invalid constraint expression node")
         return node
 
     def operand(node: Any) -> str:
+        count()
         if isinstance(node, Mapping) and set(node) == {"column"}:
             name = _name(node["column"])
             if name not in known:
@@ -69,12 +78,9 @@ def render_expression(
         return literal(_literal(node["literal"]))
 
     def visit(node: Any, depth: int) -> str:
-        nonlocal remaining
-        remaining -= 1
+        count()
         if depth > 32:
             raise ValueError("constraint expression is too deep")
-        if remaining < 0:
-            raise ValueError("constraint expression has too many nodes")
         if not isinstance(node, Mapping):
             raise ValueError("a constraint expression must be structured data, never SQL text")
         op = node.get("op")
@@ -92,8 +98,12 @@ def render_expression(
             values = node["values"]
             if not isinstance(values, list) or not 1 <= len(values) <= 1024:
                 raise ValueError("constraint enum requires 1 to 1024 literals")
-            rendered = ", ".join(literal(_literal(value)) for value in values)
-            return f"({operand(node['left'])} IN ({rendered}))"
+            left = operand(node["left"])
+            rendered = []
+            for value in values:
+                count()
+                rendered.append(literal(_literal(value)))
+            return f"({left} IN ({', '.join(rendered)}))"
         if op == "is_null":
             node = mapping(node, {"op", "left"})
             return f"({operand(node['left'])} IS NULL)"
@@ -162,6 +172,7 @@ def derive_constraints(
     tdef = schema.tables[table]
     foreign: list[dict[str, Any]] = []
     pairs: set[tuple[tuple[str, ...], str, tuple[str, ...]]] = set()
+    foreign_names: dict[str, tuple[tuple[str, ...], str, tuple[str, ...]]] = {}
     unique: list[list[str]] = []
     checks: list[dict[str, Any]] = []
     defaults: dict[str, Any] = {}
@@ -171,6 +182,8 @@ def derive_constraints(
         if (
             not child
             or len(child) != len(target)
+            or len(set(child)) != len(child)
+            or len(set(target)) != len(target)
             or parent not in schema.tables
             or any(c not in tdef.columns for c in child)
             or any(c not in schema.tables[parent].columns for c in target)
@@ -179,6 +192,9 @@ def derive_constraints(
         for identifier in [*child, parent, *target]:
             _name(identifier)
         key = (tuple(child), parent, tuple(target))
+        if name in foreign_names and foreign_names[name] != key:
+            raise ValueError(f"duplicate foreign key name {name!r}")
+        foreign_names[name] = key
         if key not in pairs:
             foreign.append(
                 {
@@ -227,6 +243,8 @@ def derive_constraints(
 
         compat.check_readable("contract", contract)
         subtables = contract.get("tables")
+        if "tables" in contract and not isinstance(subtables, Mapping):
+            raise ValueError("contract tables must be an object")
         sub = subtables.get(table, {}) if isinstance(subtables, Mapping) else contract
         if not isinstance(sub, Mapping) or not isinstance(sub.get("columns", {}), Mapping):
             raise ValueError("contract columns must be an object")
