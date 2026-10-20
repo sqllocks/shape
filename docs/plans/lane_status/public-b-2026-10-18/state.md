@@ -1,121 +1,57 @@
-# Public B state — 2026-10-20 throughput directive
+# Shape Public Lead B — current state
 
-Read the attached prompt and this state after restart. The Owner throughput directive in chat supersedes earlier local-full/evidence procedures. Keep working until all assigned issues are merged/parked or a specified hard stop occurs.
+Updated 2026-10-20 after PR40 merged and all own open lanes refreshed. Work continues; do not end to wait. Original prompt: `/workspace/attachments/e304682d-bc67-494c-8b2e-3d8b1436dda0/5-NEW-WINDOW-shape-public-B.md`. Latest Owner resumption/throughput directives in chat override conflicting original rules. Scratch branch: `lead/public-b-2026-10-18`, worktree `/workspace/shape`. Every commit signed off and immediately pushed. Credentials work in fresh commands; no authentication/settings changes.
 
-## Effective rules
+## Progress
 
-CI is the full-suite gate on each exact head, including both kernel implementations. Locally use acceptance/changed-module tests, Ruff/format/mypy/wording and only genuinely uncovered functional acceptance. The native joint-heavy test absent from CI passed in all six lanes. Independent review confirmed that extra unchanged Python performance benchmarks are redundant Cartesian reruns under the new policy: they were interrupted, NOT passed. Do not restart the serial full worker. Do not archive raw logs, gate-state JSON, watcher heartbeats or receipt indexes. Existing historical artifacts remain historical. Keep only PR, green CI links and acceptance red→green output as lane evidence.
+Nine assigned issues:1merged11.1%,6active-ready66.7%,2blocked-or-partially-parked22.2%;8unmerged88.9%. Seven ready implementations including the merged issue77.8%. Partial #20 category is not full delivery. Supporting PR40 is outside the nine-issue denominator. Give full count updates every five minutes plus merge/blocker milestones; last full update approximately22:03UTC.
 
-All six PRs were marked ready. PR32 merged via API as a merge commit; every remaining lane refreshed onto that main in parallel and signed-off/pushed immediately. Only formats had code conflicts, resolved using the previously reviewed candidate and targeted tests345passed each kernel. Other conflicts were additive changelog/requirements entries, both preserved; no local reruns for clean code merges. All refreshed heads independently APPROVED. Never push main directly or alter gates/tolerances. No release/version/tag/settings/secrets changes.
+Current main: `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` from PR40. Its post-merge workflows CI39504029294, Documentation39504029094 and Security39504029453 are still queued/running; no observed failures, no complete main-green claim. Metadata agent watches. Prior main35addfc4 had all workflows green, recorded in W9-08.md.
 
-## Current lanes
+## Assigned lanes
 
-Current main:35addfc4c310b85a62cbe7f315e1d50fb8e426f8. Main post-merge CI39483030770 completedSUCCESS with all27jobs passing; Documentation39483030734 and Security39483030728 also completeSUCCESS. Green merged-head links are in W9-08.md. Watch the new main after the next merge.
-
-| Issue | Branch / exact head | PR | Stage |
+| Issue | Branch / exact pushed head | PR | Stage |
 |---|---|---|---|
-| #9 W9-08 | lane/W9-08-finish / 91ef6200266bf962246d1553356b26a442be2303 | https://github.com/sqllocks/shape/pull/32 | MERGED35addfc4; all triggered source-head AND post-merge main workflows green |
-| #10 W9-09 | lane/W9-09 / 0178fa0c93ba0bc9133a7a6e63067a97f9add115 | https://github.com/sqllocks/shape/pull/34 | ready, refreshed, APPROVED; fresh CI pending |
-| #11 W9-10 | lane/W9-10-finish / 00d648ce65c9f58ae003168f38a1a8dd46db78aa | https://github.com/sqllocks/shape/pull/29 | ready, refreshed, APPROVED; fresh CI pending |
-| #12 W9-11 | lane/W9-11-finish / cad8cfd96a18453cb426de5b1d22e1cff9f9147a | https://github.com/sqllocks/shape/pull/30 | ready, refreshed, APPROVED; fresh CI pending |
-| #13 W9-12 | lane/W9-12-finish / 1535427ec055eb5e197c91a86e10df17347a3be3 | https://github.com/sqllocks/shape/pull/33 | ready, refreshed, APPROVED; fresh CI pending |
-| #17 W9-16 | lane/W9-16-finish / 81cff73ea799039a70b5c584ea7cbfd1e3ec1749 | https://github.com/sqllocks/shape/pull/31 | ready, refreshed, APPROVED; fresh CI pending |
-| #6 W9-05 | lane/W9-05 / 66ace0965ce5442cb931abc77d4b8bdab43f08a9 | https://github.com/sqllocks/shape/pull/43 | ready, independently APPROVED; depends on PR42/main refresh/combined exact-head CI |
-| #20 FRZ-01 | lane/FRZ-01-finish / aa5be107c62ca2d98901a43d627b4e028d626cf7 | https://github.com/sqllocks/shape/pull/42 | error category ready and APPROVED; four remaining value workloads parked; no closure |
-| #14 W9-13 | lane/W9-13 / 58966e0 | none | journal only; dependency-blocked until PR35/main source interface |
+| #9 W9-08 | lane/W9-08-finish / 91ef6200266bf962246d1553356b26a442be2303 | https://github.com/sqllocks/shape/pull/32 | MERGED35addfc4c310b85a62cbe7f315e1d50fb8e426f8; all source-head and merged-head workflows green |
+| #11 W9-10 | lane/W9-10-finish / 00d648ce65c9f58ae003168f38a1a8dd46db78aa | https://github.com/sqllocks/shape/pull/29 | Ready; main53 contained; exact independent APPROVAL eventhouse; fresh CI pending |
+| #12 W9-11 | lane/W9-11-finish / cad8cfd96a18453cb426de5b1d22e1cff9f9147a | https://github.com/sqllocks/shape/pull/30 | Ready; main53 contained; exact independent APPROVAL dbt; fresh CI pending |
+| #13 W9-12 | lane/W9-12-finish / 1535427ec055eb5e197c91a86e10df17347a3be3 | https://github.com/sqllocks/shape/pull/33 | Ready; main53 contained; exact independent APPROVAL eventhouse; fresh CI pending |
+| #10 W9-09 | lane/W9-09 / 0178fa0c93ba0bc9133a7a6e63067a97f9add115 | https://github.com/sqllocks/shape/pull/34 | Ready; main53 contained; exact independent APPROVAL metadata; fresh CI pending |
+| #17 W9-16 | lane/W9-16-finish / 81cff73ea799039a70b5c584ea7cbfd1e3ec1749 | https://github.com/sqllocks/shape/pull/31 | Ready; main53 contained; exact independent APPROVAL metadata; fresh CI pending |
+| #6 W9-05 | lane/W9-05 / 66ace0965ce5442cb931abc77d4b8bdab43f08a9 | https://github.com/sqllocks/shape/pull/43 | Ready; main53 contained; exact independent APPROVAL frz_review; depends42 landing and combined main refresh/CI |
+| #20 FRZ-01 | lane/FRZ-01-finish / aa5be107c62ca2d98901a43d627b4e028d626cf7 | https://github.com/sqllocks/shape/pull/42 | Error category ready, main53 contained, exact independent APPROVAL frz_review; four value workloads still PARKED; no closure |
+| #14 W9-13 | lane/W9-13 / 58966e09218ef3a8c2cdb96ad22ccbcf6fbd6033 | none | Decision journal only; source-interface dependency blocked until Lead A35 merges |
 
-PR34 old7a head had an unchanged macOS cancellation-test timing failure; new0b head CI supersedes it. Do not weaken/edit the unowned test. Iceberg Windows local-file URI fix remains in8c,128targeted pass each mode+16current/minimumSDK tests; actual Windows freshCI pending. The old font failure was in unchanged branded-site tests; no assertion edited.
+Worktrees: `/workspace/shape-w9-08`, `-09`, `-10`, `-11`, `-12`, `-16`, `-05`; `/workspace/shape-frz-01` for42. Authors: dbt_recover29; eventhouse_recover30/43; root33; formats_recover34/42; iceberg_recover31. All tracked trees clean except root33's old owned `docs/plans/lane_status/W9-12-commands.md` unstaged changes; preserve those, do not commit old raw commands. dbt has known empty untracked `not-json.tmp`; leave it.
 
-## Decisions and Owner actions
+All seven refreshed lanes contain main53 and independent approvals are bound to the exact heads above. Refreshes had only additive changelog conflicts (33/34/42); all entries preserved, no product-code conflicts, so no local reruns. Fresh CI is queued/running with no observed new failure. Canceled older-head runs are NOT passes. Hosted runner queueing is currently visible; don't claim a fixed completion time.
 
-Throughput decision-log row is committed on scratch cf68ff1 and included in dbt PR29 e1ae578 for main. Premium process05/08 edits are owned by Premium Build A; do not touch that repo or another session's PRs. Semantic/dbt explicit Owner-actions headings were added during refresh. Pending service validation is already listed in each lane record; no live success claimed. Semantic fixture/measure/role expected-results decision remains Owner work.
+## Shared blocker resolved
 
-PARTIAL READY / REMAINING ACCEPTANCE PARKED #20: approved error category implemented in PR42 at8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4, independently APPROVED. Four value-recording workloads remain blocked under unchanged value rules; exact question/options/recommendation in questions.md and issuecomment6301325664. Do not count #20 delivered or close it. Value comparisons/recordings/thresholds unchanged.
-READY #6: Owner2026-10-20 approval implemented in PR43, independently APPROVED current exact4704c7118966e9e17aa61a230744e51a8275d448 after the documentation-only correction. Depends on shared category PR42 landing and a combined main refresh; no harness code copied. eventhouse_recover owns refreshes; frz_review approved full diff.
-Parked #14: waiting only for W9-01 source interface on main; do not inspect Lead A branches/issues. Decimal0<=scale<=precision refusal was ALREADY approved in issuecomment6072817299, no further decision needed. Current pushed journal lane/W9-13 head58966e0. Updated clarification: issuecomment6299575080; no new decimal decision is pending.
+PR40 https://github.com/sqllocks/shape/pull/40 merged as main53d3d0c after independently approved head `3f6254768085d6f96683550c8939998170be989f` had all4 workflows SUCCESS:30successful jobs and only conditional documentation publish skip. Worktree `/workspace/shape-ci-certifi`, branch `fix/public-b-certifi-2026-10-20`. Repair: certifi2026.7.22→2026.10.19 locked artifacts/generated docs export; prepared Playwright browser selection and missing Documentation browser installation; changelog. No gate/assertion/range/tolerance change. Targeted audit oldexit1 GHSA-6q48-6c7w-9gw2→newexit0; branding1pass30.95s; static/lock/export clean. Source-head links in CI-runtime-repair.md. New-main full gate still pending.
 
-Exact questions/options/recommendations remain in questions.md. #6 is active; #20 has a ready category PR with remaining value acceptance parked; #14 remains dependency-blocked. All three remain open; no product PR/merge yet.
+## Next merge actions
 
-## Next actions
+1. First group29/30/33: merge whichever is fully green, independently approved and current first; do not hold a green group member waiting for another. PR32 already merged.
+2. Then34/31; then42/43 (43 depends42); then14 after35/main source interface.
+3. Every merge requires nonempty complete applicable exact-head checks, ALL triggered workflows successful, current main contained, independent approval. Use PR merge API with exact SHA, merge commit and DCO. No direct main push.
+4. After each main move, refresh other own lanes, push, rebind reviews and let CI run. Local targeted tests only for actual product-code conflicts. Preserve additive changelog/requirements entries. No local full pytest/makecheck.
+5. Watch new main after each merge. Genuine main failure: one small repair PR if possible; otherwise revert own merge through PR and stop as original prompt requires.
 
-Poll fresh exact-head CI without persisting JSON/heartbeats. Merge green reviewed current PRs promptly via merge API; refresh other own open lanes from new main, preserve additive entries and let CI rerun. Local tests only for code conflicts. Keep lanes parallel; do not run local fulls again. Re-check main/dependency interface when it moves, and unpark BigQuery only if its needed interface is on main. Do not end just to wait. report.md currently holds an interim credential-interruption checkpoint, clearly marked resolved; replace it with the final report at completion or an unresolved hard stop.
+Bounded parallel watches through22:30: dbt29/30, formats34/42, iceberg31, eventhouse33/43, metadata main53. Each fresh shell per poll avoids stale inherited GH_TOKEN. Renew watches as needed; don't end to wait. No raw log/gate-state/heartbeat archives. Evidence only PR/run links and acceptance red→green. Current targeted evidence and pending live actions remain in each lane record and interim report.md; no live pass claimed.
 
-Active/idle recover agents: metadata_recover (streaming reviewer), formats_recover, dbt_recover, eventhouse_recover (Iceberg/semantic reviewer), iceberg_recover. Use followup_task to resume idle agents. All local test commands use /home/agent/bin/reap.py. Last observed zombies22 (<1000); credentials/git/gh operations succeed. Worktrees: /workspace/shape-w9-08/-09/-10/-11/-12/-16. All heavy/full queues are intentionally stopped; old status.json is historical and must not cause a restart.
+## Owner decisions and parking
 
-## Shared CI repair — current priority
+Throughput decision row is committed on scratch and included in PR29 for main. Premium process05/08 and114–122 are owned by Premium Build A; don't touch Premium or Lead A branches/issues. All owned local implementation commits were pushed; historical placeholder refs contain no unpublished work and must not be force-pushed.
 
-[PR #40](https://github.com/sqllocks/shape/pull/40), branch `fix/public-b-certifi-2026-10-20`, head `3f6254768085d6f96683550c8939998170be989f`, is ready and independently APPROVED. Worktree `/workspace/shape-ci-certifi`; parent main35addfc4. Only certifi lock metadata (2026.7.22 → 2026.10.19), its generated requirements-docs.txt pin, prepared Playwright browser selection, its missing Documentation-workflow browser installation prerequisite, and a changelog entry changed. Initial CI caught the missing generated docs pin; the existing exporter regenerated it and its check plus uv lock --check passed. Documentation verify on3991 then exposed the missing pinned browser in docs.yml (CI docs-test already installed it). Added exactly that preparation command, parsed the YAML, and preserved every job, gate and assertion. Independent review APPROVED the final3f62547 head; no full local suite rerun. No dependency range, project version, test assertion, gate or tolerance changed; docs.yml only gains its browser prerequisite. Targeted audit old exit1/new exit0, branding test1pass30.95s, lock/static/type/wording checks clean. Full suites delegated to CI. This supporting PR does not add a tenth assigned issue.
+#20/#6: approved NOT COMPARABLE only when recorded0.9.1 itself errors/unsupported. Reviewed committed registry names `profile:edge/x_pq_list.parquet` and `profile:edge/x_pq_nested.parquet`, both recorded TypeError/no values. Separate reporting, never pass/timing credit. Authenticated records/datasets, forged pass/identity negative tests; numeric/value functions unchanged. PR42 targeted107green+21Python controls; red evidence in lane. PR43 Wanted5 uses this category, no harness copy. Initial14red both kernels; final221focused incl both1GB cases with unchanged256MiB growth limit, Python220nonheavy, consumer235/capsules171/conformance39/directsafe131. Conservative child temporal suppression, escaped paths, closed contracts, engine/error boundaries verified. Parquet pre_buffer=False fixes1GB retention without changing batches. Documentation warning refs and isolated INSTALL transcript corrected; final old-head4704 Docs39500618099 green, all8 pages passed. Prior exact-source approvals persist across reviewed automatic refreshes.
 
-The newly surfaced certifi advisory GHSA-6q48-6c7w-9gw2 blocks active PR audit/build/security jobs. Earlier main audits were green before the advisory surfaced; do not ignore the new finding. Semantic docs-test also failed the unchanged Host Grotesk font check; the repair makes it use CI's already-installed pinned browser rather than arbitrary system Chrome. The precise prior font root cause remains unproven.
+Four #20 value-recording workloads remain PARKED: `profile:edge/x_time_only.csv`, `profile:edge/x_time_ampm.csv`, `generate:capital_markets:medium`, `generate:healthcare:medium`. Recorded time weekday counts differ on Sunday; generation code/description values differ under unchanged vocab/TVD/coherence limits. No rerecord/threshold change/output rewriting. Capture recorded_utc is session-start metadata, not proven per-workload timezone/clock context. Stable-ID display-name substitutions could partially normalize names but don't resolve whole workloads' code values. PR42 journal now clarifies these distinctions. Exact evidence/options/recommendation in questions.md and https://github.com/sqllocks/shape/issues/20#issuecomment-6301325664 . Recommend retain strict comparisons until precise further Owner context/policy. PR42 Refs20 only. Never close20 until qualifying Nightly dispatched on main is green on all5parity shards, parity-publish and sqlserver-e2e; link it and close only through PR. Do not dispatch known-incomplete acceptance merely for a coincidental capture weekday match.
 
-To free runner slots, root intentionally canceled remaining CI runs on current feature heads PR29, PR30 and PR33: these unchanged-code refreshes must absorb repair main and rerun CI anyway. Their canceled checks are NOT passing. Only the Iceberg CI workflow remains running on a feature head, to validate the new Windows code. Formats CI and the redundant Iceberg Wheels workflow were also intentionally canceled to prioritize the shared repair; all feature heads require fresh checks after the repair merges. Main CI also remains running; completed jobs have no observed failures. PR30's queued one-job REPORT_CARD teardown retry was canceled as part of this deliberate hold; no passing retry claimed. Do not retry old feature jobs before the repair lands.
+#14: decimal0<=scale<=precision BEFORE connect, name column, already approved Oct9 and reaffirmed Oct20. PR35 remainsOPEN at latest22:00 read. When merged, start fresh `lane/W9-13-finish` from THEN main and reuse interface; don't carry old journal branch's unmerged historical Lead A ancestry. No new decimal-policy question. Dependency options/recommendation in questions.md and issuecomment6299575080.
 
-Next: merge PR40 promptly when all exact-head CI is green and it contains current main, then merge new main into all five feature lanes and push. Run local targeted tests only for any actual code conflicts. Keep tests/assertions/gates unchanged. Continue main CI monitoring; #20/#6 are ACTIVE under the new Owner decision and #14 remains conditional on PR35.
+## Environment and recovery
 
-## HARD STOP — 2026-10-20 20:33 UTC
+Use `/workspace/public-b-validation/test-env.sh`, uv0.8.17 locked workflow, no pip in project env. Every test command through `python /home/agent/bin/reap.py`. Last zombies45 (<1000); hard stop above1000. No local full-suite workers: old worker.py controlstoptrue and historical JSON must not be restarted. No GitHub polling in long-lived shells: use fresh exec commands. One403 workflow-running error or404 active-log-not-ready is not credential failure. Persistent401/403/failedpush: retry gitlsremote+oneghAPI at5/10/20minutes while local work continues; only stop if all3fail. Never print tokens/change config.
 
-GitHub GraphQL PR40 polling returned HTTP401 Bad credentials. This is the prompt credential hard stop. Root stopped remote work and interrupted the only active agent watcher. No new merge or authentication configuration change attempted. See report.md for the final handoff. Last successful PR40 final-head snapshot:14success/16running/no observed failure; main20success/7running/no observed failure. Counts:1/9merged11.1%,5/9active55.6%,3/9parked33.3%,8/9unmerged88.9%. Resume only after credentials are restored and the prompt/state are re-read; current CI status is not established.
-
-## RESUMED — 2026-10-20 20:35 UTC
-
-Fresh commands authenticated successfully to GitHub REST and GraphQL without any authentication/settings change. The401 was confined to the inherited environment of the long-running watcher, now stopped; do not use long-lived shell processes for GitHub polling. Use fresh exec commands each cycle so current runtime credentials apply. The scratch checkpoint was pushed successfully as108f18f. report.md is marked interim/resolved, not final. Latest PR40 snapshot:19success/11running/1conditional skip/no failures, exact3f62547 unchanged and APPROVED. Continue required CI/merge/refresh work. User requests full count updates every five minutes plus merge/blocker changes. Latest complete issue counts remain1/9merged11.1%,5/9active55.6%,3/9parked33.3%.
-
-## Owner resumption directive — 2026-10-20
-
-Push audit: all owned implementation/scratch commits were already reachable on origin; no unpublished commit remained. Historical placeholder branch refs differ from old lane remotes but contain zero commits absent from all origin refs; no force push was used. A non-fast-forward rejection on historical lane/W9-11 was not a credential failure. Current implementation tips are in the lane table; support3f62547 and scratch10af006 were already pushed at the audit. New #14 decision journal58966e0 was signed/pushed.
-
-Record the exact #20/#6 approval from questions.md in each lane. Both lanes are unparked and running in parallel while CI gates PR40. No reference data/threshold/value rewriting is approved. #14 decimal policy is resolved; PR35 is OPEN and the lane remains dependency-blocked. Do not inspect or edit Lead A's implementation.
-
-Merge order now: PR40 first (Lead A also depends on it); then PR29/30/33 (PR32 already merged); then34/31; then20/6; then14 after PR35/main dependency. Refresh each own open lane once from main and let exact-head CI run; no local reruns except targeted tests for code conflicts. All PRs ready, all applicable triggered CI jobs including both kernels, independent review and current main required.
-
-Credential rule REPLACED:401/403/failed push is a hard stop only if persistent. Retry git ls-remote origin plus one gh api call at5,10,20minutes, doing local work between attempts; stop only if all three fail. Never print tokens or modify authentication settings. Use fresh command environments for polling.
-
-Current counts after unpark:9total,1merged11.1%,7active77.8%,1dependency-blocked11.1%,8unmerged88.9%. Continue full user count updates every five minutes plus merge/blocker changes. report.md is an interim historical checkpoint and will be rewritten at final completion.
-
-## Parallel work checkpoint — 2026-10-20 20:58 UTC
-
-PR42 ready, signed/pushed8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4; independent frz_review APPROVED exacthead. Targeted acceptance11red; stronger base-behavior3red; review identity2red and forged-pass1red; final107green plus21Python controls. Static checks pass. Worktree/workspace/shape-frz-01 clean. Artifact attached. No merge/Nightly/closure; merge order remains40→29/30/33→34/31→42→6→14. #20's four remaining value workloads are honestly parked, not passed.
-
-#6 eventhouse_recover: currentmain baseline14red eachmode; initial24targetedgreen, finishing schema/capsule/1GB heavy and changed-module boundaries. Source changes uncommitted, no full run. #14 journal58966e0 pushed; PR35 stillOPEN.
-
-PR40 last snapshot21success/9running/1structural skip/no failures; exact3f62547 unchanged and APPROVED. Iceberg PR31 current8c9fa927 Windows3.14 fullcorejob118837250058 SUCCESS; Windows3.11 stillrunning. Existing be2 fix supersedes old create_table failures; do not edit source speculatively. Main35 Documentation/Security complete success; CI last23success/4running/no failures.
-
-Issue counts:1/9merged11.1%,6/9active66.7%,2/9blocked-or-parked22.2%,8/9unmerged88.9%. The ready #20 category PR is partial implementation, not full delivery. Continue user count updates every five minutes plus merge/blocker changes.
-
-## Source-validation milestones — 2026-10-20 21:10 UTC
-
-Iceberg PR31 exact8c9fa927: BOTH Windows3.11job118837250256 and3.14job118837250058 completedSUCCESS. Old create_table failures are resolved on that head. No speculativeextraWindowsfix or localrerun. Prepared-browserfontfix remains in PR40 and both docs jobs pass there; absorb on mandatorymainrefresh.
-
-#6 author/reviewer collaboration corrected privacy/path/closed-contract/engine/literal-glob boundaries with targetedred→green. Arrow25 ParquetFile read-ahead caused file-wide1GBretention; explicit pre_buffer=False preserves batches/order and fixes it. Both1GB cases pass with unchanged256MiBgrowthbound; focused/changed-module selection221passed52.37s. Measurement childprocess is fresh, fixturewriteroutsideit, actualfile>=1GB; no high-water masking. FinalPython/static/normativechecks and independent exactSHAreview pending. OpenreadyPRwith explicitdependencyPR42 onceownchecks pass; don'twaitfor42mainjusttostartCI, but MUSTNOTmerge6before42/currentmaincombinedgates. No harness copying/cherrypicking.
-
-Read-only #20 context/name reanalysis retains4parkedwholeworkloads. Authenticatedcapture-session timestamp exists but faithfulper-workloadclockcontext is unproven; display-namealiases couldpartiallynormalize nameswithstableIDs but codedata stillblockswholegenworkloads. Questions.md capturesprecisedistinction. AtnextmandatoryPR42mainrefresh, clarifyjournalratherthanextraCIchurnnow.
-
-PR40 latest23success/7running/1structural skip/no failures; main35 latest26success/1running/no failures. Remainingjobsareactivelytestingmulti-phase suites, not provisioning; minversions alone took42m47s withtwo full light suites. No relaxedgate is authorized. Userfullcountupdate21:09UTC; nextdueapproximately21:14UTC.
-
-## Ready child-profile PR — 2026-10-20 21:14 UTC
-
-PR43 is ready/non-draft and artifact attached by root. Exact39760e6927b36dc32f7d0bd7f4977a36719f70ac signed/pushed, clean worktree, independent frz_review APPROVED. Refreshed-main initial14red bothmodes; review boundary regressionsred→green. Finaltargeted221inclboth1GBheavy, Python220nonheavy, consumer235, child35, capsules171, conformance39, and directsafe-capture131 allpass; configuredchanged-source mypy19/Ruff/format/wording/requirements/CLI/stableAPI clean. No full local run. Existingfull-roundtripassertion retained with explicitcapture=full; independentdefaultsafe/leaktests added. Childcheckpointpolicy unchanged and no new private-state/profile-capsule leak found.
-
-All six active assigned issues now have ready independentlyreviewed implementations (29/30/31/33/34/43). Plus merged9, codeimplementationready7/9=77.8%; actualdelivery1/9=11.1%; unmerged8/9=88.9%; blocked/parked20+14=2/9=22.2%. PartialcategoryPR42 is not full #20 delivery. Merge priority remains40first, then29/30/33, then34/31, then42/43, then14after35.
-
-Rootattached43 after childattachmenttool stalled; no further artifact attachment needed. Authorsavailableforrefresh: dbt_recover29; eventhouse_recover30/43; formats_recover34/42; iceberg_recover31; root33. metadata_recover currently watches40 with fresh commands and exactheadreviewunchanged. Mainlast26success/1runningUbuntu3.12; completedDocs/Securitygreen. Userfullcountupdate21:14, nextdue~21:19.
-
-## Metadata merged-head gate complete — 2026-10-20 21:23 UTC
-
-CI39483030770 statuscompleted/conclusionsuccess on main35addfc4, all27jobs passed; Docs39483030734 and Security39483030728 also success. Canonical green merged-head links added to W9-08.md; no raw logs/snapshots. PR40 is24success/6running/1structural skip/no failures at lastread; stillpriorityfirst and unchangedhead3f62547/APPROVED. Nextuserfullcountupdate~21:28UTC.
-
-## Child-profile docs gate correction — 2026-10-20 21:30 UTC
-
-PR43 signed/pushed currenthead4704c7118966e9e17aa61a230744e51a8275d448, independent frz_review reboundAPPROVED, cleanworktree. Deltaonly22observedwarning430→436 references across7docpages, INSTALLisolatedbareconformance-list correction(retainingSH2-033), and laneacceptance. No productsource/assertion/normalizer/gate/tolerancechange. CI8pagesred; localPROFILING_NOTESred;7targetpagespassedbatch andSIGNINGpassedalone after editable-buildsetup race; all8actualpagesgreen. No full suite rerun. Sourceimplementationproof from39760e6 remainsvalid. CIsecurity/audit/build failures onoldheadwereeachconfirmedonlyknowncertifiadvisory; resolvevia40/mainrefresh.
-
-PR40 exact3f62547 latest28success/2running/1structural skip/no failures. RemainingUbuntu3.12 andWindows3.11. Sourceapprovalunchanged, main35fullygreen/currentbasecontainedlastcheck. Mergeas soon as alljobs/workflowscompletegreen andfreshmainancestryisverified. Userlastfullcountupdate21:28,nextdue~21:33; blockermilestone21:30. Countsremain1merged,6active-ready,2blocked/parkedof9.
-
-
-## Certificate blocker MERGED — 2026-10-20
-
-PR40 merged as main53d3d0c1a740fcca0665c216c3ebdabaaac95e49 after exact3f62547 independent approval, all4 workflows SUCCESS and30successful jobs (only conditional documentation publish skip). Source-head links in CI-runtime-repair.md; new main CI39504029294/Documentation39504029094/Security39504029453 running, not yet complete. Old priority paragraphs above are historical.
-
-Parallel refreshes underway for all own open lanes. PR29 now00d648ce, PR30 cad8cfd9, PR31 81cff73e independently APPROVED exact heads. Root PR33 now1535427e, review pending; only additive changelog conflict, source auto-merged, old dirty commands file preserved unstaged. No local reruns. Remaining34/42/43 author refreshes in progress. Merge order29 then30/33 then34/31 then42/43. All need fresh all-triggered CI and current main. Assigned counts still1merged/6active-ready/2blocked-or-parked of9. PR35 remainsOPEN; #14 still dependency-blocked. Latest interim report6e399a4 is current, not final.
-
-
-All seven open product/support lanes now contain main53d3d0c and have been signed/pushed. Additional heads: PR34 0178fa0c93ba0bc9133a7a6e63067a97f9add115 APPROVED by metadata; PR42 aa5be107c62ca2d98901a43d627b4e028d626cf7 and PR43 66ace0965ce5442cb931abc77d4b8bdab43f08a9 APPROVED by frz_review. Only additive changelog conflicts in34/42; no product code conflicts or local reruns. PR42 includes the precise clock/name journal clarification. Fresh CI all initializing, no current-head failures at first snapshot. Distributed bounded watches through22:30: dbt29/30, formats34/42, iceberg31, eventhouse33/43, metadata main53. Root merges exact green reviewed current-main heads in Owner order.
+No skips/xfail/deleted/weakened tests, loosened gates/tolerances, tags/releases/publish, direct protected push, credential/settings changes, self-hosted runners or banned names. report.md is INTERIM; rewrite final only when all assigned issues merged/parked or unresolved hard stop. Continue now after every reset/compaction.
