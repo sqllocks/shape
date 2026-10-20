@@ -72,6 +72,8 @@ def binding(field: pa.Field) -> Binding:
         return "CAST(? AS TIMESTAMP)", lambda v: None if v is None else v.isoformat()
     if pat.is_date(t):
         return "CAST(? AS DATE)", lambda v: None if v is None else v.isoformat()
+    if pat.is_time(t):
+        return "CAST(? AS TIME)", lambda v: None if v is None else v.isoformat()
     if pat.is_binary(t) or pat.is_large_binary(t) or pat.is_fixed_size_binary(t):
         return "UNHEX(?)", lambda v: None if v is None else bytes(v).hex()
     if pat.is_uint64(t):
@@ -212,6 +214,7 @@ class DatabricksSink(DatabaseSink):
         for key in ("catalog", "schema"):
             if key in t.params:
                 params[key] = t.params[key]
+        params["session_configuration"] = {"spark.sql.session.timeZone": "UTC"}
         if plan.secret is not None:
             params["access_token"] = plan.secret.reveal()
         if "client_secret" in plan.auth:

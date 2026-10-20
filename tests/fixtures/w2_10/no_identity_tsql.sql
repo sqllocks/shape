@@ -11,7 +11,7 @@ CREATE TABLE [app].[t] (
     [id]                           BIGINT               NOT NULL,
     [name]                         NVARCHAR(40)         NULL,
     [amount]                       DECIMAL(10,2)        NULL,
-    [created]                      DATETIME2            NULL,
+    [created]                      DATETIME2(6)         NULL,
     CONSTRAINT [PK_t] PRIMARY KEY ([id])
 );
 GO

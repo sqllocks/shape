@@ -675,7 +675,10 @@ def test_the_corpus_covers_every_strategy_distribution_writer_and_dialect() -> N
 
 def test_the_golden_bytes_are_unchanged(kernel: str, tmp_path: Path) -> None:
     hashes, lines = gb.load_corpus()
-    reports = gb.differences(hashes, lines, gb.write_all(tmp_path))
+    refusals: dict[str, str] = {}
+    files = gb.write_all(tmp_path, refusals=refusals)
+    assert len(files) == 390 and len(refusals) == 28
+    reports = gb.differences(hashes, lines, files, refusals=refusals)
     assert reports == [], "\n".join(reports)
 
 
@@ -687,7 +690,7 @@ def test_a_difference_names_the_first_differing_line(tmp_path: Path) -> None:
     rows[3] = b"changed,line"
     changed = {**files, key: b"\n".join(rows)}
     subset = {k: v for k, v in hashes["files"].items() if k.startswith("golden-types/")}
-    reports = gb.differences({**hashes, "files": subset}, lines, changed)
+    reports = gb.differences({**hashes, "files": subset, "refusals": {}}, lines, changed)
     assert len(reports) == 1
     assert reports[0].startswith(f"{key}: differs from the corpus at line 4\n")
     assert "written now: 'changed,line'" in reports[0]
@@ -699,7 +702,7 @@ def test_a_longer_shorter_missing_or_extra_file_is_reported(tmp_path: Path) -> N
     hashes, lines = gb.load_corpus()
     files = gb.write_all(tmp_path, ["golden-types"])
     subset = {k: v for k, v in hashes["files"].items() if k.startswith("golden-types/")}
-    corpus = {**hashes, "files": subset}
+    corpus = {**hashes, "files": subset, "refusals": {}}
     key = "golden-types/values.jsonl"
     longer = gb.differences(corpus, lines, {**files, key: files[key] + b"extra\n"})
     count = len(lines["files"][key].split())
@@ -721,7 +724,7 @@ def test_a_difference_after_a_release_says_to_rewrite_the_corpus(tmp_path: Path)
     files = gb.write_all(tmp_path, ["golden-types"])
     subset = {k: v for k, v in hashes["files"].items() if k.startswith("golden-types/")}
     key = "golden-types/values.csv"
-    corpus = {**hashes, "files": subset, "shape_version": "0.0.1"}
+    corpus = {**hashes, "files": subset, "refusals": {}, "shape_version": "0.0.1"}
     reports = gb.differences(corpus, lines, {**files, key: b"x"})
     assert reports[-1].startswith("note: the corpus was written by Shape 0.0.1")
     assert "python scripts/golden_bytes.py --update" in reports[-1]
@@ -770,7 +773,7 @@ def test_update_rewrites_the_corpus_and_check_reads_it(
         ROOT / "tests/generation/golden_bytes/lines.json"
     ).read_bytes()
     assert gb.main([]) == 0
-    assert "418 files match the golden byte corpus" in capsys.readouterr().out
+    assert "390 files and 28 named refusals match the golden byte corpus" in capsys.readouterr().out
     doc = json.loads((tmp_path / "hashes.json").read_text("utf-8"))
     key = sorted(doc["files"])[0]
     doc["files"][key] = "0" * 64
@@ -821,7 +824,7 @@ def test_the_corpus_matches_in_a_foreign_environment(child_kernel: str) -> None:
         cwd=ROOT,
     )
     assert done.returncode == 0, done.stdout + done.stderr
-    assert "418 files match the golden byte corpus" in done.stdout
+    assert "390 files and 28 named refusals match the golden byte corpus" in done.stdout
 
 
 # ---- 6. the version guard -----------------------------------------------------------------------
@@ -952,3 +955,54 @@ def test_file_hashes_is_public_and_documented() -> None:
     assert shape.repro.file_hashes is file_hashes
     assert file_hashes.__doc__ and "SHA-256" in file_hashes.__doc__
     assert "file_hashes" in (ROOT / "docs" / "REPRODUCIBILITY.md").read_text("utf-8")
+
+
+def test_w9_03_corpus_enforces_named_decimal_refusals(tmp_path: Path) -> None:
+    refusals: dict[str, str] = {}
+    files = gb.write_all(tmp_path, ["lookup"], refusals=refusals)
+    assert set(refusals) == {f"lookup/{table}.{d}.sql" for table in ("p", "t") for d in DIALECTS}
+    assert all("column" in message and "precision" in message for message in refusals.values())
+    assert not any(key.endswith(".sql") for key in files)
+    hashes, lines = gb.corpus_of(files, refusals=refusals)
+    assert gb.differences(hashes, lines, files, refusals=refusals) == []
+    changed = dict(refusals)
+    changed[next(iter(changed))] = "wrong column"
+    assert "refusal differs" in " ".join(gb.differences(hashes, lines, files, refusals=changed))
+    assert gb.differences(hashes, lines, files, refusals={})
+    assert gb.differences(hashes, lines, files, refusals={**refusals, "extra.sql": "column x"})
+
+
+def test_w9_03_old_v1_corpus_without_refusals_is_compatible(tmp_path: Path) -> None:
+    files = {"sample/t.csv": b"x\n1\n"}
+    hashes, lines = gb.corpus_of(files)
+    assert "refusals" not in hashes
+    assert gb.differences(hashes, lines, files, refusals={}) == []
+    h, line_path = tmp_path / "h.json", tmp_path / "l.json"
+    h.write_text(json.dumps(hashes))
+    line_path.write_text(json.dumps(lines))
+    assert gb.load_corpus(h, line_path) == (hashes, lines)
+
+
+@pytest.mark.parametrize("refusals", [[], {"t.sql": 1}, {1: "column amount"}])
+def test_w9_03_corpus_refusal_map_is_validated(tmp_path: Path, refusals: Any) -> None:
+    hashes, lines = gb.corpus_of({})
+    h, line_path = tmp_path / "h.json", tmp_path / "l.json"
+    h.write_text(json.dumps({**hashes, "refusals": refusals}))
+    line_path.write_text(json.dumps(lines))
+    with pytest.raises(gb.CorpusError, match="refusals"):
+        gb.load_corpus(h, line_path)
+
+
+def test_w9_03_corpus_enforces_exact_indexed_string_refusals(tmp_path: Path) -> None:
+    refusals: dict[str, str] = {}
+    gb.write_all(tmp_path, ["derived", "foreign_key"], refusals=refusals)
+    assert refusals == {
+        f"{spec}/{table}.{dialect}.sql": (
+            f"column {column!r}: indexed string requires explicit max_length"
+        )
+        for spec, table, column in [
+            ("derived", "customer", "customer_id"),
+            ("foreign_key", "e", "eid"),
+        ]
+        for dialect in ("tsql", "tsql-fabric-warehouse")
+    }

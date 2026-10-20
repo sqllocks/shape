@@ -14,7 +14,7 @@ CREATE TABLE "dbo"."item" (
     "ratio"                        DOUBLE PRECISION     NULL,
     "active"                       BOOLEAN              NOT NULL,
     "born"                         DATE                 NULL,
-    "seen"                         TIMESTAMP            NULL,
+    "seen"                         TIMESTAMP(6)         NULL,
     CONSTRAINT "PK_item" PRIMARY KEY ("id")
 );
 

@@ -6,6 +6,14 @@ Status: available.
 
 ## Unreleased
 
+- SQL writes preserve Arrow integer widths, decimal dimensions, float32 and temporal precision.
+  Zoned values keep their instant to the microsecond and normalize to UTC; zone names are not
+  preserved. Undeclared strings are now unbounded instead of VARCHAR(255), and database writers
+  no longer size strings from the first batch. `shape generate --to ... --dry-run` includes the
+  resolved DDL without connecting or generating values. T-SQL and Warehouse string key columns
+  require explicit `max_length`; missing widths are refused before connecting, naming the column.
+  See `docs/SINKS.md`.
+
 - Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.
 
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.

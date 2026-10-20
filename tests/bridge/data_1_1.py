@@ -160,8 +160,8 @@ def tiny_design() -> dict[str, Any]:
                 "name": "City",
                 "attributes": [
                     {"name": "city_id", "type": "integer", "nullable": False},
-                    {"name": "city", "type": "string"},
-                    {"name": "country", "type": "string"},
+                    {"name": "city", "type": "string", "max_length": 64},
+                    {"name": "country", "type": "string", "max_length": 64},
                 ],
                 "keys": [["city_id"]],
                 "dependencies": [{"determinant": ["city"], "dependent": ["country"]}],

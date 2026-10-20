@@ -33,7 +33,7 @@
       "request": {
         "op": "execute",
         "params": [],
-        "sql": "CREATE TABLE [dbo].[customer] (\n    [id] BIGINT NULL,\n    [name] VARCHAR(8000) NULL,\n    [segment] VARCHAR(8000) NULL,\n    [balance] DECIMAL(12,2) NULL,\n    [score] FLOAT NULL,\n    [active] BIT NULL,\n    [born] DATE NULL,\n    [seen] DATETIME2(6) NULL,\n    [seen_tz] DATETIME2(6) NULL\n)"
+        "sql": "CREATE TABLE [dbo].[customer] (\n    [id] BIGINT NULL,\n    [name] VARCHAR(MAX) NULL,\n    [segment] VARCHAR(MAX) NULL,\n    [balance] DECIMAL(12,2) NULL,\n    [score] FLOAT NULL,\n    [active] BIT NULL,\n    [born] DATE NULL,\n    [seen] DATETIME2(6) NULL,\n    [seen_tz] DATETIME2(6) NULL\n)"
       },
       "response": {
         "value": null
