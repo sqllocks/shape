@@ -14,12 +14,12 @@ Current main:35addfc4c310b85a62cbe7f315e1d50fb8e426f8. Main CI is running/queued
 
 | Issue | Branch / exact head | PR | Stage |
 |---|---|---|---|
-| #9 W9-08 | lane/W9-08-finish91ef6200266bf962246d1553356b26a442be2303 | https://github.com/sqllocks/shape/pull/32 | MERGED35addfc4; all triggered source-head workflows green |
-| #10 W9-09 | lane/W9-09 0b313bba0a74332fa7c5c955fceca4bdb92ae0d4 | https://github.com/sqllocks/shape/pull/34 | ready, refreshed, APPROVED; fresh CI pending |
-| #11 W9-10 | lane/W9-10-finish e1ae5787c395714f558252ef0190068077d8d4ad | https://github.com/sqllocks/shape/pull/29 | ready, refreshed, APPROVED; fresh CI pending |
-| #12 W9-11 | lane/W9-11-finish bc98623f582c121cad0bcf56a83a8829fd826437 | https://github.com/sqllocks/shape/pull/30 | ready, refreshed, APPROVED; fresh CI pending |
-| #13 W9-12 | lane/W9-12-finish170ce0dd549eaca5898d368b7fc3715ccc1a5d53 | https://github.com/sqllocks/shape/pull/33 | ready, refreshed, APPROVED; fresh CI pending |
-| #17 W9-16 | lane/W9-16-finish8c9fa927dc31540f19755827641b0dbc9a8a3668 | https://github.com/sqllocks/shape/pull/31 | ready, refreshed, APPROVED; fresh CI pending |
+| #9 W9-08 | lane/W9-08-finish / 91ef6200266bf962246d1553356b26a442be2303 | https://github.com/sqllocks/shape/pull/32 | MERGED35addfc4; all triggered source-head workflows green |
+| #10 W9-09 | lane/W9-09 / 0b313bba0a74332fa7c5c955fceca4bdb92ae0d4 | https://github.com/sqllocks/shape/pull/34 | ready, refreshed, APPROVED; fresh CI pending |
+| #11 W9-10 | lane/W9-10-finish / e1ae5787c395714f558252ef0190068077d8d4ad | https://github.com/sqllocks/shape/pull/29 | ready, refreshed, APPROVED; fresh CI pending |
+| #12 W9-11 | lane/W9-11-finish / bc98623f582c121cad0bcf56a83a8829fd826437 | https://github.com/sqllocks/shape/pull/30 | ready, refreshed, APPROVED; fresh CI pending |
+| #13 W9-12 | lane/W9-12-finish / 170ce0dd549eaca5898d368b7fc3715ccc1a5d53 | https://github.com/sqllocks/shape/pull/33 | ready, refreshed, APPROVED; fresh CI pending |
+| #17 W9-16 | lane/W9-16-finish / 8c9fa927dc31540f19755827641b0dbc9a8a3668 | https://github.com/sqllocks/shape/pull/31 | ready, refreshed, APPROVED; fresh CI pending |
 
 PR34 old7a head had an unchanged macOS cancellation-test timing failure; new0b head CI supersedes it. Do not weaken/edit the unowned test. Iceberg Windows local-file URI fix remains in8c,128targeted pass each mode+16current/minimumSDK tests; actual Windows freshCI pending. The old font failure was in unchanged branded-site tests; no assertion edited.
 
