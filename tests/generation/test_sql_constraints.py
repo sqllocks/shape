@@ -89,6 +89,16 @@ def test_none_keeps_primary_only_and_disable_keeps_keys():
         sql_options(schema(), "child", constraints="maybe")
 
 
+def test_legacy_keep_retains_primary_only_while_omitted_policy_defaults_to_keys():
+    definition = schema()
+    default = TargetOptions().for_sink("postgres", definition, "child")
+    legacy = TargetOptions(constraints="keep").for_sink("postgres", definition, "child")
+    none = TargetOptions(constraints="none").for_sink("postgres", definition, "child")
+    assert default["foreign_keys"]
+    assert legacy == none
+    assert set(legacy) == {"primary_key", "columns"}
+
+
 @pytest.mark.parametrize(
     "features",
     [

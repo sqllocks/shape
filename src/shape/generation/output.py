@@ -97,6 +97,9 @@ def sql_options(
         columns[c.name] = meta
     from shape.generation.sql_constraints import derive_constraints
 
+    if constraints == "keep":
+        constraints = "none"  # legacy explicit policy: keep existing constraints untouched
+
     return {
         "primary_key": list(tdef.primary_key),
         "columns": columns,

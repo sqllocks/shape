@@ -62,6 +62,7 @@ class MySqlSink(DatabaseSink):
     """``RecordBatch``es for one table to a MySQL table with batched multi-row ``INSERT``."""
 
     name = "mysql"
+    prepare_constraints = DatabaseSink._prepare_constraint_tables
     schemes = ("mysql",)
     dialect = "mysql"
     password_env = ("SHAPE_MYSQL_PASSWORD", "MYSQL_PWD")

@@ -69,10 +69,11 @@ def add_to_arguments(
     )
     g.add_argument(
         "--sql-constraints",
-        choices=("keep", "disable"),
-        help="mssql:// targets: keep (the default) or disable the foreign key and check "
-        "constraints of tables that already exist while loading, then validate them (exit 1 and "
-        "the constraints named when one does not hold)",
+        choices=("keep", "disable", "keys", "all", "none"),
+        help="databases and SQL: keys (default) writes primary, foreign and unique keys; "
+        "all also writes checks and literal defaults; none writes only primary keys. "
+        "keep is the legacy alias for none. mssql:// disable temporarily disables "
+        "existing foreign key and check constraints, then validates them",
     )
     if with_sink_config:
         g.add_argument(

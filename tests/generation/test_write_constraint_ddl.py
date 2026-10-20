@@ -156,3 +156,56 @@ def test_duplicate_constraint_names_are_refused():
     options["checks"][0]["name"] = "fk_child_parent"
     with pytest.raises(ValueError, match="duplicate"):
         compile_ddl(options)
+
+
+@pytest.mark.parametrize("exponent", [500, 1000])
+def test_large_finite_decimal_literals_do_not_coerce_through_float(exponent):
+    value = Decimal(f"1E{exponent}")
+    assert compile_ddl({"defaults": {"amount": value}}).defaults["amount"] == format(value, "f")
+
+
+@pytest.mark.parametrize(
+    "value", [Decimal("1E1001"), Decimal("NaN"), Decimal("Infinity"), float("inf")]
+)
+def test_unbounded_or_nonfinite_literal_is_refused(value):
+    with pytest.raises(ValueError):
+        compile_ddl({"defaults": {"amount": value}})
+
+
+@pytest.mark.parametrize("value", [r"C:\tmp", "'\\'; DROP TABLE x; --", "café"])
+def test_mysql_string_default_is_independent_of_backslash_sql_mode(value):
+    result = compile_ddl({"defaults": {"name": value}}, "mysql")
+    assert result.defaults["name"] == "_utf8mb4 X'" + value.encode().hex() + "'"
+
+
+@pytest.mark.parametrize("dialect", ["postgres", "mysql", "tsql", "tsql-fabric-warehouse"])
+def test_script_sink_writes_constraints_and_notes_in_their_phases(tmp_path, dialect, caplog):
+    import pyarrow as pa
+
+    from shape.builtins.sinks.sql import SqlSink
+
+    path = tmp_path / "child.sql"
+    assert (
+        SqlSink().write(
+            str(path),
+            "child",
+            [
+                pa.RecordBatch.from_pydict(
+                    {"id": [1], "parent_id": [1], "amount": [2], "name": ["example"]}
+                )
+            ],
+            sql_dialect=dialect,
+            **declaration(),
+        )
+        == 1
+    )
+    text = path.read_text()
+    assert "UNIQUE" in text
+    assert "FOREIGN KEY" in text and text.index("FOREIGN KEY") > text.index("CREATE TABLE")
+    if dialect == "tsql-fabric-warehouse":
+        assert "-- NOTE:" in text and "cannot hold CHECK" in text
+        assert "cannot hold DEFAULT" in text
+        assert sum("cannot hold CHECK" in record.message for record in caplog.records) == 1
+        assert "CHECK (" not in text
+    else:
+        assert "ck_amount" in text and "DEFAULT 1.25" in text

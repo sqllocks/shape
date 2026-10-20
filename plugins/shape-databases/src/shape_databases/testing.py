@@ -355,6 +355,10 @@ class FakeCursor:
             if key in s.tables:
                 raise FakeDriverError(f"relation {key[1]} already exists")
             lines = [ln.strip() for ln in m[3].split(",\n")]
+            # Table-level declarations do not become physical Arrow columns.
+            lines = [
+                line for line in lines if not line.startswith(("UNIQUE", "CHECK", "CONSTRAINT"))
+            ]
             s.tables[key] = []
             s.columns[key] = [
                 _unquote(_ONE_IDENT.match(ln)[0])  # type: ignore[index]
@@ -373,6 +377,10 @@ class FakeCursor:
                     nullable = not declaration.endswith(" NOT NULL")
                     declaration = declaration.removesuffix(" NOT NULL").removesuffix(" NULL")
                     s.catalog[key].append((_unquote(ident[0]), declaration, nullable))
+            return
+        if sql.startswith("ALTER TABLE ") and " ADD CONSTRAINT " in sql:
+            # Phase tests assert this event after CREATEs and before rows. Driver
+            # violations remain injected explicitly; this is not a SQL engine.
             return
         if m := _DROP.match(sql):
             s.ddl()

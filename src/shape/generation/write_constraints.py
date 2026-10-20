@@ -67,20 +67,26 @@ def literal(value: Any, dialect: str) -> str:
         )
     if isinstance(value, int):
         return str(value)
-    if isinstance(value, (float, Decimal)):
-        if not math.isfinite(value) or (
-            isinstance(value, Decimal) and abs(value.adjusted()) > 1000
-        ):
+    if isinstance(value, Decimal):
+        if not value.is_finite() or abs(value.adjusted()) > 1000:
             raise ValueError("constraint literals must be finite with bounded exponents")
-        return format(value, "f") if isinstance(value, Decimal) else repr(value)
+        return format(value, "f")
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError("constraint literals must be finite")
+        return repr(value)
     if not isinstance(value, str) or "\x00" in value:
         raise ValueError("constraint defaults must be finite scalar literals, never SQL objects")
+    if dialect == "mysql":
+        # Charset-tagged hexadecimal text keeps the same value with and without
+        # NO_BACKSLASH_ESCAPES and cannot acquire SQL from its contents.
+        return "_utf8mb4 X'" + value.encode("utf-8").hex() + "'"
     escaped = value.replace("'", "''")
     if dialect == "postgres":
         return postgres_text(escaped)
     if dialect.startswith("tsql"):
         return tsql_text(escaped, national=dialect == "tsql")
-    if dialect in {"mysql", "snowflake", "databricks"}:
+    if dialect in {"snowflake", "databricks"}:
         escaped = escaped.replace("\\", "\\\\")
     return "'" + escaped + "'"
 
@@ -103,8 +109,10 @@ def compile_constraints(
     if dialect not in _DIALECTS:
         raise ValueError(f"unsupported constraint dialect {dialect!r}")
     known = set(columns)
+
     def q(value: Any) -> str:
         return identifier(value, dialect)
+
     q(table)
     if schema_name is not None:
         q(schema_name)

@@ -143,6 +143,7 @@ class DatabricksSink(DatabaseSink):
     """``RecordBatch``es for one table to a Delta table with batched, bound ``INSERT``."""
 
     name = "databricks"
+    prepare_constraints = DatabaseSink._prepare_constraint_tables
     schemes = ("databricks",)
     dialect = "databricks"
     password_env = ("DATABRICKS_TOKEN",)
@@ -241,6 +242,7 @@ class DatabricksSink(DatabaseSink):
             plan.columns,
             plan.primary_key,
             plan.options.get("nested", "native"),
+            constraints=self._constraint_ddl(plan, schema),
         )
 
     # -- connection --------------------------------------------------------------------------

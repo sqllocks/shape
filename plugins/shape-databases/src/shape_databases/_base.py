@@ -26,6 +26,7 @@ from urllib.parse import parse_qsl, unquote, urlsplit
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.generation.write_constraints import ConstraintDDL, compile_constraints
 
 from . import _sql
 from ._auth import Secret, resolve_password, scrub
@@ -201,7 +202,23 @@ class DatabaseSink:
             columns=plan.columns,
             primary_key=plan.primary_key,
             nested=plan.options.get("nested", "native"),
+            constraints=self._constraint_ddl(plan, schema),
         )
+
+    def _constraint_ddl(self, plan: Plan, schema: pa.Schema) -> ConstraintDDL:
+        if not any(k in plan.options for k in ("foreign_keys", "unique", "checks", "defaults")):
+            return ConstraintDDL((), (), (), {}, ())
+        try:
+            return compile_constraints(
+                plan.options,
+                columns=schema.names,
+                table=plan.table,
+                dialect=self.dialect,
+                schema_name=plan.schema_name,
+                table_prefix=plan.options.get("table_prefix") or "",
+            )
+        except ValueError as exc:
+            raise ShapeError(str(exc)) from None
 
     def keys_sql(self, plan: Plan) -> str:
         """``SELECT`` of the primary key columns of the planned table (``shape seed --mode append``
@@ -296,6 +313,9 @@ class DatabaseSink:
             _sql.check_identifier(name, "column", self.dialect)
         _sql.check_unique(use_schema.names, self.dialect)
         self.check_schema(use_schema, plan)
+        if self.dialect in {"postgres", "mysql", "snowflake", "databricks"}:
+            for note in self._constraint_ddl(plan, use_schema).notes:
+                log.warning("%s", note)
         injected = options.get("connection")
         label = plan.target.label
         secrets = [plan.secret, *plan.secrets]
@@ -381,10 +401,25 @@ class DatabaseSink:
         self, conn: Any, plan: Plan, schema: pa.Schema, first: pa.RecordBatch | None
     ) -> bool:
         """Make the table ready for the mode; return whether this call created it."""
+        return self._prepare_table(conn, plan, schema, first, defer_foreign_keys=False)
+
+    def _prepare_table(
+        self,
+        conn: Any,
+        plan: Plan,
+        schema: pa.Schema,
+        first: pa.RecordBatch | None,
+        *,
+        defer_foreign_keys: bool,
+    ) -> bool:
         dialect = self.dialect
         cur = conn.cursor()
         try:
             exists = self._exists(conn, plan)
+            if plan.options.get("prepared_constraints"):
+                if not exists:
+                    raise ShapeError(f"prepared table {plan.table!r} is missing before loading")
+                return False
             if plan.mode == "create" and exists:
                 raise ShapeError(
                     f"table {plan.table} already exists; set write_mode to append, truncate "
@@ -396,13 +431,113 @@ class DatabaseSink:
             elif plan.mode == "truncate" and exists:
                 cur.execute(_sql.truncate_sql(plan.schema_name, plan.table, dialect))
             if exists:
+                if any(
+                    plan.options.get(k) for k in ("foreign_keys", "unique", "checks", "defaults")
+                ):
+                    raise ShapeError(
+                        f"existing table {plan.table!r}: requested constraints cannot yet be "
+                        "verified; no data was loaded"
+                    )
                 return False
             if plan.schema_name:
                 cur.execute(self.create_schema_sql(plan.schema_name))
             cur.execute(self.create_table_sql(plan, schema, first))
+            constraints = self._constraint_ddl(plan, schema)
+            clauses = list(constraints.after_create)
+            if not defer_foreign_keys:
+                clauses.extend(constraints.foreign_keys)
+            for clause in clauses:
+                target = _sql.qualified(plan.schema_name, plan.table, dialect)
+                cur.execute(f"ALTER TABLE {target} ADD {clause}")
             return True
         finally:
             cur.close()
+
+    def _prepare_constraint_tables(self, uri: str, tables: Mapping[str, Mapping[str, Any]]) -> None:
+        """Create every target, then foreign keys, before the output engine sends rows."""
+        plans: list[tuple[Plan, pa.Schema, pa.RecordBatch | None]] = []
+        for table, raw in tables.items():
+            options = dict(raw)
+            first = options.pop("first_batch", None)
+            if first is not None and not isinstance(first, pa.RecordBatch):
+                raise ShapeError("first_batch must be an Arrow RecordBatch")
+            plan = self.plan(uri, table, options)
+            schema = first.schema if first is not None else plan.schema
+            if schema is None:
+                raise ShapeError(
+                    f"table {table!r} needs an Arrow schema before constraint preparation"
+                )
+            for name in schema.names:
+                _sql.check_identifier(name, "column", self.dialect)
+            _sql.check_unique(schema.names, self.dialect)
+            self.check_schema(schema, plan)
+            self._constraint_ddl(plan, schema)
+            plans.append((plan, schema, first))
+        if not plans:
+            return
+        initial = plans[0][0]
+
+        def material(value: Any) -> Any:
+            return value.reveal() if isinstance(value, Secret) else value
+
+        for plan, _, _ in plans[1:]:
+            if (
+                plan.target != initial.target
+                or material(plan.secret) != material(initial.secret)
+                or {k: material(v) for k, v in plan.auth.items()}
+                != {k: material(v) for k, v in initial.auth.items()}
+                or plan.options.get("connection") is not initial.options.get("connection")
+                or plan.options.get("connect") is not initial.options.get("connect")
+            ):
+                raise ShapeError(
+                    "constraint preparation needs the same connection options for every table"
+                )
+        secrets = [s for plan, _, _ in plans for s in (plan.secret, *plan.secrets)]
+        injected = initial.options.get("connection")
+        conn = injected
+        failure: WriteError
+
+        def rollback() -> None:
+            if conn is not None:
+                try:
+                    conn.rollback()
+                except Exception:  # noqa: S110  # nosec B110
+                    pass  # preserve the original, scrubbed preparation error
+
+        try:
+            if conn is None:
+                conn = self._open(
+                    initial, initial.target.label, secrets, initial.options.get("connect")
+                )
+            for plan, schema, first in plans:
+                self._prepare_table(conn, plan, schema, first, defer_foreign_keys=True)
+            cur = conn.cursor()
+            try:
+                for plan, schema, _ in plans:
+                    for clause in self._constraint_ddl(plan, schema).foreign_keys:
+                        target = _sql.qualified(plan.schema_name, plan.table, self.dialect)
+                        cur.execute(f"ALTER TABLE {target} ADD {clause}")
+            finally:
+                cur.close()
+            conn.commit()
+            return
+        except ShapeError:
+            rollback()
+            raise
+        except Exception as exc:
+            rollback()
+            failure = WriteError(
+                f"preparing constraints at {initial.target.label} failed "
+                f"({type(exc).__name__}): {scrub(str(exc), secrets)}",
+                0,
+            )
+        finally:
+            if conn is not None and injected is None:
+                try:
+                    conn.close()
+                except Exception:  # noqa: S110  # nosec B110
+                    pass  # closing must not replace the original result or error
+        raise failure
 
     def create_schema_sql(self, schema_name: str) -> str:
         return f"CREATE SCHEMA IF NOT EXISTS {_sql.quote(schema_name, self.dialect)}"

@@ -1008,8 +1008,11 @@
     },
     "--sql-constraints": {
      "choices": [
+      "all",
       "disable",
-      "keep"
+      "keep",
+      "keys",
+      "none"
      ],
      "takes_value": true
     },
@@ -2508,8 +2511,11 @@
     },
     "--sql-constraints": {
      "choices": [
+      "all",
       "disable",
-      "keep"
+      "keep",
+      "keys",
+      "none"
      ],
      "takes_value": true
     },
@@ -3184,8 +3190,11 @@
     },
     "--sql-constraints": {
      "choices": [
+      "all",
       "disable",
-      "keep"
+      "keep",
+      "keys",
+      "none"
      ],
      "takes_value": true
     },
@@ -6409,8 +6418,11 @@
     },
     "--sql-constraints": {
      "choices": [
+      "all",
       "disable",
-      "keep"
+      "keep",
+      "keys",
+      "none"
      ],
      "takes_value": true
     },

@@ -22,6 +22,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import pyarrow.types as pat  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.generation.write_constraints import ConstraintDDL
 
 from . import _sql
 from .nested import native_type, validate_json_shape, validate_snowflake_shape
@@ -169,6 +170,7 @@ def create_table_sql(
     columns: Mapping[str, Mapping[str, Any]],
     primary_key: Sequence[str],
     nested: str = "native",
+    constraints: ConstraintDDL | None = None,
 ) -> str:
     """``CREATE TABLE`` with the mapped types; key columns are ``NOT NULL`` and the key is
     declared (neither database enforces it)."""
@@ -185,10 +187,18 @@ def create_table_sql(
         )
         nullable = bool(meta.get("nullable", True)) and field.name not in primary_key
         lines.append(
-            f"  {_sql.quote(field.name, dialect)} {sql_type}{'' if nullable else ' NOT NULL'}"
+            f"  {_sql.quote(field.name, dialect)} {sql_type}"
+            + (
+                f" DEFAULT {constraints.defaults[field.name]}"
+                if constraints and field.name in constraints.defaults
+                else ""
+            )
+            + ("" if nullable else " NOT NULL")
         )
     if primary_key:
         lines.append(f"  PRIMARY KEY ({', '.join(_sql.quote(c, dialect) for c in primary_key)})")
+    if constraints:
+        lines.extend("  " + clause for clause in constraints.definitions)
     body = ",\n".join(lines)
     tail = " USING DELTA" if dialect == "databricks" else ""
     return f"CREATE TABLE {qualified_name} (\n{body}\n){tail}"  # nosec B608

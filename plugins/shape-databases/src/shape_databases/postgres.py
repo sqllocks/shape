@@ -53,6 +53,7 @@ class PostgresSink(DatabaseSink):
     """``RecordBatch``es for one table to a PostgreSQL table with ``COPY``."""
 
     name = "postgres"
+    prepare_constraints = DatabaseSink._prepare_constraint_tables
     schemes = ("postgresql", "postgres")
     dialect = "postgres"
     password_env = ("SHAPE_POSTGRES_PASSWORD", "PGPASSWORD")

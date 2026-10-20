@@ -131,6 +131,7 @@ class SnowflakeSink(DatabaseSink):
     """``RecordBatch``es for one table to a Snowflake table: Parquet, ``PUT``, ``COPY INTO``."""
 
     name = "snowflake"
+    prepare_constraints = DatabaseSink._prepare_constraint_tables
     schemes = ("snowflake",)
     dialect = "snowflake"
     password_env = ("SNOWFLAKE_PASSWORD",)
@@ -198,6 +199,7 @@ class SnowflakeSink(DatabaseSink):
             plan.columns,
             plan.primary_key,
             plan.options.get("nested", "native"),
+            constraints=self._constraint_ddl(plan, schema),
         )
 
     def _peek(
