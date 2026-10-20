@@ -158,3 +158,47 @@ def test_non_enforced_or_unvalidated_check_does_not_count_as_matching(catalog_ta
     with pytest.raises(ShapeError, match=name):
         verify(catalog_table)
     assert list(execute(f"SELECT amount FROM {q(table)}")) == [(4,)]
+
+
+def test_non_enforced_foreign_key_is_not_accepted_by_catalog_verification(catalog_table):
+    _, dialect, table, options, execute, q = catalog_table
+    foreign = options["foreign_keys"][0]
+    if dialect == "postgres":
+        execute(f"ALTER TABLE {q(table)} DROP CONSTRAINT {q(foreign['name'])}")
+        execute(
+            f"ALTER TABLE {q(table)} ADD CONSTRAINT {q(foreign['name'])} "
+            f"FOREIGN KEY (parent_id) REFERENCES {q(foreign['ref_table'])} (id) NOT VALID"
+        )
+    else:
+        execute("SET SESSION foreign_key_checks=0")
+    with pytest.raises(ShapeError, match=foreign["name"]):
+        verify(catalog_table)
+    assert list(execute(f"SELECT parent_id FROM {q(table)}")) == [(1,)]
+
+
+def test_verification_preserves_the_callers_pending_transaction(catalog_table):
+    conn, dialect, table, _, execute, q = catalog_table
+    if dialect == "postgres":
+        conn.autocommit = False
+    else:
+        conn.autocommit(False)
+    try:
+        execute(f"INSERT INTO {q(table)} (id,parent_id,amount) VALUES (2,1,5)")
+        verify(catalog_table)
+        conn.rollback()
+        assert list(execute(f"SELECT id FROM {q(table)} ORDER BY id")) == [(1,)]
+    finally:
+        conn.rollback()
+        if dialect == "postgres":
+            conn.autocommit = True
+        else:
+            conn.autocommit(True)
+
+
+@pytest.mark.parametrize("catalog_table", ["postgres"], indirect=True)
+def test_replication_session_cannot_silently_disable_foreign_key_enforcement(catalog_table):
+    _, _, table, options, execute, q = catalog_table
+    execute("SET SESSION session_replication_role='replica'")
+    with pytest.raises(ShapeError, match=options["foreign_keys"][0]["name"]):
+        verify(catalog_table)
+    assert list(execute(f"SELECT parent_id FROM {q(table)}")) == [(1,)]
