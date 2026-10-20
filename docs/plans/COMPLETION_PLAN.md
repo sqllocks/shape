@@ -2739,6 +2739,7 @@ The owner delegated decisions to the lead on 2026-10-03 (§2.3). These work pack
 | W8-04 | #567 | Byte-identical CSV, JSON Lines and SQL output per engine version on every supported platform | W1-15 |
 | W8-05 | #568 | Value vault management through the bridge (status, verify, key rewrap, column policy), never values or key material | W5-03, P6-11 |
 | W8-06 | #766 | One switch for realistic identifiers for a whole run (`identifiers="realistic"`, `--identifiers`, schema default); the default stays reserved | none |
+| W10-01 | not filed | Ephemeral test environments: `shape env up/down` from a profile + seed + targets + size; pytest fixture; Action support; idempotent teardown. Shape owns the data and loading only; provisioning stays with Testcontainers/compose/Terraform. Not started; design spike first. | W9-04, W9-01, W5-05 |
 
 P6-11 (`shape bridge`) is specified further by issue #56; its `demo_*` commands follow P6-12 and the rest start now (owner standing instruction: whatever can run in parallel, do).
 
