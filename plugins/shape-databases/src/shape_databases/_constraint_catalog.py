@@ -254,6 +254,25 @@ def verify_existing_constraints(
             )
             if actual["foreign"].get(ref["name"]) != wanted_fk:
                 refuse(ref["name"])
+        foreign = options.get("foreign_keys", [])
+        if foreign:
+            if dialect == "postgres":
+                cursor.execute("SELECT current_setting('session_replication_role')")
+                enforced = cursor.fetchone()[0] in ("origin", "local")
+            else:
+                cursor.execute("SELECT @@SESSION.foreign_key_checks")
+                enforced = cursor.fetchone()[0] == 1
+            if not enforced:
+                refuse(foreign[0]["name"])
+        for check in options.get("checks", []):
+            found = actual["checks"].get(check["name"])
+            if not found or not found[1]:
+                refuse(check["name"])
+        for column, value in options.get("defaults", {}).items():
+            if column not in actual["defaults"] or (
+                actual["defaults"][column] is None and value is not None
+            ):
+                refuse("DEFAULT " + column)
         if not options.get("checks") and not options.get("defaults"):
             return
         probe = "shape_check_" + uuid.uuid4().hex
