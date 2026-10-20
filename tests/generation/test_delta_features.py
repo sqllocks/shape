@@ -69,7 +69,9 @@ def test_wanted1_properties_invalid_or_reserved(tmp_path, properties):
     assert not (tmp_path / "t" / "_delta_log").exists()
 
 
+@pytest.mark.conformance
 def test_wanted2_constraints_and_violating_append_atomic(tmp_path):
+    """SHAPE-SINK-002: rule diagnostics and persisted-version atomicity."""
     constraints = {"not_null": ["id"], "check": {"positive": "id > 0"}}
     t = write(tmp_path, constraints=constraints)
     assert t.metadata().configuration["delta.constraints.positive"] == "id > 0"
@@ -207,7 +209,9 @@ def test_wanted5_invalid_generated_columns(tmp_path, generated):
     assert not (tmp_path / "t" / "_delta_log").exists()
 
 
+@pytest.mark.conformance
 def test_wanted6_ntz_opt_in_and_default_utc(tmp_path):
+    """SHAPE-SINK-002: explicit protocol opt-in preserves the default protocol."""
     b = pa.record_batch({"ts": pa.array([0, None, 1], pa.timestamp("us"))})
     for flag in [False, True]:
         root = tmp_path / str(flag)
@@ -626,3 +630,39 @@ def test_streaming_declared_nonnullable_null_names_constraint(tmp_path):
         writer.write_batch(bad)
     writer.abort()
     assert deltalake.DeltaTable(str(tmp_path / "t")).version() == before
+
+
+@pytest.mark.parametrize(
+    "name,value",
+    [
+        ("table_properties", {"owner": "a"}),
+        ("constraints", {"not_null": ["id"]}),
+        ("column_mapping", "name"),
+        ("deletion_vectors", True),
+        ("generated_columns", {"label": "'a'"}),
+        ("timestamp_ntz", True),
+    ],
+)
+def test_wanted8_older_release_with_same_api_refused_before_write(
+    tmp_path, monkeypatch, name, value
+):
+    # Public enum/signature presence does not prove the native writer supports it.
+    monkeypatch.setattr(deltalake, "__version__", "1.0.0")
+    with pytest.raises(ValueError, match=rf"{name}.*1\.0\.0.*1\.6\.6"):
+        write(tmp_path, **{name: value})
+    assert not (tmp_path / "t" / "_delta_log").exists()
+
+
+@pytest.mark.parametrize("version", ["1.6.5", "1.6.6rc1", "1.6.6.dev0", "unknown"])
+def test_wanted8_unverified_release_refused_before_mutation(tmp_path, monkeypatch, version):
+    monkeypatch.setattr(deltalake, "__version__", version)
+    with pytest.raises(ValueError, match="column_mapping.*requires verified deltalake"):
+        write(tmp_path, column_mapping="name")
+    assert not (tmp_path / "t" / "_delta_log").exists()
+
+
+def test_wanted8_verified_local_build_keeps_capability_checks(tmp_path, monkeypatch):
+    monkeypatch.setattr(deltalake, "__version__", "1.6.6+local.1")
+    table = write(tmp_path, column_mapping="name")
+    assert table.metadata().configuration["delta.columnMapping.mode"] == "name"
+    assert read(table).to_pydict() == batch().to_pydict()

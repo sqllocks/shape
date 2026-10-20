@@ -1,8 +1,7 @@
 """The abfss:// and delta+abfss:// sinks against a real ADLS Gen2 account or a OneLake lakehouse.
 
 Marker ``live``: run by the nightly job ``abfss-live`` only where the owner's secrets exist (plan
-O-02). The original publish tests fail for missing settings; W9-07 feature cases skip
-naming a missing setting as specified for that package. Azurite has no hierarchical
+O-02); a missing variable fails its test by name, never skips it. Azurite has no hierarchical
 namespace, so this is what exercises the real rename, a real Delta commit and OneLake itself.
 
 ``SHAPE_LIVE_ABFSS_URI``   an ``abfss://`` folder to write under (ADLS Gen2 or OneLake Files);
@@ -109,9 +108,7 @@ def test_delta_feature_tables_native_readback(feature: str, options: dict[str, A
     from shape.builtins.sinks.azure import _with_environment_keys
     from shape.builtins.sinks.delta import _location
 
-    base = os.environ.get("SHAPE_LIVE_DELTA_URI")
-    if not base:
-        pytest.skip("SHAPE_LIVE_DELTA_URI is missing")
+    base = required("SHAPE_LIVE_DELTA_URI")
     table_name = f"shape_live_{feature}_{uuid.uuid4().hex[:8]}"
     rows = pa.record_batch(
         {

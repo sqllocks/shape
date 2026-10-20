@@ -1990,7 +1990,6 @@ That is 27 in total, which is the hub, the web app and 25 others (D-08).
 | O-11 | W2-08: create the six sink secrets `SHAPE_TEST_SNOWFLAKE_URI`, `SNOWFLAKE_PASSWORD`, `SHAPE_TEST_DATABRICKS_URI`, `DATABRICKS_TOKEN`, `SHAPE_TEST_SYNAPSE_URI` and `SHAPE_TEST_SYNAPSE_STAGING` (Synapse signs in with the O-02 `FABRIC_*` service principal). The nightly sinks job runs each sink's live test only where its secrets exist. | W2-08 live tests | Contract tests with fakes; the live job prints "nothing to run" |
 | O-12 | W7-01: in addition to the O-02 secrets (`FABRIC_TENANT_ID`, `FABRIC_CLIENT_ID`, `FABRIC_CLIENT_SECRET`, `FABRIC_WORKSPACE_ID`), create `FABRIC_GIT_REMOTE` (the Git repository the O-02 workspace is connected to through Fabric Git integration; the live test needs no connection id, only these variables) and `FABRIC_GIT_TOKEN` (a token that can push to it), so the nightly `fabric-git-sync-live` job runs. | W7-01 item 1 (issue #139) | #139 stays open; the job prints "nothing to run" |
 | O-13 | W3-12: confirm whether the ISO 4217 list (SIX Group) and the ISO 639-2 list (Library of Congress) may be redistributed inside the package. If yes, the reference-pack builders ship them unchanged; if not, they stay unshipped. | W3-12 `iso-4217` and `iso-639` packs | `iso-639-1` covers the `iso639_1` validator; no `iso-4217` or `iso-639` pack ships |
-| O-14 | W9-13, W9-14: create the live-test secrets, or say the live tests stay skipped. BigQuery: `SHAPE_TEST_BIGQUERY_URI` (a scratch project and dataset) and `GOOGLE_APPLICATION_CREDENTIALS_JSON` (a service account with BigQuery Data Editor, Job User and Read Session User on it). Redshift: `SHAPE_TEST_REDSHIFT_URI` (a scratch Serverless workgroup or cluster), `REDSHIFT_PASSWORD`, `SHAPE_TEST_REDSHIFT_STAGING` (an `s3://` prefix), `SHAPE_TEST_REDSHIFT_IAM_ROLE`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. Both accounts cost money while used. Oracle and Iceberg need nothing (emulators). | W9-13 `issue #14`, W9-14 `issue #15` |
 
 ---
 
@@ -2201,23 +2200,6 @@ Work packages are listed in execution order. The next work package is the first 
 | 155 | W8-04 | todo (held with W1-15, #768: merged in INT-20 and reverted before landing; its byte-identical corpus failed the cross-CPU proof) | Issue #567. |
 | 156 | W8-05 | todo (lane blocked, nothing built: it needs W5-03's vault and W1-11's safe capture in its base) | Issue #568. |
 | 157 | W8-06 | done (reserved identifiers stay the default) | Integrated in INT-20 (2026-10-05, §2.3); issue #766. |
-| 158 | W8-07 | wip | Lane lane/W8-07; issue #1. |
-| 159 | W9-01 | todo | Issue #2 (platform coverage, 2026-10-08). |
-| 160 | W9-02 | todo | Issue #3 (platform coverage, 2026-10-08). |
-| 161 | W9-03 | todo | Issue #4 (platform coverage, 2026-10-08). |
-| 162 | W9-04 | todo | Issue #5 (platform coverage, 2026-10-08). |
-| 163 | W9-05 | todo | Issue #6 (platform coverage, 2026-10-08). |
-| 164 | W9-06 | todo | Issue #7 (platform coverage, 2026-10-08). |
-| 165 | W9-07 | todo | Issue #8 (platform coverage, 2026-10-08). |
-| 166 | W9-08 | todo | Issue #9 (platform coverage, 2026-10-08). |
-| 167 | W9-09 | todo | Issue #10 (platform coverage, 2026-10-08). |
-| 168 | W9-10 | todo | Issue #11 (platform coverage, 2026-10-08). |
-| 169 | W9-11 | todo | Issue #12 (platform coverage, 2026-10-08). |
-| 170 | W9-12 | todo | Issue #13 (platform coverage, 2026-10-08). |
-| 171 | W9-13 | todo | Issue #14 (platform coverage II, 2026-10-08). |
-| 172 | W9-14 | todo | Issue #15 (platform coverage II, 2026-10-08). |
-| 173 | W9-15 | todo | Issue #16 (platform coverage II, 2026-10-08). |
-| 174 | W9-16 | todo | Issue #17 (platform coverage II, 2026-10-08). |
 
 | Gate | Status |
 |---|---|
@@ -2757,23 +2739,6 @@ The owner delegated decisions to the lead on 2026-10-03 (§2.3). These work pack
 | W8-04 | #567 | Byte-identical CSV, JSON Lines and SQL output per engine version on every supported platform | W1-15 |
 | W8-05 | #568 | Value vault management through the bridge (status, verify, key rewrap, column policy), never values or key material | W5-03, P6-11 |
 | W8-06 | #766 | One switch for realistic identifiers for a whole run (`identifiers="realistic"`, `--identifiers`, schema default); the default stays reserved | none |
-| W8-07 | #1 | Nested columns in profile (opaque kind), --exclude/--columns, clean Delta exit | none |
-| W9-01 | #2 | Live profiling of PostgreSQL and MySQL: `postgresql://` and `mysql://` sources, whole-schema profiles with catalog keys and sampling | none |
-| W9-02 | #3 | Live profiling of Snowflake and Databricks: `snowflake://` and `databricks://` sources, whole-schema profiles | none |
-| W9-03 | #4 | Type fidelity on write: integer widths, time zones, decimals, float32, time precision, string lengths, on every SQL sink | none |
-| W9-04 | #5 | Constraints on write: foreign, unique, check and default constraints from the generation schema and contract, per dialect | none |
-| W9-05 | #6 | Nested data II: child-field profiling of struct, list and map columns; diff, check and safe-by-default over child paths | W8-07 |
-| W9-06 | #7 | Native nested types in the sinks (PostgreSQL, MySQL, Databricks, DuckDB, Delta maps, Snowflake typed) | none |
-| W9-07 | #8 | Delta table features on write, all opt-in: properties, constraints, column mapping, deletion vectors, generated columns, `timestampNtz` | none |
-| W9-08 | #9 | Kafka and Event Hubs message metadata: keys, headers, partitions and timestamps on write and read | none |
-| W9-09 | #10 | Kafka and Event Hubs formats II: Avro and Protobuf without a registry, on read, nested fields, Azure Schema Registry | none |
-| W9-10 | #11 | dbt II: singular tests, semantic models, metrics and exposures | none |
-| W9-11 | #12 | Fabric Eventhouse source: `eventhouse://` tables profiled through the KQL query endpoint | none |
-| W9-12 | #13 | Power BI semantic models II: measures and row-level security read into the profile and kept by `export-model` | W2-06 |
-| W9-13 | #14 | BigQuery sink and source: Parquet load jobs, Storage Read API, whole-dataset profiles, a bytes-billed cost guard | W9-01 |
-| W9-14 | #15 | Amazon Redshift sink and source: S3-staged Parquet `COPY`, IAM or password sign-in, whole-schema profiles | W9-01 |
-| W9-15 | #16 | Oracle Database sink and source: thin-mode array DML, Oracle's empty-string rule, whole-schema profiles | W9-01 |
-| W9-16 | #17 | Apache Iceberg sink and source beside Delta: local SQL catalog and named catalogs, transforms, time travel, native nested types | W8-07 |
 
 P6-11 (`shape bridge`) is specified further by issue #56; its `demo_*` commands follow P6-12 and the rest start now (owner standing instruction: whatever can run in parallel, do).
 

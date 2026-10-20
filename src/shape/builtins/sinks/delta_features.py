@@ -1,13 +1,14 @@
 """Opt-in Delta writer features, using the supported delta-rs transaction APIs.
 
 The dependency floor is unchanged. Capabilities are checked against public APIs;
-1.6.6 is the verified version, not an asserted minimum for earlier releases.
+Opt-ins require the verified 1.6.6 release or newer, plus their public APIs.
 """
 
 from __future__ import annotations
 
 import inspect
 import json
+import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from tempfile import TemporaryDirectory
@@ -214,12 +215,17 @@ def require_capabilities(dl: Any, options: dict[str, Any], features: Features) -
         "generated_columns": bool(features.generated),
         "timestamp_ntz": features.ntz,
     }
+    installed = str(getattr(dl, "__version__", "unknown"))
+    release = re.fullmatch(
+        r"(\d+)\.(\d+)\.(\d+)(?:\+[A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)*)?", installed
+    )
+    verified = release is not None and tuple(map(int, release.groups())) >= (1, 6, 6)
     for name in options:
-        if active.get(name) and not checks[name]:
+        if active.get(name) and (not verified or not checks[name]):
             raise ValueError(
-                f"{name}: installed deltalake {getattr(dl, '__version__', 'unknown')} "
-                "lacks the required public API; use a release providing that API "
-                f"(verified deltalake {_VERIFIED_VERSION})"
+                f"{name}: installed deltalake {installed}; "
+                f"requires verified deltalake >= {_VERIFIED_VERSION} "
+                "and the required public API"
             )
 
 

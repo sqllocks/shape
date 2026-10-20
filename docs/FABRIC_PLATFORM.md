@@ -212,8 +212,9 @@ union with `shape generate ... --format delta --dry-run --json --sink-config ...
 Use the default write when a SQL endpoint or older Spark reader's support has not
 been confirmed. Shape does not alter the endpoint or disable its protocol checks.
 
-The writer's feature APIs are verified with deltalake 1.6.6. Unsupported APIs are
-refused naming the installed version and required capability; the optional extra's
+The writer's opt-in features require verified deltalake 1.6.6 or newer and their
+public APIs. Unsupported versions or APIs are refused naming the installed and
+required versions; the optional extra's
 existing dependency floor is unchanged. Native DataFusion `QueryBuilder` reads
 mapped and advertised-DV tables correctly on that version; its PyArrow scanner
 requires Shape's existing DuckDB fallback for those features. See `docs/SINKS.md`

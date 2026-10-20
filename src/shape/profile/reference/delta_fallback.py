@@ -212,7 +212,9 @@ def read_via_duckdb(
 
 def _like(table: pa.Table, schema: pa.Schema | None) -> pa.Table:
     """``table`` cast to the logical types of ``schema`` when the columns line up."""
-    if schema is None or table.column_names != [f.name for f in schema if f.name in table.names]:
+    if schema is None or table.column_names != [
+        f.name for f in schema if f.name in table.column_names
+    ]:
         return table
     wanted = pa.schema([schema.field(n).remove_metadata() for n in table.column_names])
     try:

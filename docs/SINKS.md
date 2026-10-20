@@ -319,7 +319,10 @@ own commit option. Check it with `shape.plugins.kit.check_sink` and `shape confo
 The default Delta write still uses reader **1** / writer **2**, no table features,
 and no configuration. Zone-less timestamps are rewritten to UTC, preserving their
 wall-clock value. Existing golden files and benchmark fixtures are unchanged.
-`DeltaSink.write` and `open_table` accept these options:
+`DeltaSink.write` and `open_table` accept these options. Opt-ins require the
+verified `deltalake>=1.6.6` release and their public APIs; refusals name both the
+installed and required versions before writing. The published `deltalake>=0.17`
+range remains available for default writes:
 
 | Option | Value and effect | Required protocol |
 |---|---|---|
