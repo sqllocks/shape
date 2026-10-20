@@ -1,0 +1,6 @@
+{
+  "stream-integration-resolution.patch": "c7481f8831637541b69f03b7f2260dfac1ef559506f2ed57a12b41f4f32997ba",
+  "stream-integration-from-binary.patch": "48a8fd09b395a1ff2bce431eb848afda9f822a24c0a9e5bc54c81189c505b822",
+  "integration-objects.json": "415a53370afcc55bbb100941f90e2ae00c65f350ce5c97c63ad26d8272a65ab7",
+  "integration-summary.md": "e23053df071609e47cdc9308e45baf7440ed7a8188157063e00212bf9bdd10d4"
+}

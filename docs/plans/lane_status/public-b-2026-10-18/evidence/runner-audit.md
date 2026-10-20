@@ -25,3 +25,11 @@ Same-head retries overwrite the named job entry/log/cache log. Preserve previous
 The old empty W9-10 not-json.tmp comes from existing tests/streaming/emit/test_curves.py::test_unknown_names_and_unreadable_files. The test creates this relative file and unlinks in finally. A stopped attempt can leave it behind; archive/quarantine the known generated file outside checkout before clean binding, with no test edit.
 
 Persistent workspace storage, per-job head/tree/exit/zombie logs, failure pause and the corpus decomposition otherwise meet the proposed plan. Overall acceptance remains contingent on actual zero exits, clean binding and the above orchestration corrections, not collection alone.
+
+## Updated worker review — APPROVED
+
+Re-audited updated on-disk worker.py, SHA256 `256500dea0342c7a8e9e90568fec69a4bb0f1a11ccc20a9208ddd119699a1e56`. Parsed its AST without executing it. The tracked guard now covers all paths except explicit lane evidence. Untracked paths are rejected except lane evidence and the known empty not-json.tmp artifact. Control is re-read at each job boundary. A retry preserves the previous entry, logs and collection outputs in a unique attempt directory before replacement. These corrections resolve the three prior findings for the next worker load.
+
+Current PID5354 remains untouched; it still runs previous loaded code. Metadata acceptance separately requires its recorded clean before/after status at the frozen head. No tests, Docker jobs or source changes were performed for this review.
+
+Minor traceability note: preserved entry.log retains the original log pathname subsequently reused by retry; the archive directory plus basename identifies the preserved bytes. An explicit archived-artifact path map would make automated consumers safer. This is not evidence loss and does not block the updated plan.
