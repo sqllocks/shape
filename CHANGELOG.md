@@ -2061,6 +2061,9 @@ Converting a full capture to the safe form now gives a different content ID when
   named catalogs, native nested types, width restoration, partition transforms,
   snapshot micro-batches/fingerprints, time travel and namespace profiling. CLI
   URI targets and additive bridge API 1.2 target arguments are supported.
+- W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+  catalog row counts and whole-database profiles through the KQL endpoint.
+  Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
 
 ### W9-08: broker message metadata
 
