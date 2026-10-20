@@ -27,11 +27,11 @@ PR34 old7a head had an unchanged macOS cancellation-test timing failure; new0b h
 
 Throughput decision-log row is committed on scratch cf68ff1 and included in dbt PR29 e1ae578 for main. Premium process05/08 edits are owned by Premium Build A; do not touch that repo or another session's PRs. Semantic/dbt explicit Owner-actions headings were added during refresh. Pending service validation is already listed in each lane record; no live success claimed. Semantic fixture/measure/role expected-results decision remains Owner work.
 
-ACTIVE #20: Owner2026-10-20 approves narrowly scoped not-comparable handling for recorded errors/unsupported only. formats_recover owns comparison harness/registry and tests-first implementation. Exact constraints are in questions.md and its lane record. Value-based workloads retain unchanged thresholds, no rerecording.
+PARTIAL READY / REMAINING ACCEPTANCE PARKED #20: approved error category implemented in PR42 at8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4, independently APPROVED. Four value-recording workloads remain blocked under unchanged value rules; exact question/options/recommendation in questions.md and issuecomment6301325664. Do not count #20 delivered or close it. Value comparisons/recordings/thresholds unchanged.
 ACTIVE #6: Owner2026-10-20 approves Wanted5 under the same category as #20. eventhouse_recover owns child-field implementation, coordinating with formats_recover for the shared harness category. Refreshed signed/pushed branch lane/W9-05 headbc4b903.
 Parked #14: waiting only for W9-01 source interface on main; do not inspect Lead A branches/issues. Decimal0<=scale<=precision refusal was ALREADY approved in issuecomment6072817299, no further decision needed. Current pushed journal lane/W9-13 head58966e0. Updated clarification: issuecomment6299575080; no new decimal decision is pending.
 
-Exact questions/options/recommendations remain in questions.md. #20/#6 are now active and #14 remains dependency-blocked. All three remain open; no product PR/merge yet.
+Exact questions/options/recommendations remain in questions.md. #6 is active; #20 has a ready category PR with remaining value acceptance parked; #14 remains dependency-blocked. All three remain open; no product PR/merge yet.
 
 ## Next actions
 
@@ -68,3 +68,13 @@ Merge order now: PR40 first (Lead A also depends on it); then PR29/30/33 (PR32 a
 Credential rule REPLACED:401/403/failed push is a hard stop only if persistent. Retry git ls-remote origin plus one gh api call at5,10,20minutes, doing local work between attempts; stop only if all three fail. Never print tokens or modify authentication settings. Use fresh command environments for polling.
 
 Current counts after unpark:9total,1merged11.1%,7active77.8%,1dependency-blocked11.1%,8unmerged88.9%. Continue full user count updates every five minutes plus merge/blocker changes. report.md is an interim historical checkpoint and will be rewritten at final completion.
+
+## Parallel work checkpoint — 2026-10-20 20:58 UTC
+
+PR42 ready, signed/pushed8f5dfb341d15068f6b2e646b1d3915ea41f9cfe4; independent frz_review APPROVED exacthead. Targeted acceptance11red; stronger base-behavior3red; review identity2red and forged-pass1red; final107green plus21Python controls. Static checks pass. Worktree/workspace/shape-frz-01 clean. Artifact attached. No merge/Nightly/closure; merge order remains40→29/30/33→34/31→42→6→14. #20's four remaining value workloads are honestly parked, not passed.
+
+#6 eventhouse_recover: currentmain baseline14red eachmode; initial24targetedgreen, finishing schema/capsule/1GB heavy and changed-module boundaries. Source changes uncommitted, no full run. #14 journal58966e0 pushed; PR35 stillOPEN.
+
+PR40 last snapshot21success/9running/1structural skip/no failures; exact3f62547 unchanged and APPROVED. Iceberg PR31 current8c9fa927 Windows3.14 fullcorejob118837250058 SUCCESS; Windows3.11 stillrunning. Existing be2 fix supersedes old create_table failures; do not edit source speculatively. Main35 Documentation/Security complete success; CI last23success/4running/no failures.
+
+Issue counts:1/9merged11.1%,6/9active66.7%,2/9blocked-or-parked22.2%,8/9unmerged88.9%. The ready #20 category PR is partial implementation, not full delivery. Continue user count updates every five minutes plus merge/blocker changes.
