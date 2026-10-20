@@ -4,27 +4,29 @@ Updated 2026-10-20 after PR40 merged and all own open lanes refreshed. Work cont
 
 ## Progress
 
-Nine assigned issues:1merged11.1%,7ready/reviewed77.8%,1dependency-blocked11.1%;8unmerged88.9%. Eight ready implementations including the merged issue88.9%; PR43 compatibility repair is signed, pushed and independently approved, with fresh CI pending. Issue20 closure additionally requires qualifying post-merge main Nightly. Supporting PR40 is outside the nine-issue denominator. Give full count updates every five minutes plus merge/blocker milestones. Use actual UTC clock for update cadence.
+Nine assigned issues: 2 merged (22.2%), 5 ready/reviewed (55.6%), 1 active integration fix (11.1%), 1 dependency-blocked (11.1%). Seven unmerged (77.8%). PR43's refreshed catalog recursion must forward max_depth; independent review caught this integration regression and author is adding targeted red/green. Supporting PR40 is outside the denominator. Give full counts every five minutes and blocker/merge milestones.
 
-Current main: `53d3d0c1a740fcca0665c216c3ebdabaaac95e49` from PR40. Post-merge Security39504029453 is SUCCESS; Documentation39504029094 is SUCCESS; CI39504029294 remains pending, with no observed failures and no complete main-green claim. metadata_watch monitors. Prior main35addfc4 had all workflows green, recorded in W9-08.md.
+Current main: `5c6d46ff1703db9fd2307bc4ebd4fb087e9af733`, PR30 merged2026-10-20T23:47:06Z. All6 source-head workflows SUCCESS on cad8cfd: CI39504103202, Documentation39504103156, Security39504103173, DCO39504103258, Container39504103180, action-selftest39504103224. Issue12 closed through PR. New-main CI39517243088, Documentation39517243016 and Security39517243183 initialize/run; no green claim yet. Prior main53 Documentation39504029094 and Security39504029453 succeeded, but CI39504029294 automatically CANCELLED when main moved with one job left: never call this a full pass. Earlier main35addfc4 all workflows green (W9-08 record). metadata_watch monitors current main.
 
 ## Assigned lanes
 
 | Issue | Branch / exact pushed head | PR | Stage |
 |---|---|---|---|
 | #9 W9-08 | lane/W9-08-finish / 91ef6200266bf962246d1553356b26a442be2303 | https://github.com/sqllocks/shape/pull/32 | MERGED35addfc4c310b85a62cbe7f315e1d50fb8e426f8; all source-head and merged-head workflows green |
-| #11 W9-10 | lane/W9-10-finish / 00d648ce65c9f58ae003168f38a1a8dd46db78aa | https://github.com/sqllocks/shape/pull/29 | Ready; main53 contained; exact independent APPROVAL eventhouse; fresh CI pending |
-| #12 W9-11 | lane/W9-11-finish / cad8cfd96a18453cb426de5b1d22e1cff9f9147a | https://github.com/sqllocks/shape/pull/30 | Ready; main53 contained; exact independent APPROVAL dbt; fresh CI pending |
-| #13 W9-12 | lane/W9-12-finish / 1535427ec055eb5e197c91a86e10df17347a3be3 | https://github.com/sqllocks/shape/pull/33 | Ready; main53 contained; exact independent APPROVAL eventhouse; fresh CI pending |
-| #10 W9-09 | lane/W9-09 / 0178fa0c93ba0bc9133a7a6e63067a97f9add115 | https://github.com/sqllocks/shape/pull/34 | Ready; main53 contained; exact independent APPROVAL metadata; fresh CI pending |
-| #17 W9-16 | lane/W9-16-finish / 81cff73ea799039a70b5c584ea7cbfd1e3ec1749 | https://github.com/sqllocks/shape/pull/31 | Ready; main53 contained; exact independent APPROVAL metadata; fresh CI pending |
-| #6 W9-05 | lane/W9-05 / 5ae6460db5f2ce0ee06070434104b71745a63523 | https://github.com/sqllocks/shape/pull/43 | Ready; actual Windows3.14 compatibility regression repaired; main53 contained; independent frz_resume_review APPROVED exact head; freshCI pending; depends42 |
-| #20 FRZ-01 | lane/FRZ-01-finish / 0b95d31a7f70fcaa2c399b1ff121420b66eb0113 | https://github.com/sqllocks/shape/pull/42 | Complete3-part fix independently APPROVED exact head; all4value acceptance green; freshCI/merge/mainNightly pending; no closure |
+| #11 W9-10 | lane/W9-10-finish / fd5211c42f741ff2ed284ec767c2c36d24a783e0 | https://github.com/sqllocks/shape/pull/29 | Ready; main5c6d46 contained; exact independent APPROVAL eventhouse; fresh CI pending |
+| #12 W9-11 | lane/W9-11-finish / cad8cfd96a18453cb426de5b1d22e1cff9f9147a | https://github.com/sqllocks/shape/pull/30 | MERGED5c6d46ff1703db9fd2307bc4ebd4fb087e9af733; all6 source workflows green; newmain gate pending |
+| #13 W9-12 | lane/W9-12-finish / 190c7631739dfbafff64c2ed34673c94bc1b1b20 | https://github.com/sqllocks/shape/pull/33 | Ready; main5c6d46 contained; exact independent APPROVAL eventhouse; fresh CI pending |
+| #10 W9-09 | lane/W9-09 / 8a7d047b7c48038b08b858b8e3505cc827b13aff | https://github.com/sqllocks/shape/pull/34 | Ready; main5c6d46 contained; exact independent APPROVAL metadata; fresh CI pending |
+| #17 W9-16 | lane/W9-16-finish / edf678977bb10ede4f26e0f340eb70499e8a8e82 | https://github.com/sqllocks/shape/pull/31 | Ready; main5c6d46 contained; exact independent APPROVAL metadata; fresh CI pending |
+| #6 W9-05 | lane/W9-05 / 094d9cf6493a912e2040da3059f5059a3d882e9f | https://github.com/sqllocks/shape/pull/43 | ACTIVE INTEGRATION FIX; contains main5c6d46, but catalog recursion omits max_depth; review held pending targeted fix; depends42 |
+| #20 FRZ-01 | lane/FRZ-01-finish / 4eb7f38f2b20875d6854e5983a732d7c06d6fbe9 | https://github.com/sqllocks/shape/pull/42 | Complete3-part fix independently APPROVED exact head; all4value acceptance green; freshCI/merge/mainNightly pending; no closure |
 | #14 W9-13 | lane/W9-13 / 58966e09218ef3a8c2cdb96ad22ccbcf6fbd6033 | none | Decision journal only; source-interface dependency blocked until Lead A35 merges |
 
 Worktrees: `/workspace/shape-w9-08`, `-09`, `-10`, `-11`, `-12`, `-16`, `-05`; `/workspace/shape-frz-01` for42. Current authors/watchers: dbt_watch29; eventhouse_watch30/43; root33; formats_watch34/42. Restore a31 author in the free slot when main next moves; metadata_watch independently reviews31/34. All tracked trees clean except root33's old owned `docs/plans/lane_status/W9-12-commands.md` unstaged changes; preserve those, do not commit old raw commands. dbt has known empty untracked `not-json.tmp`; leave it.
 
-All seven refreshed lanes contain main53 and independent approvals are bound to the exact heads above. Refreshes had only additive changelog conflicts (33/34/42); all entries preserved, no product-code conflicts, so no local reruns. PR43 subsequently required the targeted compatibility repair recorded below; its fresh reviewed head is now queued for CI. Canceled older-head runs are NOT passes. Hosted runner queueing is currently visible; don't claim a fixed completion time.
+All six remaining open implementations refreshed from main5c6d46 and signed/pushed. Independent approvals: eventhouse_watch29/33, metadata_watch31/34, frz_resume_review42. PR43 automatic source merge introduced catalog recursion max_depth omission; reviewer withheld approval and author is fixing with targeted red/green. Other refreshes had documentation/requirements/changelog conflicts only; all additions preserved and no local reruns. Old lower-priority31/34 canceled runs are superseded by newly triggered exact-head CI/Wheels. Canceled old42 Documentation39509002209 and43 Container39514264890/action-selftest39514264909/Documentation39514265020 to free obsolete queue work; never passes. Current exact-head gates are required.
+
+Current authors/watchers: dbt_watch29; eventhouse_watch43 and independent29/33; root33; formats_watch34/42; iceberg_watch31; metadata_watch currentmain and independent31/34; frz_resume_review independent42/43. Availability through00:30UTC, renew as needed.
 
 ## Shared blocker resolved
 
@@ -32,7 +34,7 @@ PR40 https://github.com/sqllocks/shape/pull/40 merged as main53d3d0c after indep
 
 ## Next merge actions
 
-1. First group29/30/33: merge whichever is fully green, independently approved and current first; do not hold a green group member waiting for another. PR32 already merged.
+1. First group29/33 (30 now merged): merge whichever is fully green, independently approved and current first; do not hold a green group member waiting for another. PR32 and PR30 already merged.
 2. Then34/31; then42/43 (43 depends42); then14 after35/main source interface.
 3. Every merge requires nonempty complete applicable exact-head checks, ALL triggered workflows successful, current main contained, independent approval. Use PR merge API with exact SHA, merge commit and DCO. No direct main push.
 4. After each main move, refresh other own lanes, push, rebind reviews and let CI run. Local targeted tests only for actual product-code conflicts. Preserve additive changelog/requirements entries. No local full pytest/makecheck.
@@ -72,3 +74,7 @@ Windows3.14 CI job118909326600/run39504152982 failed on exact66ace096 (https://g
 ## PR43 compatibility repair completed 2026-10-20 23:19 UTC
 
 Signed/pushed5ae6460db5f2ce0ee06070434104b71745a63523, independently APPROVED exact head by frz_resume_review. Red16failed/92passed existing targeted nested generation/diff/CLI; green170targeted eachkernel,183changed learn/fit+nested consumers,24scalar cases and2snapshot/merge lifecycle cases. Ruff/format,configuredmypy705,wording/diff clean. Fixedwidth-only bijective internal hex state preserves actual count_distinct and exact/HLL lifecycle; public whitelist drops all surrogate values. Extension storage/null handling and transformed-schema resume/merge covered. Legacy parent length names restored, child distribution paths retained. Missing safe extrema discard incomplete length model/use existing public1–3 defaults; no private histogram reconstruction. Existing assertions,privacy,heavy bounds,gates unchanged. Prior failed66ace CI is not a pass; fresh exact5ae CI required plus42 dependency/currentmain. Counts1merged7ready1dependency-blocked;8of9unmerged88.9%.
+
+## Current integration repair after PR30 merge
+
+Independent frz_resume_review found that incoming reference/profile.py catalog profile_tables recursion calls _profile without forwarding PR43 max_depth. Automatic merge success is insufficient; author eventhouse_watch is adding fake catalog max_depth0/1 targeted red/green and fix. Exact094d9cf is NOT APPROVED. No full local suite. Rebind review only after signed/pushed repair and targeted green. Counts2merged5ready1activefix1dependency-blocked;7of9unmerged77.8%.
