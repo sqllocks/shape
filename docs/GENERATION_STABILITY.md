@@ -393,6 +393,6 @@ python scripts/golden_bytes.py --update   # rewrite the corpus
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    394 files and 24 refusals match the golden byte corpus
-    wrote 394 file digests and 24 refusals to tests/generation/golden_bytes/hashes.json
+    390 files and 28 named refusals match the golden byte corpus
+    wrote 390 file digests to tests/generation/golden_bytes/hashes.json
     ```
