@@ -16,15 +16,15 @@ Wanted5 explicitly asks to report nested baseline inputs as unsupported rather t
 
 Options: defer Wanted5 and retain strict exception matching; or authorize explicit unsupported-baseline classification together with the #20 comparison-contract decision. Recommendation: explicit authorized classification, preserving recordings and numeric thresholds. Restoring obsolete nested TypeError failures would regress merged functionality. The lane's Owner action is explicit; no live execution is claimed.
 
-Issue comment: https://github.com/sqllocks/shape/issues/6#issuecomment-6252336978
+Issue comment: https://github.com/sqllocks/shape/issues/6#issuecomment-6299574643
 
 ## #14 W9-13: merged source dependency
 
-The issue explicitly depends on W9-01 and requires reusing its source catalog/sampling model. Latest verified main d0e64d5 still has only database-plugin sink modules. No Lead A branch or issue was inspected or modified. The preserved own lane/W9-13 journal1249af9 contains no implementation.
+The issue explicitly depends on W9-01 and requires reusing its source catalog/sampling model. Latest verified main 35addfc4 still has only database-plugin sink modules. No Lead A branch or issue was inspected or modified. The preserved own lane/W9-13 journal1249af9 contains no implementation.
 
 Options: wait for the dependency to merge and reuse its interface; or authorize an explicit scope/interface change. Recommendation: wait for the merged interface. This run does not design a parallel source model.
 
-Issue comment: https://github.com/sqllocks/shape/issues/14#issuecomment-6252276474
+Issue comment: https://github.com/sqllocks/shape/issues/14#issuecomment-6299575080
 
 ## #14 W9-13: decimal boundary clarification resolved
 

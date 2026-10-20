@@ -28,8 +28,8 @@ PR34 old7a head had an unchanged macOS cancellation-test timing failure; new0b h
 Throughput decision-log row is committed on scratch cf68ff1 and included in dbt PR29 e1ae578 for main. Premium process05/08 edits are owned by Premium Build A; do not touch that repo or another session's PRs. Semantic/dbt explicit Owner-actions headings were added during refresh. Pending service validation is already listed in each lane record; no live success claimed. Semantic fixture/measure/role expected-results decision remains Owner work.
 
 Parked #20: comparison-contract decision, authenticated artifacts retrieved and exact failures/root cause in FRZ-01-evidence.md. Do not re-record, restore obsolete errors/labels, or change pass rules. Latest issuecomment6252771902.
-Parked #6: Wanted5 unsupported-baseline classification conflicts with frozen comparison policy; Owner decision required. Existing implementation/test-first branch3de70e3.
-Parked #14: waiting only for W9-01 source interface on main; do not inspect Lead A branches/issues. Decimal0<=scale<=precision refusal was ALREADY approved in issuecomment6072817299, no further decision needed. Existing journal branch1249af9.
+Parked #6: Wanted5 unsupported-baseline classification conflicts with frozen comparison policy; Owner decision required. Existing implementation/test-first branch3de70e3. Updated clarification: issuecomment6299574643; artifact access is resolved.
+Parked #14: waiting only for W9-01 source interface on main; do not inspect Lead A branches/issues. Decimal0<=scale<=precision refusal was ALREADY approved in issuecomment6072817299, no further decision needed. Existing journal branch1249af9. Updated clarification: issuecomment6299575080; no new decimal decision is pending.
 
 Exact questions/options/recommendations remain in questions.md. All three issues remain open; no product PR/merge for them.
 
