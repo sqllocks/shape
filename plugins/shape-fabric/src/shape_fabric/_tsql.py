@@ -21,6 +21,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.types as pat  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.generation.write_constraints import ConstraintDDL
 
 from ._auth import SCOPE_SQL, token_for
 from .errors import AuthError, optional_plugin
@@ -181,6 +182,7 @@ def create_table_sql(
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
     options: str | None = None,
+    constraint_ddl: ConstraintDDL | None = None,
 ) -> str:
     """DDL for ``schema``. Key columns are ``NOT NULL``; a Warehouse key is added by a
     separate ``ALTER TABLE ... NONCLUSTERED ... NOT ENFORCED`` after ``CREATE TABLE``.
@@ -202,11 +204,20 @@ def create_table_sql(
         if identity is not None:
             sql_type = f"BIGINT IDENTITY({identity[0]}, {identity[1]})"
             nullable = False
-        lines.append(f"    {ident(field.name)} {sql_type} {'NULL' if nullable else 'NOT NULL'}")
+        default = (
+            f" DEFAULT {constraint_ddl.defaults[field.name]}"
+            if constraint_ddl and field.name in constraint_ddl.defaults
+            else ""
+        )
+        lines.append(
+            f"    {ident(field.name)} {sql_type}{default} {'NULL' if nullable else 'NOT NULL'}"
+        )
     if key and not warehouse:
         cols = ", ".join(ident(c) for c in key)
         name = ident(_key_name(table))
         lines.append(f"    CONSTRAINT {name} PRIMARY KEY ({cols})")
+    if constraint_ddl:
+        lines.extend("    " + clause for clause in constraint_ddl.definitions)
     body = ",\n".join(lines)
     # every name went through ident(); there are no values in this statement
     tail = f"\nWITH ({options})" if options else ""

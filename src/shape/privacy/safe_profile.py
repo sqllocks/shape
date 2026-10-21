@@ -505,7 +505,9 @@ class SafeTableProfile:
             name=str(table["name"]),
             row_count=row_count,
             columns={
-                cname: SafeColumnProfile.from_column(col, cfg, row_count)
+                cname: SafeColumnProfile.from_column(
+                    col, cfg, int(table.get("sampled_rows", row_count) or 0)
+                )
                 for cname, col in table["columns"].items()
             },
             primary_key=list(table.get("primary_key") or []),
@@ -700,7 +702,7 @@ def build_redaction_manifest(
         safe_table = safe.tables.get(tname)
         if safe_table is None:
             continue
-        row_count = int(table.get("row_count") or 0)
+        row_count = int(table.get("sampled_rows", table.get("row_count")) or 0)
         cols: dict[str, Any] = {}
         for cname, col in table["columns"].items():
             safe_col = safe_table.columns.get(cname)

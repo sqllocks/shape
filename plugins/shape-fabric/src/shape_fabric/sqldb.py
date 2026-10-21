@@ -52,6 +52,7 @@ microsoft.com``) is recognised and gets Warehouse types; for bulk loading it use
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -60,8 +61,15 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.generation.write_constraints import (
+    _PREPARED_CONSTRAINTS,
+    ConstraintDDL,
+    _PreparedTransaction,
+    compile_constraints,
+)
 
 from . import _tsql
+from ._constraint_catalog import verify_constraints
 from .errors import ConstraintError, WriteError, WriteResult
 
 WRITE_MODES = ("create", "append", "truncate", "replace")
@@ -70,6 +78,7 @@ IDENTITY_MODES = ("keep", "server")
 CONSTRAINT_MODES = ("keep", "disable")
 DEFAULT_BATCH_SIZE = 5000
 DEFAULT_SCHEMA = "dbo"
+log = logging.getLogger(__name__)
 
 
 def check_mode(mode: str) -> str:
@@ -235,6 +244,183 @@ def _peek(
     return next(it, None), it
 
 
+def constraint_plan(
+    schema_name: str,
+    table: str,
+    schema: pa.Schema,
+    warehouse: bool,
+    declarations: Mapping[str, Any],
+) -> ConstraintDDL:
+    try:
+        return compile_constraints(
+            declarations,
+            columns=schema.names,
+            table=table,
+            dialect="tsql-fabric-warehouse" if warehouse else "tsql",
+            schema_name=schema_name,
+            table_prefix=declarations.get("table_prefix") or "",
+        )
+    except ValueError as exc:
+        raise ShapeError(str(exc)) from None
+
+
+def prepare_constraint_tables(
+    db: SqlConnection, tables: Mapping[str, Mapping[str, Any]]
+) -> _PreparedTransaction | None:
+    """Validate the entire load before creating any table, then add all foreign keys."""
+    plans: list[tuple[str, str, str, pa.Schema, Mapping[str, Any], ConstraintDDL]] = []
+    for table, options in tables.items():
+        schema = options.get("schema")
+        if not isinstance(schema, pa.Schema):
+            raise ShapeError(f"table {table!r}: constraint preparation needs an Arrow schema")
+        schema = _tsql.normalize_schema(schema)
+        sname = options.get("schema_name") or DEFAULT_SCHEMA
+        plan = plan_write(
+            table,
+            mode=options.get("write_mode", "create"),
+            identity=options.get("identity", "keep"),
+            constraints=options.get("constraints", "keep"),
+            columns=options.get("columns"),
+            primary_key=options.get("primary_key") or (),
+            identity_references=options.get("identity_references") or (),
+            warehouse=db.warehouse,
+        )
+        compiled = constraint_plan(sname, table, schema, db.warehouse, options)
+        _tsql.create_table_sql(
+            sname,
+            table,
+            schema,
+            warehouse=db.warehouse,
+            columns=options.get("columns"),
+            primary_key=options.get("primary_key") or (),
+            constraint_ddl=compiled,
+        )
+        plans.append((table, sname, plan.mode, schema, options, compiled))
+    try:
+        rerun_mode = plans[0][2] if plans else None
+        if (
+            plans
+            and not db.warehouse
+            and rerun_mode in {"truncate", "replace"}
+            and all(
+                mode == rerun_mode and db.table_exists(sname, table)
+                for table, sname, mode, _, _, _ in plans
+            )
+        ):
+            owned = {(sname, table) for table, sname, _, _, _, _ in plans}
+            references = []
+            for table, sname, _, schema, options, compiled in plans:
+                if rerun_mode == "truncate":
+                    verify_constraints(db, sname, table, {**options, "schema": schema}, compiled)
+                references.extend(
+                    db.execute(
+                        "SELECT fk.name AS coordinated_constraint_name, "
+                        "OBJECT_SCHEMA_NAME(fk.parent_object_id), "
+                        "OBJECT_NAME(fk.parent_object_id) FROM sys.foreign_keys fk "
+                        "WHERE fk.referenced_object_id = OBJECT_ID(?)",
+                        _tsql.qualified(sname, table),
+                    ).fetchall()
+                )
+            for name, child_schema, child in references:
+                if (child_schema, child) not in owned:
+                    raise ShapeError(
+                        f"cannot {rerun_mode}: external foreign key {name!r} must be preserved"
+                    )
+            if references:
+                name = references[0][0]
+                if any(
+                    options.get("commit_rows") or options.get("constraints") == "disable"
+                    for _, _, _, _, options, _ in plans
+                ):
+                    raise ShapeError(
+                        f"foreign key {name!r}: coordinated truncate requires default "
+                        "transaction granularity"
+                    )
+                if getattr(db.get(), "autocommit", False):
+                    raise ShapeError(
+                        f"foreign key {name!r}: coordinated truncate requires a transaction"
+                    )
+                for table, sname, _, _, _, _ in reversed(plans):
+                    db.execute(
+                        ("DROP TABLE " if rerun_mode == "replace" else "DELETE FROM ")
+                        + _tsql.qualified(sname, table)
+                    )
+                if rerun_mode == "replace":
+                    for table, sname, _, schema, options, compiled in plans:
+                        db.ddl(
+                            _tsql.create_table_sql(
+                                sname,
+                                table,
+                                schema,
+                                warehouse=False,
+                                columns=options.get("columns"),
+                                primary_key=options.get("primary_key") or (),
+                                constraint_ddl=compiled,
+                            )
+                        )
+                        for clause in compiled.after_create:
+                            db.ddl(f"ALTER TABLE {_tsql.qualified(sname, table)} ADD {clause}")
+                    for table, sname, _, _, _, compiled in plans:
+                        for clause in compiled.foreign_keys:
+                            db.ddl(f"ALTER TABLE {_tsql.qualified(sname, table)} ADD {clause}")
+                return _PreparedTransaction(
+                    db.get(),
+                    owns_connection=db._injected is None,
+                    error_factory=lambda exc: WriteError(
+                        f"committing constrained dataset failed: {_tsql.redact(str(exc))}",
+                        rows_committed=0,
+                    ),
+                )
+        for table, sname, mode, schema, options, compiled in plans:
+            if not db.table_exists(sname, table):
+                continue
+            if mode == "create":
+                raise ShapeError(f"table {sname}.{table} already exists")
+            if mode != "replace":
+                verify_constraints(db, sname, table, {**options, "schema": schema}, compiled)
+            if not db.warehouse and mode in {"truncate", "replace"}:
+                incoming = db.execute(
+                    "SELECT fk.name AS coordinated_constraint_name, "
+                    "OBJECT_SCHEMA_NAME(fk.parent_object_id), "
+                    "OBJECT_NAME(fk.parent_object_id) FROM sys.foreign_keys fk "
+                    "WHERE fk.referenced_object_id = OBJECT_ID(?)",
+                    _tsql.qualified(sname, table),
+                ).fetchone()
+                if incoming is not None:
+                    raise ShapeError(
+                        f"cannot {mode} table {table!r}: foreign key {incoming[0]!r} "
+                        "must be preserved before any target mutation"
+                    )
+        foreign: list[tuple[str, str, ConstraintDDL]] = []
+        for table, sname, mode, schema, options, compiled in plans:
+            exists = db.table_exists(sname, table)
+            prepare_table(
+                db,
+                sname,
+                table,
+                mode,
+                schema,
+                columns=options.get("columns"),
+                primary_key=options.get("primary_key") or (),
+                constraint_ddl=compiled,
+                defer_foreign_keys=True,
+                declarations={**options, "schema": schema},
+            )
+            if not exists or mode == "replace":
+                foreign.append((sname, table, compiled))
+        for sname, table, compiled in foreign:
+            for clause in compiled.foreign_keys:
+                db.ddl(f"ALTER TABLE {_tsql.qualified(sname, table)} ADD {clause}")
+        db.commit()
+        return None
+    except ShapeError:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise WriteError(f"preparing constraints failed: {_tsql.redact(str(exc))}") from None
+
+
 def prepare_table(
     db: SqlConnection,
     schema_name: str,
@@ -245,6 +431,10 @@ def prepare_table(
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
     options: str | None = None,
+    constraint_ddl: ConstraintDDL | None = None,
+    prepared_constraints: Any = None,
+    defer_foreign_keys: bool = False,
+    declarations: Mapping[str, Any] | None = None,
 ) -> bool:
     """Make the target ready for ``mode`` (see the module docstring); ``schema`` is normalized.
 
@@ -252,8 +442,29 @@ def prepare_table(
     rows, and a rollback brings the old rows back (#429). A table that did not exist is created
     and committed on its own. Returns whether this call committed a new table, which
     :func:`undo` drops again after a failure."""
-    db.ensure_schema(schema_name)
     exists = db.table_exists(schema_name, table)
+    if prepared_constraints is _PREPARED_CONSTRAINTS:
+        if not exists:
+            raise ShapeError(f"prepared table {table!r} is missing before loading")
+        return False
+    db.ensure_schema(schema_name)
+    if (
+        exists
+        and mode != "replace"
+        and constraint_ddl
+        and (
+            (defer_foreign_keys and primary_key)
+            or any(
+                (
+                    constraint_ddl.definitions,
+                    constraint_ddl.foreign_keys,
+                    constraint_ddl.defaults,
+                    constraint_ddl.after_create,
+                )
+            )
+        )
+    ):
+        verify_constraints(db, schema_name, table, declarations or {}, constraint_ddl)
     if mode == "create" and exists:
         raise WriteError(
             f"table {schema_name}.{table} already exists; set write_mode to append, truncate "
@@ -282,8 +493,15 @@ def prepare_table(
             columns=columns,
             primary_key=primary_key,
             options=options,
+            constraint_ddl=constraint_ddl,
         )
     )
+    if constraint_ddl:
+        clauses = list(constraint_ddl.after_create)
+        if not defer_foreign_keys:
+            clauses.extend(constraint_ddl.foreign_keys)
+        for clause in clauses:
+            db.ddl(f"ALTER TABLE {_tsql.qualified(schema_name, table)} ADD {clause}")
     if exists:
         return False  # the drop and the new table commit with the rows, or roll back together
     db.commit()
@@ -402,9 +620,28 @@ class SqlDatabaseWriter:
         identity: str = "keep",
         constraints: str = "keep",
         identity_references: Sequence[Mapping[str, str]] = (),
+        foreign_keys: list[dict[str, Any]] | None = None,
+        unique: list[list[str]] | None = None,
+        checks: list[dict[str, Any]] | None = None,
+        defaults: Mapping[str, Any] | None = None,
+        prepared_constraints: Any = None,
+        _constraint_transaction: Any = None,
     ) -> int:
         """Write one table; return its row count. ``schema`` is needed only to create an
         empty table from no batches."""
+        if _constraint_transaction is not None:
+            if not isinstance(_constraint_transaction, _PreparedTransaction):
+                raise ShapeError("_constraint_transaction is internal coordinator state")
+            if (
+                commit_rows
+                or constraints == "disable"
+                or self.db.get() is not _constraint_transaction.connection
+            ):
+                raise ShapeError(
+                    "prepared transaction requires its shared connection and default commits"
+                )
+        if prepared_constraints is not None and prepared_constraints is not _PREPARED_CONSTRAINTS:
+            raise ShapeError("prepared_constraints is an internal preparation marker")
         if isinstance(batch_size, bool) or not isinstance(batch_size, int) or batch_size < 1:
             raise ShapeError("batch_size must be a positive integer")
         if commit_rows is not None and (
@@ -438,6 +675,29 @@ class SqlDatabaseWriter:
                 f"table {table!r} has only identity columns: identity=server has no column to "
                 "insert; use identity=keep"
             )
+        declarations = {
+            key: value
+            for key, value in (
+                ("foreign_keys", foreign_keys),
+                ("unique", unique),
+                ("checks", checks),
+                ("defaults", defaults),
+            )
+            if value is not None
+        }
+        compiled = constraint_plan(sname, table, use_schema, self.db.warehouse, declarations)
+        # Complete type and constraint validation runs before the lazy connection opens.
+        _tsql.create_table_sql(
+            sname,
+            table,
+            use_schema,
+            warehouse=self.db.warehouse,
+            columns=columns,
+            primary_key=primary_key,
+            constraint_ddl=compiled,
+        )
+        for note in compiled.notes:
+            log.warning("%s", note)
         created = False
         disabled = False
         db = self.db
@@ -451,6 +711,9 @@ class SqlDatabaseWriter:
                 use_schema,
                 columns=columns,
                 primary_key=primary_key,
+                constraint_ddl=compiled,
+                prepared_constraints=prepared_constraints,
+                declarations={**declarations, "schema": use_schema, "primary_key": primary_key},
             )
             # a replaced table is new, like one this call created: nothing to disable; a
             # truncate's TRUNCATE (or DELETE) commits with the rows, so NOCHECK does too (#429)
@@ -462,14 +725,19 @@ class SqlDatabaseWriter:
             rows = self._load(
                 sname, table, first, rest, plan, columns, batch_size, commit_rows, committed
             )
-            db.commit()
+            if _constraint_transaction is None:
+                db.commit()
         except Exception as exc:
             undo(db, sname, table, created and not committed[0])
             if disabled:
                 self._enable_again(sname, table)
             if isinstance(exc, ShapeError):
                 raise
-            raise WriteError(f"writing {sname}.{table} failed: {_tsql.redact(str(exc))}") from exc
+            kept = f"; {committed[0]} rows were committed before it failed" if committed[0] else ""
+            raise WriteError(
+                f"writing {sname}.{table} failed: {_tsql.redact(str(exc))}{kept}",
+                rows_committed=committed[0],
+            ) from exc
         if disabled:
             self._validate(sname, table)
         return rows

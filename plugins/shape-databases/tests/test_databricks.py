@@ -329,9 +329,9 @@ def test_type_map():
         (pa.timestamp("us", "UTC"), "TIMESTAMP"),
         (pa.timestamp("ns", "Asia/Tokyo"), "TIMESTAMP"),
         (pa.binary(), "BINARY"),
-        (pa.list_(pa.int32()), "STRING"),
-        (pa.struct([("a", pa.int32())]), "STRING"),
-        (pa.map_(pa.string(), pa.int32()), "STRING"),
+        (pa.list_(pa.int32()), "ARRAY<INT>"),
+        (pa.struct([("a", pa.int32())]), "STRUCT<`a`: INT>"),
+        (pa.map_(pa.string(), pa.int32()), "MAP<STRING, INT>"),
         (pa.dictionary(pa.int8(), pa.string()), "STRING"),
     ]
     for arrow, expected in cases:
@@ -364,7 +364,7 @@ def test_values_are_converted_for_their_placeholders(server):
             "nothing": pa.array([None], pa.string()),
         }
     )
-    write(server, [batch])
+    write(server, [batch], nested="json")
     (insert, params) = server.inserts()[0]
     assert "CAST(? AS TIMESTAMP_NTZ), CAST(? AS TIMESTAMP), CAST(? AS DATE), UNHEX(?)" in insert
     assert "CAST(? AS DECIMAL(20,0)), ?, ?, ?)" in insert

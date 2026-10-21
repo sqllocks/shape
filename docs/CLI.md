@@ -294,6 +294,32 @@ the policy.
   golden records; `shape resolve synth FILE -o OUT` plants seeded duplicates and writes the true
   clusters. See [RESOLVE.md](RESOLVE.md). Bad options or an unreadable file exit 2.
 
+## Cloud database profiling
+
+With the databases plugin installed, `shape profile` accepts
+`snowflake://USER@ACCOUNT/DATABASE/SCHEMA?warehouse=WH&table=T` and
+`databricks://HOST/sql/1.0/warehouses/ID?catalog=C&schema=S&table=T`.
+Omit `table` to profile a schema; `--tables A,B` selects tables and
+`--sample-rows N` bounds distributions (default 1000; zero reads catalogs only).
+Catalog population counts and declared keys accompany sampled statistics. Snowflake
+provenance records the actual warehouse. Credentials use source options and references,
+never URI passwords or tokens. See the [Snowflake](databases/snowflake.md) and
+[Databricks](databases/databricks.md) source guides for authentication, types and limits.
+
+## Generated SQL constraints
+
+`shape generate --sql-constraints keys|all|none` controls derived database and SQL-script
+declarations. Omitted means `keys`: primary keys, foreign keys and declared unique keys.
+`all` adds supported structured CHECK and literal DEFAULT clauses. `none` omits derived
+constraints, and `keep` is its compatibility alias. The existing SQL Server `disable`
+loading option remains available; `emit`, seed and scale retain their existing behavior.
+
+`--contract FILE` reads a JSON or YAML contract before opening destinations. With `all`,
+its bounds, accepted values and literal defaults join supported generation-schema checks.
+Raw SQL expressions and regex checks are not accepted as database CHECK expressions.
+`--dry-run` shows the resolved DDL without connecting. Unsupported declarations produce
+warnings and SQL-script notes. See [destination capabilities and safe reruns](SINKS.md#generated-sql-constraints).
+
 ## Cloud and Fabric options
 
 Three options reach cloud destinations and sources. Their help text, as `shape --help` prints it:
@@ -768,6 +794,24 @@ shape doctor
 
     Result: OK
     ```
+
+### PostgreSQL and MySQL profiling
+
+Install the database plugin and its driver extra. `shape profile` accepts
+`postgresql://user@host:5432/db?schema=public` (also `postgres://`) and
+`mysql://user@host:3306/db`. Without `table=T`, all tables in the schema are included;
+with it, the selected table is profiled. `--tables orders,customers` selects tables.
+`--sample-rows N` sets the bounded distribution sample per table (default 1000;
+0 means catalog only). Catalog counts, declared primary/foreign keys and nullability are
+kept; distributions describe the sample, with sampling recorded in the profile.
+PostgreSQL uses system sampling, MySQL a keyed hash spread. Catalog counts are estimates.
+Pass passwords through the driver environment variables, never a URI. Safe capture applies
+to sampled values. See the database plugin README for credentials, TLS and type mapping.
+
+```bash
+shape profile 'postgresql://shape@localhost/db?schema=public' --tables orders --sample-rows 1000 -o db.shape
+shape profile 'mysql://shape@localhost/db?table=orders' --sample-rows 0 -o catalog.shape
+```
 
 ### Message metadata (W9-08)
 

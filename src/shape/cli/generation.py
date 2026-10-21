@@ -74,6 +74,11 @@ def _run_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "-o", "--output", "--out", metavar="DIR", help="the output directory (needed to write)"
     )
+    parser.add_argument(
+        "--contract",
+        metavar="FILE",
+        help="JSON or YAML contract for write keys, checks and defaults",
+    )
     parser.add_argument("--dry-run", action="store_true", help="plan the run; generate nothing")
     parser.add_argument("--json", action="store_true", help="print the result or the plan as JSON")
     parser.add_argument(
@@ -286,6 +291,15 @@ def _sink_options(a: argparse.Namespace) -> dict[str, Any]:
     """The writer options the command line sets (only those given)."""
     fmt = a.format
     options: dict[str, Any] = {}
+    if fmt in ("sql", "delta"):
+        from shape.cli.to import constraint_contract
+
+        policy = getattr(a, "sql_constraints", None)
+        if policy is not None:
+            options["sql_constraints"] = policy
+        contract = constraint_contract(a)
+        if contract is not None:
+            options["contract"] = contract
     if fmt == "sql":
         options["sql_dialect"] = a.sql_dialect
         for key, value in (
@@ -392,6 +406,124 @@ def cmd_composite(a: argparse.Namespace) -> int:
     return _generate_schema(a, lambda: resolve(a.target).schema, {})
 
 
+def _constraint_preview(a: argparse.Namespace, schema: GenSchema, order: list[str]) -> list[str]:
+    """Show derived SQL constraint DDL without generating rows or opening a target."""
+    from shape.cli import to
+    from shape.generation.output import _options
+
+    choices: list[tuple[str, dict[str, dict[str, Any]]]] = []
+    targets = getattr(a, "to", None) or []
+    if targets:
+        from shape.io.targets import scheme_of, sink_names_by_scheme
+
+        dialects = {
+            "postgres": "postgres",
+            "mysql": "mysql",
+            "duckdb": "duckdb",
+            "sqlserver": "tsql",
+            "sql-database": "tsql",
+            "warehouse": "tsql-fabric-warehouse",
+            "snowflake": "snowflake",
+            "databricks": "databricks",
+        }
+        options = to.target_options(a, a.format, targets, offline=True)
+        registered = sink_names_by_scheme()
+        for target in targets:
+            name = registered.get(scheme_of(target) or "")
+            # A generic dry-run plan has never required an optional sink to be
+            # installed. Only registered backends can supply a dialect preview.
+            if name is not None and name in dialects:
+                choices.append(
+                    (
+                        dialects[name],
+                        {table: options.for_sink(name, schema, table) for table in order},
+                    )
+                )
+    elif a.format == "sql":
+        file_options = _sink_options(a)
+        choices.append(
+            (
+                a.sql_dialect,
+                {table: _options("sql", schema, table, file_options) for table in order},
+            )
+        )
+    result: list[str] = []
+    for dialect, table_options in choices:
+        result.extend(_render_constraint_preview(schema, order, dialect, table_options))
+    return result
+
+
+def _render_constraint_preview(
+    schema: GenSchema,
+    order: list[str],
+    dialect: str,
+    table_options: dict[str, dict[str, Any]],
+) -> list[str]:
+    from shape.generation.write_constraints import compile_constraints, identifier
+
+    result: list[str] = []
+    foreign: list[str] = []
+    for table in order:
+        derived = table_options[table]
+        schema_name = derived.get("schema_name")
+        prefix = derived.get("table_prefix") or ""
+        plan = compile_constraints(
+            derived,
+            columns=schema.tables[table].column_names,
+            table=table,
+            dialect=dialect,
+            schema_name=schema_name,
+            table_prefix=prefix,
+        )
+        if dialect == "duckdb":
+            from importlib import import_module
+
+            import pyarrow as pa  # type: ignore[import-untyped]
+
+            from shape.generation.engine import arrow_type
+
+            # This renderer belongs to the optional plugin, loaded at the same runtime
+            # boundary as its sink rather than as a typed dependency of core.
+            create_table_sql = import_module("shape_databases.duckdb_sink").create_table_sql
+
+            arrow_schema = pa.schema(
+                [
+                    (column.name, arrow_type(column))
+                    for column in schema.tables[table].columns.values()
+                ]
+            )
+            result.append(
+                create_table_sql(
+                    schema_name or "main",
+                    prefix + table,
+                    arrow_schema,
+                    columns=derived.get("columns"),
+                    primary_key=derived.get("primary_key") or [],
+                    nested=derived.get("nested", "native"),
+                    constraints=plan,
+                )
+                + ";"
+            )
+            continue
+        qualified = (identifier(schema_name, dialect) + ".") if schema_name else ""
+        qualified += identifier(prefix + table, dialect)
+        result.extend("-- NOTE: " + note for note in plan.notes)
+        result.extend(
+            f"ALTER TABLE {qualified} ADD {clause};"
+            for clause in (*plan.definitions, *plan.after_create)
+        )
+        for column, value in plan.defaults.items():
+            quoted = identifier(column, dialect)
+            clause = (
+                f"ADD DEFAULT {value} FOR {quoted}"
+                if dialect == "tsql"
+                else f"ALTER COLUMN {quoted} SET DEFAULT {value}"
+            )
+            result.append(f"ALTER TABLE {qualified} {clause};")
+        foreign.extend(f"ALTER TABLE {qualified} ADD {clause};" for clause in plan.foreign_keys)
+    return result + foreign
+
+
 def _generate_schema(
     a: argparse.Namespace, load: Callable[[], GenSchema], per_table: dict[str, int]
 ) -> int:
@@ -438,10 +570,17 @@ def _generate_schema(
     if a.dry_run:
         plan = engine.dry_run()
         run.set(rows=plan.total_rows, tables=len(plan.order))
+        constraints = _constraint_preview(a, schema, list(plan.order))
         if a.json:
-            _dump(plan.to_dict())
+            payload = plan.to_dict()
+            if constraints:
+                payload["constraint_ddl"] = constraints
+            _dump(payload)
         else:
             print(plan.render())
+            if constraints:
+                print("\nConstraint DDL (preview):")
+                print("\n".join(constraints))
         return 0 if plan.ok else 1
     return _generate(a, engine)
 

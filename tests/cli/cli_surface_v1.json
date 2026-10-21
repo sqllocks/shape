@@ -924,6 +924,10 @@
      "choices": null,
      "takes_value": true
     },
+    "--contract": {
+     "choices": null,
+     "takes_value": true
+    },
     "--delta-mode": {
      "choices": [
       "append",
@@ -1008,8 +1012,11 @@
     },
     "--sql-constraints": {
      "choices": [
+      "all",
       "disable",
-      "keep"
+      "keep",
+      "keys",
+      "none"
      ],
      "takes_value": true
     },
@@ -2508,8 +2515,11 @@
     },
     "--sql-constraints": {
      "choices": [
+      "all",
       "disable",
-      "keep"
+      "keep",
+      "keys",
+      "none"
      ],
      "takes_value": true
     },
@@ -3010,6 +3020,10 @@
      "choices": null,
      "takes_value": true
     },
+    "--contract": {
+     "choices": null,
+     "takes_value": true
+    },
     "--decisions": {
      "choices": null,
      "takes_value": true
@@ -3184,8 +3198,11 @@
     },
     "--sql-constraints": {
      "choices": [
+      "all",
       "disable",
-      "keep"
+      "keep",
+      "keys",
+      "none"
      ],
      "takes_value": true
     },
@@ -4696,6 +4713,10 @@
      ],
      "takes_value": true
     },
+    "--sample-rows": {
+     "choices": null,
+     "takes_value": true
+    },
     "--sample-seed": {
      "choices": null,
      "takes_value": true
@@ -4721,6 +4742,10 @@
      "takes_value": true
     },
     "--string-columns": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tables": {
      "choices": null,
      "takes_value": true
     },
@@ -6401,8 +6426,11 @@
     },
     "--sql-constraints": {
      "choices": [
+      "all",
       "disable",
-      "keep"
+      "keep",
+      "keys",
+      "none"
      ],
      "takes_value": true
     },
