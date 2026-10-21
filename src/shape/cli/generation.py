@@ -414,7 +414,7 @@ def _constraint_preview(a: argparse.Namespace, schema: GenSchema, order: list[st
     choices: list[tuple[str, dict[str, dict[str, Any]]]] = []
     targets = getattr(a, "to", None) or []
     if targets:
-        from shape.io.targets import sink_for_target
+        from shape.io.targets import scheme_of, sink_names_by_scheme
 
         dialects = {
             "postgres": "postgres",
@@ -427,9 +427,12 @@ def _constraint_preview(a: argparse.Namespace, schema: GenSchema, order: list[st
             "databricks": "databricks",
         }
         options = to.target_options(a, a.format, targets, offline=True)
+        registered = sink_names_by_scheme()
         for target in targets:
-            name, _ = sink_for_target(target)
-            if name in dialects:
+            name = registered.get(scheme_of(target) or "")
+            # A generic dry-run plan has never required an optional sink to be
+            # installed. Only registered backends can supply a dialect preview.
+            if name is not None and name in dialects:
                 choices.append(
                     (
                         dialects[name],
