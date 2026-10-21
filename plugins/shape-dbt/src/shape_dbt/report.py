@@ -151,6 +151,13 @@ def build_report(
         and not (changes and fail_on_drift)
         and (check is None or bool(check.get("passed", not violations)))
     )
+    from .semantic import impact
+
+    columns = [f"{f['model']}.{f['column']}" for f in failed if f.get("model") and f.get("column")]
+    for item in [*violations, *changes]:
+        column = item.get("column")
+        if column:
+            columns.append(str(column) if "." in str(column) or not table else f"{table}.{column}")
     meta = run_results.get("metadata") or {}
     return {
         "format": FORMAT,
@@ -171,6 +178,7 @@ def build_report(
             if drift is None
             else {"drifted": bool(changes), "changes": changes, "fail_on_drift": fail_on_drift},
         },
+        "impact": impact(manifest or {}, columns),
         "by_column": _by_column(failed, violations, changes, table),
         "summary": {
             "dbt_failed": len(failed),
@@ -255,4 +263,18 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         for column, parts in report["by_column"].items():
             seen = ", ".join(f"{k} ({len(v)})" for k, v in parts.items() if v)
             lines.append(f"- `{column}`: {seen}")
+    impact_columns = (report.get("impact") or {}).get("columns") or {}
+    if impact_columns:
+        lines += [
+            "",
+            "## Metric and exposure impact",
+            "",
+            "| column | metrics | exposures |",
+            "|---|---|---|",
+        ]
+        for column, affected in impact_columns.items():
+            lines.append(
+                f"| {_cell(column)} | {_cell(', '.join(affected['metrics']))} | "
+                f"{_cell(', '.join(affected['exposures']))} |"
+            )
     return "\n".join(lines) + "\n"
