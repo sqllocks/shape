@@ -26,7 +26,7 @@ Previous main53d3d0c from certificate PR40: Documentation39504029094 and Securit
 
 Worktrees: `/workspace/shape-w9-08`, `-09`, `-10`, `-11`, `-12`, `-16`, `-05`; `/workspace/shape-frz-01` for42. Root33 preserves old owned dirty `docs/plans/lane_status/W9-12-commands.md` unstaged; do not commit those old raw commands. dbt has known empty untracked `not-json.tmp`; leave it. Other tracked trees clean. All six open implementation heads contain current main5c6d46 and have exact independent approvals. No full local suite ran on refresh.
 
-Agents through00:30UTC (renew as necessary): dbt_watch author29; eventhouse_watch author43 and independent29/33; root author33; formats_watch author34/42; iceberg_watch author31; metadata_watch currentmain/dependency45 and independent31/34; frz_resume_review independent42/43 (completed turn, use followup_task to resume). Original prompt explicitly authorizes per-issue delegation and independent reviewers. No other-session branch/issue edits.
+Agents through01:30UTC (renew as necessary): dbt_watch author29; eventhouse_watch author43 and independent29/33; root author33; formats_watch author34/42; iceberg_watch author31 (completed lightweight watch; followup_task on main move/stage advance); metadata_watch currentmain/dependency45 and independent31/34; frz_resume_review independent42/43 (completed turn, use followup_task to resume). Original prompt explicitly authorizes per-issue delegation and independent reviewers. No other-session branch/issue edits.
 
 ## Next actions and scheduling
 
