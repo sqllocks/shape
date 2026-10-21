@@ -46,6 +46,20 @@ def test_checkpoint(tmp_path):
     contract.check_checkpoint(new_harness, directory=tmp_path)
 
 
+def test_azure_schema_registry_avro_roundtrip():
+    """Owner validation: Entra identity needs schema contributor on the named group."""
+    from shape_eventhubs.registry import azure_codec
+
+    schema = '{"type":"record","name":"ShapeLive","fields":[{"name":"id","type":"long"}]}'
+    codec = azure_codec(
+        need("EVENTHUBS_SCHEMA_REGISTRY_NAMESPACE"),
+        group=need("EVENTHUBS_SCHEMA_REGISTRY_GROUP"),
+        schema_text=schema,
+    )
+    encoded = codec.encode({"id": 1})
+    assert codec.decode(encoded["content"], encoded["content_type"]) == {"id": 1}
+
+
 def test_keyed_metadata_round_trip_live():
     h = new_harness()
     batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 3)

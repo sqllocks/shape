@@ -30,6 +30,9 @@ Issues = "https://github.com/sqllocks/shape/issues"
 Documentation = "https://github.com/sqllocks/shape/tree/main/plugins/shape-eventhubs"
 
 [project.optional-dependencies]
+avro = ["fastavro>=1.9"]
+protobuf = ["protobuf>=5"]
+schema-registry = ["azure-schemaregistry-avroencoder>=1.0,<2", "fastavro>=1.9"]
 # Microsoft Entra sign-in instead of a connection string.
 entra = ["azure-identity>=1.16.1"]
 

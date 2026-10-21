@@ -44,13 +44,13 @@ def subject_name(strategy: str, topic: str, record: str) -> str:
 
 def check_url(url: str) -> str:
     parts = urlsplit(url)
-    if parts.scheme not in ("http", "https") or not parts.netloc:
-        raise ShapeError(f"kafka.schema_registry_url {url!r} is not an http(s) URL")
     if parts.username or parts.password:
         raise ShapeError(
             "kafka.schema_registry_url must not carry credentials: give "
             "kafka.schema_registry_username and kafka.schema_registry_password=env://NAME"
         )
+    if parts.scheme not in ("http", "https") or not parts.netloc:
+        raise ShapeError("kafka.schema_registry_url is not an http(s) URL")
     return url.rstrip("/")
 
 
@@ -90,6 +90,23 @@ class RegistryClient:
             token = base64.b64encode(f"{username}:{password}".encode()).decode("ascii")
             self._headers["Authorization"] = f"Basic {token}"
         self._transport = transport or _urllib_transport
+
+    def schema(self, schema_id: int) -> str:
+        """Resolve an Avro writer schema by its wire-format id."""
+        status, raw = self._transport(
+            "GET", f"{self.url}/schemas/ids/{schema_id}", self._headers, None
+        )
+        if status >= 500 or status == 429:
+            raise ConnectionError(f"schema registry error {status}")
+        if status != 200:
+            raise ValueError(f"schema registry has no schema id {schema_id}")
+        try:
+            doc = json.loads(raw)
+            if doc.get("schemaType", "AVRO") != "AVRO":
+                raise ValueError("schema is not Avro")
+            return str(doc["schema"])
+        except (KeyError, TypeError) as exc:
+            raise ValueError("schema registry returned an invalid schema") from exc
 
     def register(self, subject: str, schema_text: str, schema_type: str) -> int:
         """Register ``schema_text`` under ``subject``; return its id. A registry that refuses

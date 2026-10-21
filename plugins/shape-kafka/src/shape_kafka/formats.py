@@ -33,7 +33,8 @@ timestamp with zone   timestamp-millis/-micros     int64 (microseconds,    strin
 
 A timestamp of unit second or millisecond is Avro ``-millis``; microsecond is ``-micros``;
 nanosecond is ``-micros`` with the nanoseconds cut off. A dictionary column is its value type.
-Lists, structs and maps are not mapped: such a table is refused (exit 2) naming the column.
+Avro and Protobuf also support nested structs, lists and maps; JSON Schema
+continues to refuse nested fields naming the column.
 A field name must be a valid identifier (letters, digits, underscore; not starting with a digit)
 in Avro and Protobuf, and the table name is the record or message name.
 """
@@ -537,6 +538,25 @@ _MAKERS = {"avro": make_avro, "protobuf": make_protobuf, "json-schema": make_jso
 
 
 def make_codec(fmt: str, table: str, schema: pa.Schema) -> TableCodec:
+    if fmt in ("avro", "protobuf") and any(
+        pa.types.is_struct(f.type) or pa.types.is_list(f.type) or pa.types.is_map(f.type)
+        for f in schema
+    ):
+        from shape.streaming.binary import BinaryCodec
+
+        text = event_schema(fmt, table, schema)
+        binary = BinaryCodec(fmt, text, message=f"shape.events.{table}")
+
+        def encode(batch: pa.RecordBatch) -> list[bytes | EncodeError]:
+            out: list[bytes | EncodeError] = []
+            for row in batch.to_pylist():
+                try:
+                    out.append(binary.encode(row))
+                except ValueError as exc:
+                    out.append(EncodeError(str(exc)))
+            return out
+
+        return TableCodec(table, fmt, [], fmt.upper(), text, f"shape.events.{table}", encode)
     try:
         maker = _MAKERS[fmt]
     except KeyError:
@@ -544,3 +564,87 @@ def make_codec(fmt: str, table: str, schema: pa.Schema) -> TableCodec:
             f"unknown event format {fmt!r}; choose from {', '.join(EVENT_FORMATS)}"
         ) from None
     return maker(table, schema)
+
+
+def event_schema(fmt: str, table: str, schema: pa.Schema) -> str:
+    """Derive a nested schema for registry writes, preserving field order."""
+    if fmt == "avro":
+
+        def avro(t: pa.DataType, name: str) -> Any:
+            if pa.types.is_struct(t):
+                return {
+                    "type": "record",
+                    "name": name,
+                    "fields": [avro_field(f, name + "_" + f.name) for f in t],
+                }
+            if pa.types.is_list(t) or pa.types.is_large_list(t):
+                item = avro(t.value_type, name + "_item")
+                if (
+                    t.value_field.nullable or pa.types.is_floating(t.value_type)
+                ) and not pa.types.is_null(t.value_type):
+                    item = ["null", item]
+                return {"type": "array", "items": item}
+            if pa.types.is_map(t):
+                if not pa.types.is_string(t.key_type):
+                    raise ShapeError(f"Avro map field {name} requires string keys")
+                value = avro(t.item_type, name + "_value")
+                if (
+                    t.item_field.nullable or pa.types.is_floating(t.item_type)
+                ) and not pa.types.is_null(t.item_type):
+                    value = ["null", value]
+                return {"type": "map", "values": value}
+
+            kind, extra = _kind(name, t)
+            return _avro_type(Col(name, kind, False, **extra))
+
+        def avro_field(f: pa.Field, name: str) -> dict[str, Any]:
+            t = avro(f.type, name)
+            return (
+                {"name": f.name, "type": ["null", t], "default": None}
+                if f.nullable or pa.types.is_floating(f.type)
+                else {"name": f.name, "type": t}
+            )
+
+        return json.dumps(
+            {
+                "type": "record",
+                "name": table,
+                "namespace": "shape.events",
+                "fields": [
+                    avro_field(f, table + "_" + f.name) for f in schema if f.name != "_shape_poison"
+                ],
+            }
+        )
+    declarations = []
+
+    def proto(t: pa.DataType, name: str) -> str:
+        if pa.types.is_struct(t):
+            message(name, list(t))
+            return name
+
+        kind, extra = _kind(name, t)
+        return _proto_kind(Col(name, kind, False, **extra))
+
+    def message(name: str, fields: Any) -> None:
+        # Reserve the root before child declarations: wire() advertises message index [0].
+        index = len(declarations)
+        declarations.append("")
+        lines = [f"message {name} {{"]
+        for i, f in enumerate(fields, 1):
+            t = f.type
+            if pa.types.is_list(t) or pa.types.is_large_list(t):
+                mapped = "repeated " + proto(t.value_type, name + "_" + f.name)
+            elif pa.types.is_map(t):
+                key = proto(t.key_type, name + "_key")
+                value = proto(t.item_type, name + "_" + f.name)
+                mapped = f"map<{key}, {value}>"
+            else:
+                mapped = proto(t, name + "_" + f.name)
+                if (f.nullable or pa.types.is_floating(t)) and not pa.types.is_struct(t):
+                    mapped = "optional " + mapped
+            lines.append(f"  {mapped} {f.name} = {i};")
+        lines.append("}")
+        declarations[index] = "\n".join(lines)
+
+    message(table, [f for f in schema if f.name != "_shape_poison"])
+    return 'syntax = "proto3";\npackage shape.events;\n' + "\n".join(declarations)
