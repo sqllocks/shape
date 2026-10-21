@@ -8830,8 +8830,15 @@
 <li><code>--log-json</code> records redact messages, <code>extra</code> fields and exceptions (#290); the Fabric UDF
   redacts the errors it returns (#299).</li>
 <li>The fidelity e-mail format pattern runs in linear time (#293).</li>
-<li>The kql scale sink percent-encodes its database name (#295); Spark job and <code>COPY INTO</code> checks
-  take whole values, and backticks in Spark column names are doubled (#300).</li>
+<li>
+<p>The kql scale sink percent-encodes its database name (#295); Spark job and <code>COPY INTO</code> checks
+  take whole values, and backticks in Spark column names are doubled (#300).</p>
+</li>
+<li>
+<p>W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+  catalog row counts and whole-database profiles through the KQL endpoint.
+  Emitter metadata is excluded from profiles; <code>dedupe=true</code> collapses retries.</p>
+</li>
 </ul>
 <h3 id="w9-08-broker-message-metadata">W9-08: broker message metadata<a class="headerlink" href="#w9-08-broker-message-metadata" title="Permanent link">&para;</a></h3>
 <ul>

@@ -3903,6 +3903,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#read-an-eventhouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read an Eventhouse
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6423,6 +6434,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#read-an-eventhouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Read an Eventhouse
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6843,6 +6865,28 @@ the Git workspace, Fabric's answers to <code>git/connection</code>, <code>git/st
 and <code>SHAPE_SQLSERVER_CLIENT_SECRET</code>; the matrix sets these from the Fabric variables for each
 test. No secret is placed in argv. <code>SHAPE_RECORD_DIR</code> optionally records scrubbed live tapes
 in the existing writer/command tests. Do not commit unreviewed live recordings.</p>
+<h3 id="read-an-eventhouse">Read an Eventhouse<a class="headerlink" href="#read-an-eventhouse" title="Permanent link">&para;</a></h3>
+<p>The Fabric plugin registers the <code>eventhouse</code> source. Read one table with
+<code>shape profile 'eventhouse://&lt;query host&gt;/&lt;database&gt;?table=T' -o table.shape</code>,
+or omit <code>table</code> to capture every table in one multi-table profile. The same URI
+works through the bridge profile command and as a source for <code>shape diff</code>.
+Sign-in uses the emitter's <code>token</code> option, <code>SHAPE_EVENTHOUSE_TOKEN</code>, or Entra
+(<code>sqllocks-shape-fabric[entra]</code>). Credentials belong in options or environment
+variables, never in the URI. <code>tls=false</code> supports local emulators.</p>
+<p>Python source options are <code>sample_rows</code> (default 1000; 0 reads all) and
+<code>batch_size</code> (default 65536, maximum 500000). Sampling uses KQL <code>sample N</code>;
+<code>source_sampling</code> records <code>sampled_rows</code>, <code>sample_method</code>, and <code>catalog_rows</code>
+from <code>.show table T details</code>. Profiles exclude emitter <code>_shape_table</code> and
+<code>_shape_seq</code> columns by default, so their delivery metadata does not cause drift.
+Add <code>dedupe=true</code> to collapse repeated emitter rows using
+<code>summarize take_any(*) by _shape_table, _shape_seq</code>; ordinary tables without
+both key columns are read unchanged.</p>
+<p>Schema comes from <code>.show table T schema as json</code>. KQL maps to Arrow as follows:
+<code>long</code> → int64, <code>int</code> → int32, <code>real</code> → float64, <code>decimal</code> → decimal256(57,28),
+<code>datetime</code> → timestamp(us, UTC), <code>timespan</code> → duration(ns), <code>bool</code> → boolean,
+and <code>string</code>/<code>guid</code> → string. <code>dynamic</code> becomes JSON text. Unknown types fail
+explicitly; nulls stay null. Decimal values exceeding the fixed precision or
+scale fail rather than round silently.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Fabric+writers&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2Fplugins%2Ffabric-writers%2F">Report a problem with this page</a></p>
 
 
