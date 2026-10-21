@@ -28,6 +28,12 @@ Status: available.
   documented microsecond normalization as scalar values.
 
 - Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.
+- W9-12: semantic model profiles retain table measures and read-only TOM roles. `semantic-model://`
+  accepts `as_role` for native DAX role-filtered reads, and plain profiles retain hidden columns.
+  `export-model --from-profile` preserves measures and roles; `known-answer MODEL.shape --measures
+  from-profile` computes supported aggregates and lists unsupported DAX under `skipped`.
+  Model diffs report `measure_change` and `role_change` with no numeric drift score.
+  See `docs/SEMANTIC_MODEL.md`.
 - Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.
 
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.

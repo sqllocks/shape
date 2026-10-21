@@ -6,19 +6,51 @@ generation and query functions read the documents their docstrings name.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable
+from functools import wraps
+from typing import TYPE_CHECKING, Any, ParamSpec, cast
 
 from shape.contracts.v1 import check as check
 from shape.contracts.v1 import diff as diff
 from shape.profile.reference import load as load
-from shape.profile.reference import profile as profile
+from shape.profile.reference import profile as _reference_profile
 from shape.profile.reference import save as save
 from shape.profile.types_report import types_report as types_report
 
 if TYPE_CHECKING:
     from shape.generation.fidelity import FidelityCertificate, ReconstructionPlan
     from shape.generation.timeline import ShapeTimeline
+    from shape.profile.reference import Profile
     from shape.query import ShapeView
+
+
+_ProfileArgs = ParamSpec("_ProfileArgs")
+
+
+def _with_source_metadata(
+    callback: Callable[_ProfileArgs, Profile],
+) -> Callable[_ProfileArgs, Profile]:
+    @wraps(callback)
+    def wrapped(*args: _ProfileArgs.args, **options: _ProfileArgs.kwargs) -> Profile:
+        result = callback(*args, **options)
+        source = args[0] if args else options.get("source")
+        if isinstance(source, str) and "://" in source:
+            from shape.plugins.host import default_host
+
+            host = default_host()
+            for record in host.records("shape.sources"):
+                provider = host.try_get(record.group, record.name)
+                if provider is not None and provider.can_open(source):
+                    enrich = getattr(provider, "profile_metadata", None)
+                    if callable(enrich):
+                        return cast("Profile", enrich(source, result))
+                    break
+        return result
+
+    return wrapped
+
+
+profile = _with_source_metadata(_reference_profile)
 
 
 def _is_profile(obj: Any) -> bool:

@@ -206,3 +206,13 @@ repeatable captures. Size-limited or failed queries must be retried with a
 smaller batch; the source does not use Kusto export or streaming reads.
 The source reserves `__shape_read_row` and `__shape_read_order` as paging helper
 names and refuses a table containing either name before requesting its rows.
+
+## Semantic model metadata and role reads
+
+See [Semantic model profiles](SEMANTIC_MODEL.md) for measures and read-only TOM roles.
+`semantic-model://` supports `as_role` for native role-filtered DAX reads and retains hidden-column
+metadata. `export-model --from-profile MODEL.shape` preserves model-owned measures and roles;
+`known-answer MODEL.shape --measures from-profile` computes supported aggregates and lists other
+expressions under `skipped`. Model-profile diffs report `measure_change` and `role_change`,
+excluded from numeric drift gates. The TOM connection is read-only and sempy requires its
+specified model permissions; Shape does not deploy roles to a live model.
