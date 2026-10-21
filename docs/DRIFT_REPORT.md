@@ -179,7 +179,7 @@ shape fabric publish-report orders-2026-03-01.shape orders-2026-03-06.shape orde
       Changes:   0
       dim_column:        23 rows
       dim_date:          6 rows
-      dim_kind:          36 rows
+      dim_kind:          38 rows
       dim_run:           2 rows
       fact_drift_change: 0 rows
       Output:    report
@@ -194,7 +194,7 @@ shape fabric publish-report orders-2026-03-01.shape orders-2026-03-06.shape orde
       Changes:   0
       dim_column:        23 rows
       dim_date:          1 rows
-      dim_kind:          36 rows
+      dim_kind:          38 rows
       dim_run:           2 rows
       fact_drift_change: 0 rows
       Output:    report
@@ -209,7 +209,7 @@ shape fabric publish-report orders-2026-03-01.shape orders-2026-03-06.shape orde
       Changes:   0
       dim_column:        23 rows
       dim_date:          6 rows
-      dim_kind:          36 rows
+      dim_kind:          38 rows
       dim_run:           2 rows
       fact_drift_change: 0 rows
       Output:    fabric-report
