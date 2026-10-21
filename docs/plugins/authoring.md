@@ -520,3 +520,10 @@ shape plugins doctor
       ok    shape.transforms:star [sqllocks-shape]
     all plugins load
     ```
+
+A source can optionally define `profile_metadata(uri, profile) -> profile` to attach declared
+metadata after a public `shape.profile` call for a single URI finishes. For example, the semantic-model source
+adds `hidden: true` for hidden columns. The hook must preserve the computed column statistics,
+profile name, provenance, sketches and capture state. It runs outside the reference profiler;
+sources without the hook keep the existing behavior. It must not expose credentials in metadata
+or exceptions. It is an optional extension; the v1 source Protocol remains unchanged.
