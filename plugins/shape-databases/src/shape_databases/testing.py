@@ -102,6 +102,9 @@ class FakeServer:
         self.default_schema = default_schema or ("public" if dialect == "postgres" else "testdb")
         self.tables: dict[Key, list[tuple[Any, ...]]] = {}
         self.columns: dict[Key, list[str]] = {}
+        self.catalog: dict[Key, list[tuple[str, str, bool]]] = {}
+        self.primary_keys: dict[Key, list[str]] = {}
+        self.foreign_keys: dict[Key, list[Any]] = {}
         self.events: list[tuple[Any, ...]] = []
         self.fail_after_rows = fail_after_rows
         self.fail_message = fail_message
@@ -112,6 +115,24 @@ class FakeServer:
         # A sink writes each table on its own thread into one server: every statement, copy
         # and commit runs under this lock, so a snapshot never copies a dict another thread grows.
         self.lock = threading.RLock()
+
+    def seed(
+        self,
+        table: str,
+        columns: list[tuple[str, str, bool]],
+        rows: list[tuple[Any, ...]],
+        *,
+        primary_key: list[str] | None = None,
+        foreign_keys: list[Any] | None = None,
+        schema: str | None = None,
+    ) -> None:
+        """Seed catalog declarations and rows for offline source acceptance."""
+        key = self.key(schema, table)
+        self.catalog[key] = columns
+        self.columns[key] = [c[0] for c in columns]
+        self.tables[key] = rows
+        self.primary_keys[key] = primary_key or []
+        self.foreign_keys[key] = foreign_keys or []
 
     # the connect function ---------------------------------------------------------------
     def connect(self, **params: Any) -> FakeConnection:
@@ -216,6 +237,51 @@ class FakeCursor:
     def _execute(self, sql: str, params: Sequence[Any] | None) -> None:
         s = self.server
         s.events.append(("execute", sql, tuple(params) if params is not None else None))
+        if sql in ("SELECT current_schema()", "SELECT DATABASE()"):
+            self._result = [(s.default_schema,)]
+            return
+        if sql.startswith("SELECT a.attname") or sql.startswith("SELECT column_name, column_type"):
+            assert params is not None
+            key = s.key(params[0], params[1])
+            self._result = list(s.catalog.get(key, []))
+            return
+        if sql.startswith("SELECT c.relname") or sql.startswith("SELECT table_name, COALESCE"):
+            assert params is not None
+            self._result = [
+                (t, len(rows))
+                for (schema, t), rows in sorted(s.tables.items())
+                if schema == params[0]
+            ]
+            return
+        if sql.startswith("SELECT k.column_name"):
+            assert params is not None
+            self._result = [(n,) for n in s.primary_keys.get(s.key(*params), [])]
+            return
+        if sql.startswith("SELECT con.conname") or sql.startswith(
+            "SELECT constraint_name, referenced"
+        ):
+            assert params is not None
+            self._result = []
+            for i, (parent, parent_cols, child_cols) in enumerate(
+                s.foreign_keys.get(s.key(*params), [])
+            ):
+                self._result.extend(
+                    (f"fk_{params[1]}_{i}", parent, p, c)
+                    for p, c in zip(parent_cols, child_cols, strict=True)
+                )
+            return
+        if sql.startswith("SELECT ") and (" LIMIT %s" in sql or "CAST(" in sql):
+            base = sql.split(" TABLESAMPLE")[0].split(" ORDER BY")[0].split(" LIMIT")[0]
+            match = re.search(r" FROM " + _QUALIFIED, base)
+            if match is None:
+                raise FakeDriverError("invalid SELECT")
+            key = s.key(_unquote(match[1]) if match[1] else None, _unquote(match[2]))
+            rows = s.tables[key]
+            limit = int(params[0]) if params else len(rows)
+            if limit and len(rows) > limit:
+                rows = [rows[i * len(rows) // limit] for i in range(limit)]
+            self._result = list(rows[:limit])
+            return
         if sql.startswith("SELECT 1 FROM information_schema.tables"):
             assert params is not None
             schema, table = params
@@ -245,6 +311,18 @@ class FakeCursor:
                 for ln in lines
                 if not ln.startswith("PRIMARY KEY")
             ]
+            s.catalog[key] = []
+            s.primary_keys[key] = []
+            for line in lines:
+                if line.startswith("PRIMARY KEY"):
+                    s.primary_keys[key] = [_unquote(c) for c in _ONE_IDENT.findall(line)]
+                else:
+                    ident = _ONE_IDENT.match(line)
+                    assert ident is not None
+                    declaration = line[ident.end() :].strip()
+                    nullable = not declaration.endswith(" NOT NULL")
+                    declaration = declaration.removesuffix(" NOT NULL").removesuffix(" NULL")
+                    s.catalog[key].append((_unquote(ident[0]), declaration, nullable))
             return
         if m := _DROP.match(sql):
             s.ddl()
@@ -284,6 +362,10 @@ class FakeCursor:
                 raise FakeDriverError("relation does not exist")
         return FakeCopy(self.server, key, statement)
 
+    def fetchall(self) -> list[tuple[Any, ...]]:
+        out, self._result = self._result, []
+        return out
+
     def fetchone(self) -> tuple[Any, ...] | None:
         return self._result[0] if self._result else None
 
@@ -300,7 +382,7 @@ class FakeConnection:
         self.server = server
         self.closed = False
 
-    def cursor(self) -> FakeCursor:
+    def cursor(self, *args: Any, **kwargs: Any) -> FakeCursor:
         return FakeCursor(self.server)
 
     def commit(self) -> None:
@@ -354,6 +436,8 @@ class FakeSnowflake:
         purge_fails: bool = False,
     ) -> None:
         self.default_schema = default_schema
+        self.catalog_answers: dict[str, tuple[list[str], list[tuple[Any, ...]]]] = {}
+        self.arrow_results: dict[str, Any] = {}
         self.tables: dict[Key, list[tuple[Any, ...]]] = {}
         self.columns: dict[Key, list[str]] = {}
         self.stages: dict[Key, dict[str, Any]] = {}
@@ -403,6 +487,7 @@ class FakeSnowflake:
 class FakeSnowflakeCursor:
     def __init__(self, server: FakeSnowflake) -> None:
         self.server = server
+        self._read_sql = ""
         self._result: list[tuple[Any, ...]] = []
         self.description: list[tuple[str]] | None = None
 
@@ -411,10 +496,18 @@ class FakeSnowflakeCursor:
         self._result = rows
 
     def execute(self, sql: str, params: Sequence[Any] | None = None) -> None:
-        import pyarrow.parquet as pq
+        import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
         s = self.server
         s.events.append(("execute", sql, tuple(params) if params is not None else None))
+        self._read_sql = sql
+        if sql in s.catalog_answers:
+            catalog_names, rows = s.catalog_answers[sql]
+            self.description = [(name,) for name in catalog_names]
+            self._result = list(rows)
+            return
+        if sql in s.arrow_results:
+            return
         self._set((), [])
         if s.fail_on is not None:
             s.fail_on(sql)
@@ -505,6 +598,17 @@ class FakeSnowflakeCursor:
     def close(self) -> None:
         pass
 
+    def fetch_arrow_batches(self) -> Any:
+        """Snowflake connector Arrow result iterator, configured by ``arrow_results``."""
+        self.server.events.append(("fetch_arrow_batches", self._read_sql))
+        table = self.server.arrow_results[self._read_sql]
+        return iter(()) if table is None else iter((table,))
+
+    def fetchall_arrow(self) -> Any:
+        """Databricks connector Arrow result, configured by ``arrow_results``."""
+        self.server.events.append(("fetchall_arrow", self._read_sql))
+        return self.server.arrow_results[self._read_sql]
+
 
 class FakeSnowflakeConnection:
     def __init__(self, server: FakeSnowflake) -> None:
@@ -540,6 +644,8 @@ class FakeDatabricks:
         fail_message: str = "simulated driver failure",
     ) -> None:
         self.default_schema = default_schema
+        self.catalog_answers: dict[str, tuple[list[str], list[tuple[Any, ...]]]] = {}
+        self.arrow_results: dict[str, Any] = {}
         self.tables: dict[Key, list[tuple[Any, ...]]] = {}
         self.columns: dict[Key, list[str]] = {}
         self.events: list[tuple[Any, ...]] = []
@@ -590,11 +696,20 @@ def _top_level_groups(text: str) -> list[str]:
 class FakeDatabricksCursor:
     def __init__(self, server: FakeDatabricks) -> None:
         self.server = server
+        self._read_sql = ""
         self._result: list[tuple[Any, ...]] = []
 
     def execute(self, sql: str, parameters: Sequence[Any] | None = None) -> None:
         s = self.server
         s.events.append(("execute", sql, list(parameters) if parameters is not None else None))
+        self._read_sql = sql
+        if sql in s.catalog_answers:
+            names, rows = s.catalog_answers[sql]
+            self.description = [(name,) for name in names]
+            self._result = list(rows)
+            return
+        if sql in s.arrow_results:
+            return
         if sql.startswith("SELECT 1 FROM information_schema.tables"):
             assert parameters is not None
             schema, table = parameters
@@ -649,6 +764,21 @@ class FakeDatabricksCursor:
 
     def close(self) -> None:
         pass
+
+    def fetchall(self) -> list[tuple[Any, ...]]:
+        rows, self._result = self._result, []
+        return rows
+
+    def fetch_arrow_batches(self) -> Any:
+        """Snowflake connector Arrow result iterator, configured by ``arrow_results``."""
+        self.server.events.append(("fetch_arrow_batches", self._read_sql))
+        table = self.server.arrow_results[self._read_sql]
+        return iter(()) if table is None else iter((table,))
+
+    def fetchall_arrow(self) -> Any:
+        """Databricks connector Arrow result, configured by ``arrow_results``."""
+        self.server.events.append(("fetchall_arrow", self._read_sql))
+        return self.server.arrow_results[self._read_sql]
 
 
 class FakeDatabricksConnection:

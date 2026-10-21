@@ -6,6 +6,7 @@ Status: available.
 
 ## Unreleased
 
+- Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.
 - W9-12: semantic model profiles retain table measures and read-only TOM roles. `semantic-model://`
   accepts `as_role` for native DAX role-filtered reads, and plain profiles retain hidden columns.
   `export-model --from-profile` preserves measures and roles; `known-answer MODEL.shape --measures
@@ -2066,6 +2067,15 @@ Converting a full capture to the safe form now gives a different content ID when
 - W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
   catalog row counts and whole-database profiles through the KQL endpoint.
   Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
+
+### W9-01 — PostgreSQL and MySQL profiling
+
+- Database sources stream Arrow record batches from `postgresql://` (also `postgres://`) and
+  `mysql://`, preserve catalog types and nullability, and share the sinks' credential/TLS rules.
+- `shape profile` and bridge `profile` capture a whole schema or selected tables with declared
+  keys and bounded spread samples. `--tables` and `--sample-rows` select CLI tables/sample size;
+  bridge arguments are `tables` and `sample_rows`. Catalog-only capture uses sample size zero.
+- Database profiles and bridge database artifacts use existing safe capture rules.
 
 ### W9-08: broker message metadata
 
