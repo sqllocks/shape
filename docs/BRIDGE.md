@@ -1356,10 +1356,17 @@ There is no second implementation: a command calls what the matching command lin
 
 ## Security
 
+`profile` opens a database connection when its `source` is a database URI.
+PostgreSQL (`postgresql://`, also `postgres://`) and MySQL (`mysql://`) profile a schema
+or a URI-selected table. Optional `tables` is an array of table names; `sample_rows` is
+a non-negative integer (default 1000; 0 is catalog only). These database artifacts use
+safe capture for sampled values. Use password environment variables or credential references;
+passwords in URIs are rejected and never persisted in job records.
+
 The bridge speaks over standard input and output and does what its caller asks with the
 permissions of its process: it reads and writes the paths a request names, as given. Run it with
 the permissions you would give the program that drives it. It opens no network connection of its
-own, except to Fabric for a `fabric_spark` run you ask for. A credential is read from the request
+own, except for a database `profile` or Fabric `fabric_spark` run you ask for. A credential is read from the request
 or the environment when a command needs it and is never written to a job file, a result or a
 log. Job files and spilled results are created with mode `0600` in a `0700` directory.
 
@@ -1462,3 +1469,9 @@ EOF
     {"api_version": "1.2", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
     {"api_version": "1.2", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
     ```
+
+Oracle sources (`oracle://` and `tcps://`, from `sqllocks-shape-databases[oracle]`) support
+`profile` with `sample_rows` and `tables`. Their persisted bridge artifacts use safe capture
+by default. Oracle connection credentials and wallet passwords are never artifact metadata.
+The catalog count and LAST_ANALYZED describe the population; sampled distributions describe
+only the bounded sample. See the database plugin README for exact counts and type mapping.

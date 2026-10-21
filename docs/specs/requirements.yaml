@@ -728,6 +728,14 @@ requirements:
   owner: integrations
 
 
+- id: SHAPE-DBS-001
+  title: Bounded PostgreSQL and MySQL catalog profiling
+  level: L1
+  milestone: W9-01
+  priority: MUST
+  text: Database sources stream typed Arrow batches and profile catalog schemas with bounded samples, declared keys, safe capture and no persisted credentials.
+  verify: [database-source-conformance]
+  owner: databases
 - id: SHAPE-SEMANTIC-METADATA-001
   title: Semantic model metadata and native role reads
   level: L2
@@ -745,3 +753,12 @@ requirements:
   text: Kafka and Event Hubs support column keys and headers, preserve replay identity, refuse reserved header names and unknown metadata columns before sending, and optionally decode broker metadata outside default drift comparisons.
   verify: [conformance]
   owner: streaming
+
+- id: SHAPE-ORACLE-001
+  title: Oracle thin-mode source and sink
+  level: L1
+  milestone: W9-15
+  priority: MUST
+  text: Oracle 19c+ supports bounded array writes and Arrow or cursor reads with exact declared types, schema catalogs, explicit empty-string handling, referenced credentials and safe artifacts.
+  verify: [oracle-source-sink-conformance, oracle-emulator]
+  owner: databases

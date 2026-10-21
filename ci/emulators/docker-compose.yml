@@ -111,3 +111,18 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+
+  oracle:
+    image: gvenzl/oracle-free:23-slim
+    volumes:
+      - ./oracle:/container-entrypoint-initdb.d:ro
+    ports: ["1521:1521"]
+    environment:
+      ORACLE_PASSWORD: shape_emulator
+      APP_USER: shape
+      APP_USER_PASSWORD: shape_emulator
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 10s
+      retries: 60

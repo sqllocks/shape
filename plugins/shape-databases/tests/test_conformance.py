@@ -80,8 +80,13 @@ def test_the_installed_distribution_conforms():
         "shape.sinks:databricks",
         "shape.sinks:duckdb",
         "shape.sinks:mysql",
+        "shape.sinks:oracle",
         "shape.sinks:postgres",
         "shape.sinks:snowflake",
+        "shape.sources:mysql",
+        "shape.sources:oracle",
+        "shape.sources:postgres",
+        "shape.sources:postgresql",
     ]
 
 

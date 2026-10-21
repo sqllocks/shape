@@ -1,7 +1,7 @@
 # sqllocks-shape-databases
 
 Shape plugin: write generated tables straight into a running database, or a local DuckDB file
-(`shape.sinks`). Five sinks live here. `postgres` and `mysql` match the dialects of the built-in
+(`shape.sinks`), and stream PostgreSQL/MySQL tables (`shape.sources`). Five sinks live here. `postgres` and `mysql` match the dialects of the built-in
 `sql` script sink (same quoting, same Arrow-to-database type map); `snowflake` and `databricks`
 have their own type maps (see [Snowflake](#snowflake) and [Databricks](#databricks)); `duckdb`
 writes Arrow batches into a DuckDB file:
@@ -314,3 +314,100 @@ up -d --wait postgres mysql`, with `SHAPE_POSTGRES_PASSWORD` / `SHAPE_MYSQL_PASS
 
 Its version always equals core's (`sqllocks-shape`), and it is released together with core.
 How plugins are written: `docs/plugins/authoring.md` in the repository.
+
+## PostgreSQL and MySQL sources
+
+The plugin registers `shape.sources` entries `postgresql`, `postgres` and `mysql`.
+`postgresql://user@host:5432/db?schema=public&table=orders` and
+`mysql://user@host:3306/db?table=orders` select one table. `schema()` returns the catalog
+Arrow schema; `read()` yields record batches, default `batch_size=65536`, with server-side
+cursors. Missing `table`, passwords in URIs, unknown options and invalid batch sizes fail
+before connecting. Sources use the sinks' TLS defaults and credential precedence: `password`,
+`credential`, then `SHAPE_POSTGRES_PASSWORD` / `PGPASSWORD` or `SHAPE_MYSQL_PASSWORD` /
+`MYSQL_PWD`. Passwords belong in options or the environment, never the URI.
+
+The catalog maps `smallint` to `int16`, `integer` to `int32`, `bigint` to `int64`,
+`numeric(p,s)` / `decimal(p,s)` to `decimal128(p,s)` (precision 1–38), `timestamptz` to
+`timestamp(us, tz=UTC)`, `timestamp` / MySQL `datetime(6)` to zone-less `timestamp(us)`,
+`date` to `date32`, `time` to `time64(us)`, `boolean` / MySQL `tinyint(1)` to boolean,
+`uuid` to string with field metadata `shape.type=uuid`, and `bytea` / `blob` to binary.
+`jsonb`, `json` and arrays are JSON text strings. An unmapped type becomes text and emits
+one warning naming the column. Field metadata `shape.sql_type` retains the declaration;
+nullability comes from the catalog. Decimal declarations outside Arrow's range fail explicitly.
+
+`shape.profile(uri)` uses catalog-plus-sample profiling for both a table URI and a URI without
+`table` (the whole schema). `shape.profile(uri, sample_rows=1000, tables=["orders"])`
+selects tables and bounds the sample; `sample_rows=0` reads only catalog information.
+PostgreSQL uses `TABLESAMPLE SYSTEM` with a row limit; it can return fewer rows than requested.
+MySQL orders by a CRC32 hash of the declared primary key, or columns when no key is declared,
+then limits rows. MySQL's spread query can scan/sort the table on the server, but does not
+transfer the entire table to the client. Catalog row counts are estimates (`reltuples` / `table_rows`),
+and stale counts may affect the sampling strategy. Primary keys and foreign keys are exact
+catalog declarations; relationships carry `evidence: "declared"`.
+`sampled_rows`, `sample_method` and dataset `sampling` distinguish sample statistics from
+catalog counts. Each table's sampling record keeps both the catalog population and the
+actual sampled rows; safe capture evaluates observed statistics using those sampled rows.
+Null rates and uniqueness are unknown when no rows are sampled.
+Saved profiles use the existing versioned `.shape` format and safe capture by default.
+
+Service checks: `pytest -m emulator plugins/shape-databases/tests/test_sources_services.py`
+uses PostgreSQL 16 and MySQL 8.4 from the emulator compose file. Opt-in live checks use
+`SHAPE_TEST_POSTGRES_URI` / `SHAPE_POSTGRES_PASSWORD` or
+`SHAPE_TEST_MYSQL_URI` / `SHAPE_MYSQL_PASSWORD`; each check names any missing required setting.
+Offline fake-server source acceptance runs on every PR.
+
+## Oracle
+
+Install `sqllocks-shape-databases[oracle]` for python-oracledb >=3.0. Oracle 19c and later
+use thin mode. Both the `oracle` sink and source accept
+`oracle://user@host:1521/service?schema=CaseSchema`; `tcps://` or `ssl=true` enables TLS.
+Remote hosts default to verified TLS; `ssl=false` explicitly opts out. Names retain case,
+are quoted, and must fit Oracle's 128-byte UTF-8 identifier limit before connecting.
+
+Supply `password` as a credential reference, or set `ORACLE_PASSWORD`. Passwords in URIs
+are refused. `wallet_location` and a referenced `wallet_password` configure a thin-mode TLS
+wallet; the wallet decryption password does not replace database user authentication.
+Credentials are resolved for the connection and are never profile or job metadata.
+
+The sink uses bound array DML (`executemany` and `setinputsizes`) with `batch_rows=50000`.
+It reads the server version and `MAX_STRING_SIZE` once per write. The account needs access
+to `v$parameter` for the latter. Create, append, truncate and replace modes follow the other
+database sinks. Oracle DDL commits implicitly: replacement/truncation cannot be undone;
+a failed new-table write attempts to drop that new table. `commit_rows` retains completed
+chunks and reports committed rows on failure.
+
+| Arrow type | Oracle declaration |
+|---|---|
+| int8 / int16 / int32 / int64 | NUMBER(3) / NUMBER(5) / NUMBER(10) / NUMBER(19) |
+| uint8 / uint16 / uint32 / uint64 | NUMBER(5) / NUMBER(10) / NUMBER(19) / NUMBER(20) |
+| float32 / float64 | BINARY_FLOAT / BINARY_DOUBLE |
+| decimal(p,s), p <= 38 | NUMBER(p,s); floating decimal overrides require explicit precision and scale |
+| bool | BOOLEAN on 23+, otherwise NUMBER(1) with a zero-or-one check |
+| string | declared `max_length` gives VARCHAR2(n CHAR) up to MAX_STRING_SIZE, otherwise CLOB |
+| binary | declared length <= 2000 gives RAW(n), otherwise BLOB |
+| date / time / timestamp | DATE / INTERVAL DAY(0) TO SECOND(p) / TIMESTAMP(p), WITH TIME ZONE for zoned values |
+| UUID metadata / nested values | VARCHAR2(36 CHAR) / JSON text in CLOB |
+
+Oracle treats empty strings as NULL. The default refuses them with the table and column.
+`empty_string=null` converts only nullable, non-key fields and reports the conversion count;
+NOT NULL and primary-key fields always refuse empty strings.
+
+The source streams bounded Arrow batches (`batch_size=65536`). If any selected column is
+RAW, BLOB, CLOB, NCLOB or INTERVAL, the whole read uses bounded cursor `fetchmany` with
+non-locator LOB values; provenance records `read_path=cursor`. Both paths preserve decimal
+text and fractional timestamps. Unconstrained NUMBER warns once per column and maps to
+`decimal128(38,10)`; values that cannot fit fail rather than round. DATE is a zone-less
+microsecond timestamp; zoned timestamps normalize to UTC before Arrow annotation.
+
+`shape profile oracle://user@host/service --sample-rows 1000 --tables Orders -o catalog.shape`
+profiles the selected schema's declared primary, unique and foreign keys and LAST_ANALYZED.
+Population counts come from catalog statistics; `exact_counts=true` explicitly requests
+COUNT(*), and missing statistics otherwise give a named refusal. Bounded SAMPLE reads describe
+the sample's distributions, not the population; small populations use a whole-table bounded
+read. `sample_rows=0` reads catalogs only. The public API, CLI and bridge accept these source
+URIs; saved CLI and bridge profiles use safe capture by default.
+
+Local emulator: `docker compose -f ci/emulators/docker-compose.yml up -d --wait oracle`, then
+set `ORACLE_PASSWORD=shape_emulator` and run
+`pytest -m emulator plugins/shape-databases/tests/test_oracle_emulator.py` with the oracle
+extra installed. The tests fail if the service or driver is unavailable; they do not skip.
