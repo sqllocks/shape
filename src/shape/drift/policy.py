@@ -16,6 +16,8 @@ def gate(before, after, default_max=0.25, overrides=None):
     overrides = overrides or {}
     bad = []
     for d in compare(before, after):
+        if d.kind in ("measure_change", "role_change"):
+            continue
         limit = float(overrides.get(d.path, default_max))
         if d.score > limit:
             bad.append({"path": d.path, "score": d.score, "limit": limit, "reason": d.reason})

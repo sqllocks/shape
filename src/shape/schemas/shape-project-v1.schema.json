@@ -525,6 +525,13 @@
             "cosmetic"
           ]
         },
+        "measure_change": {
+          "enum": [
+            "breaking",
+            "additive",
+            "cosmetic"
+          ]
+        },
         "mixture_change": {
           "enum": [
             "breaking",
@@ -582,6 +589,13 @@
           ]
         },
         "reference_match_change": {
+          "enum": [
+            "breaking",
+            "additive",
+            "cosmetic"
+          ]
+        },
+        "role_change": {
           "enum": [
             "breaking",
             "additive",

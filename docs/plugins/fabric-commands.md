@@ -638,3 +638,12 @@ shape check-answers ka/answers.json results.json --places 4
     All 2 values match the known answers.
     All 2 values match the known answers.
     ```
+
+### Preserve a profiled semantic model
+
+`shape export-model --from-profile model.shape -o model.bim` fits the profile's table schema and
+preserves its measures and roles instead of inventing domain measures. `shape known-answer
+model.shape --measures from-profile -o answers` uses those measures, with unsupported DAX listed
+under `skipped`. Model profiles now retain `measures` per table and dataset `roles`; the TOM read
+is read-only. See [Semantic model profiles](../SEMANTIC_MODEL.md) for permissions and the supported
+known-answer expressions.
