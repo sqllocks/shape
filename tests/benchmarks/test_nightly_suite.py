@@ -34,6 +34,16 @@ DOMAINS = ["hr", "retail", "telecom"]
 PASS = {"status": "pass", "exit_code": 0, "command": "verify.py"}
 
 
+@pytest.fixture(autouse=True)
+def successful_synthetic_recordings(monkeypatch):
+    """This module's synthetic all-value fixtures have no recorded errors.
+
+    Real authenticated refusals and forged pass claims have dedicated coverage in
+    test_not_comparable_contract; keep these original value-gate controls intact.
+    """
+    monkeypatch.setattr(nightly, "recorded_not_comparable_reason", lambda wid: None)
+
+
 def _rec(kind: str, wid: str, verifier: dict | None = PASS, median: float | None = 1.0) -> dict:
     rec: dict[str, Any] = {
         "kind": kind,

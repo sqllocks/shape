@@ -6,6 +6,9 @@ Status: available.
 
 ## Unreleased
 
+- Compare frozen release results with explicit recorded-error noncomparability, approved
+  reference category-name aliases and authenticated capture-date replay; recorded values
+  and all numeric comparison thresholds remain unchanged.
 - W9-12: semantic model profiles retain table measures and read-only TOM roles. `semantic-model://`
   accepts `as_role` for native DAX role-filtered reads, and plain profiles retain hidden columns.
   `export-model --from-profile` preserves measures and roles; `known-answer MODEL.shape --measures

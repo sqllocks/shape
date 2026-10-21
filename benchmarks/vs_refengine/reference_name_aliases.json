@@ -1,0 +1,943 @@
+{
+  "owner_commit": "904d5d2ed46bdd2e79c0ffb243ff82821134c4d2",
+  "baseline_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "domains": {
+    "healthcare": {
+      "source": {
+        "cpt_codes": "bfd656ce37b07babb72f944fe046b16540676e36d2c4ed4e4a987695338426ea"
+      },
+      "target": {
+        "cpt_codes": "8a0f82badbcd3e8f2e18bc50c8f0f4eb45216c8db23fe668f6e6eff481551d00"
+      },
+      "aliases": {
+        "code": [
+          {
+            "lineage": 1,
+            "source": "b2a003b226bcef51af073fadb6412eb50fbee55d5b77b3e117b999d6b24c968a",
+            "target": "SP-01"
+          },
+          {
+            "lineage": 2,
+            "source": "8a851e47fff67c0d8aafc4c94bf43d9933a65dd27eb61839f7c6e98db1bf1f73",
+            "target": "SP-02"
+          },
+          {
+            "lineage": 3,
+            "source": "66b60eb2338143b7e26214de1e11958febaaac7b08db3d9ca5ebad33379f0248",
+            "target": "SP-03"
+          },
+          {
+            "lineage": 4,
+            "source": "13628f4cc50a3a9bbdb2589e39e900af6672522a4aa56ef5a99b214b40b2136f",
+            "target": "SP-04"
+          },
+          {
+            "lineage": 5,
+            "source": "3c27e76dde68fdd32a5f781e35bfd46e7750ee34fa378267df6e1b57114d20ac",
+            "target": "SP-05"
+          },
+          {
+            "lineage": 6,
+            "source": "930770be39b157ed0f71b9dce1c1738aa9cb8f0ba7a2e58395ab1bbe537392d8",
+            "target": "SP-06"
+          },
+          {
+            "lineage": 7,
+            "source": "91e0a36e718d9109d9b6d74f2d91f23d93fa37564cbbc28d17224f91a3585843",
+            "target": "SP-07"
+          },
+          {
+            "lineage": 8,
+            "source": "93df8a9169f05d10b55449ab64b3e20b96523db7ab1298a0261bbab318a64972",
+            "target": "SP-08"
+          },
+          {
+            "lineage": 9,
+            "source": "1100e9fdab0ae9b312f1067afdda3c46ca2281249ff00c4d6635f18b48cb133c",
+            "target": "SP-09"
+          },
+          {
+            "lineage": 10,
+            "source": "c8d8496e2eb0e159feeef40a53692eca60d870bf3e55c0eeb05d89c98c33e379",
+            "target": "SP-10"
+          },
+          {
+            "lineage": 11,
+            "source": "4a4887ceb1987f3db515cd5aae68fab48d6fafa5296c8fba7584f86f192a05ba",
+            "target": "SP-11"
+          },
+          {
+            "lineage": 12,
+            "source": "224a0b13d1c0808987edb01976c09c2c2416fa0566e21004338959a4daf9eb35",
+            "target": "SP-12"
+          },
+          {
+            "lineage": 13,
+            "source": "a73d3b5896b136257c6746103fe93f7126c9f10ea31c9bc9429dbad8cbb7c060",
+            "target": "SP-13"
+          },
+          {
+            "lineage": 14,
+            "source": "060dfec7c93938e0ef6bb8dd1ac2543fcd33208179ae327e2962747de20a2dea",
+            "target": "SP-14"
+          },
+          {
+            "lineage": 15,
+            "source": "e8b7a3661aff447c92c6c8f5624f1c35d3291268e8cd0749f394c6979cdd1f33",
+            "target": "SP-15"
+          },
+          {
+            "lineage": 16,
+            "source": "70bc1e4e2263866960f54f921631adf48e264f21b226049b2381723ce3d152b5",
+            "target": "SP-16"
+          },
+          {
+            "lineage": 17,
+            "source": "b60d264bfe9b8e80010804cc80c279b968b62304552b3c7ad4c50bb67a8eb501",
+            "target": "SP-17"
+          },
+          {
+            "lineage": 18,
+            "source": "a0598926117470269359d53f6ce9aedf823adf9f243b6868f21b13f26b8ca5a2",
+            "target": "SP-18"
+          },
+          {
+            "lineage": 19,
+            "source": "91ebade59e404a817e03a724e4ddd52e28db4636d6dcd9360db45944bac2f6d7",
+            "target": "SP-19"
+          },
+          {
+            "lineage": 20,
+            "source": "af89a590f88cbc6e0a4dac6acf5fe0a595321d7d0d489864fafc42d062173bd0",
+            "target": "SP-20"
+          },
+          {
+            "lineage": 21,
+            "source": "95d3d4e33b096d50713e152a4905ba86b8f1e4061b74def9b2904dec196817e6",
+            "target": "SP-21"
+          },
+          {
+            "lineage": 22,
+            "source": "f38da5974e17397b67390e0eabd52cab92bb52679aee84b7c96935cdcd47af08",
+            "target": "SP-22"
+          },
+          {
+            "lineage": 23,
+            "source": "cbb2b7197489ebae81881098cc0dbeabf7430f52ea48b0e2cb1a86b19bda4123",
+            "target": "SP-23"
+          },
+          {
+            "lineage": 24,
+            "source": "be28b9bda356f3b831b42626eed01e39c28d196087357ac9bf0e46e8f510db94",
+            "target": "SP-24"
+          },
+          {
+            "lineage": 25,
+            "source": "890d11cbf9ae06edd49114264dc88b80701acb0a80930a590db09a0c422201cd",
+            "target": "SP-25"
+          },
+          {
+            "lineage": 26,
+            "source": "8df30e56586f48993b9023af7bda40fc2de734c57d210192cd9647a206e49cf3",
+            "target": "SP-26"
+          },
+          {
+            "lineage": 27,
+            "source": "ef99b7d56abb4de237d14170a5545a502bcef23d8809835f2938680d86b72ab3",
+            "target": "SP-27"
+          },
+          {
+            "lineage": 28,
+            "source": "04b07bfcb5bc8f82adc9c24f3afe233903943c4ec27cfd266c7198702566aa77",
+            "target": "SP-28"
+          },
+          {
+            "lineage": 29,
+            "source": "7c7f7c1fb6f553ff86cff8fbdb735851fd56db59d789936af1ae51ebf7222463",
+            "target": "SP-29"
+          },
+          {
+            "lineage": 30,
+            "source": "81c1de429c78fb2a05258cf698bc3a6494db4a1be9415f7f03de7d7abe907071",
+            "target": "SP-30"
+          },
+          {
+            "lineage": 31,
+            "source": "7099773ad9ffe63eff1b635bf5c7da65681b46ef8f23be00e93711390e7eebdd",
+            "target": "SP-31"
+          },
+          {
+            "lineage": 32,
+            "source": "b187fe467320c9243a9dc583c78088445ef39a1019d7c7cce739c47b282e246f",
+            "target": "SP-32"
+          },
+          {
+            "lineage": 33,
+            "source": "81d74d85303d9876d546e89f6e5f8b732b8ab4715463f65f37e287377064bf18",
+            "target": "SP-33"
+          },
+          {
+            "lineage": 34,
+            "source": "28bad62c0c68ae9a36b6e0aee6d2da101ef2f05f41f31ff7b71325ad55da3f30",
+            "target": "SP-34"
+          },
+          {
+            "lineage": 35,
+            "source": "5329919797dc702823500c38ba238c10d9dd4a4ebb4b67401f343503355abf54",
+            "target": "SP-35"
+          },
+          {
+            "lineage": 36,
+            "source": "c9846dacbe569d738dbe97305a37cc33889fd3dacd9733c063bf875ac523f5cc",
+            "target": "SP-36"
+          },
+          {
+            "lineage": 37,
+            "source": "15bfc05c86b78893a9bcde606d9c87dbaae9b23eb0e9d79d8d1284c788204693",
+            "target": "SP-37"
+          },
+          {
+            "lineage": 38,
+            "source": "1a3e51cce054134b1497b60a9348e9fd8aed3036a71d191773df123c6c342018",
+            "target": "SP-38"
+          },
+          {
+            "lineage": 39,
+            "source": "c573962ab9b06f9f8fd2f5f50446e8d31ecad5cf19e0ea53c582c647ef024312",
+            "target": "SP-39"
+          },
+          {
+            "lineage": 40,
+            "source": "c6feeb9262e6d2f3944ab04bf0f82dff8b8d4f735a0c67c97f520789c559ca25",
+            "target": "SP-40"
+          },
+          {
+            "lineage": 41,
+            "source": "e23aa944418978663157c576fc3ac0578108cd80e2df9a5027248797f7aa4441",
+            "target": "SP-41"
+          },
+          {
+            "lineage": 42,
+            "source": "12402e330893668c9a6bf1d8fe77df46e0ec60b9f1980043325aecb7399077c6",
+            "target": "SP-42"
+          },
+          {
+            "lineage": 43,
+            "source": "ead0b5b515ec5c1d56ce102a24c387c22f5aa791d4b3f0ac313e3a343a782e7f",
+            "target": "SP-43"
+          },
+          {
+            "lineage": 44,
+            "source": "227abfd9d3ef0792edc7e1249429affcce2d1aa4943c2226085bbc342530811d",
+            "target": "SP-44"
+          },
+          {
+            "lineage": 45,
+            "source": "0ffb617aba06350d3d58172f8e35a9354fc0cfea0ba69dad20b92c36395a4e4e",
+            "target": "SP-45"
+          },
+          {
+            "lineage": 46,
+            "source": "48c02ddf4ffa369f26be9485019950019552d444adcbd0803415dc6f652e13e4",
+            "target": "SP-46"
+          },
+          {
+            "lineage": 47,
+            "source": "604700f574160e96a7323560ecdc954883aa4ad2f518a4340a03c6573cf395fb",
+            "target": "SP-47"
+          },
+          {
+            "lineage": 48,
+            "source": "c049bd09b6840fed8f95ccb2a228c511e64741ce7cb5cd90e6709c5455f477a9",
+            "target": "SP-48"
+          },
+          {
+            "lineage": 49,
+            "source": "94c4004ebdf227f142ffc3e62aad046c65d0df89f74b61369bf933769ca83f31",
+            "target": "SP-49"
+          }
+        ],
+        "description": [
+          {
+            "lineage": 1,
+            "source": "a1a5b93bb9d7c2a8134b807a97bef0e859a357d803d50bf3386fe23f5e94abf9",
+            "target": "Synthetic procedure 01"
+          },
+          {
+            "lineage": 2,
+            "source": "d0fe60c0bfc918b4f0d96541d6e632247bc1d87be7233e63e9bef003b1879dc5",
+            "target": "Synthetic procedure 02"
+          },
+          {
+            "lineage": 3,
+            "source": "4ebe2c017a74e12b4b1a98f9301154319070cf2d3026d541f733a4af178d0a07",
+            "target": "Synthetic procedure 03"
+          },
+          {
+            "lineage": 4,
+            "source": "c6395e8a703053bccd105467b2e0be8ef971a454c55c3597482ea6bab8ea57c5",
+            "target": "Synthetic procedure 04"
+          },
+          {
+            "lineage": 5,
+            "source": "afd4791e3b23f0be45e75848193bcf7908dc8145034667596311e7954aaff02d",
+            "target": "Synthetic procedure 05"
+          },
+          {
+            "lineage": 6,
+            "source": "be8d8261b1151cd45662b8f016cb04610eef815e7ba53d112f7296bc983c448b",
+            "target": "Synthetic procedure 06"
+          },
+          {
+            "lineage": 7,
+            "source": "74bcaec253a3de44c87f8afede8f0dbaea05e845a109cb5ff1fca85809dafc1b",
+            "target": "Synthetic procedure 07"
+          },
+          {
+            "lineage": 8,
+            "source": "21e72a52fb53255fc374213622bcbf28d7d2257f521afdd19391af0b44a6b62c",
+            "target": "Synthetic procedure 08"
+          },
+          {
+            "lineage": 9,
+            "source": "0f1ecbf329cbff308b69d818fca23cfc6f8ee81a543acdeb86905efaeea846b0",
+            "target": "Synthetic procedure 09"
+          },
+          {
+            "lineage": 10,
+            "source": "c20b9a4ba8ecd2ca86778cd6724a6c673b949340f44eb531d22e37a90ecdf963",
+            "target": "Synthetic procedure 10"
+          },
+          {
+            "lineage": 11,
+            "source": "60f89a44fb0dcedd495c4bd80a8dd982a093ccd0273c4976a65b1b3f007b404d",
+            "target": "Synthetic procedure 11"
+          },
+          {
+            "lineage": 12,
+            "source": "792dd63c9265be7a8dd506b8a70affa4ec3aaf77940d9fe5b5dfbc5e3fb62a6e",
+            "target": "Synthetic procedure 12"
+          },
+          {
+            "lineage": 13,
+            "source": "32ec9b697ec6f0a94dfdc2b928b283d1b860ee9beafbb8fb3fd9e632352ba8be",
+            "target": "Synthetic procedure 13"
+          },
+          {
+            "lineage": 14,
+            "source": "af03033ca1f3945b79bcd94d16e45e381b0eea8d95b02eaf790b1b3df29ce27c",
+            "target": "Synthetic procedure 14"
+          },
+          {
+            "lineage": 15,
+            "source": "41feb231cd176d969649d47668a791200dee97b3ec6de535814df751bb57e838",
+            "target": "Synthetic procedure 15"
+          },
+          {
+            "lineage": 16,
+            "source": "a87f44977aec2f44935ef7e45e1ee6380b6d01fd2b027b3519bc4809da489a5c",
+            "target": "Synthetic procedure 16"
+          },
+          {
+            "lineage": 17,
+            "source": "a3f75facafe8f9345de703158d89e9afb3011185a040d5ce6cff973fd168350c",
+            "target": "Synthetic procedure 17"
+          },
+          {
+            "lineage": 18,
+            "source": "ae9a726bc587567be67fe92dec817a4ebe2934b4a49f383d95a30e933194c964",
+            "target": "Synthetic procedure 18"
+          },
+          {
+            "lineage": 19,
+            "source": "3442e78ea7ba405ac450998bdbd124fdbaddb3b685d82f79c20d9d5e2bcec4ad",
+            "target": "Synthetic procedure 19"
+          },
+          {
+            "lineage": 20,
+            "source": "f173c33da74cd23e03b7ad1932761cc21ca83270ffe3052e4d72f79e51d782aa",
+            "target": "Synthetic procedure 20"
+          },
+          {
+            "lineage": 21,
+            "source": "5c52eb6d6d1a67177447a07fd4e412f89913769c6756781fcc77d32120d70932",
+            "target": "Synthetic procedure 21"
+          },
+          {
+            "lineage": 22,
+            "source": "9340bed66f68644e817e6db9761add3d316d467b17ac1dffe0ed24bf8ca8e025",
+            "target": "Synthetic procedure 22"
+          },
+          {
+            "lineage": 23,
+            "source": "00e22c1f6732bffa3ca4b2f62997bfe5affcfc9f661d4756068927f24aabcb2a",
+            "target": "Synthetic procedure 23"
+          },
+          {
+            "lineage": 24,
+            "source": "5ce3fce9d3d08daf7fb48238f374714f1ea2f41b2a3dc6160414c575e9d83a73",
+            "target": "Synthetic procedure 24"
+          },
+          {
+            "lineage": 25,
+            "source": "78c4881c3be0fd81e74525b21b09c0febfa888c24a0650e05b062a85377dd657",
+            "target": "Synthetic procedure 25"
+          },
+          {
+            "lineage": 26,
+            "source": "54d3ceebbbe52e3cb783ae3d4a5bbb5e8af343479027d7d70a419ab34ef7b276",
+            "target": "Synthetic procedure 26"
+          },
+          {
+            "lineage": 27,
+            "source": "f113e83f16b8da80aa9a373acbac9a9baaa4e9ff74c7e2b4a3c4713bf10057d9",
+            "target": "Synthetic procedure 27"
+          },
+          {
+            "lineage": 28,
+            "source": "bc4c2836757820a3504db9f48df5a99be2c32e382c5256881041b39e972297de",
+            "target": "Synthetic procedure 28"
+          },
+          {
+            "lineage": 29,
+            "source": "9882cd09ee9a9fd9dc32c3beef1362c056091b5aa97c8b53861c796b602df793",
+            "target": "Synthetic procedure 29"
+          },
+          {
+            "lineage": 30,
+            "source": "6093d6255f0ec397b582fcc1452cba2722b50bd622b85ea48d6e553332d3a712",
+            "target": "Synthetic procedure 30"
+          },
+          {
+            "lineage": 31,
+            "source": "a7d6c4af3d528b16aeb11488f4dbdf16819ef1e98896930712a120ee91e730bf",
+            "target": "Synthetic procedure 31"
+          },
+          {
+            "lineage": 32,
+            "source": "642fcb5cebf19f371b1d086b6e1ebab4508b00475f6ed46d214c69f34ef4ba5c",
+            "target": "Synthetic procedure 32"
+          },
+          {
+            "lineage": 33,
+            "source": "453a94f4b75f09374fe1d3b7b3dce8f9bce9e8547c979cd1f3c17375efd1eeeb",
+            "target": "Synthetic procedure 33"
+          },
+          {
+            "lineage": 34,
+            "source": "38d1fae0b64bf7fd8ee00d84fe13f126a11cb0aa9e6902455a7382925cb3df8f",
+            "target": "Synthetic procedure 34"
+          },
+          {
+            "lineage": 35,
+            "source": "78c64b6cf75db532dd85331d9d0b593bd4bae5d05f880b850b6f28c6dc336f7f",
+            "target": "Synthetic procedure 35"
+          },
+          {
+            "lineage": 36,
+            "source": "93fbb3e3fa23be8663d42d3e4251c51b396c6a25ae53094163ee67e2680818c2",
+            "target": "Synthetic procedure 36"
+          },
+          {
+            "lineage": 37,
+            "source": "b2b91e8d635e877e7a36715d50280e3bf111d814046d2cf04278ee93049ae9b9",
+            "target": "Synthetic procedure 37"
+          },
+          {
+            "lineage": 38,
+            "source": "1a7db527f57a97fe21992e719bea0cd5aa025169ffac0620c13e3c544ee41109",
+            "target": "Synthetic procedure 38"
+          },
+          {
+            "lineage": 39,
+            "source": "9e7192cf486447ff7d7c2b7a8e1b89869be36c6277101c87be2c4bf76b05b714",
+            "target": "Synthetic procedure 39"
+          },
+          {
+            "lineage": 40,
+            "source": "79540ef7a067e3b95a74d000b9121b64a6a9f50d9ed3c27309d390de7a961179",
+            "target": "Synthetic procedure 40"
+          },
+          {
+            "lineage": 41,
+            "source": "83bafc27ecdf6c78db5e5fd92722c06d28a0b0e76c8a1760101702eaf0ee7d60",
+            "target": "Synthetic procedure 41"
+          },
+          {
+            "lineage": 42,
+            "source": "9a01a78ef3d9d0d1947619cb54c7f5399e6ce760066c6fbbae1f3b4b3e3dcbc3",
+            "target": "Synthetic procedure 42"
+          },
+          {
+            "lineage": 43,
+            "source": "18a10afbb2d035fa8363477f5f8508ef7db7452edbdee1dfb0800d0ac06aa7a2",
+            "target": "Synthetic procedure 43"
+          },
+          {
+            "lineage": 44,
+            "source": "36e8f745301a21869d983682fe06bf0eeb40322469180c8c6405335ef50167ba",
+            "target": "Synthetic procedure 44"
+          },
+          {
+            "lineage": 45,
+            "source": "451a7c272392774f4d6313010d76bba4452c05950d2e567bee1b011d8b398c5c",
+            "target": "Synthetic procedure 45"
+          },
+          {
+            "lineage": 46,
+            "source": "277c6c974f15014468d78baf822b8d3f6d62d98fe135ce7187a4df08cadbdf06",
+            "target": "Synthetic procedure 46"
+          },
+          {
+            "lineage": 47,
+            "source": "49256efe3402aee39f7d2b79820e4ad4fcc6475a714d96826bf02cbf83f7b03d",
+            "target": "Synthetic procedure 47"
+          },
+          {
+            "lineage": 48,
+            "source": "b9fb80c310d5889fff3275e0b993e4807e1ada69db7808a10a90607528e52c86",
+            "target": "Synthetic procedure 48"
+          },
+          {
+            "lineage": 49,
+            "source": "c7e16c26c7257aaf9dbf0032133b1b046f8c3f3d272136cd82c335831d4a3cb1",
+            "target": "Synthetic procedure 49"
+          }
+        ]
+      }
+    },
+    "capital_markets": {
+      "source": {
+        "gics_sectors": "f023e9a2dced7e5309cc2a79c59a14b5c40df3fbdd390651f99f9228d3454f19",
+        "sp500_constituents": "d22e51262945f4f1204a4014f88348f5fcd1736701edfb3906622787a4208f47"
+      },
+      "target": {
+        "gics_sectors": "710915656e7ab9e06a179c7447420ccdb956ae5bbc9d022743f84dc00f58f9c7",
+        "sp500_constituents": "4bbf72cfe96a9b738587598db266f915780c6fef2e1ffe992b9707899c93abe7"
+      },
+      "aliases": {
+        "sector_name": [
+          {
+            "lineage": 1,
+            "source": "222a36f3f602dee0e8a6530f95d1a732622d11631fb1964034ed07f013dcc4f0",
+            "target": "Synthetic sector A"
+          },
+          {
+            "lineage": 2,
+            "source": "04b0a88a870707127f8b37f0a410fe1b9728a9b57e9845ad005276f3b746b613",
+            "target": "Synthetic sector B"
+          },
+          {
+            "lineage": 3,
+            "source": "4e4f1565fb7c9f2a8b4b32b9aa3137af684f3da8a2ce97799d3a7117b14f07be",
+            "target": "Synthetic sector C"
+          },
+          {
+            "lineage": 4,
+            "source": "c2ef8c5fb4379b8902749785d98531d66515a3169f8c041cb014de5927728b49",
+            "target": "Synthetic sector D"
+          },
+          {
+            "lineage": 5,
+            "source": "1c05eb170427b94067eeebf1bdfcb2f5c68c30d78f8829f9b03b183658e5a327",
+            "target": "Synthetic sector E"
+          },
+          {
+            "lineage": 6,
+            "source": "cb8757a58a3ca86033cbc940bd5f95d1413cd4978ea9dcceb865b4e075ea7259",
+            "target": "Synthetic sector F"
+          },
+          {
+            "lineage": 7,
+            "source": "4d635f128d2fa099eceae34e8ea928aa8196ba6cb198a5a62f554d3229850d14",
+            "target": "Synthetic sector G"
+          },
+          {
+            "lineage": 8,
+            "source": "f2fcd3f7dccadd194c4c5a54a5102c9559487743ac236a6236301e4418d0dd7c",
+            "target": "Synthetic sector H"
+          },
+          {
+            "lineage": 9,
+            "source": "0a035c2b85b8f35d7c304286acc49f8174c42bfb8d889ff71e613d6083116220",
+            "target": "Synthetic sector I"
+          },
+          {
+            "lineage": 10,
+            "source": "5226954feafeae18181de39d33b5d20b5f78e1ee112684bf04445903bf4db562",
+            "target": "Synthetic sector J"
+          },
+          {
+            "lineage": 11,
+            "source": "fd10a146e9625bfd3f69639eeb5fbee0eae7e4633222f1ee3d3d36395844303e",
+            "target": "Synthetic sector K"
+          }
+        ],
+        "sector_code": [
+          {
+            "lineage": 1,
+            "source": "811786ad1ae74adfdd20dd0372abaaebc6246e343aebd01da0bfc4c02bf0106c",
+            "target": "SA"
+          },
+          {
+            "lineage": 2,
+            "source": "9f14025af0065b30e47e23ebb3b491d39ae8ed17d33739e5ff3827ffb3634953",
+            "target": "SB"
+          },
+          {
+            "lineage": 3,
+            "source": "d59eced1ded07f84c145592f65bdf854358e009c5cd705f5215bf18697fed103",
+            "target": "SC"
+          },
+          {
+            "lineage": 4,
+            "source": "b7a56873cd771f2c446d369b649430b65a756ba278ff97ec81bb6f55b2e73569",
+            "target": "SD"
+          },
+          {
+            "lineage": 5,
+            "source": "1a6562590ef19d1045d06c4055742d38288e9e6dcd71ccde5cee80f1d5a774eb",
+            "target": "SE"
+          },
+          {
+            "lineage": 6,
+            "source": "f5ca38f748a1d6eaf726b8a42fb575c3c71f1864a8143301782de13da2d9202b",
+            "target": "SF"
+          },
+          {
+            "lineage": 7,
+            "source": "624b60c58c9d8bfb6ff1886c2fd605d2adeb6ea4da576068201b6c6958ce93f4",
+            "target": "SG"
+          },
+          {
+            "lineage": 8,
+            "source": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5",
+            "target": "SH"
+          },
+          {
+            "lineage": 9,
+            "source": "02d20bbd7e394ad5999a4cebabac9619732c343a4cac99470c03e23ba2bdc2bc",
+            "target": "SI"
+          },
+          {
+            "lineage": 10,
+            "source": "39fa9ec190eee7b6f4dff1100d6343e10918d044c75eac8f9e9a2596173f80c9",
+            "target": "SJ"
+          },
+          {
+            "lineage": 11,
+            "source": "e629fa6598d732768f7c726b4b621285f9c3b85303900aa912017db7617d8bdb",
+            "target": "SK"
+          }
+        ],
+        "industry_name": [
+          {
+            "lineage": 1,
+            "source": "9b3289a385a5301eea0c04a06fde98bc542113ab4ed24c47c9b9771984869a31",
+            "target": "Synthetic industry A01"
+          },
+          {
+            "lineage": 2,
+            "source": "881e3e62984b6e78a1d7fb86575638e8285247cbcf42e7b59ac4c7b7bc2241eb",
+            "target": "Synthetic industry A02"
+          },
+          {
+            "lineage": 3,
+            "source": "899eddae422df7d30213f78267dd606a5a0ec39a3f4d793f88d20ad041afe40a",
+            "target": "Synthetic industry A03"
+          },
+          {
+            "lineage": 4,
+            "source": "6571f3b0ac6eb20454575171ae3f5bdb026da88e0466d3c9eebf1048deb54953",
+            "target": "Synthetic industry A04"
+          },
+          {
+            "lineage": 5,
+            "source": "e1a148b65a9c871aa2eb7fd165745bb0cc55efd7630b119c7c17937764035e70",
+            "target": "Synthetic industry A05"
+          },
+          {
+            "lineage": 6,
+            "source": "bc4ed941e0eb2dcd9834c897d234ca76714b9bbc697c8c089901c06a1af23b04",
+            "target": "Synthetic industry A06"
+          },
+          {
+            "lineage": 7,
+            "source": "e0adb060548c779fe07d89ad298eff3dbb7c41b4442714881669ed7569798239",
+            "target": "Synthetic industry B01"
+          },
+          {
+            "lineage": 8,
+            "source": "83a08ea52f660d3b8adb8c2e907def07bc81817cbd47d5f3a246543ca5aeef47",
+            "target": "Synthetic industry B02"
+          },
+          {
+            "lineage": 9,
+            "source": "8cdaad072a5ae230c8afdeef67d8a3895a49cde52ffb368cd9b54c3070415870",
+            "target": "Synthetic industry B03"
+          },
+          {
+            "lineage": 10,
+            "source": "b2c9ee13af0e9b8327ecdf23ea310f9c0a733404f3474b593e8e8f4ea74b64c7",
+            "target": "Synthetic industry B04"
+          },
+          {
+            "lineage": 11,
+            "source": "66727de2bf88c406bd75390b2ac4d37ae3b3e0c8a82ec6d2a00e8e8942bb2784",
+            "target": "Synthetic industry B05"
+          },
+          {
+            "lineage": 12,
+            "source": "7729e3ce8b4dad4fe20905a4e1cac4373349af8cbb08f23b426dc264dee918d1",
+            "target": "Synthetic industry B06"
+          },
+          {
+            "lineage": 13,
+            "source": "0959e9bdd3051a4157de0f2cc72703c78d4bf8b14eb57cc0f684b5b466b2cac3",
+            "target": "Synthetic industry C01"
+          },
+          {
+            "lineage": 14,
+            "source": "4594b737568af7e32b200a9bd671212b423ddbda362b95bbe21a39a1abe55fcc",
+            "target": "Synthetic industry C02"
+          },
+          {
+            "lineage": 15,
+            "source": "7d4c8dd3fb2729e74bf7c9b67ef37376b0435e362d2d78e02eb5408ee9eb6710",
+            "target": "Synthetic industry C03"
+          },
+          {
+            "lineage": 16,
+            "source": "fbe065970201fb55f19a51222e494e7bf256b667be17a15cb293165e9d636197",
+            "target": "Synthetic industry C04"
+          },
+          {
+            "lineage": 17,
+            "source": "98c091d5f8f31af74ccdef84f0ddfff306ef2e68356f2ee69f6fe71d1fad17da",
+            "target": "Synthetic industry C05"
+          },
+          {
+            "lineage": 18,
+            "source": "d88ca185eeb20f77e32c53418731bd186a4675acf179a2c14744ecf9a829b502",
+            "target": "Synthetic industry C06"
+          },
+          {
+            "lineage": 19,
+            "source": "d8dd7de9a25c7e477506d319e9bf4c2442c6628ba158462821f630da9b6344ec",
+            "target": "Synthetic industry D01"
+          },
+          {
+            "lineage": 20,
+            "source": "e4fa9b16edac043f181b2f1e07b7d2691202963cd6c837656bc9167b2138b41a",
+            "target": "Synthetic industry D02"
+          },
+          {
+            "lineage": 21,
+            "source": "5c5b90a9eb449455f25681f1083e22c4ba93b7e0314dfa49f2ad801a570d96c9",
+            "target": "Synthetic industry D03"
+          },
+          {
+            "lineage": 22,
+            "source": "5be54d70a728d3f0d1b055bcb2eea0914cf7839e64adfb9cd0a420dd37ae524c",
+            "target": "Synthetic industry D04"
+          },
+          {
+            "lineage": 23,
+            "source": "68043d79ace3cc327d317ecb279a3a1d6e4851a6ad83c32670268e2bac299639",
+            "target": "Synthetic industry D05"
+          },
+          {
+            "lineage": 24,
+            "source": "e41418de5aaff3e09e0bb33995d09ed312c17f63744773cf033f5422b36ebef5",
+            "target": "Synthetic industry D06"
+          },
+          {
+            "lineage": 25,
+            "source": "dc464c94aef0f9091725900b651f1f5beed7b79fbfd02dc551388f008e916bc3",
+            "target": "Synthetic industry D07"
+          },
+          {
+            "lineage": 26,
+            "source": "14be45fec0f39b863ddee81bf66cd95e9e26fb6298332658124f44dbbaeef309",
+            "target": "Synthetic industry E01"
+          },
+          {
+            "lineage": 27,
+            "source": "ceaa553e838fb9f12e3e473ec6a8fe0c53329041cdee871874a3e4b2769e36ea",
+            "target": "Synthetic industry E02"
+          },
+          {
+            "lineage": 28,
+            "source": "d357175cfe8978d39b0f86552dcd9404973493e2816101d9ff6c05ee248ef6bd",
+            "target": "Synthetic industry E03"
+          },
+          {
+            "lineage": 29,
+            "source": "174480774ab1ceb85c15c3b7f70d8853cec38dcb1c6e16cf5b7d0e45237fccc6",
+            "target": "Synthetic industry E04"
+          },
+          {
+            "lineage": 30,
+            "source": "b4ffdc02c864beaabd326d06bc10082a30e99515927e3e5aa4e139f35907f9e8",
+            "target": "Synthetic industry E05"
+          },
+          {
+            "lineage": 31,
+            "source": "fe3d4f1e8b3cb683f5d7ae78bd08c590d5e8ebf30ed29b606272d83f8fd54ebf",
+            "target": "Synthetic industry F01"
+          },
+          {
+            "lineage": 32,
+            "source": "c20600239eb10815324390ba1b780e8757e46ae047198dec5ecb96725a937f3e",
+            "target": "Synthetic industry F02"
+          },
+          {
+            "lineage": 33,
+            "source": "4085082b4eafaf11a38d985f8ea68c37cff1d6bfea6c4886f209478e65063b2c",
+            "target": "Synthetic industry F03"
+          },
+          {
+            "lineage": 34,
+            "source": "7be4fdb5b26470bc83ca32da8bbc4319f489fe6b0ef4af592af2b9b4ddb8af08",
+            "target": "Synthetic industry F04"
+          },
+          {
+            "lineage": 35,
+            "source": "60f4e659716522de5bf92cf4ef5efdbf5764ba488e9cbc4bc97a742dfa8fca28",
+            "target": "Synthetic industry F05"
+          },
+          {
+            "lineage": 36,
+            "source": "ae8b35a292438d1346ff222a03bdf20806e418eadd1a9437aaef9d903d81ecec",
+            "target": "Synthetic industry F06"
+          },
+          {
+            "lineage": 37,
+            "source": "c4ede4b993b7452a41edcb630bf18dd9280708d06f6a47bc39f1fba9e4eaeb56",
+            "target": "Synthetic industry F07"
+          },
+          {
+            "lineage": 38,
+            "source": "b338dc6bd89d3042ed3366acc66b22ec4dafec1a3fc130c6926fb2a9c2f37399",
+            "target": "Synthetic industry F08"
+          },
+          {
+            "lineage": 39,
+            "source": "511b7047ab028a4749e51ad5d6e30c158f8810e984767dc6efc7f831a7f0870f",
+            "target": "Synthetic industry F09"
+          },
+          {
+            "lineage": 40,
+            "source": "7dc83ab071a8d545c791b4c46e746374b51f153efc2a807b722729500f44cbf5",
+            "target": "Synthetic industry F10"
+          },
+          {
+            "lineage": 41,
+            "source": "b5f1e049a80f701c6acbe836dbf429bd39cb799649fa1e4ebe73f595b9aa8c7a",
+            "target": "Synthetic industry F11"
+          },
+          {
+            "lineage": 42,
+            "source": "893aba5a4a5b78d7350b2cf92c545b7e6857c2efbbf47a674899f1bef045c7f8",
+            "target": "Synthetic industry G01"
+          },
+          {
+            "lineage": 43,
+            "source": "d8a9d10c7ac21b7ecf9f0800637311f2089ad10e68492b34c1d30ad7d34beb47",
+            "target": "Synthetic industry G02"
+          },
+          {
+            "lineage": 44,
+            "source": "d00a0fc156922e1b708f379d9e38e497f24502462995661a69797cc7a832d3ef",
+            "target": "Synthetic industry G03"
+          },
+          {
+            "lineage": 45,
+            "source": "ab5f39df6d0a21d1ddcbc6d8317415cb8c8c77fdac6223c5cec7f8212072059b",
+            "target": "Synthetic industry G04"
+          },
+          {
+            "lineage": 46,
+            "source": "b4c7dd5a4df85f7f4beb03f5b18d7eeaa9909ceb39c4eac0908ac9305dc09be4",
+            "target": "Synthetic industry G05"
+          },
+          {
+            "lineage": 47,
+            "source": "3260abd5f75969a30297d030fbff0d906e5d392fc3657478e66c64e798986bc8",
+            "target": "Synthetic industry G06"
+          },
+          {
+            "lineage": 48,
+            "source": "faf48e621c43846f9bc1306114d99a30e071c37e9d1728227e3213a706b5cbde",
+            "target": "Synthetic industry H01"
+          },
+          {
+            "lineage": 49,
+            "source": "b21e7bf8cb6930ed851a16c96ddc35da8a43e30493cfc4955fb28ae79ea4cd53",
+            "target": "Synthetic industry H02"
+          },
+          {
+            "lineage": 50,
+            "source": "e3e19a31a2b6520dff01f5267eaab60943a95df6613c532d43c6a4e41746e3a2",
+            "target": "Synthetic industry I01"
+          },
+          {
+            "lineage": 51,
+            "source": "4c79dbbc2c4b4a6d3803384c8f1b85d04049dde40bb5681c06d0f69bf5a334b6",
+            "target": "Synthetic industry I02"
+          },
+          {
+            "lineage": 52,
+            "source": "e9178f92264a8141dde3c4b78c18302001c3e7985302bbcabb468478fe49398a",
+            "target": "Synthetic industry I03"
+          },
+          {
+            "lineage": 53,
+            "source": "6e4234db694197ed42a99ce44b512426498eab6722e0fab9c082c62d2eea03ec",
+            "target": "Synthetic industry I04"
+          },
+          {
+            "lineage": 54,
+            "source": "1ed1f6f549b0c04a406fac3f8eae1f1ecdbd1905a140d4d0897794d69fc387b5",
+            "target": "Synthetic industry I05"
+          },
+          {
+            "lineage": 55,
+            "source": "50210156f9a2935b1a9bec66ccb71dddb22132126532ac6742012b8472f5d603",
+            "target": "Synthetic industry J01"
+          },
+          {
+            "lineage": 56,
+            "source": "d28bb97867fa6133cef964c6cfc424df6889c540e756f8455854e3ab7383a35c",
+            "target": "Synthetic industry J02"
+          },
+          {
+            "lineage": 57,
+            "source": "73fda182833f975d4b41768d5e434f324796e45f8b3ea0a9edff7f5d0acc6d5e",
+            "target": "Synthetic industry K01"
+          },
+          {
+            "lineage": 58,
+            "source": "efebe8562c2adeb73159b2031d87e69c0d9c1df79cecaaf58b041257b1f5a7c4",
+            "target": "Synthetic industry K02"
+          },
+          {
+            "lineage": 59,
+            "source": "cc101ae0f6cbd1908c92aa7459e7d116fbab93eb24872cc4748885b708364ef6",
+            "target": "Synthetic industry K03"
+          },
+          {
+            "lineage": 60,
+            "source": "c2933a49f1924dbade603f87b52e913a963320cc3dc9356a19c517a2003ee028",
+            "target": "Synthetic industry K04"
+          },
+          {
+            "lineage": 61,
+            "source": "9748dd889e3703645467b13a4abb8dd1e60441478f37e5917141c43f7e3b0936",
+            "target": "Synthetic industry K05"
+          }
+        ]
+      }
+    }
+  }
+}

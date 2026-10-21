@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 
@@ -128,3 +128,13 @@ def test_missing_recording_is_checked_before_missing_profile_input(monkeypatch, 
     )
     assert v.main(["stub.csv"]) == 2
     assert "no recording" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("path_type", [PurePosixPath, PureWindowsPath])
+def test_profile_input_digest_keys_use_recorded_posix_paths(monkeypatch, path_type):
+    v = verifier()
+    v.DATA = path_type("fixtures")
+    source = v.DATA / "edge" / "x_time_only.csv"
+    monkeypatch.setattr(v, "input_files", lambda ds: [source])
+    monkeypatch.setattr(v, "sha256", lambda path: "a" * 64)
+    assert v.input_digests("edge/x_time_only.csv") == {"profile/edge/x_time_only.csv": "a" * 64}

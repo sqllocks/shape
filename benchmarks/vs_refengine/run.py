@@ -15,6 +15,10 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from common import bench_lock, machine_meta  # noqa: E402 (harness path bootstrap)
+from comparison_contract import (  # noqa: E402
+    NOT_COMPARABLE_EXIT,
+    recorded_not_comparable_reason,
+)
 from paths import (  # noqa: E402 (harness path bootstrap)
     BASELINE_PY,
     BASELINE_VERSION,
@@ -304,11 +308,17 @@ def profile_workloads(
         vcmd = [str(py), str(PROFILE / "verify.py"), "--impl", "shape", ds]
         rc, _ = sh(vcmd)
         ver = verifier_record(vcmd, rc)
+        if rc == NOT_COMPARABLE_EXIT:
+            reason = recorded_not_comparable_reason("profile:" + ds)
+            if reason is not None:
+                ver.update(status="not_comparable", workload="profile:" + ds, reason=reason)
         base = blank("profile", ver, dataset=ds)
         current = blank("profile", ver, dataset=ds)
         out["baseline"]["workloads"]["profile:" + ds] = base
         if not BASELINE_ONLY:
             out["shape"]["workloads"]["profile:" + ds] = current
+        if ver["status"] == "not_comparable":
+            continue
         if rc:
             ok = False
             continue
