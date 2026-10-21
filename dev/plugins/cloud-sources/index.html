@@ -952,6 +952,8 @@
       
         
       
+        
+      
     
     
     
@@ -1040,6 +1042,34 @@
     
   
     Profiling notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SEMANTIC_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic model profiles
   
 
     
@@ -6633,6 +6663,11 @@ DAX (<code>max_rows</code>) are quoted, so a table or column name cannot end the
 <p>Tests use a fake <code>sempy</code> (<code>plugins/shape-fabric/tests/fake_sempy.py</code>); a <code>live</code>-marked test
 (<code>test_live_semantic_model.py</code>) reads a real model where <code>FABRIC_WORKSPACE_ID</code> and
 <code>FABRIC_SEMANTIC_MODEL</code> are set.</p>
+<p>Semantic model measures, roles, <code>as_role</code> reads and hidden-column profile parity are documented
+in <a href="../../SEMANTIC_MODEL/">Semantic model profiles</a>.</p>
+<p><code>as_role=NAME</code> uses a native DAX role-filtered read after checking TOM role names. Unknown roles
+are refused with the available names; <code>mode</code> cannot be combined with it. Hidden column metadata
+is retained by both plain <code>shape profile semantic-model://...</code> and <code>shape profile-model</code>.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Cloud+sources&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2Fplugins%2Fcloud-sources%2F">Report a problem with this page</a></p>
 
 

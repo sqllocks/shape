@@ -952,6 +952,8 @@
       
         
       
+        
+      
     
     
     
@@ -1040,6 +1042,34 @@
     
   
     Profiling notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SEMANTIC_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic model profiles
   
 
     
@@ -3941,6 +3971,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#preserve-a-profiled-semantic-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preserve a profiled semantic model
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6555,6 +6596,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#preserve-a-profiled-semantic-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preserve a profiled semantic model
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -7183,6 +7235,13 @@ All 2 values match the known answers.
 All 2 values match the known answers.
 </code></pre></div>
 </details>
+<h3 id="preserve-a-profiled-semantic-model">Preserve a profiled semantic model<a class="headerlink" href="#preserve-a-profiled-semantic-model" title="Permanent link">&para;</a></h3>
+<p><code>shape export-model --from-profile model.shape -o model.bim</code> fits the profile's table schema and
+preserves its measures and roles instead of inventing domain measures. <code>shape known-answer
+model.shape --measures from-profile -o answers</code> uses those measures, with unsupported DAX listed
+under <code>skipped</code>. Model profiles now retain <code>measures</code> per table and dataset <code>roles</code>; the TOM read
+is read-only. See <a href="../../SEMANTIC_MODEL/">Semantic model profiles</a> for permissions and the supported
+known-answer expressions.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Fabric+commands&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2Fplugins%2Ffabric-commands%2F">Report a problem with this page</a></p>
 
 

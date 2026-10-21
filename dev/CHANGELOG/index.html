@@ -952,6 +952,8 @@
       
         
       
+        
+      
     
     
     
@@ -1040,6 +1042,34 @@
     
   
     Profiling notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SEMANTIC_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic model profiles
   
 
     
@@ -6670,6 +6700,12 @@
 <p><strong>Early access 0.9.3.</strong> Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.</p>
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <ul>
+<li>W9-12: semantic model profiles retain table measures and read-only TOM roles. <code>semantic-model://</code>
+  accepts <code>as_role</code> for native DAX role-filtered reads, and plain profiles retain hidden columns.
+  <code>export-model --from-profile</code> preserves measures and roles; <code>known-answer MODEL.shape --measures
+  from-profile</code> computes supported aggregates and lists unsupported DAX under <code>skipped</code>.
+  Model diffs report <code>measure_change</code> and <code>role_change</code> with no numeric drift score.
+  See <code>docs/SEMANTIC_MODEL.md</code>.</li>
 <li>Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.</li>
 </ul>
 <p>Development: the dev and CI environment is now locked with uv; user installs are unchanged.</p>

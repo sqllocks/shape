@@ -97,6 +97,7 @@ Early access 0.9.3. Profiling, contracts and drift are available.
 - [Data quality scorecards:](https://docs.shapedata.ai/dev/SCORECARD/)
 - [Security policy](https://docs.shapedata.ai/dev/SECURITY/)
 - [Shape Sensitive & Classified Data Security Specification](https://docs.shapedata.ai/dev/SECURITY_SPECIFICATION/)
+- [Semantic model profiles](https://docs.shapedata.ai/dev/SEMANTIC_MODEL/)
 - [Shape Manifesto](https://docs.shapedata.ai/dev/SHAPE_MANIFESTO/)
 - [Safe-to-share bundle](https://docs.shapedata.ai/dev/SHARE_BUNDLE/)
 - [Signing](https://docs.shapedata.ai/dev/SIGNING/)

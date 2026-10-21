@@ -6320,6 +6320,26 @@ Early access 0.9.3.
 Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 Unreleased
 ¶
+W9-12: semantic model profiles retain table measures and read-only TOM roles.
+semantic-model://
+accepts
+as_role
+for native DAX role-filtered reads, and plain profiles retain hidden columns.
+export-model --from-profile
+preserves measures and roles;
+known-answer MODEL.shape --measures
+  from-profile
+computes supported aggregates and lists unsupported DAX under
+skipped
+.
+  Model diffs report
+measure_change
+and
+role_change
+with no numeric drift score.
+  See
+docs/SEMANTIC_MODEL.md
+.
 Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
@@ -25485,7 +25505,7 @@ Shape v0.9.3 — Drift report
   Changes:   0
   dim_column:        23 rows
   dim_date:          6 rows
-  dim_kind:          36 rows
+  dim_kind:          38 rows
   dim_run:           2 rows
   fact_drift_change: 0 rows
   Output:    report
@@ -25500,7 +25520,7 @@ Shape v0.9.3 — Drift report
   Changes:   0
   dim_column:        23 rows
   dim_date:          1 rows
-  dim_kind:          36 rows
+  dim_kind:          38 rows
   dim_run:           2 rows
   fact_drift_change: 0 rows
   Output:    report
@@ -25515,7 +25535,7 @@ Shape v0.9.3 — Drift report
   Changes:   0
   dim_column:        23 rows
   dim_date:          6 rows
-  dim_kind:          36 rows
+  dim_kind:          38 rows
   dim_run:           2 rows
   fact_drift_change: 0 rows
   Output:    fabric-report
@@ -31220,6 +31240,29 @@ and
 __shape_read_order
 as paging helper
 names and refuses a table containing either name before requesting its rows.
+Semantic model metadata and role reads
+¶
+See
+Semantic model profiles
+for measures and read-only TOM roles.
+semantic-model://
+supports
+as_role
+for native role-filtered DAX reads and retains hidden-column
+metadata.
+export-model --from-profile MODEL.shape
+preserves model-owned measures and roles;
+known-answer MODEL.shape --measures from-profile
+computes supported aggregates and lists other
+expressions under
+skipped
+. Model-profile diffs report
+measure_change
+and
+role_change
+,
+excluded from numeric drift gates. The TOM connection is read-only and sempy requires its
+specified model permissions; Shape does not deploy roles to a live model.
 Report a problem with this page
 
 ## Failure modes
@@ -64748,6 +64791,174 @@ SHAPE-SEC-016: A Shape is treated as sensitive unless policy establishes otherwi
 SHAPE-SEC-017: Security claims distinguish technical capability from external certification/accreditation.
 Report a problem with this page
 
+## Semantic model profiles
+https://docs.shapedata.ai/dev/SEMANTIC_MODEL/
+
+Semantic model profiles
+¶
+Install
+sqllocks-shape-fabric[semantic-link]
+in a Fabric notebook.
+sempy
+signs in as the
+notebook user; credentials are never URI components or profile fields.
+shape
+profile-model
+Workspace/Model
+-o
+model.shape
+shape
+profile
+semantic-model://Workspace/Model/Sales
+-o
+sales.shape
+shape
+export-model
+--from-profile
+model.shape
+-o
+model.bim
+shape
+known-answer
+model.shape
+--measures
+from-profile
+-o
+answers
+A model profile adds a
+measures
+list to each table. Every measure records
+name
+,
+expression
+,
+formatString
+,
+displayFolder
+, and
+hidden
+. It also adds dataset-level
+roles
+: each has
+name
+,
+modelPermission
+and
+tablePermissions
+entries with
+name
+and
+filterExpression
+. Existing
+profiles without these additive keys remain readable. The existing
+.shape
+format and version
+stay unchanged. Measures are metadata, never numeric data columns.
+Roles are read through
+sempy.fabric.connect_semantic_model(dataset=..., workspace=...,
+readonly=True)
+and
+tom.model.Roles
+. This API and
+list_measures
+require the model permission
+sempy documents as ReadWrite, even for this read-only connection. Shape never writes roles back
+to a live model. TOM failures stop profiling rather than silently dropping security metadata.
+For role-filtered rows, use the source API in the notebook:
+from
+shape_fabric.semantic_source
+import
+SemanticModelSource
+source
+=
+SemanticModelSource
+()
+batches
+=
+list
+(
+source
+.
+read
+(
+"semantic-model://Workspace/Model/Sales"
+,
+as_role
+=
+"Region North"
+))
+as_role
+is a nonempty role name. Shape validates it against TOM and passes
+role=...
+to
+sempy.fabric.evaluate_dax
+; the engine applies the role's filters and their relationships. Unknown
+roles are refused with available role names. Connection delimiters in a role name are refused.
+columns
+,
+batch_rows
+, and
+max_rows
+still apply; a zero cap returns no rows after validation.
+mode
+cannot be combined with
+as_role
+. Hidden columns remain readable and carry
+hidden: true
+in both plain profiles and model profiles; visible columns omit that key.
+export-model --from-profile
+takes a saved profile and preserves the exact DAX expressions,
+format strings, display folders, hidden measure flags (TOM
+isHidden
+), and roles in its
+.bim
+.
+It fits the table schema from the profile. Do not also pass a domain or
+--mode
+.
+--no-measures
+omits measures while keeping roles. An older profile without semantic metadata exports empty
+roles and no model-owned measures.
+known-answer MODEL.shape --measures from-profile
+generates synthetic rows using the profile's
+row counts, then computes its own measures. Supported complete expressions are
+COUNTROWS('table')
+and
+SUM
+,
+AVERAGE
+,
+MIN
+, or
+MAX
+over a numeric column of any profiled table. Simple unquoted table names are accepted too. Quoted names use
+DAX escaping (doubled table quotes and column closing brackets). Arbitrary DAX, references to absent tables/columns
+and nonnumeric aggregates are recorded under
+skipped
+with
+reason: "unsupported
+DAX expression"
+; their original expressions remain in
+model.bim
+. No DAX is executed locally.
+Leave
+--scale
+out: the profile's row counts determine the scale. The existing
+shape-dax-answers
+format/version 1 continues to apply.
+shape diff
+reports added, removed and changed measures as
+measure_change
+and roles as
+role_change
+, with old and new definitions and the object name. These metadata records have
+score zero and are excluded from numeric drift gates. Numeric columns use the existing gates
+and thresholds. Ordering alone in the measures/roles lists does not count as a change.
+Object-level security, calculation groups, perspectives, translations and DirectLake-specific
+behavior are outside this workflow. Live role/measure fixtures await the Owner's decision;
+offline fake sempy tests verify the behavior on every PR.
+Report a problem with this page
+
 ## Shape Manifesto
 https://docs.shapedata.ai/dev/SHAPE_MANIFESTO/
 
@@ -75970,6 +76181,18 @@ plugin API 1.0: 180 plugin(s)
   ok    shape.transforms:mask [sqllocks-shape]
   ok    shape.transforms:star [sqllocks-shape]
 all plugins load
+A source can optionally define
+profile_metadata(uri, profile) -> profile
+to attach declared
+metadata after a public
+shape.profile
+call for a single URI finishes. For example, the semantic-model source
+adds
+hidden: true
+for hidden columns. The hook must preserve the computed column statistics,
+profile name, provenance, sketches and capture state. It runs outside the reference profiler;
+sources without the hook keep the existing behavior. It must not expose credentials in metadata
+or exceptions. It is an optional extension; the v1 source Protocol remains unchanged.
 Report a problem with this page
 
 ## Behavior models:
@@ -78792,6 +79015,22 @@ FABRIC_WORKSPACE_ID
 and
 FABRIC_SEMANTIC_MODEL
 are set.
+Semantic model measures, roles,
+as_role
+reads and hidden-column profile parity are documented
+in
+Semantic model profiles
+.
+as_role=NAME
+uses a native DAX role-filtered read after checking TOM role names. Unknown roles
+are refused with the available names;
+mode
+cannot be combined with it. Hidden column metadata
+is retained by both plain
+shape profile semantic-model://...
+and
+shape profile-model
+.
 Report a problem with this page
 
 ## Signing in to Fabric and Azure (
@@ -80187,6 +80426,25 @@ Output (exit 0)
 Wrote a local result fixture from the known answers
 All 2 values match the known answers.
 All 2 values match the known answers.
+Preserve a profiled semantic model
+¶
+shape export-model --from-profile model.shape -o model.bim
+fits the profile's table schema and
+preserves its measures and roles instead of inventing domain measures.
+shape known-answer
+model.shape --measures from-profile -o answers
+uses those measures, with unsupported DAX listed
+under
+skipped
+. Model profiles now retain
+measures
+per table and dataset
+roles
+; the TOM read
+is read-only. See
+Semantic model profiles
+for permissions and the supported
+known-answer expressions.
 Report a problem with this page
 
 ## Fabric writers and the

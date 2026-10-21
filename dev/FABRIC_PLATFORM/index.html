@@ -952,6 +952,8 @@
       
         
       
+        
+      
     
     
     
@@ -1040,6 +1042,34 @@
     
   
     Profiling notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SEMANTIC_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic model profiles
   
 
     
@@ -2972,6 +3002,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#semantic-model-metadata-and-role-reads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Semantic model metadata and role reads
+      
+    </span>
+  </a>
   
 </li>
       
@@ -6384,6 +6425,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#semantic-model-metadata-and-role-reads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Semantic model metadata and role reads
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -6799,6 +6851,14 @@ repeatable captures. Size-limited or failed queries must be retried with a
 smaller batch; the source does not use Kusto export or streaming reads.
 The source reserves <code>__shape_read_row</code> and <code>__shape_read_order</code> as paging helper
 names and refuses a table containing either name before requesting its rows.</p>
+<h2 id="semantic-model-metadata-and-role-reads">Semantic model metadata and role reads<a class="headerlink" href="#semantic-model-metadata-and-role-reads" title="Permanent link">&para;</a></h2>
+<p>See <a href="../SEMANTIC_MODEL/">Semantic model profiles</a> for measures and read-only TOM roles.
+<code>semantic-model://</code> supports <code>as_role</code> for native role-filtered DAX reads and retains hidden-column
+metadata. <code>export-model --from-profile MODEL.shape</code> preserves model-owned measures and roles;
+<code>known-answer MODEL.shape --measures from-profile</code> computes supported aggregates and lists other
+expressions under <code>skipped</code>. Model-profile diffs report <code>measure_change</code> and <code>role_change</code>,
+excluded from numeric drift gates. The TOM connection is read-only and sempy requires its
+specified model permissions; Shape does not deploy roles to a live model.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Fabric+platform+inventory&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FFABRIC_PLATFORM%2F">Report a problem with this page</a></p>
 
 

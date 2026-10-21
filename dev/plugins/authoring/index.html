@@ -952,6 +952,8 @@
       
         
       
+        
+      
     
     
     
@@ -1040,6 +1042,34 @@
     
   
     Profiling notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SEMANTIC_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic model profiles
   
 
     
@@ -7077,6 +7107,12 @@ plugin API 1.0: 180 plugin(s)
 all plugins load
 </code></pre></div>
 </details>
+<p>A source can optionally define <code>profile_metadata(uri, profile) -&gt; profile</code> to attach declared
+metadata after a public <code>shape.profile</code> call for a single URI finishes. For example, the semantic-model source
+adds <code>hidden: true</code> for hidden columns. The hook must preserve the computed column statistics,
+profile name, provenance, sketches and capture state. It runs outside the reference profiler;
+sources without the hook keep the existing behavior. It must not expose credentials in metadata
+or exceptions. It is an optional extension; the v1 source Protocol remains unchanged.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Writing+a+plugin&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2Fplugins%2Fauthoring%2F">Report a problem with this page</a></p>
 
 
