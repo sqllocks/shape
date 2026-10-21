@@ -85,6 +85,8 @@ THRESHOLD_KEYS: dict[str, tuple[str, ...]] = {
     "cohort_shift": ("cohort_tvd",),
 }
 NO_THRESHOLD = (
+    "measure_change",
+    "role_change",
     "table_added",
     "table_removed",
     "column_added",

@@ -145,6 +145,12 @@ def profile_model(
     for table, names in hidden.items():
         for name in names:
             doc["tables"][table]["columns"][name]["hidden"] = True
+    from .semantic_metadata import read_measures, read_roles
+
+    measures = read_measures(workspace, model)
+    for table in chosen:
+        doc["tables"][table]["measures"] = measures.get(table, [])
+    doc["roles"] = read_roles(workspace, model)
     _declare(doc, relationships)
     return Profile(
         doc,
