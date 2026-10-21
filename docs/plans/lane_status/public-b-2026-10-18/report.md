@@ -90,3 +90,23 @@ PR43 catalog integration repair completed: exact548b97651b169f626d891f94d782dfe6
 Scheduling at23:56UTC: current31 coreCI39517323914/Wheels39517323900 and34 coreCI39517315974 canceled to prioritize29/33/main runner capacity. Cancellations are NOTpasses. Hold these later-priority fulls until both firstgroup PRs merge and root advances stage; lightweight gates continue.42/43 CI remains active for regression detection.
 
 Dependency routing: LeadA closed35 unmerged and replaced it with [PR45](https://github.com/sqllocks/shape/pull/45), identical source tree with corrected DCO trailers. Issue2 remains open;14 stays parked until replacement45 merges. [Supersession evidence](https://github.com/sqllocks/shape/pull/35#issuecomment-6304433722).
+
+## Targeted comparison results — qualifying main Nightly still pending
+
+All four original workloads with recorded values pass their unchanged comparisons in the reviewed PR42 implementation:
+
+| Workload | Targeted result |
+|---|---|
+| `generate:healthcare:medium` | PASS, 80/80 columns and every original clause a–f |
+| `generate:capital_markets:medium` | PASS, 64/64 columns and every original clause a–f |
+| `profile:edge/x_time_only.csv` | PASS, zero mismatches, exit0 |
+| `profile:edge/x_time_ampm.csv` | PASS, zero mismatches, exit0 |
+
+These two workloads are reported separately and **never count as passes or receive timing credit**:
+
+| Workload | Category | Recorded0.9.1 reason |
+|---|---|---|
+| `profile:edge/x_pq_list.parquet` | NOT COMPARABLE | TypeError on list-valued Parquet; no baseline profile values |
+| `profile:edge/x_pq_nested.parquet` | NOT COMPARABLE | TypeError on struct-valued Parquet; no baseline profile values |
+
+The reviewed registry is `benchmarks/vs_refengine/comparison_contract.py` in PR42. No recordings, value comparisons or thresholds changed. These targeted results do not establish the required post-merge main Nightly acceptance or close20.
