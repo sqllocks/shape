@@ -256,7 +256,7 @@ shape plugins list
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    180 plugin(s)
+    182 plugin(s)
       shape.behaviors:entity_lifecycle        unloaded [sqllocks-shape-behavior]
       shape.behaviors:equipment_maintenance   unloaded [sqllocks-shape-behavior]
       shape.behaviors:event_sequence          unloaded [sqllocks-shape-behavior]
@@ -363,6 +363,7 @@ shape plugins list
       shape.sinks:fabric-mirror               unloaded [sqllocks-shape]
       shape.sinks:fhir-bundle                 unloaded [sqllocks-shape-healthcare-standards]
       shape.sinks:fhir-ndjson                 unloaded [sqllocks-shape-healthcare-standards]
+      shape.sinks:iceberg                     unloaded [sqllocks-shape]
       shape.sinks:ipc                         unloaded [sqllocks-shape]
       shape.sinks:jsonl                       unloaded [sqllocks-shape]
       shape.sinks:mysql                       unloaded [sqllocks-shape-databases]
@@ -387,6 +388,7 @@ shape plugins list
       shape.sources:duckdb                    unloaded [sqllocks-shape-integrations]
       shape.sources:eventhouse                unloaded [sqllocks-shape-fabric]
       shape.sources:hl7v2                     unloaded [sqllocks-shape-healthcare-standards]
+      shape.sources:iceberg                   unloaded [sqllocks-shape]
       shape.sources:ipc                       unloaded [sqllocks-shape]
       shape.sources:json                      unloaded [sqllocks-shape]
       shape.sources:jsonl                     unloaded [sqllocks-shape]

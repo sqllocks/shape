@@ -78,7 +78,7 @@ to install the library and development headers before installing the extras.
 ## Offline installation locks
 
 `python scripts/offline_lock.py generate LOCKDIR` writes a hashed core dependency
-lock and one `requirements-<extra>.txt` per extra (`yaml`, `sign`, `delta`, `delta-fallback`, `excel`, `azure`, `pandas`, `pytest`, `scipy`, `advanced`, `faker`, `ctgan`, `kafka`, `eventhubs`, `fabric`, `sqlserver`, `domains`, `simulation`, `dbt`, `healthcare`, `integrations`, `all`, `postgres`, `mysql`, `databases`, `duckdb`, `docs`, `streaming`, `dev`).
+lock and one `requirements-<extra>.txt` per extra (`yaml`, `sign`, `delta`, `iceberg`, `delta-fallback`, `excel`, `azure`, `pandas`, `pytest`, `scipy`, `advanced`, `faker`, `ctgan`, `kafka`, `eventhubs`, `fabric`, `sqlserver`, `domains`, `simulation`, `dbt`, `healthcare`, `integrations`, `all`, `postgres`, `mysql`, `databases`, `duckdb`, `docs`, `streaming`, `dev`).
 Run `python scripts/offline_lock.py check LOCKDIR` to verify the lock files before
 using them for an offline installation. Resolve and download dependencies while
 network access is available; generating the locks needs a package index.
