@@ -10,6 +10,12 @@ Status: available.
   preserve nested Arrow fields, and count malformed or incompatible rows. Kafka
   Avro reads resolve writer schema ids with a per-read cache; Event Hubs supports
   Azure Schema Registry Avro through its optional schema-registry extra.
+- W9-12: semantic model profiles retain table measures and read-only TOM roles. `semantic-model://`
+  accepts `as_role` for native DAX role-filtered reads, and plain profiles retain hidden columns.
+  `export-model --from-profile` preserves measures and roles; `known-answer MODEL.shape --measures
+  from-profile` computes supported aggregates and lists unsupported DAX under `skipped`.
+  Model diffs report `measure_change` and `role_change` with no numeric drift score.
+  See `docs/SEMANTIC_MODEL.md`.
 - Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.
 
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
