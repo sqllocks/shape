@@ -380,3 +380,45 @@ def test_a_scan_writes_nothing(safe_file, api11):
     before = sorted(p.name for p in safe_file.parent.iterdir())
     api11.ok("safe_scan", path=str(safe_file))
     assert sorted(p.name for p in safe_file.parent.iterdir()) == before
+
+
+def test_nested_children_stay_under_column_and_are_share_safe(tmp_path, api11):
+    import pyarrow as pa
+
+    import shape
+
+    profile = shape.profile(
+        pa.table({"items": [[{"email": "child@example.com", "amount": 12345.0}]] * 20})
+    )
+    path = tmp_path / "children.shape"
+    shape.save(profile, path, capture="full")
+    shown = api11.ok("profile_show", path=str(path))
+    child = shown["summary"]["columns"]["items"]["children"][0]["children"][0]
+    assert child["path"] == "$.items[].amount" or child["path"] == "$.items[].email"
+    assert "child@example.com" not in json.dumps(shown)
+    assert child["min_value"] is None
+    shape.save(profile, path)
+    scan = api11.ok("safe_scan", path=str(path))
+    assert scan["clean"], scan["findings"]
+    unsafe = {
+        "schema_version": 1,
+        "row_count": 20,
+        "columns": {"x": {"children": [{"min_value": ["str", "child@example.com"]}]}},
+    }
+    assert not api11.ok("safe_scan", text=json.dumps(unsafe))["clean"]
+
+
+def test_child_path_check_observed_values_are_withheld(tmp_path, api11):
+    import pyarrow as pa
+
+    import shape
+
+    path = tmp_path / "full-child.shape"
+    shape.save(shape.profile(pa.table({"x": [[{"price": 12345.0}]] * 20})), path, capture="full")
+    contract = tmp_path / "child-contract.json"
+    contract.write_text(json.dumps({"columns": {"x[].price": {"min": 99999}}}))
+    safe = api11.ok("check", profile=str(path), contract=str(contract))
+    assert safe["violation_count"] == 1
+    assert "12345" not in json.dumps(safe)
+    raw = api11.ok("check", {"include_raw_values": True}, profile=str(path), contract=str(contract))
+    assert "12345" in json.dumps(raw)

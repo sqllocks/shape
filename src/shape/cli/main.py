@@ -494,6 +494,7 @@ def _cmd_profile(a):
         decisions=a.decisions,
         **_sample_options(a),
         time_column=getattr(a, "time_column", None),
+        max_depth=getattr(a, "max_depth", 8),
         **_workbook_options(a),
     )
     if settings:
@@ -1667,6 +1668,12 @@ def _build_parser(plugin_commands=()):
         "--delimiter",
         metavar="CHAR",
         help="CSV field delimiter (default: sniffed among comma, semicolon, tab and pipe)",
+    )
+    pr.add_argument(
+        "--max-depth",
+        type=int,
+        default=8,
+        help="nested child depth (default: 8; 0 keeps opaque columns)",
     )
     pr.add_argument("--encoding", metavar="NAME", help="CSV text encoding (default: utf-8)")
     pr.add_argument("--quotechar", metavar="CHAR", help='CSV quote character (default: ")')

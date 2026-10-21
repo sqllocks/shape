@@ -557,7 +557,13 @@ class SchemaBuilder:
         check_generatable(gen, where)
         nested = col.nested or {}
         if nested.get("length"):
-            gen["length"] = nested["length"]
+            length = dict(nested["length"])
+            if "min" not in length or "max" not in length:
+                # Safe captures omit extrema. Use existing public defaults for
+                # unmodelled lengths; do not reconstruct private bounds from bins.
+                length = {}
+            if length:
+                gen["length"] = length
         if nested.get("element_null_rate"):
             gen["element_null_rate"] = nested["element_null_rate"]
         return gen

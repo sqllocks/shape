@@ -64,6 +64,8 @@ class ColumnProfile:
     arrow_type: str | None = None
     arrow_type_spec: dict[str, Any] | None = None
     nested: dict[str, Any] | None = None
+    children: list[dict[str, Any]] | None = None
+    length: dict[str, Any] | None = None
     # the analyses whose statistics of this column drew a sample (``sampling.INTERNAL``); read by
     # the table's sampling record, never stored in the profile
     samples: list[str] = field(default_factory=list)

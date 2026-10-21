@@ -27,6 +27,16 @@ SHOULD and MAY text, where it appears, is advice and is not tested.
 - **SH2-007** A Shape MUST NOT retain original source rows.
 - **SH2-032** Profiling the same input in exact mode MUST produce the same document every time.
 
+## Nested child evidence
+
+- **SH2-033** Nested profiling MUST retain child statistics and paths under their
+  owning column, carry mode-appropriate error evidence, and suppress child values
+  in safe captures independently of repeated element counts.
+
+Children are optional for older profiles. The depth, path syntax, parent-null
+semantics and consumers are described in `docs/PROFILING_NOTES.md` and tracked by
+`SHAPE-NESTED-CHILD-001`.
+
 ## The `.shape` artifact
 
 - **SH2-008** A writer MUST write `.shape` format version 2.

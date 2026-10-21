@@ -113,7 +113,7 @@ def test_a_nested_column_survives_the_artifact_round_trip(kernel: str, tmp_path:
     src = ni.write("parquet", tmp_path, ni.table_with("li", "mp"))
     prof = shape.profile(str(src))
     path = tmp_path / "p.shape"
-    save(prof, str(path))
+    save(prof, str(path), capture="full")
     again = shape.load(str(path)).to_dict()
     assert again["columns"]["li"] == prof.to_dict()["columns"]["li"]
 

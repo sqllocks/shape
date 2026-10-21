@@ -629,7 +629,12 @@ def _check_table(
     gaps: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     violations: list[dict[str, Any]] = []
-    columns = table["columns"]
+    from shape.profile.children import walk
+
+    columns = dict(table["columns"])
+    for path, child in walk(table["columns"]):
+        columns.setdefault(path, child)
+        columns.setdefault(path.removeprefix("$."), child)
     rc = contract.get("row_count", {})
     if "min" in rc and table["row_count"] < rc["min"]:
         violations.append(_violation(None, f"{prefix}row_count.min", rc["min"], table["row_count"]))
@@ -651,11 +656,15 @@ def _check_table(
                     )
                 )
             continue
-        violations.extend(_check_column(name, rules, columns[name], table["row_count"], gaps))
+        violations.extend(
+            _check_column(
+                name, rules, columns[name], columns[name].get("row_count", table["row_count"]), gaps
+            )
+        )
     violations.extend(check_joint_rules(contract, table))
     if contract.get("allow_extra_columns", True) is False:
         known = set(contract.get("columns", {})) | set(required)
-        for name in columns:
+        for name in table["columns"]:
             if name not in known:
                 violations.append(_strong(_violation(name, "extra_column", "absent", "present")))
     return violations

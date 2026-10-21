@@ -64,6 +64,10 @@
       "required": ["name", "arrow_type", "kind", "count", "null_count", "error_models"],
       "properties": {
         "name": {"type": "string"},
+        "path": {"type": "string"},
+        "row_count": {"type": "integer", "minimum": 0},
+        "present": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "children": {"type": "array", "items": {"$ref": "#/$defs/column"}},
         "arrow_type": {"type": "string"},
         "kind": {"enum": ["int", "float", "bool", "text", "temporal", "other"]},
         "classification": {"type": "string"},

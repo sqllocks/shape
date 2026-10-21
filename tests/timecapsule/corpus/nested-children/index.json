@@ -1,0 +1,24 @@
+{
+  "files": [
+    {
+      "id": "profile-artifact-v2-children-safe",
+      "kind": "profile-artifact",
+      "format_version": 2,
+      "path": "profile/children-safe.shape",
+      "produced_by": "shape.save(capture='safe')",
+      "writer_shape_version": "0.9.3",
+      "authored": false,
+      "sha256": "52d32e1a089ccf4840e4a520427df59d2c205cd9e381aa256cadd0e8e57f638f"
+    },
+    {
+      "id": "profile-artifact-v2-children-full",
+      "kind": "profile-artifact",
+      "format_version": 2,
+      "path": "profile/children-full.shape",
+      "produced_by": "shape.save(capture='full')",
+      "writer_shape_version": "0.9.3",
+      "authored": false,
+      "sha256": "514b372c3f7f214cbe545cdaa0e1880199750ef0b671b0d08a095f54b4e799bf"
+    }
+  ]
+}
