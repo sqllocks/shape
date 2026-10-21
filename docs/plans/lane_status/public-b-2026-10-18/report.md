@@ -4,7 +4,7 @@ Work is continuing. This is not the final completion report. The earlier transie
 
 ## Progress
 
-Nine assigned issues: two merged (22.2%), five ready/reviewed (55.6%), one active Windows portability fix (11.1%), one dependency-blocked (11.1%). Seven remain unmerged (77.8%). PR42 capture-date manifest key serialization needs canonical separators after a genuine Windows3.14 CI failure; targeted repair/review in progress. Supporting PR40 is outside the denominator.
+Nine assigned issues: two merged (22.2%), six ready/reviewed (66.7%), one dependency-blocked (11.1%). Seven remain unmerged (77.8%). Eight implementations ready including merged issues (88.9%). PR42 Windows portability fix is signed/pushed, independently approved and locally green; fresh exact-head CI and required main Nightly remain. Supporting PR40 is outside the denominator.
 
 | Issue | Status | PR | Merge SHA |
 |---|---|---|---|
@@ -16,7 +16,7 @@ Nine assigned issues: two merged (22.2%), five ready/reviewed (55.6%), one activ
 | #17 Iceberg | Implemented, ready, independently approved; prior Windows repair passed both versions; current core/Wheels held for next main refresh | [31](https://github.com/sqllocks/shape/pull/31) | None |
 | #6 Nested profiling | Catalog max_depth fix complete at548b976, independently approved; fresh CI pending; depends on PR42 | [43](https://github.com/sqllocks/shape/pull/43) | None |
 | #14 BigQuery | Parked: source interface dependency absent from main | None | None |
-| #20 Frozen comparison | Three-part value fix complete; Windows manifest path portability repair active after CI failure; new review/CI/merge/Nightly pending | [42](https://github.com/sqllocks/shape/pull/42) | None |
+| #20 Frozen comparison | Three-part value fix and Windows manifest portability repair complete, independently approved20cfff2; fresh CI/merge/Nightly pending | [42](https://github.com/sqllocks/shape/pull/42) | None |
 
 All current feature heads and branches are recorded in [state.md](state.md). Their existing reviews remain bound to those heads. Canceled checks are not passes. No open feature PR has a complete green exact-head gate established.
 
@@ -112,3 +112,5 @@ These two workloads are reported separately and **never count as passes or recei
 The reviewed registry is `benchmarks/vs_refengine/comparison_contract.py` in PR42. No recordings, value comparisons or thresholds changed. These targeted results do not establish the required post-merge main Nightly acceptance or close20.
 
 PR42 update01:19UTC: CI39517332719 Windows3.14 failed six capture-date cases because str(relative_path) uses backslashes for canonicalPOSIX manifest lookups. Author addingportableWindows/POSIX red test andas_posix serialization fix; strict digests, records, values and thresholds unchanged. Independent frz_review_resume reviewing repair. No full local runs.
+
+PR42 portability repair complete:20cfff275c14d1ac44e77575fbc9be769181f2dc signed/pushed, independently APPROVED frz_review_resume. Regression1red/1green→35focused tests green eachkernel; static/user-facing and configuredmypy703sources green. Canonicalpathkey only, strict hashes/values/records/thresholds unchanged. FreshCI39526872370 pending; oldfailed4ebrun neverqualifies.
