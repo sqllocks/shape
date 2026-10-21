@@ -1,10 +1,10 @@
 # Public B interim report — 2026-10-20
 
-Work is continuing. This is not the final completion report. The earlier transient credential interruption resolved with fresh command environments; authentication settings were unchanged. Current main is `5c6d46ff1703db9fd2307bc4ebd4fb087e9af733` after PR30 merged. Its full post-merge gate is still running; no completed main-green claim.
+Work is continuing. This is not the final completion report. The earlier transient credential interruption resolved with fresh command environments; authentication settings were unchanged. Current main is `404fed823b271525b8802254312ded28f1c5aaa8` after PR33 merged. Its full post-merge gate is still running; no completed main-green claim.
 
 ## Progress
 
-Nine assigned issues: two merged (22.2%), six ready/reviewed (66.7%), one dependency-blocked (11.1%). Seven remain unmerged (77.8%). Eight implementations ready including merged issues (88.9%). PR42 Windows portability fix is signed/pushed, independently approved and locally green; fresh exact-head CI and required main Nightly remain. Supporting PR40 is outside the denominator.
+Nine assigned issues: three merged (33.3%), five ready/reviewed (55.6%), one dependency-blocked (11.1%). Six remain unmerged (66.7%). Eight implementations ready including merged issues (88.9%). Supporting PR40 is outside the denominator.
 
 | Issue | Status | PR | Merge SHA |
 |---|---|---|---|
@@ -12,7 +12,7 @@ Nine assigned issues: two merged (22.2%), six ready/reviewed (66.7%), one depend
 | #10 Kafka/Event Hubs formats | Implemented, ready, independently approved; exact-head CI running | [34](https://github.com/sqllocks/shape/pull/34) | None |
 | #11 dbt | Implemented, ready, independently approved; exact-head CI running | [29](https://github.com/sqllocks/shape/pull/29) | None |
 | #12 Eventhouse | Merged; all6 source-head workflows green, merged-head gate pending | [30](https://github.com/sqllocks/shape/pull/30) | `5c6d46ff1703db9fd2307bc4ebd4fb087e9af733` |
-| #13 Semantic measures/roles | Implemented, ready, independently approved; exact-head CI running | [33](https://github.com/sqllocks/shape/pull/33) | None |
+| #13 Semantic measures/roles | Merged; all6source workflows green, newmain gate pending | [33](https://github.com/sqllocks/shape/pull/33) | `404fed823b271525b8802254312ded28f1c5aaa8` |
 | #17 Iceberg | Implemented, ready, independently approved; prior Windows repair passed both versions; current core/Wheels held for next main refresh | [31](https://github.com/sqllocks/shape/pull/31) | None |
 | #6 Nested profiling | Catalog max_depth fix complete at548b976, independently approved; fresh CI pending; depends on PR42 | [43](https://github.com/sqllocks/shape/pull/43) | None |
 | #14 BigQuery | Parked: source interface dependency absent from main | None | None |
@@ -114,3 +114,7 @@ The reviewed registry is `benchmarks/vs_refengine/comparison_contract.py` in PR4
 PR42 update01:19UTC: CI39517332719 Windows3.14 failed six capture-date cases because str(relative_path) uses backslashes for canonicalPOSIX manifest lookups. Author addingportableWindows/POSIX red test andas_posix serialization fix; strict digests, records, values and thresholds unchanged. Independent frz_review_resume reviewing repair. No full local runs.
 
 PR42 portability repair complete:20cfff275c14d1ac44e77575fbc9be769181f2dc signed/pushed, independently APPROVED frz_review_resume. Regression1red/1green→35focused tests green eachkernel; static/user-facing and configuredmypy703sources green. Canonicalpathkey only, strict hashes/values/records/thresholds unchanged. FreshCI39526872370 pending; oldfailed4ebrun neverqualifies.
+
+## PR33 merged — third assigned issue delivered
+
+PR33 merged2026-10-21T01:36:10Z as404fed823b271525b8802254312ded28f1c5aaa8, closing13. Exact approved190c763 had32successful checks plus2structural publishskips; all6workflows SUCCESS: [CI](https://github.com/sqllocks/shape/actions/runs/39517317496), [Documentation](https://github.com/sqllocks/shape/actions/runs/39517317492), [Security](https://github.com/sqllocks/shape/actions/runs/39517317518), [DCO](https://github.com/sqllocks/shape/actions/runs/39517317485), [Container](https://github.com/sqllocks/shape/actions/runs/39517317531), [action-selftest](https://github.com/sqllocks/shape/actions/runs/39517317589). Acceptance40red/7green againstbase→171focusedgreen eachkernel. Owner measure/role livefixture remains pending, no livepass claimed. New-main [CI](https://github.com/sqllocks/shape/actions/runs/39528275403), [Docs](https://github.com/sqllocks/shape/actions/runs/39528275422), [Security](https://github.com/sqllocks/shape/actions/runs/39528275442) pending. Allfive remaining implementation branches refreshed/signed/pushed and independentlyapproved; no productconflicts orlocalreruns.29 is finalfirstgroup PR.31/34 currentfulls canceled/helduntil29merge+explicitstageadvance; cancellations neverpasses.
