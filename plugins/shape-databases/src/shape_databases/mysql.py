@@ -75,6 +75,7 @@ class MySqlSink(DatabaseSink):
         "ssl-mode": _ssl_mode,
         "charset": as_text,
         "connect_timeout": as_int,
+        "nested": as_text,
     }
     exists_sql = (
         "SELECT 1 FROM information_schema.tables "
@@ -181,7 +182,9 @@ class MySqlSink(DatabaseSink):
         marks = ", ".join(["%s"] * len(names))
         # Identifiers only, each checked and quoted; every value is a bound parameter.
         statement = f"INSERT INTO {qualified} ({columns}) VALUES ({marks})"  # nosec B608
-        converters = _sql.converters_for(first.schema, self.dialect)
+        converters = _sql.converters_for(
+            first.schema, self.dialect, plan.options.get("nested", "native")
+        )
         step = min(plan.batch_size, plan.commit_rows or plan.batch_size)
 
         def rows() -> Iterator[tuple[Any, ...]]:

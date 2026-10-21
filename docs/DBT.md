@@ -256,7 +256,7 @@ shape plugins list
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    180 plugin(s)
+    185 plugin(s)
       shape.behaviors:entity_lifecycle        unloaded [sqllocks-shape-behavior]
       shape.behaviors:equipment_maintenance   unloaded [sqllocks-shape-behavior]
       shape.behaviors:event_sequence          unloaded [sqllocks-shape-behavior]
@@ -383,6 +383,7 @@ shape plugins list
       shape.sinks:x12-837p                    unloaded [sqllocks-shape-healthcare-standards]
       shape.sources:abfss                     unloaded [sqllocks-shape]
       shape.sources:csv                       unloaded [sqllocks-shape]
+      shape.sources:databricks                unloaded [sqllocks-shape-databases]
       shape.sources:delta                     unloaded [sqllocks-shape]
       shape.sources:duckdb                    unloaded [sqllocks-shape-integrations]
       shape.sources:eventhouse                unloaded [sqllocks-shape-fabric]
@@ -391,9 +392,13 @@ shape plugins list
       shape.sources:json                      unloaded [sqllocks-shape]
       shape.sources:jsonl                     unloaded [sqllocks-shape]
       shape.sources:mssql                     unloaded [sqllocks-shape-sqlserver]
+      shape.sources:mysql                     unloaded [sqllocks-shape-databases]
       shape.sources:onelake                   unloaded [sqllocks-shape-fabric]
       shape.sources:parquet                   unloaded [sqllocks-shape]
+      shape.sources:postgres                  unloaded [sqllocks-shape-databases]
+      shape.sources:postgresql                unloaded [sqllocks-shape-databases]
       shape.sources:semantic-model            unloaded [sqllocks-shape-fabric]
+      shape.sources:snowflake                 unloaded [sqllocks-shape-databases]
       shape.sources:x12                       unloaded [sqllocks-shape-healthcare-standards]
       shape.sources:xml                       unloaded [sqllocks-shape]
       shape.strategies:address                unloaded [sqllocks-shape]

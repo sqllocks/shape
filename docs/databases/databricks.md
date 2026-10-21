@@ -20,7 +20,7 @@ idempotency decision.
 
 Evidence: `plugins/shape-databases/src/shape_databases/databricks.py` and shared adapter helpers.
 The integrations source definitions are in `plugins/shape-integrations/src/shape_integrations/`.
-Snowflake and Databricks are write targets; Shape does not profile from them yet.
+Databricks also profiles SQL warehouse tables and Unity Catalog schemas.
 
 ## Write receipt
 
@@ -45,6 +45,30 @@ The elapsed time records this single run. The [Owner-run receipt](../evidence/da
 The receipt records one test-account run. Authentication, permissions and server limits
 remain properties of your deployment.
 Do not publish credentials in a profile, project file or issue.
+
+## Profile a table or schema
+
+Use `databricks://HOST/sql/1.0/warehouses/ID?catalog=C&schema=S&table=T` with
+`shape profile` or the bridge profile handler. Omit `table` to profile a whole schema.
+This source supports SQL warehouses. Authentication uses the sink's token or OAuth
+machine-to-machine options; credentials are refused in URIs before connecting.
+
+The connector's `fetchall_arrow` supplies Arrow results. Bounded distributions use
+`TABLESAMPLE (... PERCENT)` and a limit. Catalog population counts come from `DESCRIBE
+TABLE EXTENDED` statistics. Missing row statistics fail with an instruction to ask the
+table owner to collect them; Shape does not modify statistics. Primary and foreign keys
+come from Unity Catalog `information_schema.table_constraints`, `key_column_usage` and
+`referential_constraints`. Key relationships carry `evidence: "declared"`.
+
+TINYINT, SMALLINT, INT and BIGINT retain int8, int16, int32 and int64 widths.
+DECIMAL(p,s) uses decimal128(p,s). TIMESTAMP uses UTC; TIMESTAMP_NTZ has no timezone.
+ARRAY, STRUCT and MAP retain recursive native Arrow types from `full_data_type` catalog
+declarations. This parses declared child types and does not profile child fields. Catalog row counts,
+`sampled_rows` and `sampling` distinguish the population and sampled distributions;
+zero requested sample rows reads the catalog only.
+
+Offline fake catalogs and Arrow result sets cover these reads. Live account validation
+is pending Owner settings.
 
 ## Related
 

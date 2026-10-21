@@ -44,7 +44,7 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
@@ -56,6 +56,7 @@ from . import _cloud, _sql
 from ._auth import Secret, _resolve_reference, resolve_password
 from ._base import DatabaseSink, Plan, Target, as_text, chain_batches, chunks, parse_uri
 from .errors import CredentialError
+from .nested import native_json
 
 INSTALL = "pip install 'sqllocks-shape-databases[databricks]'"
 _HOST = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$")
@@ -63,7 +64,7 @@ DEFAULT_BATCH_SIZE = 1000
 Binding = tuple[str, Callable[[Any], Any] | None]
 
 
-def binding(field: pa.Field) -> Binding:
+def binding(field: pa.Field, *, nested: str = "native") -> Binding:
     """The placeholder a column's value goes into and the conversion it needs first."""
     t = field.type
     if pat.is_timestamp(t):
@@ -77,6 +78,12 @@ def binding(field: pa.Field) -> Binding:
     if pat.is_uint64(t):
         return "CAST(? AS DECIMAL(20,0))", lambda v: None if v is None else str(v)
     if _cloud.is_nested(t):
+        if nested == "native":
+            schema = _cloud.string_literal(_cloud.databricks_type(field))
+            return (
+                f"from_json(?, {schema}, map('mode', 'FAILFAST'))",
+                lambda value: native_json(value, field, "databricks"),
+            )
         return "?", lambda v: None if v is None else _sql._json(v)  # noqa: SLF001
     return "?", None
 
@@ -139,7 +146,7 @@ class DatabricksSink(DatabaseSink):
     schemes = ("databricks",)
     dialect = "databricks"
     password_env = ("DATABRICKS_TOKEN",)
-    uri_params = {"catalog": as_text, "schema": as_text, "client_id": as_text}
+    uri_params = {"catalog": as_text, "schema": as_text, "client_id": as_text, "nested": as_text}
     exists_sql = (
         "SELECT 1 FROM information_schema.tables "
         "WHERE table_schema = COALESCE(?, current_schema()) AND table_name = ?"
@@ -197,12 +204,45 @@ class DatabricksSink(DatabaseSink):
         return plan
 
     def check_schema(self, schema: pa.Schema, plan: Plan) -> None:
-        _cloud.check_types(schema, self.dialect, plan.columns, plan.primary_key)
+        _cloud.check_types(
+            schema,
+            self.dialect,
+            plan.columns,
+            plan.primary_key,
+            plan.options.get("nested", "native"),
+        )
+
+    def _peek(
+        self, batches: Iterable[pa.RecordBatch], plan: Plan
+    ) -> tuple[pa.RecordBatch | None, Iterator[pa.RecordBatch]]:
+        first, rest = super()._peek(batches, plan)
+        if first is not None and plan.options.get("nested", "native") == "native":
+            self.check_schema(first.schema, plan)
+            for field, column in zip(first.schema, first.columns, strict=True):
+                if not _cloud.is_nested(field.type):
+                    continue
+                _, convert = binding(field)
+                if convert is None:
+                    raise ShapeError(f"column {field.name!r}: nested value has no JSON binding")
+                failure = None
+                try:
+                    for value in column.to_pylist():
+                        convert(value)
+                except (ValueError, TypeError) as exc:
+                    failure = ShapeError(str(exc))
+                if failure is not None:
+                    raise failure
+        return first, rest
 
     def create_table_sql(self, plan: Plan, schema: pa.Schema, first: pa.RecordBatch | None) -> str:
         qualified = _sql.qualified(plan.schema_name, plan.table, self.dialect)
         return _cloud.create_table_sql(
-            qualified, schema, self.dialect, plan.columns, plan.primary_key
+            qualified,
+            schema,
+            self.dialect,
+            plan.columns,
+            plan.primary_key,
+            plan.options.get("nested", "native"),
         )
 
     # -- connection --------------------------------------------------------------------------
@@ -276,7 +316,7 @@ class DatabricksSink(DatabaseSink):
             return 0
         names = first.schema.names
         columns = ", ".join(_sql.quote(n, self.dialect) for n in names)
-        bindings = [binding(f) for f in first.schema]
+        bindings = [binding(f, nested=plan.options.get("nested", "native")) for f in first.schema]
         row_marks = "(" + ", ".join(b[0] for b in bindings) + ")"
         converters = [b[1] for b in bindings]
 
