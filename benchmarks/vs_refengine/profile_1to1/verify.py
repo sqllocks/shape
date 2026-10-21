@@ -237,7 +237,7 @@ def input_files(ds: str) -> list[Path]:
 
 
 def input_digests(ds: str) -> dict[str, str]:
-    return {"profile/" + str(p.relative_to(DATA)): sha256(p) for p in input_files(ds)}
+    return {"profile/" + p.relative_to(DATA).as_posix(): sha256(p) for p in input_files(ds)}
 
 
 def baseline_profile(ds: str) -> dict[str, Any]:

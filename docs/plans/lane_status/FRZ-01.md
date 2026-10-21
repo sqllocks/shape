@@ -150,3 +150,17 @@ All four former value failures now have concrete targeted passing paths. The rem
 acceptance gate is hosted CI and a later Nightly dispatched on merged main, including all
 five parity shards, parity-publish and sqlserver-e2e. Those runs have not been claimed green;
 this lane performs no merge, Nightly dispatch or issue closure.
+
+## Windows input-manifest path repair — 2026-10-21
+
+[CI 39517332719](https://github.com/sqllocks/shape/actions/runs/39517332719/job/118952937393)
+found six Windows 3.14 capture-date tests failing because the verifier serialized relative
+input paths with native backslashes, while the authenticated recording uses POSIX keys.
+The input bytes and digests were unchanged. A platform-independent regression control using
+`PureWindowsPath` reproduced the failure: 1 failed, 1 passed before the repair. The verifier
+now uses `as_posix()` for manifest keys, retaining the exact byte hashes and equality check.
+
+Focused verifier, capture-date and timed-worker tests: 35 passed in each kernel mode
+(3.41 seconds and 3.09 seconds). Ruff, formatting and user-facing checks pass. Hosted
+Windows validation remains pending on the new head; the failed run is not passing evidence.
+No recording, fixture, value, threshold or comparison rule changed.
