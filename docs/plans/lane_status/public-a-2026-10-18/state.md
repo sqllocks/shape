@@ -1,6 +1,6 @@
 # Public A state
 
-Updated 2026-10-25 17:50 UTC. This file is the current checkpoint; lane records retain acceptance evidence.
+Updated 2026-10-25 18:18 UTC. This file is the current checkpoint; lane records retain acceptance evidence.
 
 ## Goal and progress
 
@@ -132,3 +132,11 @@ Verifiedsourcepluginregistrationcounts(root/pluginTOMLshape.*entrypoints+literal
 Latestrepairb81CI:32successful,9running,0queued,0failed;43registeredcheckruns includes2untriggeredpublishskips, so41triggeredchecksrequired. Security/audit/lock-exportgreen. Remainingplatform/minversionsuitesstillgates. Main43dhasonlyknownaudit/build/security+DuckDBminversionsfailures beingrepaired; no furtherfailuretypeobserved. Normalfeaturemergesremainpauseduntilrepair46lands safely; fourbaseline-blockedheadsretainimplementationapprovalandneedfreshCIafterrepairmainrefresh.
 
 Main43dCIcompleted:26green,4failed,0running. Failuresareexactlybuild/audit/security(all4tooladvisories) andminimumversions(removedDuckDB2relation.fetchone). Allothertriggeredmainchecks passed. ThisconfirmsPR46targetsallobservedmainfailureswithinonesmallPR; no unrelatedproductionfailurefound. Latestapprovedrepairb81CI34green/7running/0queued/0failed, plus2untriggeredpublishskips. Stillwait forall41triggeredchecks/workflowsoverallgreen andcurrentmainancestorbeforeAPImerge. No normalmergesyet.
+
+## Repair46 Windows failure — unresolved, do not dismiss
+
+Currentb81CI38green/2running/1failed asof18:17UTC. Windows3.11job121231082157 inrun40213846736 failed existing tests/regressions/test_issue_1_nested_profile.py::test_a_delta_read_that_fails_after_the_scan_started_exits_2_not_hangs: run2exit0 expected2;18525otherspassed,94.52%coverage. FailuremessagecontainsstderrRuntimeWarningonly; childstdout/artifactstate unavailable. Main43dWindows3.11passedthiscase, butthatdoesNOTprovefailurepre-existing/unrelated. No newskip/weakenedassertion/speculativeproductionfix made.
+
+Separateagentdelta_exit_ci_review tracedfullmaterialization(shape.api.profile→reference.read_delta→deltafs.local_table→DeltaTable.to_pyarrow_table nativeFS), no sample/cache bypass. CLIerrorsmap2,closedpipe141,lifecycle forwardscode; no knowncontrol-flowpath explains0. Unchangedtargetedtest6children passedLinux/native7.48s; outside-repoprobe30physical/30activefilesconfirmedcorruptselectedfileactiveandbytesunchanged;12additionalchildrenall2. No definitiveWindowscause or safecodefix found. This is18correctlocalruns, NOTproof Windowsflake/pre-existingcause.
+
+OneexactfailedWindowsjobrerunwithdebugloggingisplannedasdiagnostic, notrerununtilgreen. POSTjobrerunreturned403 becauseworkflowstillrunning (explicitoperationalreason, notcredentialfailure); waitforrun40213846736completed thenrequestjob121231082157rerun ONCE. As of18:17workflowinprogressattempt1,twootherjobsstillrunning. No dispatchofotherownedworkflows orfullmatrix. Keepallassertions/timeoutsunchanged. Reviewer_oct25 isassessingnewrisk; priorcodeapprovaldoesnoteraseCI failure. Do notmergerepairunlessallrequiredlatestexact-headCIgreen ANDreviewapprovalremainsappropriate. Ifno safeonesmallPRrepairispossible,userhardstoprequiresrevertour45merge throughPRthenstop; no protectedpush/gatebypass. Normalfeaturemergesstillpaused.
