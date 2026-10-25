@@ -150,3 +150,17 @@ Read-only merge prediction: repair b81 into each of37/38/39/44 conflicts only in
 Read-only Delta07 preparation: sql_constraints.py safe-AST helper is already byte-identical between tests checkpoint897f626 and final44head8243809. After actual44main, integrate final shared wiring rather than copying AST again. Preserve44 SQL policy vs Delta constraints bool/mapping namespace split, --contract parsing/constraint_contract/target_options and optional-sink-safe preview. The07 protocol preview currently omits contract-derived CHECK options; six of eight red cases address this, remaining two require44 parser. No premature07 integration or implementation edits made.
 
 Delta07 followup from read-only preparation: CLI parse_sink_config retains raw noninteger strings. Final44 namespace split treats any constraints string as SQL policy, but07 Features.parse accepts true/false/JSON-mapping strings as Delta feature configuration. During07 integration after actual44main, recognize only actual SQL policy names and preserve raw Delta strings/mappings; add targeted CLI true/false/structured constraints regression. Protocol preview must consume same derived per-table options as execution and union protocol versions/features. Preserve prestorage validation, named AST refusals, native mapped-NTZ refusal, appendOnly-before-user-rows ordering and default protocol; do not imply cross-table Delta atomicity.
+
+## Repair46 merged; feature queue resuming
+
+PR https://github.com/sqllocks/shape/pull/46 MERGED via guarded PRmergeAPI as c1ff1c8adec2225a7e458c50c5cf7c70625b17b1, exacttested/reviewedhead b81ceb8c6a1f77bb817b177748d21dbd2b6438cf. All41requiredchecks and6workflowsgreen. Windows diagnostic rerun job121252062691 passed: core18526passed (existing63platformskips,92deselected), heavy51passed, bothkernels449passed each(existing1platformskip each), bothdrifts7passed each. No tests/skips/assertions/gates altered byrepair. FirstWindowsfailurejob121231082157 remains unexplained; rerunpassdoesnotprovepre-existingcause. Preserve https://github.com/sqllocks/shape/actions/runs/40213846736/job/121231082157 asmaterialrisk. Exactlyone diagnosticrerunaccepted; no retryuntilgreen.
+
+Greenexact-headworkflowlinks:
+- CI https://github.com/sqllocks/shape/actions/runs/40213846736 (attempt2)
+- DCO https://github.com/sqllocks/shape/actions/runs/40213846872
+- Container https://github.com/sqllocks/shape/actions/runs/40213846631
+- Security https://github.com/sqllocks/shape/actions/runs/40213846712
+- Wheels https://github.com/sqllocks/shape/actions/runs/40213846671
+- Documentation https://github.com/sqllocks/shape/actions/runs/40213846756
+
+Checked ContractLead reports/contract-application/2026-10-25/questions.md after46mergebatch inworktree+neworigin/main: absent. Refresh37/38/39/44 once toactualrepairmain; no localtests unlesscodeconflicts. Current37head4b13dbc679eb61ae1305c9d161ea86516c1595d2 signed/pushed, onlyCHANGELOGappendconflict; current39head4496683c4aca24d8da2e0ddd57970eb8b5bc0c38 signed/pushed, onlyCHANGELOGappendconflict/lockauto-merge; publishedrangesandrepairpinsretained. Needindependentrefreshreviews/currentheadCI. MainrepairCIalsoinprogress; diagnoseanynewmainfailurebeforeordinarymerges. Sevenissuecountunchanged1merged,5active,1parked; maintenance46isoutsideseven.
