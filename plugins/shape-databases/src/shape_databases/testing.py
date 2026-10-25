@@ -764,6 +764,8 @@ class FakeBigQuery:
         self.declared = {}
         self.keys = {}
         self.foreign_keys = {}
+        self.catalog_schemas = {}
+        self.get_table_calls = []
         self.loads = []
         self.queries = []
         self.storage_reads = []
@@ -821,13 +823,17 @@ class _FakeBigQueryClient:
     def get_table(self, table):
         from types import SimpleNamespace
 
+        self.server.get_table_calls.append(table)
         if table not in self.server.tables:
 
             class NotFound(Exception):
                 pass
 
             raise NotFound(table)
-        return SimpleNamespace(num_rows=self.server.tables[table].num_rows)
+        return SimpleNamespace(
+            num_rows=self.server.tables[table].num_rows,
+            schema=self.server.catalog_schemas.get(table, ()),
+        )
 
     def delete_table(self, table, not_found_ok=False):
         self.server.tables.pop(table, None)

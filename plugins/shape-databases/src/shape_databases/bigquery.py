@@ -113,9 +113,11 @@ def arrow_field(name: str, declared: str, nullable: bool) -> pa.Field:
     t = types.get(kind)
     if match := re.fullmatch(r"(NUMERIC|BIGNUMERIC)\((\d+),\s*(\d+)\)", kind):
         base, p, s = match.groups()
-        t = (pa.decimal128 if base == "NUMERIC" else pa.decimal256)(int(p), int(s))
-    if re.fullmatch(r"STRING\(\d+\)", kind):
-        t = pa.string()
+        precision, scale = _decimal_parameters(name, base, int(p), int(s))
+        t = (pa.decimal128 if base == "NUMERIC" else pa.decimal256)(precision, scale)
+    if match := re.fullmatch(r"(STRING|BYTES)\((\d+)\)", kind):
+        _integer(int(match[2]), f"column {name!r} max_length", 1)
+        t = pa.string() if match[1] == "STRING" else pa.binary()
     if t is None:
         # BigQuery native nested fields are outside this adapter's write scope; read as JSON.
         if kind == "JSON" or kind.startswith(("ARRAY<", "STRUCT<")):
@@ -123,6 +125,57 @@ def arrow_field(name: str, declared: str, nullable: bool) -> pa.Field:
         else:
             raise ShapeError(f"column {name!r}: unsupported BigQuery catalog type")
     return pa.field(name, t, nullable=nullable, metadata={b"shape.sql_type": declared.encode()})
+
+
+def _decimal_parameters(name: str, kind: str, precision: Any, scale: Any) -> tuple[int, int]:
+    p = _integer(precision, f"column {name!r} precision", 1)
+    s = _integer(scale, f"column {name!r} scale", 0)
+    if (
+        s > p
+        or (kind == "NUMERIC" and (p - s > 29 or s > 9))
+        or (kind == "BIGNUMERIC" and (p - s > 38 or s > 38))
+    ):
+        raise ShapeError(f"column {name!r}: invalid {kind} precision/scale constraints")
+    return p, s
+
+
+def _catalog_declaration(name: str, declared: str, field: Any) -> str:
+    """Retain explicit REST TableFieldSchema constraints without guessing DATA_TYPE output."""
+    kind = declared.upper().strip()
+    if field is None:
+        return kind
+    base = kind.partition("(")[0]
+    aliases = {
+        "INTEGER": "INT64",
+        "FLOAT": "FLOAT64",
+        "BOOLEAN": "BOOL",
+        "DECIMAL": "NUMERIC",
+        "BIGDECIMAL": "BIGNUMERIC",
+    }
+    supplied = str(getattr(field, "field_type", base)).upper()
+    if aliases.get(supplied, supplied) != aliases.get(base, base):
+        raise ShapeError(f"column {name!r}: inconsistent catalog type metadata")
+    precision = getattr(field, "precision", None)
+    scale = getattr(field, "scale", None)
+    length = getattr(field, "max_length", None)
+    if precision is not None or scale is not None:
+        if base not in ("NUMERIC", "BIGNUMERIC") or precision is None:
+            raise ShapeError(f"column {name!r}: precision is required with decimal scale")
+        # REST explicitly defines omitted scale as zero when precision is supplied.
+        p, s = _decimal_parameters(name, base, precision, 0 if scale is None else scale)
+        if "(" in kind:
+            match = re.fullmatch(r"(?:NUMERIC|BIGNUMERIC)\((\d+)(?:,\s*(\d+))?\)", kind)
+            if not match or (int(match[1]), int(match[2] or 0)) != (p, s):
+                raise ShapeError(f"column {name!r}: conflicting decimal catalog constraints")
+        kind = f"{base}({p},{s})"
+    if length is not None:
+        n = _integer(length, f"column {name!r} max_length", 1)
+        if base not in ("STRING", "BYTES"):
+            raise ShapeError(f"column {name!r}: length constraints require STRING or BYTES")
+        if "(" in kind and kind != f"{base}({n})":
+            raise ShapeError(f"column {name!r}: conflicting length catalog constraints")
+        kind = f"{base}({n})"
+    return kind
 
 
 class _Session:
@@ -468,6 +521,7 @@ class _Catalog:
 
     def __init__(self, client: Any, plan: Plan) -> None:
         self.client, self.plan = client, plan
+        self.table_metadata: dict[str, Any] = {}
 
     def cursor(self) -> _Catalog:
         return self
@@ -542,6 +596,11 @@ class BigQuerySource(DatabaseSource):
     def _info(self, cur: Any, view: str) -> str:
         return f"`{cur.plan.target.host}.{cur.plan.target.database}.INFORMATION_SCHEMA.{view}`"
 
+    def _table_metadata(self, cur: Any, table: str) -> Any:
+        if table not in cur.table_metadata:
+            cur.table_metadata[table] = cur.client.get_table(self.sink.table_id(cur.plan, table))
+        return cur.table_metadata[table]
+
     def _tables(self, cur: Any, schema: str) -> list[tuple[str, int]]:
         rows = self._query(
             cur,
@@ -551,10 +610,7 @@ class BigQuerySource(DatabaseSource):
             schema,
         )
         return [
-            (
-                identifier(str(r[0]), "table"),
-                int(cur.client.get_table(self.sink.table_id(cur.plan, str(r[0]))).num_rows),
-            )
+            (identifier(str(r[0]), "table"), int(self._table_metadata(cur, str(r[0])).num_rows))
             for r in rows
         ]
 
@@ -567,7 +623,17 @@ class BigQuerySource(DatabaseSource):
             table,
             {"table": table},
         )
-        fields = [arrow_field(str(r[0]), str(r[1]), str(r[2]) == "YES") for r in rows]
+        schema_fields = {
+            field.name: field for field in getattr(self._table_metadata(cur, table), "schema", ())
+        }
+        fields = [
+            arrow_field(
+                str(r[0]),
+                _catalog_declaration(str(r[0]), str(r[1]), schema_fields.get(str(r[0]))),
+                str(r[2]) == "YES",
+            )
+            for r in rows
+        ]
         if not fields:
             raise ShapeError(f"table {table!r} is missing or has no readable columns")
         return pa.schema(fields)

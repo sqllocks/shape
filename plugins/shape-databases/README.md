@@ -405,6 +405,14 @@ microseconds. The catalog reverse map uses `INT64` → `int64`, `FLOAT64` → `f
 `DATETIME` → timestamp(us), `TIMESTAMP` → timestamp(us, UTC). Parameterized `NUMERIC(p,s)`
 uses decimal128; `BIGNUMERIC(p,s)` uses decimal256. BigQuery's unparameterized `NUMERIC`
 and `BIGNUMERIC` declare precision/scale 38/9 and 76/38 respectively.
+The COLUMNS view remains authoritative for column order and nullability. Explicit
+`Client.get_table(...).schema` precision, scale and maximum length constraints are preserved
+and checked against any parameterized COLUMNS type. Table metadata is cached per read/profile.
+The [TableFieldSchema API](https://cloud.google.com/bigquery/docs/reference/rest/v2/tables#TableFieldSchema)
+defines omitted scale as zero when precision is supplied; the source retains that rule.
+Conflicting or invalid explicit constraints fail naming the column. Without explicit
+constraints, the documented unparameterized physical mapping above remains in use. This
+behavior does not assume whether COLUMNS includes type parameters in a particular result.
 
 `BigQuerySource` inherits the W9-01 database source model. `read()` obtains Arrow batches
 from `RowIterator.to_arrow_iterable` with a `BigQueryReadClient`. A dataset URI profiles

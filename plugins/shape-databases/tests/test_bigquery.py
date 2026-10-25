@@ -522,3 +522,118 @@ def test_parquet_bignumeric_decimal_targets_and_values():
     assert all(
         t.startswith("BIGNUMERIC") for _, t, _ in server.declared["test-project.dataset.decimals"]
     )
+
+
+def test_explicit_sdk_catalog_constraints_with_bare_columns_and_cached_metadata():
+    from decimal import Decimal
+    from types import SimpleNamespace
+
+    server = FakeBigQuery()
+    b = pa.record_batch(
+        {
+            "money": pa.array([Decimal(1)], type=pa.decimal128(20, 0)),
+            "wide": pa.array([Decimal("1.0000000001")], type=pa.decimal128(38, 10)),
+            "label": ["label"],
+            "payload": [b"data"],
+        }
+    )
+    BigQuerySink(connect=server.connect).write(URI, "typed", [b])
+    table_id = "test-project.dataset.typed"
+    server.declared[table_id] = [
+        ("money", "NUMERIC", ""),
+        ("wide", "BIGNUMERIC", ""),
+        ("label", "STRING", ""),
+        ("payload", "BYTES", ""),
+    ]
+    server.catalog_schemas[table_id] = [
+        SimpleNamespace(
+            name="payload", field_type="BYTES", precision=None, scale=None, max_length=8
+        ),
+        SimpleNamespace(
+            name="label", field_type="STRING", precision=None, scale=None, max_length=12
+        ),
+        SimpleNamespace(
+            name="wide", field_type="BIGNUMERIC", precision=38, scale=10, max_length=None
+        ),
+        SimpleNamespace(
+            name="money", field_type="NUMERIC", precision=20, scale=None, max_length=None
+        ),
+    ]
+    source = BigQuerySource(connect=server.connect)
+    schema = source.schema(URI + "&table=typed")
+    assert schema.names == ["money", "wide", "label", "payload"]
+    assert schema.field("money").type == pa.decimal128(20, 0)
+    assert schema.field("wide").type == pa.decimal256(38, 10)
+    assert schema.field("label").metadata[b"shape.sql_type"] == b"STRING(12)"
+    assert schema.field("payload").metadata[b"shape.sql_type"] == b"BYTES(8)"
+    server.get_table_calls.clear()
+    prof = source.profile_database(URI, sample_rows=0)
+    assert prof.tables["typed"]["columns"]["money"]["declared_type"] == "NUMERIC(20,0)"
+    assert server.get_table_calls == [table_id]
+
+
+@pytest.mark.parametrize(
+    "declared,metadata",
+    [
+        ("NUMERIC", {"precision": 0}),
+        ("NUMERIC", {"precision": 20, "scale": -1}),
+        ("NUMERIC", {"precision": 2, "scale": 3}),
+        ("NUMERIC", {"scale": 2}),
+        ("NUMERIC", {"precision": True}),
+        ("NUMERIC", {"precision": 20, "scale": 10}),
+        ("STRING", {"max_length": 0}),
+        ("STRING", {"max_length": True}),
+        ("STRING", {"precision": 20}),
+        ("NUMERIC(20,0)", {"precision": 21, "scale": 0}),
+        ("STRING(12)", {"max_length": 13}),
+        ("NUMERIC", {"field_type": "STRING"}),
+    ],
+)
+def test_catalog_invalid_or_conflicting_explicit_metadata_fails_closed(declared, metadata):
+    from types import SimpleNamespace
+
+    server = FakeBigQuery()
+    BigQuerySink(connect=server.connect).write(URI, "typed", [pa.record_batch({"value": [1]})])
+    table_id = "test-project.dataset.typed"
+    server.declared[table_id] = [("value", declared, "")]
+    data = {
+        "name": "value",
+        "field_type": declared.split("(")[0],
+        "precision": None,
+        "scale": None,
+        "max_length": None,
+        **metadata,
+    }
+    server.catalog_schemas[table_id] = [SimpleNamespace(**data)]
+    with pytest.raises(ShapeError, match="value"):
+        BigQuerySource(connect=server.connect).schema(URI + "&table=typed")
+
+
+@pytest.mark.parametrize(
+    "declared,metadata,expected",
+    [
+        ("NUMERIC(20,0)", {"precision": 20}, pa.decimal128(20, 0)),
+        ("BIGNUMERIC(38,10)", {"precision": 38, "scale": 10}, pa.decimal256(38, 10)),
+        ("STRING(12)", {"max_length": 12}, pa.string()),
+        ("NUMERIC", {}, pa.decimal128(38, 9)),
+    ],
+)
+def test_catalog_matching_or_unspecified_metadata_preserves_mapping(declared, metadata, expected):
+    from types import SimpleNamespace
+
+    server = FakeBigQuery()
+    BigQuerySink(connect=server.connect).write(URI, "typed", [pa.record_batch({"value": [1]})])
+    table_id = "test-project.dataset.typed"
+    server.declared[table_id] = [("value", declared, "")]
+    data = {
+        "name": "value",
+        "field_type": declared.split("(")[0],
+        "precision": None,
+        "scale": None,
+        "max_length": None,
+        **metadata,
+    }
+    server.catalog_schemas[table_id] = [SimpleNamespace(**data)]
+    field = BigQuerySource(connect=server.connect).schema(URI + "&table=typed").field("value")
+    assert field.type == expected
+    assert field.nullable
