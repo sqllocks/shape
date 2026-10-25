@@ -1,6 +1,6 @@
 # Public A state
 
-Updated 2026-10-25 16:34 UTC. This file is the current checkpoint; lane records retain acceptance evidence.
+Updated 2026-10-25 17:21 UTC. This file is the current checkpoint; lane records retain acceptance evidence.
 
 ## Goal and progress
 
@@ -124,3 +124,9 @@ Canceled onlyownfourfeaturebaseline-blocked unfinishedworkflowruns afterrepairre
 Repair46generatedexportfollowup: original465a9c0CIlock-checkfoundrequirements-docs.txtstale. Unchangedgeneratorcheck red→CONTRIBUTING-prescribed--write→green. Newf52add9changesonly2generatedversionlines, matcheslock. All4existinguv-environmentcontracttests passed. Independentreview APPROVED exactf52add9/DCO/currentbase43d; priorsecurity/publishedrangereview retained. CIneedsalltriggerednewheadjobs; do notmergeold465head. No fullsuiteor gatechange.
 
 Repair46minimum-versionfollowup: main43dminversions1failed/18578passed on existingDuckDBreadbacktest. CIinstalledDuckDB2.0.0, whichremovedrelation.fetchone(). Newb81ceb8replacesonlytheexistingconsumerwith.fetchall() andassertscomplete[(small_table.num_rows,)] result; exactcountpreserved, no newskip/deletedcase/production/gatechange. Local2.0failednode1red4.37s→wholefingerprintmodule43greenlocked1.5.6/native4.94s and43green2.0/Python5.98s, zeroskips. Ruff/format/wording/diffgreen. Independentexactb81approval/DCO/currentmain43dverified; priorsecurity/exportreviews retained. Same smallrepairPR46 addressesauditandminimum-versionfailures; currentheadCIrequired, old465/f52heads superseded. Prepared/tmp/public-a-merge46.jsonguardsb81/Signed-off-by/mergecommit, NOTsubmitted.
+
+Read-onlyW9-06DuckDB2compatibilityreviewpassed: sink/source/nestedreadback paths useconnection.execute/fetchone/fetchall, sourceprefers.to_arrow_reader; removedrelation.fetchone notused inthesechangedpaths. No extraedits/testsneeded. Worktreeclean/released.
+
+Verifiedsourcepluginregistrationcounts(root/pluginTOMLshape.*entrypoints+literalGROUPS/BUILTINS dedup, matchinghostfallback): currentmain43d=183; cloud37/nested38/constraints44=185 each; Oracle39=185withdifferententries; cloud+Oracleunion=187. CloudaddsDatabricks/SnowflakeSources; OracleaddsOracleSource+Sink. Allsharedtargetsidentical,no removedmainkeys. IMPORTANTfuturemerges: identical185docheaders mayauto-merge whilecombinedactualcountis187; recompute/updateDBTandauthoringfulltranscriptsfromactualmergedregistrations, do notblindlykeep185. Read-onlyutilityreviewedat/tmp/public-a-count-plugins.py (ASTliteral/tomllib,read-onlygitshow/ls-tree); mayneedregenerateafterenvreset. No repositoryhelperorproofarchiveadded.
+
+Latestrepairb81CI:32successful,9running,0queued,0failed;43registeredcheckruns includes2untriggeredpublishskips, so41triggeredchecksrequired. Security/audit/lock-exportgreen. Remainingplatform/minversionsuitesstillgates. Main43dhasonlyknownaudit/build/security+DuckDBminversionsfailures beingrepaired; no furtherfailuretypeobserved. Normalfeaturemergesremainpauseduntilrepair46lands safely; fourbaseline-blockedheadsretainimplementationapprovalandneedfreshCIafterrepairmainrefresh.
