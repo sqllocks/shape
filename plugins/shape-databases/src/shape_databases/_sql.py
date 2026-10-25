@@ -32,10 +32,10 @@ WRITE_MODES = ("create", "append", "truncate", "replace")
 DEFAULT_BATCH_SIZE = 5000
 # PostgreSQL limits an identifier to 63 bytes and silently truncates longer names; MySQL to 64
 # characters. A write fails instead of creating a table under a different name.
-MAX_IDENTIFIER = {"postgres": 63, "mysql": 64, "snowflake": 255, "databricks": 255}
+MAX_IDENTIFIER = {"postgres": 63, "mysql": 64, "snowflake": 255, "databricks": 255, "oracle": 128}
 # Quoting is core's for the two classic dialects; Snowflake quotes like PostgreSQL and Databricks
 # like MySQL (backticks).
-_QUOTE_AS = {"snowflake": "postgres", "databricks": "mysql"}
+_QUOTE_AS = {"snowflake": "postgres", "databricks": "mysql", "oracle": "postgres"}
 # Characters Delta refuses in a column name (without column mapping), and those Unity Catalog
 # refuses in a table or schema name.
 _DELTA_COLUMN_BAD = frozenset(" ,;{}()\n\t=")
@@ -52,7 +52,7 @@ def check_identifier(name: Any, kind: str, dialect: str) -> str:
     if "\x00" in name:
         raise ShapeError(f"{kind} name {name!r} contains a NUL character")
     limit = MAX_IDENTIFIER[dialect]
-    size = len(name.encode("utf-8")) if dialect == "postgres" else len(name)
+    size = len(name.encode("utf-8")) if dialect in ("postgres", "oracle") else len(name)
     if size > limit:
         raise ShapeError(
             f"{kind} name {name[:30]!r}... is longer than the {limit} {dialect} allows"

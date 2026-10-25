@@ -39,6 +39,7 @@ mysql = ["pymysql>=1.1.1,<2"]
 snowflake = ["snowflake-connector-python>=3.7,<5"]
 databricks = ["databricks-sql-connector>=3.1,<5"]
 duckdb = ["duckdb>=1.2"]
+oracle = ["oracledb>=3.0"]
 
 [project.entry-points."shape.sinks"]
 postgres = "shape_databases:PostgresSink"
@@ -46,6 +47,7 @@ mysql = "shape_databases:MySqlSink"
 snowflake = "shape_databases:SnowflakeSink"
 databricks = "shape_databases:DatabricksSink"
 duckdb = "shape_databases:DuckDbSink"
+oracle = "shape_databases:OracleSink"
 
 [project.entry-points."shape.sources"]
 snowflake = "shape_databases.cloud_readers:SnowflakeSource"
@@ -53,6 +55,7 @@ databricks = "shape_databases.cloud_readers:DatabricksSource"
 postgresql = "shape_databases.sources:PostgresSource"
 postgres = "shape_databases.sources:PostgresAliasSource"
 mysql = "shape_databases.sources:MySqlSource"
+oracle = "shape_databases:OracleSource"
 
 [tool.setuptools.packages.find]
 where = ["src"]
