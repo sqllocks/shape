@@ -367,6 +367,7 @@ class BigQuerySink(DatabaseSink):
         if first is None:
             if plan.mode != "truncate":
                 return 0
+            assert plan.schema is not None
             first = pa.RecordBatch.from_pydict(
                 {field.name: [] for field in plan.schema}, schema=plan.schema
             )
