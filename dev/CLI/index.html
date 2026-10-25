@@ -4494,6 +4494,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#postgresql-and-mysql-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PostgreSQL and MySQL profiling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#message-metadata-w9-08" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6971,6 +6982,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#postgresql-and-mysql-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PostgreSQL and MySQL profiling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#message-metadata-w9-08" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7757,6 +7779,20 @@ Optional
 Result: OK
 </code></pre></div>
 </details>
+<h3 id="postgresql-and-mysql-profiling">PostgreSQL and MySQL profiling<a class="headerlink" href="#postgresql-and-mysql-profiling" title="Permanent link">&para;</a></h3>
+<p>Install the database plugin and its driver extra. <code>shape profile</code> accepts
+<code>postgresql://user@host:5432/db?schema=public</code> (also <code>postgres://</code>) and
+<code>mysql://user@host:3306/db</code>. Without <code>table=T</code>, all tables in the schema are included;
+with it, the selected table is profiled. <code>--tables orders,customers</code> selects tables.
+<code>--sample-rows N</code> sets the bounded distribution sample per table (default 1000;
+0 means catalog only). Catalog counts, declared primary/foreign keys and nullability are
+kept; distributions describe the sample, with sampling recorded in the profile.
+PostgreSQL uses system sampling, MySQL a keyed hash spread. Catalog counts are estimates.
+Pass passwords through the driver environment variables, never a URI. Safe capture applies
+to sampled values. See the database plugin README for credentials, TLS and type mapping.</p>
+<div class="highlight"><pre><span></span><code>shape<span class="w"> </span>profile<span class="w"> </span><span class="s1">'postgresql://shape@localhost/db?schema=public'</span><span class="w"> </span>--tables<span class="w"> </span>orders<span class="w"> </span>--sample-rows<span class="w"> </span><span class="m">1000</span><span class="w"> </span>-o<span class="w"> </span>db.shape
+shape<span class="w"> </span>profile<span class="w"> </span><span class="s1">'mysql://shape@localhost/db?table=orders'</span><span class="w"> </span>--sample-rows<span class="w"> </span><span class="m">0</span><span class="w"> </span>-o<span class="w"> </span>catalog.shape
+</code></pre></div>
 <h3 id="message-metadata-w9-08">Message metadata (W9-08)<a class="headerlink" href="#message-metadata-w9-08" title="Permanent link">&para;</a></h3>
 <p>Both broker emitters accept <code>key="column"</code> or <code>key="a|b"</code> (values joined with
 <code>|</code>; null components become empty strings), and <code>headers=["name=value",

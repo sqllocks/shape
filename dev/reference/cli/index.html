@@ -10553,7 +10553,8 @@ Exit codes:
                      [--decisions DECISIONS.json] [--version N] [--as-of TIMESTAMP]
                      [--fail-on-empty] [--reference-pair COLS=REFERENCE] [--validate COLUMN=KIND]
                      [--joint | --no-joint] [--time-column COL] [--sheet SHEET] [--include-hidden]
-                     [--sample N|P%] [--sample-method {random,systematic,head}] [--sample-seed S]
+                     [--sample-rows SAMPLE_ROWS] [--tables TABLES] [--sample N|P%]
+                     [--sample-method {random,systematic,head}] [--sample-seed S]
                      [--html REPORT.html] [--json SUMMARY.json] [--project FILE] [--no-project]
                      [--auth {cli,msi,spn,sql,device-code,fabric,kerberos}] [--tenant-id GUID]
                      [--client-id GUID] [--client-secret REF] [--sql-user NAME]
@@ -10651,6 +10652,9 @@ options:
                         without it every visible sheet is a table
   --include-hidden      SRC is an .xlsx workbook: read its hidden sheets too (they are always
                         reported)
+  --sample-rows SAMPLE_ROWS
+                        database: sampled rows per table (default 1000; 0 catalog only)
+  --tables TABLES       database: comma-separated table names in the schema
   --sample N|P%         profile a sample of each table: N rows, or P% of them (nothing is sampled
                         without it; the profile records the sample and its adequacy)
   --sample-method {random,systematic,head}

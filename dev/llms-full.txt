@@ -313,6 +313,14 @@ None
 time_column
 =
 None
+,
+sample_rows
+=
+None
+,
+tables
+=
+None
 )
 Profiles
 source
@@ -330,7 +338,14 @@ pandas.DataFrame
 , a list of row dicts, or a
 dict
 of such sources for several tables (with
-foreign-key detection). Every argument after
+foreign-key detection). Installed database sources also accept PostgreSQL/MySQL URIs;
+sample_rows
+bounds each database table sample (default 1000; 0 is catalog only), and
+tables
+selects schema table names. Database connection settings use the plugin credential
+and TLS rules (
+plugins/shape-databases/README.md
+). Every argument after
 source
 is keyword-only.
 version
@@ -5592,10 +5607,31 @@ shape.privacy.safe_validator.SafeProfileValidator
 )
 Security
 ¶
+profile
+opens a database connection when its
+source
+is a database URI.
+PostgreSQL (
+postgresql://
+, also
+postgres://
+) and MySQL (
+mysql://
+) profile a schema
+or a URI-selected table. Optional
+tables
+is an array of table names;
+sample_rows
+is
+a non-negative integer (default 1000; 0 is catalog only). These database artifacts use
+safe capture for sampled values. Use password environment variables or credential references;
+passwords in URIs are rejected and never persisted in job records.
 The bridge speaks over standard input and output and does what its caller asks with the
 permissions of its process: it reads and writes the paths a request names, as given. Run it with
 the permissions you would give the program that drives it. It opens no network connection of its
-own, except to Fabric for a
+own, except for a database
+profile
+or Fabric
 fabric_spark
 run you ask for. A credential is read from the request
 or the environment when a command needs it and is never written to a job file, a result or a
@@ -13057,6 +13093,30 @@ The kql scale sink percent-encodes its database name (#295); Spark job and
 COPY INTO
 checks
   take whole values, and backticks in Spark column names are doubled (#300).
+W9-01 — PostgreSQL and MySQL profiling
+¶
+Database sources stream Arrow record batches from
+postgresql://
+(also
+postgres://
+) and
+mysql://
+, preserve catalog types and nullability, and share the sinks' credential/TLS rules.
+shape profile
+and bridge
+profile
+capture a whole schema or selected tables with declared
+  keys and bounded spread samples.
+--tables
+and
+--sample-rows
+select CLI tables/sample size;
+  bridge arguments are
+tables
+and
+sample_rows
+. Catalog-only capture uses sample size zero.
+Database profiles and bridge database artifacts use existing safe capture rules.
 W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
   catalog row counts and whole-database profiles through the KQL endpoint.
   Emitter metadata is excluded from profiles;
@@ -16634,6 +16694,45 @@ Optional
   OK      tzdata        2026.3
 
 Result: OK
+PostgreSQL and MySQL profiling
+¶
+Install the database plugin and its driver extra.
+shape profile
+accepts
+postgresql://user@host:5432/db?schema=public
+(also
+postgres://
+) and
+mysql://user@host:3306/db
+. Without
+table=T
+, all tables in the schema are included;
+with it, the selected table is profiled.
+--tables orders,customers
+selects tables.
+--sample-rows N
+sets the bounded distribution sample per table (default 1000;
+0 means catalog only). Catalog counts, declared primary/foreign keys and nullability are
+kept; distributions describe the sample, with sampling recorded in the profile.
+PostgreSQL uses system sampling, MySQL a keyed hash spread. Catalog counts are estimates.
+Pass passwords through the driver environment variables, never a URI. Safe capture applies
+to sampled values. See the database plugin README for credentials, TLS and type mapping.
+shape
+profile
+'postgresql://shape@localhost/db?schema=public'
+--tables
+orders
+--sample-rows
+1000
+-o
+db.shape
+shape
+profile
+'mysql://shape@localhost/db?table=orders'
+--sample-rows
+0
+-o
+catalog.shape
 Message metadata (W9-08)
 ¶
 Both broker emitters accept
@@ -20633,7 +20732,7 @@ shape
 plugins
 list
 Output (exit 0)
-180 plugin(s)
+183 plugin(s)
   shape.behaviors:entity_lifecycle        unloaded [sqllocks-shape-behavior]
   shape.behaviors:equipment_maintenance   unloaded [sqllocks-shape-behavior]
   shape.behaviors:event_sequence          unloaded [sqllocks-shape-behavior]
@@ -20768,8 +20867,11 @@ Output (exit 0)
   shape.sources:json                      unloaded [sqllocks-shape]
   shape.sources:jsonl                     unloaded [sqllocks-shape]
   shape.sources:mssql                     unloaded [sqllocks-shape-sqlserver]
+  shape.sources:mysql                     unloaded [sqllocks-shape-databases]
   shape.sources:onelake                   unloaded [sqllocks-shape-fabric]
   shape.sources:parquet                   unloaded [sqllocks-shape]
+  shape.sources:postgres                  unloaded [sqllocks-shape-databases]
+  shape.sources:postgresql                unloaded [sqllocks-shape-databases]
   shape.sources:semantic-model            unloaded [sqllocks-shape-fabric]
   shape.sources:x12                       unloaded [sqllocks-shape-healthcare-standards]
   shape.sources:xml                       unloaded [sqllocks-shape]
@@ -75999,7 +76101,7 @@ Output (exit 0)
   shape.detectors:presidio   unloaded [sqllocks-shape-integrations]
   shape.detectors:us_ssn     unloaded [sqllocks-shape]
 shape: error: no plugin 'shape.detectors:iban' (see `shape plugins list`)
-plugin API 1.0: 180 plugin(s)
+plugin API 1.0: 183 plugin(s)
   ok    shape.behaviors:entity_lifecycle [sqllocks-shape-behavior]
   ok    shape.behaviors:equipment_maintenance [sqllocks-shape-behavior]
   ok    shape.behaviors:event_sequence [sqllocks-shape-behavior]
@@ -76134,8 +76236,11 @@ plugin API 1.0: 180 plugin(s)
   ok    shape.sources:json [sqllocks-shape]
   ok    shape.sources:jsonl [sqllocks-shape]
   ok    shape.sources:mssql [sqllocks-shape-sqlserver]
+  ok    shape.sources:mysql [sqllocks-shape-databases]
   ok    shape.sources:onelake [sqllocks-shape-fabric]
   ok    shape.sources:parquet [sqllocks-shape]
+  ok    shape.sources:postgres [sqllocks-shape-databases]
+  ok    shape.sources:postgresql [sqllocks-shape-databases]
   ok    shape.sources:semantic-model [sqllocks-shape-fabric]
   ok    shape.sources:x12 [sqllocks-shape-healthcare-standards]
   ok    shape.sources:xml [sqllocks-shape]
@@ -87805,6 +87910,14 @@ None
 time_column
 =
 None
+,
+sample_rows
+=
+None
+,
+tables
+=
+None
 )
 shape
 .
@@ -87908,6 +88021,14 @@ validators
 None
 ,
 time_column
+=
+None
+,
+sample_rows
+=
+None
+,
+tables
 =
 None
 )
@@ -111026,7 +111147,8 @@ usage: shape profile [-h] [-o OUT] [--sign KEY] [--passphrase-env VAR] [--passph
                      [--decisions DECISIONS.json] [--version N] [--as-of TIMESTAMP]
                      [--fail-on-empty] [--reference-pair COLS=REFERENCE] [--validate COLUMN=KIND]
                      [--joint | --no-joint] [--time-column COL] [--sheet SHEET] [--include-hidden]
-                     [--sample N|P%] [--sample-method {random,systematic,head}] [--sample-seed S]
+                     [--sample-rows SAMPLE_ROWS] [--tables TABLES] [--sample N|P%]
+                     [--sample-method {random,systematic,head}] [--sample-seed S]
                      [--html REPORT.html] [--json SUMMARY.json] [--project FILE] [--no-project]
                      [--auth {cli,msi,spn,sql,device-code,fabric,kerberos}] [--tenant-id GUID]
                      [--client-id GUID] [--client-secret REF] [--sql-user NAME]
@@ -111124,6 +111246,9 @@ options:
                         without it every visible sheet is a table
   --include-hidden      SRC is an .xlsx workbook: read its hidden sheets too (they are always
                         reported)
+  --sample-rows SAMPLE_ROWS
+                        database: sampled rows per table (default 1000; 0 catalog only)
+  --tables TABLES       database: comma-separated table names in the schema
   --sample N|P%         profile a sample of each table: N rows, or P% of them (nothing is sampled
                         without it; the profile records the sample and its adequacy)
   --sample-method {random,systematic,head}

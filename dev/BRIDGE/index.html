@@ -8970,10 +8970,16 @@ bridge until its protocol says so), and it does not touch <code>generate</code>,
 </tbody>
 </table>
 <h2 id="security">Security<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
+<p><code>profile</code> opens a database connection when its <code>source</code> is a database URI.
+PostgreSQL (<code>postgresql://</code>, also <code>postgres://</code>) and MySQL (<code>mysql://</code>) profile a schema
+or a URI-selected table. Optional <code>tables</code> is an array of table names; <code>sample_rows</code> is
+a non-negative integer (default 1000; 0 is catalog only). These database artifacts use
+safe capture for sampled values. Use password environment variables or credential references;
+passwords in URIs are rejected and never persisted in job records.</p>
 <p>The bridge speaks over standard input and output and does what its caller asks with the
 permissions of its process: it reads and writes the paths a request names, as given. Run it with
 the permissions you would give the program that drives it. It opens no network connection of its
-own, except to Fabric for a <code>fabric_spark</code> run you ask for. A credential is read from the request
+own, except for a database <code>profile</code> or Fabric <code>fabric_spark</code> run you ask for. A credential is read from the request
 or the environment when a command needs it and is never written to a job file, a result or a
 log. Job files and spilled results are created with mode <code>0600</code> in a <code>0700</code> directory.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
