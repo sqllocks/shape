@@ -6,7 +6,7 @@ Updated 2026-10-25 19:36 UTC. This file is the current checkpoint; lane records 
 
 Continue until all seven assigned issues are merged or legitimately parked. Do not end a turn merely to wait or ask. Original prompt: `/workspace/attachments/9302a188-787d-4428-9403-3510325ce6a1/4-NEW-WINDOW-shape-public-A.md`. Read it and this state after any restart.
 
-**1/7 merged (14.3% done), 6/7 unmerged (85.7%). Five active (71.4%); one parked (14.3%).** W9-01/#2 merged throughPR45. MaintenancePR46 restored known audit/minimum-version failures and merged afterall41requiredchecks+6workflowsgreen. Currentmain c1ff1c8adec2225a7e458c50c5cf7c70625b17b1; freshmainCIpending. AllfourreadyfeaturePRs refreshedonceandpushed; independentrefreshreviewAPPROVED/currentheadCIpending. Deltaawaitsactualconstraintsmerge; #4remainsOwnerparked. No directmainpushes. FirstrepairWindowsfailureunexplained; singleunchangeddiagnosticrerunpassed, riskpreservedbelow.
+**1/7 merged (14.3% done), 6/7 unmerged (85.7%). Five active (71.4%); one parked (14.3%).** W9-01/#2 merged throughPR45. MaintenancePR46 restored known audit/minimum-version failures and merged afterall41requiredchecks+6workflowsgreen. Currentmain c1ff1c8adec2225a7e458c50c5cf7c70625b17b1; freshmainCIall40triggeredchecksgreen. AllfourreadyfeaturePRs refreshedonceandpushed; independentrefreshreviewAPPROVED/currentheadCIpending. Deltaawaitsactualconstraintsmerge; #4remainsOwnerparked. No directmainpushes. FirstrepairWindowsfailureunexplained; singleunchangeddiagnosticrerunpassed, riskpreservedbelow.
 
 Give meaningful commentary at least every60seconds while working, quantified totals about every5minutes and immediately on merge/blocker changes. CI counts are a separate metric from issues merged.
 
@@ -163,10 +163,18 @@ Greenexact-headworkflowlinks:
 - Wheels https://github.com/sqllocks/shape/actions/runs/40213846671
 - Documentation https://github.com/sqllocks/shape/actions/runs/40213846756
 
-Checked ContractLead reports/contract-application/2026-10-25/questions.md after46mergebatch inworktree+neworigin/main: absent. Refresh37/38/39/44 once toactualrepairmain; no localtests unlesscodeconflicts. Current37head4b13dbc679eb61ae1305c9d161ea86516c1595d2 signed/pushed, onlyCHANGELOGappendconflict; current39head4496683c4aca24d8da2e0ddd57970eb8b5bc0c38 signed/pushed, onlyCHANGELOGappendconflict/lockauto-merge; publishedrangesandrepairpinsretained. Needindependentrefreshreviews/currentheadCI. MainrepairCIalsoinprogress; diagnoseanynewmainfailurebeforeordinarymerges. Sevenissuecountunchanged1merged,5active,1parked; maintenance46isoutsideseven.
+Checked ContractLead reports/contract-application/2026-10-25/questions.md after46mergebatch inworktree+neworigin/main: absent. Refresh37/38/39/44 once toactualrepairmain; no localtests unlesscodeconflicts. Current37head4b13dbc679eb61ae1305c9d161ea86516c1595d2 signed/pushed, onlyCHANGELOGappendconflict; current39head4496683c4aca24d8da2e0ddd57970eb8b5bc0c38 signed/pushed, onlyCHANGELOGappendconflict/lockauto-merge; publishedrangesandrepairpinsretained. Needindependentrefreshreviews/currentheadCI. MainrepairCInowall40triggeredchecksgreen; ordinaryeligiblefeaturemergesmayresumeonceexactheadCIgreen. Sevenissuecountunchanged1merged,5active,1parked; maintenance46isoutsideseven.
 
 Allfourrepairrefreshespushed/released:37 4b13dbc,38 0cdb108,39 4496683,44 07b3616. OnlyCHANGELOGappendconflicts; repairpins/export/fingerprintreadbackpreserved; Oraclelockauto-mergesnewextra. No codeconflicts/localtestreruns. Reviewer_oct25nowownsindependentread-onlyrefreshreview. NewmainandfeatureCIrunning.
 
 Reviewer_oct25 independently APPROVED allfourcurrentpublishedrepairrefreshheads:37 4b13dbc,38 0cdb108,39 4496683,44 07b3616. VerifiedPRheads/currentbaseancestry/intendedparents/DCO, onlyCHANGELOGmarkerremovalpreservingbothsides, entirepublishedmetadataunchanged, exactlytwoapprovedlockedtoolversionchanges, generatedexport/fingerprintreadbackretained. Oraclemanifestextraoracledb>=3.0/locked26.0.1retained. CIpendingexactheads. Deltaagentnested_duckdb2_reviewnowowns07tests-onlyCLIregressioncheckpoint; no44helper/sourceintegrationuntilactual44main.
 
 Delta07tests-onlycheckpoint06cb5d44fc10590a7f9825e5ec59f977dd104a3d signed/pushed/released. New CLI constraints string acceptance3red/3controls pass onunchangedproduction viareap.py/lockeduv,1.13s; true/false/JSONmapping eachmisclassifiedSQLpolicyatgenerationbinding. ActualCLIpreviewcontrolsassertexactprotocol; no-storage/nativewriter guards andnamedconstraintschecks retained. Existing8red/2derivedprotocolcasesunchanged. Ruff/format/publicwordingpass. No source/helperintegration/PRyet; stillwait44actualmain. Rootreadtestsandlanerecord; finalindependentreviewaftergreenintegration.
+
+## Main repair verified on merged head
+
+Actualmainc1ff1c8 freshCI isfullyGREEN:40triggeredchecks, bothkernelmodesincluded, all4triggeredworkflowsoverallgreen; nofailures/runningjobs. Thisclearsknownmainredafter45. FirstrepairWindowsfailureunknownriskstillpreserved; freshmainWindows3.11alsopassedunchanged. Greenmerged-headruns:
+- Security https://github.com/sqllocks/shape/actions/runs/40226657845
+- Wheels https://github.com/sqllocks/shape/actions/runs/40226657792
+- Documentation https://github.com/sqllocks/shape/actions/runs/40226657904
+- CI https://github.com/sqllocks/shape/actions/runs/40226657799
