@@ -1,8 +1,8 @@
 # Public B interim report — 2026-10-25
 
-Work continues. **3 of9 assigned issues merged (33.3%);6 remain unmerged (66.7%).** All9 implementations have independent approval. Six ready implementation PRs remain; none is parked or awaiting an Owner implementation decision. Supporting certificate PR40 is outside the9-issue denominator. No live-account success is claimed.
+Work continues. **4 of9 assigned issues merged (44.4%);5 remain unmerged (55.6%).** All9 implementations have independent approval. Five ready implementation PRs remain; none is parked or awaiting an Owner implementation decision. Supporting certificate PR40 is outside the9-issue denominator. No live-account success is claimed.
 
-Current main is `3b19d05b940816a74a0ce1ec177365138ce0ed32` after Lead A's Oracle PR39. Its [Documentation](https://github.com/sqllocks/shape/actions/runs/40235435374), [Security](https://github.com/sqllocks/shape/actions/runs/40235435418) and [CI](https://github.com/sqllocks/shape/actions/runs/40235435384) all passed, with all27 core jobs green, verified22:55:23UTC. Prior mainc1ff1c8 completed all triggered workflows successfully. PR29 was refreshed when main advanced; its previous incomplete CI does not qualify for the new head.
+Current main is `90fbff999bc95e255b3dbd90b76278441a735b41` after root merged PR29 at23:09:58UTC. Newmain [CI](https://github.com/sqllocks/shape/actions/runs/40243508314), [Docs](https://github.com/sqllocks/shape/actions/runs/40243508311), [Security](https://github.com/sqllocks/shape/actions/runs/40243508316) starting, no completegreenclaimyet. PriorOraclemain3b19 after LeadA39 is fullygreen: Its [Documentation](https://github.com/sqllocks/shape/actions/runs/40235435374), [Security](https://github.com/sqllocks/shape/actions/runs/40235435418) and [CI](https://github.com/sqllocks/shape/actions/runs/40235435384) all passed, with all27 core jobs green, verified22:55:23UTC. Prior mainc1ff1c8 completed all triggered workflows successfully. PR29 was refreshed when main advanced; its previous incomplete CI does not qualify for the new head.
 
 ## Issue status
 
@@ -11,14 +11,14 @@ Current main is `3b19d05b940816a74a0ce1ec177365138ce0ed32` after Lead A's Oracle
 | #9 W9-08 message metadata | Merged [32](https://github.com/sqllocks/shape/pull/32) | merge `35addfc4c310b85a62cbe7f315e1d50fb8e426f8` |
 | #12 W9-11 Eventhouse | Merged [30](https://github.com/sqllocks/shape/pull/30) | merge `5c6d46ff1703db9fd2307bc4ebd4fb087e9af733` |
 | #13 W9-12 semantic measures/roles | Merged [33](https://github.com/sqllocks/shape/pull/33) | merge `404fed823b271525b8802254312ded28f1c5aaa8` |
-| #11 W9-10 dbt | Ready/reviewed [29](https://github.com/sqllocks/shape/pull/29); current full CI running | `e8bcc73f238588d82c122bed9c5ad0e38b29c4b5` |
-| #10 W9-09 binary formats | Ready/reviewed [34](https://github.com/sqllocks/shape/pull/34); full CI held until29 | `2e6caa4afdab03ba35e29a1cb965d6f78eecb27e` |
-| #17 W9-16 Iceberg | Ready/reviewed [31](https://github.com/sqllocks/shape/pull/31); full CI/Wheels held until29 | `fa1ee63175ee3d480fe0de1f1472a75ef49f8de3` |
-| #20 FRZ-01 | Ready/reviewed [42](https://github.com/sqllocks/shape/pull/42); full CI held until34+31, required main Nightly still outstanding | `16b061c3e976fa4f5823d70ce40d9fd3eaf982e9` |
-| #6 W9-05 nested profiling | Ready/reviewed [43](https://github.com/sqllocks/shape/pull/43); full CI held, depends42 | `48738c68487b988c83ab56dc9275627bbd8b5819` |
-| #14 W9-13 BigQuery | Ready/reviewed [47](https://github.com/sqllocks/shape/pull/47); full CI held until prior stages | `716e791ba34fc81b9ec5587af32f331451224980` |
+| #11 W9-10 dbt | Merged [29](https://github.com/sqllocks/shape/pull/29); all4sourceworkflowsgreen | merge`90fbff999bc95e255b3dbd90b76278441a735b41` |
+| #10 W9-09 binary formats | Ready/reviewed [34](https://github.com/sqllocks/shape/pull/34); full CI UNHELD/currentstage | `9b3e7375694514faeefa779c11f05bb13e1a8e2b` |
+| #17 W9-16 Iceberg | Ready/reviewed [31](https://github.com/sqllocks/shape/pull/31); full CI/Wheels UNHELD/currentstage | `24a145795a0f33f95d125fa0a7123f76b959d780` |
+| #20 FRZ-01 | Ready/reviewed [42](https://github.com/sqllocks/shape/pull/42); full CI held until34+31, required main Nightly still outstanding | `53bc24958788830669a00d47e9048c76418a475d` |
+| #6 W9-05 nested profiling | Ready/reviewed [43](https://github.com/sqllocks/shape/pull/43); full CI held, depends42 | `e5d6dd3d8351854b7967f145f5c7aeb6c1c32f5e` |
+| #14 W9-13 BigQuery | Ready/reviewed [47](https://github.com/sqllocks/shape/pull/47); full CI held until prior stages | `8228f87e699bb3524bf26f4fa4fefc6d0449856e` |
 
-All six open heads contain currentmain and are DCO-signed/pushed. Independent exact approvals: eventhouse_oct25 for29/42; metadata_oct25 for31/34/43/47. The latest refresh had only additive conflicts except43's necessary Oracle depth integration. Clean refreshes did not rerun local tests. Every open PR is ready, not draft.
+All five open heads contain currentmain and are DCO-signed/pushed. Independent exact approvals: eventhouse_oct25 for29/42; metadata_oct25 for31/34/43/47. The latest refresh had only additive conflicts except43's necessary Oracle depth integration. Clean refreshes did not rerun local tests. Every open PR is ready, not draft.
 
 ## Targeted acceptance evidence
 
@@ -76,7 +76,7 @@ The reviewed committed registry is `benchmarks/vs_refengine/comparison_contract.
 
 ## Remaining work and Owner actions
 
-Merge29 when its [current CI40235648525](https://github.com/sqllocks/shape/actions/runs/40235648525) and all exact-head workflows pass; then advance34/31, then42, then43, then47. Every main move requires fresh signed/pushed heads and independent reviews. Current later full runs are intentionally canceled/held; **none is passing evidence**. Their retained documentation/security/DCO/container/action checks are green on current heads, verified21:46UTC. Their full gates must still run successfully before merge.
+29merged. Run34/31fulls inparallel andmergefirstfullygreen,current,reviewed; then42,then43,then47.34core[40243543568](https://github.com/sqllocks/shape/actions/runs/40243543568) and31core[40243562745](https://github.com/sqllocks/shape/actions/runs/40243562745)+[Wheels40243562771](https://github.com/sqllocks/shape/actions/runs/40243562771) areUNHELD; alltriggeredjobsrequired. Every main move requires fresh signed/pushed heads and independent reviews. Current later full runs are intentionally canceled/held; **none is passing evidence**. Their retained documentation/security/DCO/container/action checks are green on current heads, verified21:46UTC. Their full gates must still run successfully before merge.
 
 BigQuery's former source dependency is resolved: PR35 closed unmerged and was superseded by [PR45](https://github.com/sqllocks/shape/pull/45), mergedOctober25. Its fresh lane has none of the old journal branch's unmerged ancestry. The Owner decimal rule remains0<=scale<=precision before connecting, with the column named in the error. After43/main changes, refresh47's shared depth interface and rebind exact review.
 
@@ -90,3 +90,7 @@ Pending external validation, none claimed passing:
 - #14: O14 settings for live generate→write→profile and dataset identity agreement; no real BigQuery account used.
 
 No implementation is parked, and no new Owner question is needed. Lead A branches/issues and Premium were not edited. All owned commits are pushed. Current exact heads, merge guards, agent ownership and holds are in [state.md](state.md). This remains an interim report until all assigned issues are merged or genuinely parked.
+
+## Fourth assigned issue delivered
+
+PR29 exactreviewede8bcc73 completed30successful checks+onlyconditionalDocspublishskip; all4workflowsSUCCESS: [CI40235648525](https://github.com/sqllocks/shape/actions/runs/40235648525), [Docs40235648520](https://github.com/sqllocks/shape/actions/runs/40235648520), [DCO40235648542](https://github.com/sqllocks/shape/actions/runs/40235648542), [Security40235648550](https://github.com/sqllocks/shape/actions/runs/40235648550). Allgreenobserved23:09:48→exactAPImerge23:09:58 as90fbff9; issue11closed23:09:59. Sourceacceptance10red→142offline+8actualDuckDB/dbtgreen asabove. Fiveothers refreshedsignedpushedandre-reviewed; only31additivechangelogconflict,no productconflict/localrerun. Stage34/31fullCIadvanced,othersheld.4/9delivered44.4%,5/9left55.6%.
