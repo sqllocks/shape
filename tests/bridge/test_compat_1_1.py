@@ -193,7 +193,7 @@ def test_what_1_2_adds_to_a_1_1_command_is_marked_and_nothing_else_changed():
     # identifier run switch of `generate`).
     added = {
         "generate": {"identifiers", "to", "sink_options", "confirm_remote"},
-        "profile": {"source_options"},
+        "profile": {"source_options", "sample_rows", "tables"},
     }
     for name, entry in frozen_index()["commands"].items():
         now = schemas[entry["request"]]["properties"]["args"]["properties"]

@@ -41,8 +41,14 @@
           "x-path": "read",
           "x-since": "1.1"
         },
+        "sample_rows": {
+          "description": "database: rows sampled per table (default 1000; 0 catalog only)",
+          "minimum": 0,
+          "type": "integer",
+          "x-since": "1.2"
+        },
         "source": {
-          "description": "a file, folder, glob or Delta table",
+          "description": "a file, folder, glob, Delta table or database URI",
           "type": "string",
           "x-path": "read",
           "x-since": "1.0"
@@ -50,6 +56,14 @@
         "source_options": {
           "description": "source options; Iceberg catalog and snapshot_id, credential references only",
           "type": "object",
+          "x-since": "1.2"
+        },
+        "tables": {
+          "description": "database: table names to include",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
           "x-since": "1.2"
         },
         "version": {

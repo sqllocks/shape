@@ -61,3 +61,17 @@ def test_wanted_5_bridge_snapshot_and_multitable_boundary(api12, tmp_path):
     response = api12.call("generate", domain=str(path), to=target)
     assert not response["ok"]
     assert IcebergSource()._table(target, {}).current_snapshot().snapshot_id != snapshot
+
+
+@pytest.mark.parametrize("options", [{"sample_rows": 0}, {"tables": ["items"]}])
+def test_database_only_options_are_refused_for_iceberg(api12, tmp_path, options):
+    """Database URI additions cannot be silently swallowed by Iceberg's profile hook."""
+    from shape.profile.reference.sources import SourceError
+
+    target = (tmp_path / "warehouse/ns/items").as_uri().replace("file:", "iceberg+file:", 1)
+    with pytest.raises(SourceError, match="need a database URI source"):
+        shape.profile(target, **options)
+    response = api12.call("profile", source=target, **options)
+    assert not response["ok"]
+    assert "need a database URI source" in json.dumps(response)
+    assert not (tmp_path / "warehouse").exists()

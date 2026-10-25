@@ -38,7 +38,9 @@ _PEM = re.compile(
 _URL_USER = re.compile(r"(://[^/?#@:]*:)[^/?#]+(@)")
 # URI query keys are decoded before database validation; apply that same decoding when
 # masking a queued request, including requests that will fail before a connection opens.
-_QUERY_PAIR = re.compile(r"([?&])([^=?&#\s\"'<>]+)=([^&#\s\"'<>]*)")
+# Malformed values can contain raw spaces or quotes: mask through the next URI query
+# separator so a refused credential cannot leave a suffix in a persisted job.
+_QUERY_PAIR = re.compile(r"([?&])([^=?&#\s\"'<>]+)=([^&#]*)")
 _QUERY_SECRET = re.compile(
     rf"(?i)(?:{_KEYS}|credential|access[_-]?key|private[_-]?key|passphrase|"
     r"connection[_-]?string|passfile)"
