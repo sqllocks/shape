@@ -1,6 +1,6 @@
 # Public A state
 
-Updated 2026-10-25 17:21 UTC. This file is the current checkpoint; lane records retain acceptance evidence.
+Updated 2026-10-25 17:50 UTC. This file is the current checkpoint; lane records retain acceptance evidence.
 
 ## Goal and progress
 
@@ -130,3 +130,5 @@ Read-onlyW9-06DuckDB2compatibilityreviewpassed: sink/source/nestedreadback paths
 Verifiedsourcepluginregistrationcounts(root/pluginTOMLshape.*entrypoints+literalGROUPS/BUILTINS dedup, matchinghostfallback): currentmain43d=183; cloud37/nested38/constraints44=185 each; Oracle39=185withdifferententries; cloud+Oracleunion=187. CloudaddsDatabricks/SnowflakeSources; OracleaddsOracleSource+Sink. Allsharedtargetsidentical,no removedmainkeys. IMPORTANTfuturemerges: identical185docheaders mayauto-merge whilecombinedactualcountis187; recompute/updateDBTandauthoringfulltranscriptsfromactualmergedregistrations, do notblindlykeep185. Read-onlyutilityreviewedat/tmp/public-a-count-plugins.py (ASTliteral/tomllib,read-onlygitshow/ls-tree); mayneedregenerateafterenvreset. No repositoryhelperorproofarchiveadded.
 
 Latestrepairb81CI:32successful,9running,0queued,0failed;43registeredcheckruns includes2untriggeredpublishskips, so41triggeredchecksrequired. Security/audit/lock-exportgreen. Remainingplatform/minversionsuitesstillgates. Main43dhasonlyknownaudit/build/security+DuckDBminversionsfailures beingrepaired; no furtherfailuretypeobserved. Normalfeaturemergesremainpauseduntilrepair46lands safely; fourbaseline-blockedheadsretainimplementationapprovalandneedfreshCIafterrepairmainrefresh.
+
+Main43dCIcompleted:26green,4failed,0running. Failuresareexactlybuild/audit/security(all4tooladvisories) andminimumversions(removedDuckDB2relation.fetchone). Allothertriggeredmainchecks passed. ThisconfirmsPR46targetsallobservedmainfailureswithinonesmallPR; no unrelatedproductionfailurefound. Latestapprovedrepairb81CI34green/7running/0queued/0failed, plus2untriggeredpublishskips. Stillwait forall41triggeredchecks/workflowsoverallgreen andcurrentmainancestorbeforeAPImerge. No normalmergesyet.
