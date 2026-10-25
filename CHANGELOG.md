@@ -7,6 +7,9 @@ Status: available.
 ## Unreleased
 
 - Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
+- Keep the locked development toolchain audit clear with compatible `filelock` 3.20.3 and patched `setuptools` 84.1.0.
+- Keep the fingerprint readback test compatible with DuckDB 2.
+
 - W9-12: semantic model profiles retain table measures and read-only TOM roles. `semantic-model://`
   accepts `as_role` for native DAX role-filtered reads, and plain profiles retain hidden columns.
   `export-model --from-profile` preserves measures and roles; `known-answer MODEL.shape --measures
