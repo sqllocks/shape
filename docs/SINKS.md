@@ -346,3 +346,12 @@ results visible while a stream runs. The default mode refuses an existing table.
 jobs are dry-run checked against `max_bytes_billed` (default 1 GiB). See the
 [database plugin README](../plugins/shape-databases/README.md#bigquery-bigquery) for sign-in,
 types, write modes and partial failure behavior. Real account execution needs owner validation.
+
+## Oracle
+
+The `oracle` sink in `sqllocks-shape-databases[oracle]` writes Oracle 19c+ through thin-mode
+bound array DML. Use `oracle://user@host:1521/service?schema=S`, or `tcps://` for TLS, with
+`ORACLE_PASSWORD` or a referenced password. Remote hosts verify TLS by default. `batch_rows`
+defaults to 50000. Empty strings are refused; `empty_string=null` permits conversion only
+for nullable non-key columns. Oracle DDL commits implicitly, including replace and truncate.
+See the plugin README's Oracle section for types, wallets, transaction limits and the source.

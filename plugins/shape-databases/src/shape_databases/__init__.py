@@ -18,6 +18,8 @@ from .databricks import DatabricksSink
 from .duckdb_sink import DuckDbSink
 from .errors import CredentialError, WriteError
 from .mysql import MySqlSink
+from .oracle import OracleSink
+from .oracle_sources import OracleSource
 from .postgres import PostgresSink
 from .snowflake import SnowflakeSink
 
@@ -31,6 +33,8 @@ __all__ = [
     "DatabricksSink",
     "DuckDbSink",
     "MySqlSink",
+    "OracleSink",
+    "OracleSource",
     "PostgresSink",
     "Secret",
     "SnowflakeSink",

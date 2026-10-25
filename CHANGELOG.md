@@ -8,6 +8,8 @@ Status: available.
 
 - Add experimental BigQuery Parquet load and Storage Read sources, reference-only credentials, bounded catalog sampling and a dry-run query cost guard.
 
+
+- Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
 - Keep the locked development toolchain audit clear with compatible `filelock` 3.20.3 and patched `setuptools` 84.1.0.
 - Keep the fingerprint readback test compatible with DuckDB 2.
 
@@ -2076,6 +2078,7 @@ Converting a full capture to the safe form now gives a different content ID when
   keys and bounded spread samples. `--tables` and `--sample-rows` select CLI tables/sample size;
   bridge arguments are `tables` and `sample_rows`. Catalog-only capture uses sample size zero.
 - Database profiles and bridge database artifacts use existing safe capture rules.
+
 - W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
   catalog row counts and whole-database profiles through the KQL endpoint.
   Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
