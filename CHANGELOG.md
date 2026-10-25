@@ -2067,6 +2067,14 @@ Converting a full capture to the safe form now gives a different content ID when
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
 
+### W9-10
+
+- Read dbt semantic models and list singular tests in import metadata.
+- Write singular contract tests for regexp, boolean rates and non-numeric bounds
+  in DuckDB, PostgreSQL, Snowflake and BigQuery SQL.
+- Report metric and exposure impact for failing or drifted columns, and optionally
+  emit semantic models beside generated dbt seeds.
+
 ### W9-01 — PostgreSQL and MySQL profiling
 
 - Database sources stream Arrow record batches from `postgresql://` (also `postgres://`) and
