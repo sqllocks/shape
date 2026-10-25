@@ -530,9 +530,9 @@ def test_duckdb_still_reads_a_table_with_the_property(tmp_path, small_table):
         con.sql("LOAD delta")
     except Exception:
         pytest.skip("the DuckDB delta extension is not available")
-    assert con.sql(f"SELECT count(*) FROM delta_scan('{table}')").fetchone() == (
-        small_table.num_rows,
-    )
+    assert con.sql(f"SELECT count(*) FROM delta_scan('{table}')").fetchall() == [
+        (small_table.num_rows,),
+    ]
 
 
 def test_generate_fingerprint_is_refused_with_to_and_landing(tmp_path, capsys, schema_file):
