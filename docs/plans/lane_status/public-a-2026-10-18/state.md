@@ -1,12 +1,12 @@
 # Public A state
 
-Updated 2026-10-25 16:17 UTC. This file is the current checkpoint; lane records retain acceptance evidence.
+Updated 2026-10-25 16:34 UTC. This file is the current checkpoint; lane records retain acceptance evidence.
 
 ## Goal and progress
 
 Continue until all seven assigned issues are merged or legitimately parked. Do not end a turn merely to wait or ask. Original prompt: `/workspace/attachments/9302a188-787d-4428-9403-3510325ce6a1/4-NEW-WINDOW-shape-public-A.md`. Read it and this state after any restart.
 
-**1/7 merged (14.3% done), 6/7 unmerged (85.7%). Five active (71.4%); one parked (14.3%).** W9-01/#2 merged throughPR45. Four active implementation PRs are refreshed/reviewing/awaitingCI; Delta awaits constraints on main. Current main is `43d3f9aebeb8860489bc46f475203ba2faa8212e` (our W9-01/#2 merge); prior404fed8 added semantic-model metadata and5c6d46f added Eventhouse. Earlier certificate PR40 merged53d3d0c with all30required jobs green. All ready active heads below contain that main. No direct main pushes.
+**1/7 merged (14.3% done), 6/7 unmerged (85.7%). Five active (71.4%); one parked (14.3%).** W9-01/#2 merged throughPR45. Four active implementation PRs are refreshed and approved but CIblocked by sharedtoolchain audit failure; theirunfinishedruns canceled. Delta awaits constraints on main. NORMAL MERGES PAUSED: mainred; only smallrepairPR46 may merge afteritsfullCIgate. Current main is `43d3f9aebeb8860489bc46f475203ba2faa8212e` (our W9-01/#2 merge); prior404fed8 added semantic-model metadata and5c6d46f added Eventhouse. Earlier certificate PR40 merged53d3d0c with all30required jobs green. All ready active heads below contain that main. No direct main pushes.
 
 Give meaningful commentary at least every60seconds while working, quantified totals about every5minutes and immediately on merge/blocker changes. CI counts are a separate metric from issues merged.
 
@@ -44,7 +44,7 @@ Root caught omitted DCO trailer in published W9-01 refresh7ccce366821b33713d3923
 
 PR45 MERGED successfully through PRmergeAPI asmergecommit43d3f9a, signedmessage and exactheadguard5799635. Do not resubmit its oldtemporarymergeJSON. FourremainingPRs need theirnewcurrentexacthead CI+review beforemerge. PR45/37/38/39/41/44 attached;35/36 closedsupersededhistorically; attach8whencreated.
 
-Poll all active exact heads about5minutes, diagnose actual failures promptly with targeted tests only. Cancel only superseded/parked own unfinished workflows; never current valid runs or other ownership. Superseded39run39504386297 canceled after79d06a1. Earlier24old/parked plus4old44runs canceled; none counts as evidence. GitHub queue is substantial; no invented ETA. Latest zombies191, below1000hardstop.
+Poll all active exact heads about5minutes, diagnose actual failures promptly with targeted tests only. Cancel only superseded/parked own unfinished workflows; never current valid runs or other ownership. Superseded39run39504386297 canceled after79d06a1. Earlier24old/parked plus4old44runs canceled; none counts as evidence. GitHub queue is substantial; no invented ETA. Latest zombies11, below1000hardstop.
 
 ## Parked question
 
@@ -92,3 +92,31 @@ PR https://github.com/sqllocks/shape/pull/45 ; exacttestedhead5799635244b321bd42
 ## Latest main43d refresh
 
 PR37/38/44 refreshed/pushed to43d once. FourDOCconflicts only: CHANGELOG,DBT/authoringpluginheaders,requirements. Reviewed eachmainrequirementIDblock is unchanged inours; mainchangeloglinesall retained; choosingreviewedcloudstack185headerspreservesmain183entriespluscloudsources. No sourceconflicts/localtestreruns. Oracleagentrefreshedmain3603e74 thentrustdocfixa697f47. Reviewer_oct25 APPROVED allfour exactnewheads: publishedhead/currentbase ancestry/DCO/manualdocs resolutions checked. Separate OracleSIGBUS cause unknown; greennewCIrequired, no pre-existing claim. OldCI32green on37/38/44 cannot count onnewheads; currentheadCIrequired. 45isDONE; next37and39areunblocked.
+
+## Main red — small repair PR46 in progress
+
+Freshmain43dCI failed audit/security/build on4advisories in2lockedtools: filelock3.32.7(CVE-2026-112940/112913/112907), setuptools84.0.0(GHSA-xmj3-9gf7-h52w). Build failure isits auditstep. PR45 exactheadCIwasgreen; freshscan aftermerge exposes the sharedbaseline. Userhardstoprule applies: pauseordinarymerges; fix throughone smallPR ifpossible, otherwise revertourmerge throughaPR andstop. No directmainpush or gatechange.
+
+Ready repair https://github.com/sqllocks/shape/pull/46 ; fix/public-a-audit-2026-10-25 ; exact465a9c09882414ecfca9f44e83614a200fcede1b ; /workspace/public-a-ci-repair. Independently APPROVED exacthead; currentbase43d; DCOvalid. OnlyCHANGELOG/internaldev-docsgroups/uv.lock changed. Entirepublished[project]metadata unchanged; changedlockedversions exactlyfilelock3.32.7→3.20.3 andsetuptools84.0→84.1.
+
+filelock4.2.1 cannotresolve withpublishedSnowflakeconnector<5 requiringfilelock>=3.5,<4. No override/rangechange used. Internaldevpin3.20.3 isunaffected: firsttwoadvisoriesaffect3.20.4..4.2.0, third3.22..4.2.0;3.20.3fixesolderCVE-2026-22701 andPyPImetadata lists0knownadvisories. Independentreview verifiedsame plussetuptools84.1.0clean. Publishedruntime/optionaldependencyranges remain unchanged.
+
+Acceptance red on cleanlockedbase:
+
+```text
+Found 4 known vulnerabilities in 2 packages
+filelock   3.32.7  CVE-2026-112940     4.2.1
+filelock   3.32.7  CVE-2026-112913     4.2.1
+filelock   3.32.7  CVE-2026-112907     4.2.1
+setuptools 84.0.0  GHSA-xmj3-9gf7-h52w 84.1.0
+```
+
+Green sameunchangedauditafterlockedupdate:
+
+```text
+No known vulnerabilities found
+```
+
+Targetedpackagingacceptance:12pluginwheels built withupdatedsetuptools; existingdependencyfloortest1passed. uvlockcheck,publicwording,diffclean. No localfullsuite. PR46 triggersadditionalwheelchecks throughnormalPRworkflow; everytriggeredjobmustgreen exacthead, no release/publishdispatch. Latest1green/19running/19queued (39registered), currentgatemayregisterconditionalpublishskipslater.
+
+Canceled onlyownfourfeaturebaseline-blocked unfinishedworkflowruns afterrepairready: theirunchangedlockscontainknownvulnerablepins and cannotpassaudit. MainCIcontinues toidentifyanyotherfailure; otherownershipuntouched. After46merges andmainCIrestored, refreshfouractiveheads once, pushno localrerunsunlesscodeconflicts, renewreviewasneeded and resume37/39→38→44→8. Never countcanceledruns as merge evidence. Rootownsrepair; reviewer_oct25 approved.
