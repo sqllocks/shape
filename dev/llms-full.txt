@@ -6356,6 +6356,12 @@ Early access 0.9.3.
 Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 Unreleased
 ¶
+Keep the locked development toolchain audit clear with compatible
+filelock
+3.20.3 and patched
+setuptools
+84.1.0.
+Keep the fingerprint readback test compatible with DuckDB 2.
 W9-12: semantic model profiles retain table measures and read-only TOM roles.
 semantic-model://
 accepts
