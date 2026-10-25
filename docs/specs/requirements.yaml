@@ -780,3 +780,12 @@ requirements:
   text: Generation derives named foreign keys, unique keys, structured checks and literal defaults under keys/all/none policies. Supported dialects enforce declarations; informational or unsupported kinds are explicit. Preparation precedes loading, safe coordinated reruns retain transaction rollback, violations retain exact committed-row accounting, and dry runs expose constraint DDL without opening connections.
   verify: [unit, conformance, compatibility, database-emulator]
   owner: databases
+
+- id: SHAPE-ORACLE-001
+  title: Oracle thin-mode source and sink
+  level: L1
+  milestone: W9-15
+  priority: MUST
+  text: Oracle 19c+ supports bounded array writes and Arrow or cursor reads with exact declared types, schema catalogs, explicit empty-string handling, referenced credentials and safe artifacts.
+  verify: [oracle-source-sink-conformance, oracle-emulator]
+  owner: databases

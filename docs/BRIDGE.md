@@ -1472,3 +1472,9 @@ EOF
     {"api_version": "1.2", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
     {"api_version": "1.2", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
     ```
+
+Oracle sources (`oracle://` and `tcps://`, from `sqllocks-shape-databases[oracle]`) support
+`profile` with `sample_rows` and `tables`. Their persisted bridge artifacts use safe capture
+by default. Oracle connection credentials and wallet passwords are never artifact metadata.
+The catalog count and LAST_ANALYZED describe the population; sampled distributions describe
+only the bounded sample. See the database plugin README for exact counts and type mapping.

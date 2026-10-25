@@ -182,6 +182,8 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         "mysql",
         "snowflake",
         "databricks",
+        "oracle",
+        "tcps",
     )
     capture = "safe" if database else BRIDGE_CAPTURE
     with writing():
