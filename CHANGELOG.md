@@ -6,6 +6,8 @@ Status: available.
 
 ## Unreleased
 
+- Add experimental BigQuery Parquet load and Storage Read sources, reference-only credentials, bounded catalog sampling and a dry-run query cost guard.
+
 - Keep the locked development toolchain audit clear with compatible `filelock` 3.20.3 and patched `setuptools` 84.1.0.
 - Keep the fingerprint readback test compatible with DuckDB 2.
 

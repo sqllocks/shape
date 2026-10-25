@@ -336,3 +336,13 @@ shape emit retail --to duckdb:///out/retail.duckdb?schema=raw --write-mode appen
     Wrote 21,750 rows in 9 tables to duckdb:///out/retail.duckdb (0.52s)
     shape emit: 10,000 events delivered, offset 10,000 of 21,750, max-events, 40,123 events/s
     ```
+
+## BigQuery
+
+The experimental `bigquery` sink accepts `bigquery://PROJECT/DATASET?location=US` through
+`shape generate --to`. Install `sqllocks-shape-databases[bigquery]` and configure Google ADC
+or a credentials reference. Writes use bounded Parquet load jobs; `commit_rows` makes load
+results visible while a stream runs. The default mode refuses an existing table. Query
+jobs are dry-run checked against `max_bytes_billed` (default 1 GiB). See the
+[database plugin README](../plugins/shape-databases/README.md#bigquery-bigquery) for sign-in,
+types, write modes and partial failure behavior. Real account execution needs owner validation.

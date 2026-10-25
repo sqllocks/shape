@@ -820,3 +820,16 @@ CLI: `shape emit ... --key customer_id --header trace=@trace_id --partition 0
 --timestamp event_time` (Kafka); use `--partition-key customer_id` for Event
 Hubs. `shape stream-profile URI --with-key --with-headers --with-timestamp`
 reads metadata. The existing `--option nested=false` selects JSON-text maps.
+
+### BigQuery profiling and generation
+
+The experimental database plugin extra `sqllocks-shape-databases[bigquery]` adds
+`bigquery://PROJECT/DATASET?location=US` to `shape profile` and `shape generate --to`.
+Add `&table=T` to read one table. Dataset profiling accepts `--tables T,U` and
+`--sample-rows N` (default 1000; 0 catalog only), and saves the W9-01 sampling metadata.
+Configure ADC or `GOOGLE_APPLICATION_CREDENTIALS`; `--source-config credentials=env://NAME`
+and `--sink-config bigquery.credentials=env://NAME` select references to service-account JSON.
+The URI option `max_bytes_billed=1073741824` selects the query limit; the default is 1 GiB.
+Every query is dry-run checked. Row counts come from table metadata and distributions
+from bounded system samples. `--table-prefix` also applies to BigQuery generation.
+Account execution requires owner validation; the offline acceptance uses fake SDK responses.

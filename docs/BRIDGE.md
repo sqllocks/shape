@@ -1357,6 +1357,13 @@ There is no second implementation: a command calls what the matching command lin
 ## Security
 
 `profile` opens a database connection when its `source` is a database URI.
+BigQuery (`bigquery://PROJECT/DATASET?location=US`, optionally `&table=T`) opens HTTPS
+connections to the BigQuery query/load service and the Storage Read API. Its optional
+`[bigquery]` clients use ADC or private credential references; URI keys and tokens are
+refused. Every query is dry-run checked against `max_bytes_billed` (default 1 GiB).
+Dataset profiling supports `tables` and `sample_rows`, records actual sampled rows and
+bytes processed, and saves with safe capture. Storage Read and account charges still
+require account policy; no live account verification is claimed.
 PostgreSQL (`postgresql://`, also `postgres://`) and MySQL (`mysql://`) profile a schema
 or a URI-selected table. Optional `tables` is an array of table names; `sample_rows` is
 a non-negative integer (default 1000; 0 is catalog only). These database artifacts use

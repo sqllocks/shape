@@ -13,6 +13,7 @@ The client libraries (``psycopg``, ``PyMySQL``, ``snowflake-connector-python``,
 """
 
 from ._auth import Secret
+from .bigquery import BigQuerySink, BigQuerySource
 from .databricks import DatabricksSink
 from .duckdb_sink import DuckDbSink
 from .errors import CredentialError, WriteError
@@ -24,6 +25,8 @@ SHAPE_API = "1.0"
 
 __all__ = [
     "SHAPE_API",
+    "BigQuerySink",
+    "BigQuerySource",
     "CredentialError",
     "DatabricksSink",
     "DuckDbSink",

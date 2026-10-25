@@ -753,3 +753,12 @@ requirements:
   text: Kafka and Event Hubs support column keys and headers, preserve replay identity, refuse reserved header names and unknown metadata columns before sending, and optionally decode broker metadata outside default drift comparisons.
   verify: [conformance]
   owner: streaming
+
+- id: SHAPE-BIGQUERY-001
+  title: BigQuery bounded loads and guarded catalog sources
+  level: L1
+  milestone: W9-13
+  priority: MUST
+  text: BigQuery uses checked Parquet load jobs, reference-only credentials, exact type maps, Storage Read Arrow batches and declared catalog keys with bounded sampling and dry-run query limits.
+  verify: [bigquery-conformance]
+  owner: databases

@@ -4,7 +4,7 @@ from collections.abc import Sequence
 
 from shape.security import credrefs
 
-KEYS = frozenset({"token", "account_key", "sas_token", "connection_string"})
+KEYS = frozenset({"token", "account_key", "sas_token", "connection_string", "credentials"})
 
 
 def extract(argv: Sequence[str]) -> tuple[list[str], dict[str, str]]:
@@ -29,7 +29,8 @@ def extract(argv: Sequence[str]) -> tuple[list[str], dict[str, str]]:
         key, separator, reference = value.partition("=")
         if not separator or key not in KEYS:
             raise ValueError(
-                "--source-config needs token, account_key, sas_token or connection_string=REF"
+                "--source-config needs token, account_key, sas_token, "
+                "connection_string or credentials=REF"
             )
         if credrefs.scheme_of(reference) not in ("env", "file", "kv"):
             raise ValueError(
@@ -37,5 +38,11 @@ def extract(argv: Sequence[str]) -> tuple[list[str], dict[str, str]]:
             )
         if key in options:
             raise ValueError(f"--source-config repeats {key}")
-        options[key] = credrefs.resolve_reference(reference)
+        if key == "credentials":
+            if credrefs.scheme_of(reference) not in ("env", "file"):
+                raise ValueError("BigQuery credentials need an env:// or file:// reference")
+            credrefs.check_form(reference)
+            options[key] = reference
+        else:
+            options[key] = credrefs.resolve_reference(reference)
     return remaining, options
