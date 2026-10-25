@@ -145,6 +145,15 @@ class ToDbtTests(_Guarded):
         parser.add_argument("-o", "--output", metavar="schema.yml", required=True)
         parser.add_argument("--model", help="the dbt model, for a contract of one table")
         parser.add_argument(
+            "--dialect",
+            choices=("duckdb", "postgres", "snowflake", "bigquery"),
+            default="duckdb",
+            help="SQL dialect for singular tests (default: duckdb)",
+        )
+        parser.add_argument(
+            "--tests-dir", help="singular SQL directory (default: tests beside schema.yml)"
+        )
+        parser.add_argument(
             "--kind",
             choices=("models", "seeds", "sources"),
             default="models",
@@ -212,6 +221,7 @@ class ToDbtTests(_Guarded):
             bounds=bounds,
             tests_key=args.tests_key,
             args_style=args.args_style,
+            dialect=args.dialect,
         )
         out = Path(args.output)
         if args.merge:
@@ -224,6 +234,13 @@ class ToDbtTests(_Guarded):
             _write(out, render_yaml(merged, compiled.packages))
         else:
             _write(out, compiled.yaml())
+        project = next(
+            (parent for parent in out.resolve().parents if (parent / "dbt_project.yml").is_file()),
+            out.parent,
+        )
+        tests_dir = Path(args.tests_dir) if args.tests_dir else project / "tests"
+        for name, sql in compiled.singular_tests.items():
+            _write(tests_dir / name, sql)
         print(f"Wrote {out}")
         if args.packages_out and compiled.packages:
             _write(Path(args.packages_out), compiled.packages_yml())
@@ -259,6 +276,11 @@ class DbtSeeds(_Guarded):
             "--metadata", metavar="FILE", help="the .dbt-meta.json `from-dbt` wrote (descriptions)"
         )
         parser.add_argument("--allow-large", action="store_true", help="allow a file over 1 MiB")
+        parser.add_argument(
+            "--semantic-models",
+            action="store_true",
+            help="write semantic models with keys, numeric measures and a time dimension",
+        )
 
     def execute(self, args: Any) -> int:
         from shape.generation.engine import Engine
@@ -310,6 +332,10 @@ class DbtSeeds(_Guarded):
                 schema=table.schema,
             )
             print(f"  {name}: {count:,} rows -> {args.seeds_dir}/{name}.csv")
+        if args.semantic_models:
+            from .seeds import write_semantic_models
+
+            print(f"Wrote {write_semantic_models(args.project, schema, dialect=args.dialect)}")
         print(f"Seeds written to {args.project}/{args.seeds_dir}; run `dbt seed` or `dbt build`")
         return 0
 
