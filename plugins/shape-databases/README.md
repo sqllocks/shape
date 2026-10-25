@@ -376,7 +376,8 @@ removed on success and failure. Each load job stages at most `chunk_rows` rows (
 1,000,000), checks `output_rows`, and fails on a mismatch. `write_mode=append` uses
 `WRITE_APPEND`; `truncate` uses `WRITE_TRUNCATE` for the first load; `replace` drops and
 recreates; `fail` (also `create`, the default) refuses an existing table. A failed write
-drops a table it created unless `commit_rows` requested visible commits. Successful load
+drops a table it created unless `commit_rows` requested visible commits and at least one
+load was confirmed. A first-load failure or mismatch drops an unconfirmed created table. Successful load
 jobs on pre-existing tables cannot be rolled back. `WriteError.rows_committed` reports
 retained confirmed rows. With `commit_rows=N`, loads contain at most N rows, also bounded
 by `chunk_rows`, and become visible during the stream. Options `schema_name` (dataset),

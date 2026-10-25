@@ -16,6 +16,7 @@ from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, cast
+from urllib.parse import urlencode, urlsplit
 
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
@@ -187,6 +188,8 @@ class BigQuerySink(DatabaseSink):
 
     def parse_target(self, uri: str) -> Target:
         target = parse_uri(uri, self.schemes, self.uri_params)
+        if urlsplit(uri).fragment:
+            raise ShapeError("BigQuery URI fragments are refused")
         if target.user or target.port or not target.host or not target.database:
             raise ShapeError("use bigquery://<project>/<dataset>?location=US")
         identifier(target.host, "project")
@@ -337,7 +340,7 @@ class BigQuerySink(DatabaseSink):
             return total
         except Exception as exc:
             kept = progress[0]
-            if conn is not None and created and not plan.commit_rows:
+            if conn is not None and created and (not plan.commit_rows or not progress[0]):
                 try:
                     conn.delete_table(self.table_id(plan), not_found_ok=True)
                     kept = 0
@@ -496,14 +499,14 @@ class BigQuerySource(DatabaseSource):
             self.sink.schemes,
             {"location": as_text, "table": as_text, "max_bytes_billed": as_int},
         )
+        if urlsplit(uri).fragment:
+            raise ShapeError("BigQuery URI fragments are refused")
         if target.user or target.port:
             raise ShapeError("BigQuery URIs cannot contain a user or port")
         table = target.params.pop("table", None)
         if require_table and not table:
             raise ShapeError("a table source needs the URI parameter table=T")
         # Parse the original URI without the table through the common sink validator.
-        from urllib.parse import urlencode
-
         clean_uri = f"bigquery://{target.host}/{target.database}?" + urlencode(target.params)
         plan = cast(Plan, self.sink.plan(clean_uri, table or "catalog", options))
         plan.table = table or ""

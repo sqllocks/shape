@@ -109,6 +109,9 @@ def redact(uri: str) -> str:
 
     try:
         parts = urlsplit(str(uri))
+        if parts.scheme.lower() == "bigquery" and parts.fragment:
+            # BigQuery forbids fragments; hide the entire refused tail before confirmation.
+            parts = parts._replace(fragment="***")
         if parts.password is not None:
             host = parts.netloc.rpartition("@")[2]
             user = parts.username or ""

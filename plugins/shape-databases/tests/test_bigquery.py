@@ -470,14 +470,37 @@ def test_empty_truncate_and_stream_input_error_accounting():
 
 
 @pytest.mark.parametrize("key", ["credentials", "%63redentials", "private_key", "token"])
-def test_remote_confirmation_never_echoes_uri_key(key):
+@pytest.mark.parametrize("separator", ["&", "#"])
+def test_remote_confirmation_never_echoes_uri_key(key, separator):
     import io
 
     from shape.io.targets import confirm_remote_targets
     from shape.plugins.schemes import redact
 
-    uri = URI + "&" + key + "=KEY-MATERIAL"
+    uri = URI + separator + key + "=KEY-MATERIAL"
     assert "KEY-MATERIAL" not in redact(uri)
     with pytest.raises(ShapeError) as error:
         confirm_remote_targets([uri], stdin=io.StringIO("n\n"), stderr=io.StringIO())
     assert "KEY-MATERIAL" not in str(error.value)
+
+
+@pytest.mark.parametrize("fragment", ["token=KEY-MATERIAL", "private_key=KEY-MATERIAL"])
+@pytest.mark.parametrize("source", [False, True])
+def test_uri_fragment_refused_before_connection(fragment, source):
+    server = FakeBigQuery()
+    uri = URI + "#" + fragment
+    with pytest.raises(ShapeError, match="fragment") as error:
+        if source:
+            BigQuerySource(connect=server.connect).profile_database(uri)
+        else:
+            BigQuerySink(connect=server.connect).write(uri, "items", [batch()])
+    assert "KEY-MATERIAL" not in str(error.value)
+    assert server.connections == 0
+
+
+def test_first_mismatch_with_commit_rows_drops_unconfirmed_created_table():
+    server = FakeBigQuery(output_delta=1)
+    with pytest.raises(WriteError) as error:
+        BigQuerySink(connect=server.connect).write(URI, "items", [batch()], commit_rows=2)
+    assert error.value.rows_committed == 0
+    assert "test-project.dataset.items" not in server.tables
