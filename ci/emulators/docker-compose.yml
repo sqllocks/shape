@@ -148,3 +148,18 @@ services:
       CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
       CATALOG_S3_ENDPOINT: http://iceberg-minio:9000
       CATALOG_S3_PATH__STYLE__ACCESS: "true"
+
+  oracle:
+    image: gvenzl/oracle-free:23-slim
+    volumes:
+      - ./oracle:/container-entrypoint-initdb.d:ro
+    ports: ["1521:1521"]
+    environment:
+      ORACLE_PASSWORD: shape_emulator
+      APP_USER: shape
+      APP_USER_PASSWORD: shape_emulator
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 10s
+      retries: 60

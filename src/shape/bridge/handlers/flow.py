@@ -183,6 +183,8 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         "postgresql",
         "postgres",
         "mysql",
+        "oracle",
+        "tcps",
     )
     capture = "safe" if database else BRIDGE_CAPTURE
     with writing():
