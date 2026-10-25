@@ -4,7 +4,7 @@ Work is continuing. This is not the final completion report. The earlier transie
 
 ## Progress
 
-Nine assigned issues: three merged (33.3%), five ready/reviewed (55.6%), one active BigQuery implementation (11.1%), none dependency-blocked. Six remain unmerged (66.7%). Eight implementations ready including merged issues (88.9%). Supporting PR40 is outside denominator.
+Nine assigned issues: three merged (33.3%), six ready/reviewed (66.7%), none dependency-blocked. Six remain unmerged (66.7%). All nine implementations independently approved (100% implementation readiness); delivery remains33.3%. Supporting PR40 outside denominator.
 
 | Issue | Status | PR | Merge SHA |
 |---|---|---|---|
@@ -15,7 +15,7 @@ Nine assigned issues: three merged (33.3%), five ready/reviewed (55.6%), one act
 | #13 Semantic measures/roles | Merged; all6source workflows green, newmain gate pending | [33](https://github.com/sqllocks/shape/pull/33) | `404fed823b271525b8802254312ded28f1c5aaa8` |
 | #17 Iceberg | Implemented, ready, independently approved; prior Windows repair passed both versions; current core/Wheels held for next main refresh | [31](https://github.com/sqllocks/shape/pull/31) | None |
 | #6 Nested profiling | Catalog max_depth fix complete at548b976, independently approved; fresh CI pending; depends on PR42 | [43](https://github.com/sqllocks/shape/pull/43) | None |
-| #14 BigQuery | Active implementation: source interface merged via45;38acceptance cases red againstfreshbase | None | None |
+| #14 BigQuery | Implemented, independently approved; hosted full CI held until priorstages | [47](https://github.com/sqllocks/shape/pull/47) | None |
 | #20 Frozen comparison | Three-part value fix and Windows manifest portability repair complete, independently approved20cfff2; fresh CI/merge/Nightly pending | [42](https://github.com/sqllocks/shape/pull/42) | None |
 
 All current feature heads and branches are recorded in [state.md](state.md). Their existing reviews remain bound to those heads. Canceled checks are not passes. No open feature PR has a complete green exact-head gate established.
@@ -122,3 +122,7 @@ PR33 merged2026-10-21T01:36:10Z as404fed823b271525b8802254312ded28f1c5aaa8, clos
 Runner priority01:50UTC:42core39528369224 and43core39528332280 canceled/helduntil34+31merge+rootexplicitadvance, alongside31/34fullholduntil29merge. Laterstageswillrequirefreshmainrefreshandallgreenexact-headCIbeforemerge. Lightweightcheckscontinue; no source/tests/gates changed and cancellations neverpasses.
 
 Oct25 recovery: currentmainc1ff1c8 includesLeadA45;14unparkedonfreshlane/W9-13-finish fromc1ff(nohistoricaljournalancestry). Five other implementations refreshed/signed/pushed andindependentlyapproved:29 550c114,31 6497953,34 41e67fe,42 2cb1411,43 02d6913.31/43realsharedsource/privacy/bridgeconflicts repairedwithtargetedbothkernels(31 536each,43 258each+22validationeach) andstaticgreen, nofull localruns. Alllaterfullsheldpermergepriority, neverpasses. Our404mainCI39528275403/Docs39528275422/Security39528275442 nowverifiedSUCCESS. Currentc1CIrunningno failures;Doc/Sec/WheelsSUCCESS. NoqualifyingmainNightly for20yet.
+
+## BigQuery implementation and review complete
+
+[PR47](https://github.com/sqllocks/shape/pull/47) ready exactsigned+pushedadd7dd416917d96a4b4ccd671d77493d0c6af5c0, independentlyAPPROVED metadata_oct25 all7Wanted/security/scope.38initial/56expandedacceptanceREDagainstunchangedc1ff→70BQGREENeachkernel;276changedmodulesGREENeachkernel. Reviewerblockers genuinelyred→green:fragmentrejection4red,fragmentdisplay3red→8green,first-loadmismatch+commit_rowscleanup1red; previousconfirmedstreamcommits preserved. RealSDKconfig/factoryofflineproof,strictadaptermypy1/core704,Ruff/publiccheck/requirements/conformance/source-links green. Noaccount/livepass. CoreCI40230079267 canceled/helduntilpriorstages; lightcheckscontinue.9/9implementationsreviewed,3/9delivered,6/9unmerged. Later47refreshafter43mustreviewshareddepth/sourceintegrationandallfreshhostedgates.
