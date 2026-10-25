@@ -467,3 +467,17 @@ def test_empty_truncate_and_stream_input_error_accounting():
     with pytest.raises(WriteError) as err:
         sink.write(URI, "items", broken(), commit_rows=2, write_mode="append")
     assert err.value.rows_committed == 2
+
+
+@pytest.mark.parametrize("key", ["credentials", "%63redentials", "private_key", "token"])
+def test_remote_confirmation_never_echoes_uri_key(key):
+    import io
+
+    from shape.io.targets import confirm_remote_targets
+    from shape.plugins.schemes import redact
+
+    uri = URI + "&" + key + "=KEY-MATERIAL"
+    assert "KEY-MATERIAL" not in redact(uri)
+    with pytest.raises(ShapeError) as error:
+        confirm_remote_targets([uri], stdin=io.StringIO("n\n"), stderr=io.StringIO())
+    assert "KEY-MATERIAL" not in str(error.value)

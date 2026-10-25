@@ -105,6 +105,8 @@ _SECRET_PARAM = re.compile(
 def redact(uri: str) -> str:
     """``uri`` without a password in its user information or a credential in its query string
     (``sig``, ``password``, ``AccountKey``, ``SharedAccessKey``, tokens and secrets)."""
+    from shape.security.redact import redact_text
+
     try:
         parts = urlsplit(str(uri))
         if parts.password is not None:
@@ -114,9 +116,9 @@ def redact(uri: str) -> str:
         if parts.query:
             parts = parts._replace(query=_SECRET_PARAM.sub(r"\1\2***", parts.query))
         out = parts.geturl()
-        return str(uri) if out == urlsplit(str(uri)).geturl() else out
+        return redact_text(str(uri) if out == urlsplit(str(uri)).geturl() else out)
     except ValueError:
-        return str(uri)
+        return redact_text(str(uri))
 
 
 def sinks_by_scheme(host: Any | None = None) -> dict[str, list[str]]:
