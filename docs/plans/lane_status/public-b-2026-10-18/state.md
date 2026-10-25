@@ -130,3 +130,7 @@ All42retainedlightsnowSUCCESS (Docs40243544523,DCO40243544511,Security4024354452
 ## Active CI checkpoint Oct25 23:41UTC
 
 Root verified origin/main still90fbff9 at23:40:46. All five sourceheads unchanged/current/reviewed. Formats34 core/lightrollup19SUCCESS/11running/2queued plus2structuralpublishskips; Iceberg31 has25SUCCESS/12running/5queued plus2structuralpublishskips; no failures. Iceberg Wheels40243562771 has9success and sole macIntelPython3.11queued, nofailedjobs. Corebenches/audit/streamtests progressing; fulls remain incomplete, no pass claim. Later42/43/47fullsheld; alltheirretainedlights green. No localreruns or sourcechanges. Counts4/9merged44.4%,5left55.6%. Continue monitoring and merge first fullygreen34or31 immediately through guard, then refreshothersonce.
+
+## Active CI checkpoint Oct25 23:50UTC
+
+Currentexactheadsunchanged:34rollup22SUCCESS/8running/2queued+2structuralpublishskips;31rollup31SUCCESS/9running/2queued+2structuralpublishskips. No failedjobs;34macOS3.14 clearedordinarycoverage andrunsheavy;31macOS3.14 clearedcoverageandkernelstep, otherplatform/minversions/zero-networkstillactive. Wheels31solequeuedmacIntel3.11hasno steps, other9jobssuccess. No reruns/cancels/sourcechanges, no mainmoveobserved. Userfullcountsprovided23:50, still4/9merged44.4%,5left55.6%; continuefirstgreenmerge. Scratchpushesimmediate, no credentialerrorafterrecovered503.
