@@ -504,3 +504,21 @@ def test_first_mismatch_with_commit_rows_drops_unconfirmed_created_table():
         BigQuerySink(connect=server.connect).write(URI, "items", [batch()], commit_rows=2)
     assert error.value.rows_committed == 0
     assert "test-project.dataset.items" not in server.tables
+
+
+def test_parquet_bignumeric_decimal_targets_and_values():
+    from decimal import Decimal
+
+    values = {
+        "fraction": pa.array([Decimal("1.0000000001")], type=pa.decimal128(38, 10)),
+        "integer": pa.array([Decimal("9" * 38)], type=pa.decimal128(38, 0)),
+        "wide": pa.array([Decimal("9" * 38 + "." + "9" * 38)], type=pa.decimal256(76, 38)),
+    }
+    original = pa.record_batch(values)
+    server = FakeBigQuery()
+    assert BigQuerySink(connect=server.connect).write(URI, "decimals", [original]) == 1
+    assert server.loads[0].get("decimal_target_types") == ["NUMERIC", "BIGNUMERIC"]
+    assert server.tables["test-project.dataset.decimals"].to_pydict() == original.to_pydict()
+    assert all(
+        t.startswith("BIGNUMERIC") for _, t, _ in server.declared["test-project.dataset.decimals"]
+    )

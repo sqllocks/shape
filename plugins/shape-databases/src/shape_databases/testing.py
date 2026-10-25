@@ -897,6 +897,7 @@ class _FakeBigQueryClient:
                 and os.stat(os.path.dirname(path)).st_mode & 0o077 == 0,
                 "format": job_config.source_format,
                 "disposition": job_config.write_disposition,
+                "decimal_target_types": getattr(job_config, "decimal_target_types", None),
             }
         )
         if len(server.loads) == server.fail_load:

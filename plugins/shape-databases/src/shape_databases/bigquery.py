@@ -431,7 +431,10 @@ class BigQuerySink(DatabaseSink):
                     job = conn.load_table_from_file(
                         stream,
                         qualified,
-                        job_config=conn.load_config(write_disposition=disposition),
+                        job_config=conn.load_config(
+                            write_disposition=disposition,
+                            decimal_target_types=["NUMERIC", "BIGNUMERIC"],
+                        ),
                     )
                     job.result()
                 if job.output_rows != staged.num_rows:

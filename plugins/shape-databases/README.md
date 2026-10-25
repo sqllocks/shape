@@ -373,7 +373,8 @@ The SDK is loaded only when opening a connection.
 
 `BigQuerySink.write(uri, table, batches, **options)` uses private temporary Parquet files,
 removed on success and failure. Each load job stages at most `chunk_rows` rows (default
-1,000,000), checks `output_rows`, and fails on a mismatch. `write_mode=append` uses
+1,000,000), checks `output_rows`, and fails on a mismatch. Parquet load jobs explicitly
+allow `NUMERIC` and `BIGNUMERIC` decimal targets, preserving wide decimal columns. `write_mode=append` uses
 `WRITE_APPEND`; `truncate` uses `WRITE_TRUNCATE` for the first load; `replace` drops and
 recreates; `fail` (also `create`, the default) refuses an existing table. A failed write
 drops a table it created unless `commit_rows` requested visible commits and at least one
