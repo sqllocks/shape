@@ -164,3 +164,9 @@ Focused verifier, capture-date and timed-worker tests: 35 passed in each kernel 
 (3.41 seconds and 3.09 seconds). Ruff, formatting and user-facing checks pass. Hosted
 Windows validation remains pending on the new head; the failed run is not passing evidence.
 No recording, fixture, value, threshold or comparison rule changed.
+
+## Main interface refresh — 2026-10-25
+
+Merged current main `c1ff1c8adec2225a7e458c50c5cf7c70625b17b1` once. The sole conflict was additive CHANGELOG.md content; both entries are retained. Product code merged automatically. Inspection of the database-only profile dispatch, sample/privacy handling and existing sink/source interfaces found no product-code conflict with this lane. Broker formats and authenticated parity helpers retain their existing paths. The Windows manifest-key `as_posix()` repair and strict digests remain intact.
+
+`check_user_facing.py` and `git diff --check` exit 0. No local full suite or make check was run: the Owner throughput decision delegates full gates to hosted CI. No new targeted tests were needed because this refresh resolves documentation-only conflicts. Exact-head independent review and hosted gates remain required; held core CI cancellations never count as passes.

@@ -154,12 +154,13 @@ def _redact_column(
     k: int,
     classified: bool,
     row_count: int,
+    sampled_rows: int,
     previous: Mapping[str, Any],
 ) -> _ColumnResult:
     c = copy.deepcopy(dict(col))
     dtype = str(c.get("dtype"))
     cardinality = int(c.get("cardinality") or 0)
-    base = non_null_base(row_count, c.get("null_count"), c.get("null_rate") or 0.0)
+    base = non_null_base(sampled_rows, c.get("null_count"), c.get("null_rate") or 0.0)
     pii = pii_gate_reason(c.get("pattern"), cardinality, row_count, _GATE, _column_rates(c))
     reason = "classification" if classified else pii
     sensitive = reason is not None
@@ -433,6 +434,16 @@ def redact_profile(profile: Any, config: CaptureConfig | None = None) -> Any:
     manifest_tables: dict[str, Any] = {}
     for tname, table in tables.items():
         row_count = int(table.get("row_count") or 0)
+        # Canonical sampling records describe the observations behind the statistics.
+        # A catalog population must not dilute their sensitivity or disclosure support.
+        # Older sources without that record retain their population-based classification.
+        sampling = table.get("sampling")
+        sensitivity_rows = (
+            int(sampling.get("sampled_rows", row_count) or 0)
+            if isinstance(sampling, Mapping)
+            else row_count
+        )
+        sampled_rows = int(table.get("sampled_rows", row_count) or 0)
         sensitive: set[str] = set()
         entries: dict[str, Any] = {}
         columns: dict[str, Any] = {}
@@ -442,7 +453,8 @@ def redact_profile(profile: Any, config: CaptureConfig | None = None) -> Any:
                 col,
                 k=column_k.get((tname, cname), cfg.k),
                 classified=declared is not None and cfg.is_sensitive_label(declared),
-                row_count=row_count,
+                row_count=sensitivity_rows,
+                sampled_rows=sampled_rows,
                 previous=before.get(tname, {}).get(cname, {}),
             )
             columns[cname] = result.column

@@ -9,6 +9,9 @@ Status: available.
 - Compare frozen release results with explicit recorded-error noncomparability, approved
   reference category-name aliases and authenticated capture-date replay; recorded values
   and all numeric comparison thresholds remain unchanged.
+- Keep the locked development toolchain audit clear with compatible `filelock` 3.20.3 and patched `setuptools` 84.1.0.
+- Keep the fingerprint readback test compatible with DuckDB 2.
+
 - W9-12: semantic model profiles retain table measures and read-only TOM roles. `semantic-model://`
   accepts `as_role` for native DAX role-filtered reads, and plain profiles retain hidden columns.
   `export-model --from-profile` preserves measures and roles; `known-answer MODEL.shape --measures
@@ -2066,6 +2069,14 @@ Converting a full capture to the safe form now gives a different content ID when
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
 
+### W9-01 — PostgreSQL and MySQL profiling
+
+- Database sources stream Arrow record batches from `postgresql://` (also `postgres://`) and
+  `mysql://`, preserve catalog types and nullability, and share the sinks' credential/TLS rules.
+- `shape profile` and bridge `profile` capture a whole schema or selected tables with declared
+  keys and bounded spread samples. `--tables` and `--sample-rows` select CLI tables/sample size;
+  bridge arguments are `tables` and `sample_rows`. Catalog-only capture uses sample size zero.
+- Database profiles and bridge database artifacts use existing safe capture rules.
 - W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
   catalog row counts and whole-database profiles through the KQL endpoint.
   Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
