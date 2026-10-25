@@ -6722,6 +6722,7 @@
 <p><strong>Early access 0.9.3.</strong> Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.</p>
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <ul>
+<li>Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.</li>
 <li>Keep the locked development toolchain audit clear with compatible <code>filelock</code> 3.20.3 and patched <code>setuptools</code> 84.1.0.</li>
 <li>
 <p>Keep the fingerprint readback test compatible with DuckDB 2.</p>
@@ -8904,10 +8905,14 @@
 <li><code>shape profile</code> and bridge <code>profile</code> capture a whole schema or selected tables with declared
   keys and bounded spread samples. <code>--tables</code> and <code>--sample-rows</code> select CLI tables/sample size;
   bridge arguments are <code>tables</code> and <code>sample_rows</code>. Catalog-only capture uses sample size zero.</li>
-<li>Database profiles and bridge database artifacts use existing safe capture rules.</li>
-<li>W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+<li>
+<p>Database profiles and bridge database artifacts use existing safe capture rules.</p>
+</li>
+<li>
+<p>W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
   catalog row counts and whole-database profiles through the KQL endpoint.
-  Emitter metadata is excluded from profiles; <code>dedupe=true</code> collapses retries.</li>
+  Emitter metadata is excluded from profiles; <code>dedupe=true</code> collapses retries.</p>
+</li>
 </ul>
 <h3 id="w9-08-broker-message-metadata">W9-08: broker message metadata<a class="headerlink" href="#w9-08-broker-message-metadata" title="Permanent link">&para;</a></h3>
 <ul>

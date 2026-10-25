@@ -6065,6 +6065,22 @@ Output (exit 0)
 {"api_version": "1.2", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
 {"api_version": "1.2", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
 {"api_version": "1.2", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
+Oracle sources (
+oracle://
+and
+tcps://
+, from
+sqllocks-shape-databases[oracle]
+) support
+profile
+with
+sample_rows
+and
+tables
+. Their persisted bridge artifacts use safe capture
+by default. Oracle connection credentials and wallet passwords are never artifact metadata.
+The catalog count and LAST_ANALYZED describe the population; sampled distributions describe
+only the bounded sample. See the database plugin README for exact counts and type mapping.
 Report a problem with this page
 
 ## Canaries
@@ -6356,6 +6372,7 @@ Early access 0.9.3.
 Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 Unreleased
 ¶
+Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
 Keep the locked development toolchain audit clear with compatible
 filelock
 3.20.3 and patched
@@ -20738,7 +20755,7 @@ shape
 plugins
 list
 Output (exit 0)
-183 plugin(s)
+185 plugin(s)
   shape.behaviors:entity_lifecycle        unloaded [sqllocks-shape-behavior]
   shape.behaviors:equipment_maintenance   unloaded [sqllocks-shape-behavior]
   shape.behaviors:event_sequence          unloaded [sqllocks-shape-behavior]
@@ -20850,6 +20867,7 @@ Output (exit 0)
   shape.sinks:mysql                       unloaded [sqllocks-shape-databases]
   shape.sinks:ncpdp                       unloaded [sqllocks-shape-healthcare-standards]
   shape.sinks:omop                        unloaded [sqllocks-shape-healthcare-standards]
+  shape.sinks:oracle                      unloaded [sqllocks-shape-databases]
   shape.sinks:parquet                     unloaded [sqllocks-shape]
   shape.sinks:postgres                    unloaded [sqllocks-shape-databases]
   shape.sinks:snowflake                   unloaded [sqllocks-shape-databases]
@@ -20875,6 +20893,7 @@ Output (exit 0)
   shape.sources:mssql                     unloaded [sqllocks-shape-sqlserver]
   shape.sources:mysql                     unloaded [sqllocks-shape-databases]
   shape.sources:onelake                   unloaded [sqllocks-shape-fabric]
+  shape.sources:oracle                    unloaded [sqllocks-shape-databases]
   shape.sources:parquet                   unloaded [sqllocks-shape]
   shape.sources:postgres                  unloaded [sqllocks-shape-databases]
   shape.sources:postgresql                unloaded [sqllocks-shape-databases]
@@ -67542,6 +67561,26 @@ append
 Output (exit 0)
 Wrote 21,750 rows in 9 tables to duckdb:///out/retail.duckdb (0.52s)
 shape emit: 10,000 events delivered, offset 10,000 of 21,750, max-events, 40,123 events/s
+Oracle
+¶
+The
+oracle
+sink in
+sqllocks-shape-databases[oracle]
+writes Oracle 19c+ through thin-mode
+bound array DML. Use
+oracle://user@host:1521/service?schema=S
+, or
+tcps://
+for TLS, with
+ORACLE_PASSWORD
+or a referenced password. Remote hosts verify TLS by default.
+batch_rows
+defaults to 50000. Empty strings are refused;
+empty_string=null
+permits conversion only
+for nullable non-key columns. Oracle DDL commits implicitly, including replace and truncate.
+See the plugin README's Oracle section for types, wallets, transaction limits and the source.
 Report a problem with this page
 
 ## File sources
@@ -76107,7 +76146,7 @@ Output (exit 0)
   shape.detectors:presidio   unloaded [sqllocks-shape-integrations]
   shape.detectors:us_ssn     unloaded [sqllocks-shape]
 shape: error: no plugin 'shape.detectors:iban' (see `shape plugins list`)
-plugin API 1.0: 183 plugin(s)
+plugin API 1.0: 185 plugin(s)
   ok    shape.behaviors:entity_lifecycle [sqllocks-shape-behavior]
   ok    shape.behaviors:equipment_maintenance [sqllocks-shape-behavior]
   ok    shape.behaviors:event_sequence [sqllocks-shape-behavior]
@@ -76219,6 +76258,7 @@ plugin API 1.0: 183 plugin(s)
   ok    shape.sinks:mysql [sqllocks-shape-databases]
   ok    shape.sinks:ncpdp [sqllocks-shape-healthcare-standards]
   ok    shape.sinks:omop [sqllocks-shape-healthcare-standards]
+  ok    shape.sinks:oracle [sqllocks-shape-databases]
   ok    shape.sinks:parquet [sqllocks-shape]
   ok    shape.sinks:postgres [sqllocks-shape-databases]
   ok    shape.sinks:snowflake [sqllocks-shape-databases]
@@ -76244,6 +76284,7 @@ plugin API 1.0: 183 plugin(s)
   ok    shape.sources:mssql [sqllocks-shape-sqlserver]
   ok    shape.sources:mysql [sqllocks-shape-databases]
   ok    shape.sources:onelake [sqllocks-shape-fabric]
+  ok    shape.sources:oracle [sqllocks-shape-databases]
   ok    shape.sources:parquet [sqllocks-shape]
   ok    shape.sources:postgres [sqllocks-shape-databases]
   ok    shape.sources:postgresql [sqllocks-shape-databases]
@@ -87133,7 +87174,11 @@ The PostgreSQL or MySQL host in the URI you give (
 postgresql://
 ,
 mysql://
-), through psycopg and PyMySQL; the Snowflake account in a
+), through psycopg and PyMySQL; the Oracle host in an
+oracle://
+or
+tcps://
+URI, through python-oracledb in thin mode; the Snowflake account in a
 snowflake://
 URI, through snowflake-connector-python; the Databricks workspace host in a
 databricks://
@@ -87157,6 +87202,8 @@ MYSQL_PWD
 SNOWFLAKE_PASSWORD
 ,
 DATABRICKS_TOKEN
+,
+ORACLE_PASSWORD
 (secrets). Any variable you name in an
 env://NAME
 reference.
@@ -87176,7 +87223,9 @@ ssl_key
 file://
 password and Snowflake private-key files (refused if group- or world-accessible) and, through libpq,
 ~/.pgpass
-.
+. Oracle reads the thin-mode wallet files in the
+wallet_location
+directory you name.
 shape-dbt
 None.
 None.

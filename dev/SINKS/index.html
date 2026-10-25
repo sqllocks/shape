@@ -2825,6 +2825,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#oracle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Oracle
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -6558,6 +6569,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#oracle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Oracle
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -6990,6 +7012,13 @@ shape<span class="w"> </span>emit<span class="w"> </span>retail<span class="w"> 
 shape emit: 10,000 events delivered, offset 10,000 of 21,750, max-events, 40,123 events/s
 </code></pre></div>
 </details>
+<h2 id="oracle">Oracle<a class="headerlink" href="#oracle" title="Permanent link">&para;</a></h2>
+<p>The <code>oracle</code> sink in <code>sqllocks-shape-databases[oracle]</code> writes Oracle 19c+ through thin-mode
+bound array DML. Use <code>oracle://user@host:1521/service?schema=S</code>, or <code>tcps://</code> for TLS, with
+<code>ORACLE_PASSWORD</code> or a referenced password. Remote hosts verify TLS by default. <code>batch_rows</code>
+defaults to 50000. Empty strings are refused; <code>empty_string=null</code> permits conversion only
+for nullable non-key columns. Oracle DDL commits implicitly, including replace and truncate.
+See the plugin README's Oracle section for types, wallets, transaction limits and the source.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Sinks&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FSINKS%2F">Report a problem with this page</a></p>
 
 
