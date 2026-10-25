@@ -336,3 +336,12 @@ shape emit retail --to duckdb:///out/retail.duckdb?schema=raw --write-mode appen
     Wrote 21,750 rows in 9 tables to duckdb:///out/retail.duckdb (0.52s)
     shape emit: 10,000 events delivered, offset 10,000 of 21,750, max-events, 40,123 events/s
     ```
+
+## Oracle
+
+The `oracle` sink in `sqllocks-shape-databases[oracle]` writes Oracle 19c+ through thin-mode
+bound array DML. Use `oracle://user@host:1521/service?schema=S`, or `tcps://` for TLS, with
+`ORACLE_PASSWORD` or a referenced password. Remote hosts verify TLS by default. `batch_rows`
+defaults to 50000. Empty strings are refused; `empty_string=null` permits conversion only
+for nullable non-key columns. Oracle DDL commits implicitly, including replace and truncate.
+See the plugin README's Oracle section for types, wallets, transaction limits and the source.
