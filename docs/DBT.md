@@ -257,7 +257,7 @@ shape plugins list
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    183 plugin(s)
+    185 plugin(s)
       shape.behaviors:entity_lifecycle        unloaded [sqllocks-shape-behavior]
       shape.behaviors:equipment_maintenance   unloaded [sqllocks-shape-behavior]
       shape.behaviors:event_sequence          unloaded [sqllocks-shape-behavior]
@@ -369,6 +369,7 @@ shape plugins list
       shape.sinks:mysql                       unloaded [sqllocks-shape-databases]
       shape.sinks:ncpdp                       unloaded [sqllocks-shape-healthcare-standards]
       shape.sinks:omop                        unloaded [sqllocks-shape-healthcare-standards]
+      shape.sinks:oracle                      unloaded [sqllocks-shape-databases]
       shape.sinks:parquet                     unloaded [sqllocks-shape]
       shape.sinks:postgres                    unloaded [sqllocks-shape-databases]
       shape.sinks:snowflake                   unloaded [sqllocks-shape-databases]
@@ -394,6 +395,7 @@ shape plugins list
       shape.sources:mssql                     unloaded [sqllocks-shape-sqlserver]
       shape.sources:mysql                     unloaded [sqllocks-shape-databases]
       shape.sources:onelake                   unloaded [sqllocks-shape-fabric]
+      shape.sources:oracle                    unloaded [sqllocks-shape-databases]
       shape.sources:parquet                   unloaded [sqllocks-shape]
       shape.sources:postgres                  unloaded [sqllocks-shape-databases]
       shape.sources:postgresql                unloaded [sqllocks-shape-databases]
