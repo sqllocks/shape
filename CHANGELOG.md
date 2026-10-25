@@ -2072,6 +2072,14 @@ Converting a full capture to the safe form now gives a different content ID when
   catalog row counts and whole-database profiles through the KQL endpoint.
   Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
 
+### W9-10
+
+- Read dbt semantic models and list singular tests in import metadata.
+- Write singular contract tests for regexp, boolean rates and non-numeric bounds
+  in DuckDB, PostgreSQL, Snowflake and BigQuery SQL.
+- Report metric and exposure impact for failing or drifted columns, and optionally
+  emit semantic models beside generated dbt seeds.
+
 ### W9-01 — PostgreSQL and MySQL profiling
 
 - Database sources stream Arrow record batches from `postgresql://` (also `postgres://`) and
