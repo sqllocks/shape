@@ -6,7 +6,7 @@ Updated 2026-10-25 21:38 UTC. This file is the current checkpoint; lane records 
 
 Continue until all seven assigned issues are merged or legitimately parked. Do not end a turn merely to wait or ask. Original prompt: `/workspace/attachments/9302a188-787d-4428-9403-3510325ce6a1/4-NEW-WINDOW-shape-public-A.md`. Read it and this state after any restart.
 
-**2/7 merged (28.6% done), 5/7 unmerged (71.4%). Four active (57.1%); one parked (14.3%).** W9-01/#2 mergedPR45 andOracleW9-15/#16 mergedPR39. Currentmain3b19d05b940816a74a0ce1ec177365138ce0ed32, freshCIpending; priorrepairmainc1ff1c8 all40triggeredchecksgreen. Remaining37/38/44 refreshedonce toOraclemain, signed/pushed/independentlyAPPROVED;195targetedperkernel+2docspages+staticchecksallgreen; newexact-headCIpending. Delta07 awaitsactual44main. Frozen#4parkunchanged. No directmainpushes. FirstrepairWindowsfailureunknownriskpreservedbelow.
+**2/7 merged (28.6% done), 5/7 unmerged (71.4%). Four active (57.1%); one parked (14.3%).** W9-01/#2 mergedPR45 andOracleW9-15/#16 mergedPR39. Currentmain3b19d05b940816a74a0ce1ec177365138ce0ed32, freshCIall30triggeredchecksgreen; priorrepairmainc1ff1c8 all40triggeredchecksgreen. Remaining37/38/44 refreshedonce toOraclemain, signed/pushed/independentlyAPPROVED;195targetedperkernel+2docspages+staticchecksallgreen; newexact-headCIpending. Delta07 awaitsactual44main. Frozen#4parkunchanged. No directmainpushes. FirstrepairWindowsfailureunknownriskpreservedbelow.
 
 Give meaningful commentary at least every60seconds while working, quantified totals about every5minutes and immediately on merge/blocker changes. CI counts are a separate metric from issues merged.
 
@@ -194,3 +194,10 @@ AftermergebatchcheckedContractLeadquestionspathinneworigin/main:absent. Rootmerg
 ## Current Oracle integration refreshes complete
 
 37 ef2ec455079081c09f5479ece25d50923240440e;38 821f65e2e25e83b8d9cec2c9b3f6cd92694f9e48;44 ba67c2ba6d4fcd8a8de01505326b400a5aba33a2. Allsigned/pushed/clean/released; intendedoldhead+actualmain3b19parents; independentlyAPPROVEDexactremotes/DCO/ancestry/manualresolutionandautoOracle_sqlhelperintegration. No additionalimplementation/test/gateedits. Each195targeteddefault+195Python(cloudsources,Oraclesource+sink,conformance,bridgeflow)green;bothDBT/authoringdocspagesgreenonce(harnessforcesPython);Ruff/format/mypyflow/wording/conformance32/32green. Metadatafresh187registrations/187docrows/6sources/OracleSink+extra/repairpins; publishedrangesunchanged.38DBTfirstinvocationomittedpersistedRustenv; correctedcommandandreranonlyfailingnode49.85sgreen, authoringfirstpass. Oldown38CIrun40226747394canceledafternewpush; old37/44alreadycompleted, no currentrunscanceled. NewCIisgate; no localfullsuite. Rootownsallreleasedworktrees;07waitsactual44main.
+
+## Oracle merged-head CI verified
+
+Actualmain3b19d05b940816a74a0ce1ec177365138ce0ed32 freshCIall30triggeredchecksgreen, nofailure/runningjobs, bothkernelmodesandWindows3.11included. Alltriggeredworkflowsoverallgreen. This ismerged-headevidenceforPR39, separatefromitsapproved32-greenPRhead. Remaining37/38/44stillneedtheirownexactheadCIbeforemerge. Greenmerged-headruns:
+- Security https://github.com/sqllocks/shape/actions/runs/40235435418
+- Documentation https://github.com/sqllocks/shape/actions/runs/40235435374
+- CI https://github.com/sqllocks/shape/actions/runs/40235435384
