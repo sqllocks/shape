@@ -62,4 +62,3 @@ where = ["src"]
 
 [tool.uv.sources]
 sqllocks-shape = { workspace = true }
-
