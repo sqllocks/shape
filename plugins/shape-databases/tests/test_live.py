@@ -138,6 +138,7 @@ def test_databricks_source_round_trip():
     (uri, _) = _source_settings("SHAPE_TEST_DATABRICKS_URI", "DATABRICKS_TOKEN")
     _source_round_trip(DatabricksSource(), DatabricksSink(), uri, {})
 
+
 @pytest.mark.parametrize("dialect", ["snowflake", "databricks"])
 def test_w9_03_live_width_decimal_and_zoned_instant(dialect):
     import datetime as dt

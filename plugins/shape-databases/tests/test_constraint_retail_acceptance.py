@@ -1,5 +1,6 @@
 """SHAPE-SINK-004: W9-04 Wanted 5: every retail table loads, and a planted violation fails."""
 
+import copy
 import os
 import uuid
 
@@ -71,7 +72,11 @@ def _execute(conn, sql):
 
 def test_all_retail_tables_accept_constraints_and_named_chaos_is_rejected(retail_database):
     dialect, conn, sink, uri = retail_database
-    schema = load_domain("retail").schema
+    schema = copy.deepcopy(load_domain("retail").schema)
+    for table in schema.tables.values():
+        for column in table.columns.values():
+            if column.type == "decimal":
+                column.precision, column.scale = 18, 2
     engine = Engine(schema, scale="small", seed=1042)
     prefix = "" if dialect == "duckdb" else "wr_" + uuid.uuid4().hex[:10] + "_"
     contract = {

@@ -1114,7 +1114,7 @@ def _target_ddl(a: argparse.Namespace, schema: GenSchema) -> list[dict[str, str]
     """Resolve declared output column types without executing any generator or signing in."""
     if not getattr(a, "to", None):
         return []
-    import pyarrow as pa  # type: ignore[import-untyped]
+    import pyarrow as pa
 
     from shape.cli.to import target_options
     from shape.io.targets import scheme_of, sink_for_target, sink_names_by_scheme

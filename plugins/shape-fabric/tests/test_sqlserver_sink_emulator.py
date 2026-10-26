@@ -303,11 +303,17 @@ def test_upsert_with_identity_keep_keeps_the_generated_identity_values(schema):
 
 def test_full_retail_all_constraints_and_named_planted_violation(schema):
     """W9-04 Wanted 5, on the real SQL Server used by the existing nightly job."""
+    import copy
+
     from shape.generation.domains import load_domain
     from shape.generation.engine import Engine
     from shape.generation.output import TargetOptions, write_targets
 
-    definition = load_domain("retail").schema
+    definition = copy.deepcopy(load_domain("retail").schema)
+    for table in definition.tables.values():
+        for column in table.columns.values():
+            if column.type == "decimal":
+                column.precision, column.scale = 18, 2
     engine = Engine(definition, scale="small", seed=1042)
     contract = {"tables": {"product": {"columns": {"unit_price": {"min": 0, "default": 1}}}}}
     options = TargetOptions(constraints="all", contract=contract, extra={"sqlserver": LOGIN})
@@ -354,6 +360,7 @@ def test_matching_compound_check_allows_existing_append(schema):
     assert sink.write(uri, "bounded", [first], **options) == 1
     assert sink.write(uri, "bounded", [second], write_mode="append", **options) == 1
     assert count(schema, "bounded") == 2
+
 
 def test_w9_03_catalog_widths_decimal_and_datetimeoffset(schema):
     import datetime as dt

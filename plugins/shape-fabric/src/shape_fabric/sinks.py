@@ -42,7 +42,7 @@ import logging
 import re
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import ExitStack, contextmanager
-from typing import Any, cast
+from typing import Any
 from urllib.parse import parse_qsl, unquote, urlsplit
 
 import pyarrow as pa  # type: ignore[import-untyped]
@@ -363,9 +363,7 @@ class SynapseSink:
             if commit_rows is None:
                 rows = writer.write_table(table, batches, **keys)
             else:
-                rows = self._write_in_loads(
-                    cast(SynapseWriter, writer), table, batches, keys, commit_rows
-                )
+                rows = self._write_in_loads(writer, table, batches, keys, commit_rows)
             log.debug("wrote %d rows of table %r to %s", rows, table, writer.destination)
             return rows
 

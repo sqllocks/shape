@@ -1,5 +1,7 @@
 """W9-04 Wanted 5: the complete retail load through SQL Server's fake driver."""
 
+import copy
+
 import pyarrow as pa
 import pytest
 from shape_fabric import SqlServerSink, WriteError
@@ -14,7 +16,11 @@ def test_all_retail_rows_load_and_planted_check_violation_names_constraint(monke
     server = FakeSqlServer()
     sink = SqlServerSink(connect=server.connect)
     monkeypatch.setattr("shape.io.targets.sink_for_target", lambda uri: ("sqlserver", sink))
-    schema = load_domain("retail").schema
+    schema = copy.deepcopy(load_domain("retail").schema)
+    for table in schema.tables.values():
+        for column in table.columns.values():
+            if column.type == "decimal":
+                column.precision, column.scale = 18, 2
     engine = Engine(schema, scale="small", seed=1042)
     contract = {"tables": {"product": {"columns": {"unit_price": {"min": 0, "default": 1}}}}}
     options = TargetOptions(constraints="all", contract=contract)

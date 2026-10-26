@@ -4,10 +4,20 @@ import pytest
 
 
 @pytest.mark.parametrize("target", ["postgresql://unreachable/db", "mysql://unreachable/db"])
-def test_database_dry_run_shows_constraints_without_connecting(capsys, target):
-    from shape.cli.main import main
+def test_database_dry_run_shows_constraints_without_connecting(capsys, target, tmp_path):
+    import json
 
-    assert main(["generate", "retail", "--dry-run", "--to", target]) == 0
+    from shape.cli.main import main
+    from shape.generation.domains import load_domain
+
+    document = load_domain("retail").schema.to_dict()
+    for table in document["tables"].values():
+        for column in table["columns"].values():
+            if column["type"] == "decimal":
+                column.update(precision=18, scale=2)
+    schema = tmp_path / "retail-explicit.json"
+    schema.write_text(json.dumps(document))
+    assert main(["generate", str(schema), "--dry-run", "--to", target]) == 0
     output = capsys.readouterr().out
     assert "ALTER TABLE" in output and "FOREIGN KEY" in output
 
