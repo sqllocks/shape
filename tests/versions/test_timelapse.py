@@ -357,3 +357,40 @@ def test_v1_capsule_content():
     assert doc["column"] == "v" and len(doc["frames"]) == 4
     assert [f["change_point"] for f in doc["frames"]] == [False, False, True, False]
     assert doc["frames"][1]["gap"] is False
+
+
+def test_frame_order_uses_date_then_commit_time_then_log_position(tmp_path, monkeypatch):
+    from history_helpers import commit_profile
+
+    import shape.registry.local as local
+
+    reg = LocalRegistry(tmp_path / "reg")
+    entries = [
+        ("2026-03-04", 30.0),
+        ("2026-03-02", 20.0),
+        ("2026-03-02", 10.0),
+        ("2026-03-02", 10.0),
+        ("2026-03-09", 40.0),
+    ]
+    ids = []
+    for i, (day, timestamp) in enumerate(entries):
+        monkeypatch.setattr(local, "_now", lambda timestamp=timestamp: timestamp)
+        ids.append(commit_profile(reg, "feed", value_table(i, {}), day, tmp_path))
+    result = timelapse(reg, "feed", column="v").to_dict()
+    assert [f["content_ids"] for f in result["frames"]] == [[ids[i]] for i in (2, 3, 1, 0, 4)]
+    assert [f["date"] for f in result["frames"]] == [
+        "2026-03-02",
+        "2026-03-02",
+        "2026-03-02",
+        "2026-03-04",
+        "2026-03-09",
+    ]
+    # Inclusive filtering precedes grouping; empty periods do not produce frames.
+    grouped = timelapse(
+        reg, "feed", column="v", since="2026-03-02", until="2026-03-04", window="day"
+    )
+    assert [(f["date"], f["end"], f["versions"]) for f in grouped.frames] == [
+        ("2026-03-02", "2026-03-02", 3),
+        ("2026-03-04", "2026-03-04", 1),
+    ]
+    assert grouped.frames[0]["content_ids"] == [ids[2], ids[3], ids[1]]

@@ -991,9 +991,34 @@ standard deviation and top values, read from the stored profiles; frames where `
 change are change points. `table` picks the table of a dataset profile; `since` and `until` limit
 the versions (dates, inclusive).
 
-Result: `column`, `table`, `window`, `change_points` and `frames`, which is **spillable**
-(*Large results*). A frame from a share-safe version has `form: "safe"` and only what the safe form
-holds.
+Frames are ordered by effective date, then commit timestamp, then registry log position
+for ties. The effective date is `business_date` when valid, otherwise the UTC commit date.
+The inclusive date filter runs before window grouping. Without `window` there is exactly
+one frame per selected registry entry, including entries on the same date. With `window`
+there is exactly one frame per occupied calendar day, ISO week (Monday to Sunday), or
+calendar month; empty periods produce no frames. A frame's `date` and `end` are the first
+and last selected version dates, rather than the calendar period boundaries. `versions`
+is the number of registry entries in that frame; `content_ids` follows their history order.
+Multi-entry windows require raw profiles with sketch state and sum their row counts.
+
+Result: `format: "shape-timelapse"`, integer `version: 1`, `name`, `column`, `table`, `window`,
+`since`, `until`, `source`, `change_points`, `notes` and `frames`, which is **spillable**
+(*Large results*). `change_points` lists the dates of marked frames in frame order.
+Every frame has `date`, `end`, `versions`, `content_ids`, `form` (`raw` or `safe`), `gap`,
+`row_count`, `null_rate`, `cardinality`, `mean`, `std`, `quantiles`, `top_values`,
+`change_point` and `changes`. Statistics unavailable in the stored profile are `null`.
+`quantiles` is `null` or an object with `p1`, `p5`, `p10`, `p25`, `p50`, `p75`, `p90`,
+`p95` and `p99` (each a number or `null`). `top_values` is `null` or up to five objects
+with `value` (string, or `null` when redacted) and numeric `share`.
+`changes` contains sorted, distinct change-kind strings, rather than change objects.
+
+A missing column is a gap frame: its statistics are `null`, `changes` is empty and
+`change_point` is `false`. Non-gap frames compare against the previous non-gap frame;
+the first has `change_point: false`. A frame from a share-safe version has `form: "safe"`
+and only what the safe form holds. A comparison involving a share-safe frame has
+`change_point: null` and no changes. When the bridge withholds top values it adds
+`redacted: true` to the frame. The published result schema describes these same fields in its emitted-frame branch;
+the earlier frame branch remains accepted for compatibility.
 
 Errors: `input.not_found`, `input.invalid_value` (a name, column or table that is not there, a date
 that is not a date, `since` after `until`), `usage.invalid_argument` (`window`).
