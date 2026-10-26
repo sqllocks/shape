@@ -64,11 +64,14 @@ def test_the_vectors_agree_with_the_published_schemas(command):
 
 @pytest.mark.parametrize("command", sorted(COMMANDS))
 def test_a_live_bridge_gives_the_responses_of_the_vectors(command, tmp_path, monkeypatch):
+    import base64
     import time
 
     doc = lib.load(command)
     directory = tmp_path / "work"
     jobs = lib.prepare(directory, doc)
+    monkeypatch.setenv("SHAPE_VECTOR_VAULT_OLD", base64.b64encode(bytes(range(32))).decode())
+    monkeypatch.setenv("SHAPE_VECTOR_VAULT_NEW", base64.b64encode(bytes(range(32, 64))).decode())
     monkeypatch.setenv("SHAPE_FABRIC_STORAGE_TOKEN", "stor")
     monkeypatch.delenv("SHAPE_FABRIC_TOKEN", raising=False)
     monkeypatch.setenv("SHAPE_HOME", str(directory / "shape-home"))

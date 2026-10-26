@@ -70,7 +70,13 @@ ADDED_1_2 = {
 
 
 def test_the_command_set_is_the_plans_plus_the_core_workflow_and_the_job_commands():
-    assert set(COMMANDS) == PLAN_COMMANDS | ADDED | JOBS | ADDED_1_1 | ADDED_1_2
+    assert set(COMMANDS) == PLAN_COMMANDS | ADDED | JOBS | ADDED_1_1 | ADDED_1_2 | {
+        "chaos_kinds",
+        "vault_status",
+        "vault_verify",
+        "vault_rewrap",
+        "vault_policy",
+    }
     assert set(PARITY_COMMANDS) == PLAN_COMMANDS and len(PARITY_COMMANDS) == 17
 
 

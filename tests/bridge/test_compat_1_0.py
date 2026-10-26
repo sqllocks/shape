@@ -270,10 +270,10 @@ def test_the_new_commands_and_arguments_are_published_as_since_1_1_or_later():
     index = all_schemas()["index.json"]
     old = frozen_index()
     new = set(index["commands"]) - set(old["commands"])
-    assert new and all(index["commands"][n]["since"] in ("1.1", "1.2") for n in new)
+    assert new and all(index["commands"][n]["since"] in ("1.1", "1.2", "1.4") for n in new)
     for name in new:
         since = index["commands"][name]["since"]
-        assert set(index["commands"][name]["args"].values()) <= {since}
+        assert all(arg_since >= since for arg_since in index["commands"][name]["args"].values())
     added = [
         (n, a)
         for n in old["commands"]

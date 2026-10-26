@@ -47,7 +47,7 @@ def environment(doc: dict[str, Any]) -> Iterator[None]:
         sys.modules.update(saved)
 
 
-VECTOR_DIR = Path(__file__).resolve().parents[2] / "docs" / "bridge" / "vectors" / "1.3"
+VECTOR_DIR = Path(__file__).resolve().parents[2] / "docs" / "bridge" / "vectors" / "1.4"
 ANY = "<any>"
 VOLATILE = (
     "elapsed_seconds",

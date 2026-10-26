@@ -6,6 +6,8 @@ Status: available.
 
 ## Unreleased
 
+- Bridge API 1.4 adds metadata-only vault status, verification, key rotation and column-policy lookup. Existing minor requests and their frozen outputs remain supported.
+
 - Preserve cancellation across concurrent persisted job-store progress updates.
 
 - Bridge API 1.3 design DDL uses unbounded SQL strings consistently with the CLI and Python API. Bridge 1.1 and 1.2 retain historical DDL after canonical validation; indexed SQL Server strings still require an explicit `max_length`.

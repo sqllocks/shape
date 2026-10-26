@@ -37,7 +37,7 @@ def test_frozen_1_2_replay(path, tmp_path, monkeypatch):
                 monkeypatch.setattr("shape.scale.http.urllib_transport", FakeFabric())
             actual = bridge.handle(substitute(one["request"], str(directory)))
             expected = substitute(one["response"], str(directory))
-            assert actual["api_version"] == API_VERSION == "1.3"
+            assert actual["api_version"] == API_VERSION == "1.4"
             # This 1.2 vector predates the additive registry classifications. Its
             # published matcher already allows these two fields; compare their
             # precise pre-existing shape, then retain exact comparison elsewhere.
