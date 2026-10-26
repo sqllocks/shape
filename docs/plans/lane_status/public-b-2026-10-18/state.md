@@ -1,3 +1,9 @@
+# Current blocker — 2026-10-26T07:40UTC
+
+PR50 exact48f33d7 full CI40276205316 finished26/27coreSUCCESS, sole Windows3.14job121419797579 FAILURE: corrupt-Delta regression `test_a_delta_read_that_fails_after_the_scan_started_exits_2_not_hangs` run1 returns0 instead2 (1failed18913passed). All five ancillary workflows SUCCESS; NO merge/falsepass/blindrerun. Mainremote6827598 unchanged, allfourpushworkflows SUCCESS verified06:33:54UTC (CI40272522171 all27, Docs40272522213, Security40272522152, Wheels40272522202). Nightlyrequired7+artifact67/65/exact2NC stayssatisfied.
+
+Rootassigned eventhouse_oct25 targetedrootcauseinstrumentation, originalregression/assertions/6attempts/timeoutsunchanged; potentialownedpaths deltafs.py+newtests/io/test_delta_scan_failures.py onlyifverifiedactualbug. No samplingwithout --sample, so investigateactivefilemembership and threadedArrow errorpropagation/incompleterowcount beforefix. Main/PR50Deltafilesbyteidentical. Nativeignoredextensionlinkvalid; useacceptancePYTHONPATH/integrationUVlockedno-sync/reaper, nofullsuite. Rootownscommit/push/merges. Metadatareview/mainwatchresumedsamemodelaftercapacityerror; formatsagentcapacityfailedcurrentlyidle. Rootwatch423finishedonfailure, don'tresumeit; newwatchafterconcreterepair/newhead. Independentnewexactreview+freshalltriggeredCIrequiredafteranysourcefix. No pendingOwnerquestionforownissues. 8/9issuesmerged88.9%,1/9left11.1%.
+
 # Public B current recovery state
 
 Updated 2026-10-26 after PR48 merge and authenticated Nightly dispatch. Unattended run: never end to wait or ask. After restart read this file and `/workspace/attachments/e304682d-bc67-494c-8b2e-3d8b1436dda0/5-NEW-WINDOW-shape-public-B.md`. Latest Owner chat overrides original local-full and serial-lane rules. Scratch `/workspace/shape`, branch `lead/public-b-2026-10-18`; DCO every commit and push immediately.
