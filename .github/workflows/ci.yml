@@ -11,7 +11,19 @@ concurrency:
   cancel-in-progress: true
 permissions: {contents: read}
 jobs:
+  delta-diagnostic:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.14'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with: {version: '0.8.17', python-version: '3.14', enable-cache: true}
+      - run: uv sync --locked
+      - run: uv run --locked --no-sync python -u .github/scripts/public_b_delta_diagnostic.py
   lock-check:
+    needs: delta-diagnostic
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -24,6 +36,7 @@ jobs:
       - run: uv run --no-project python tests/tools/test_uv_environment.py
       - run: uv run --no-project python scripts/check_docs_requirements.py
   test:
+    needs: delta-diagnostic
     # T-06: the full Python 3.11-3.14 matrix on Linux; 3.11 and 3.14 on macOS and Windows.
     strategy:
       fail-fast: false
@@ -103,6 +116,7 @@ jobs:
       - run: uv run --locked --no-sync python -m pytest -q tests/diff/test_drift_sweep.py
         env: {SHAPE_KERNEL: rust, SHAPE_DRIFT_SWEEP: fast}
   min-versions:
+    needs: delta-diagnostic
     # BF-76: the core runtime floors in pyproject.toml must actually work (ci/constraints-min.txt).
     runs-on: ubuntu-latest
     # failing tests are also error annotations (-p pytest_annotate, ci/pytest_annotate.py): readable
@@ -127,6 +141,7 @@ jobs:
       - run: uv run --no-project --python .venv/bin/python python -m pytest -q -p pytest_annotate -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/docs
         env: {SHAPE_KERNEL: python}
   zero-network:
+    needs: delta-diagnostic
     # W6-02: every test that needs no network (all but `emulator` and `live`) runs again with
     # the network namespace emptied, so an outbound connection cannot succeed even if the
     # in-process socket guard (tests/conftest.py) were bypassed. Loopback stays up for the
@@ -162,6 +177,7 @@ jobs:
           sudo env "PATH=$PATH" "RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.rustup}" "CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}" CARGO_NET_OFFLINE=true PYTHONPATH=ci unshare --net -- sh -c 'ip link set lo up
           uv run --locked --no-sync python -m pytest -q -p no:cacheprovider -p pytest_annotate -m "zero_network and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/docs'
   docs-test:
+    needs: delta-diagnostic
     # Runnable documentation uses Linux shell/container tools and its pinned Python 3.12
     # environment. Every tests/docs case runs here; docs_site remains in every core leg.
     runs-on: ubuntu-latest
@@ -225,6 +241,7 @@ jobs:
           uv run --locked --no-sync python -m pytest -q -p no:cacheprovider -p pytest_annotate -m "zero_network and not heavy" -n 4 -o tmp_path_retention_policy=failed tests/docs'
       - run: uv run --locked --no-sync mkdocs build --strict
   offline-lock:
+    needs: delta-diagnostic
     # W6-02: pinned, hashed requirements for core and each extra, built here (a network is
     # needed to resolve) and checked against pyproject.toml. See docs/INSTALL.md.
     runs-on: ubuntu-latest
@@ -243,6 +260,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: {name: offline-lock, path: '${{ runner.temp }}/offline-lock/requirements-*.txt'}
   plugin-skeletons:
+    needs: delta-diagnostic
     # P2-06: every first-party plugin distribution builds a pure wheel, and the example plugin,
     # installed from outside the tree, passes the conformance kit (G2) on every OS.
     strategy:
@@ -268,6 +286,7 @@ jobs:
           uv run --locked --no-sync python scripts/check_user_facing.py "${args[@]}"
       - run: uv run --locked --no-sync python -m pytest -q tests/plugins/test_kit.py tests/plugins/test_plugin_kit_install.py
   stream-plugins:
+    needs: delta-diagnostic
     # P3-04, P5-02, P6-07a, P6-08: the Kafka, Event Hubs, SQL Server and Fabric plugins' contract tests.
     # PLUG-INT: also the dbt, behavior, healthcare-codes and healthcare-standards plugins' fast tests.
     # Their slow suites (the dbt build against DuckDB, the official HL7 validator) run in nightly.yml.
@@ -289,6 +308,7 @@ jobs:
       # The plugins' contract tests (no external service); emulator, live and dbt-build runs are nightly.
       - run: uv run --locked --no-sync python -m pytest -q -m "not emulator and not live and not dbt" plugins/shape-kafka/tests plugins/shape-eventhubs/tests plugins/shape-sqlserver/tests plugins/shape-fabric/tests plugins/shape-dbt/tests plugins/shape-behavior/tests plugins/shape-healthcare-codes/tests plugins/shape-healthcare-standards/tests
   database-plugins:
+    needs: delta-diagnostic
     # ISS2-sinks: the PostgreSQL and MySQL sinks, contract tests against an in-memory server
     # (no driver is installed: the sinks load psycopg / PyMySQL only when they connect).
     runs-on: ${{ matrix.os }}
@@ -310,6 +330,7 @@ jobs:
       - run: uv run --locked --no-sync python -m pytest -q -m "not emulator and not live" plugins/shape-databases/tests tests/cli/test_generate_to.py tests/streaming/emit/test_table_sink.py
       - run: uv run --locked --no-sync python -m shape.plugins.kit sqllocks-shape-databases
   rust:
+    needs: delta-diagnostic
     # T-27: cargo fmt / clippy -D warnings / cargo test for rust/shape-kernel.
     runs-on: ubuntu-latest
     steps:
@@ -320,6 +341,7 @@ jobs:
       - run: cargo clippy --manifest-path rust/shape-kernel/Cargo.toml --all-targets -- -D warnings
       - run: cargo test --manifest-path rust/shape-kernel/Cargo.toml
   audit:
+    needs: delta-diagnostic
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -333,6 +355,7 @@ jobs:
       - run: uv sync --locked
       - run: uv run --locked --no-sync pip-audit --skip-editable
   fabric-demo:
+    needs: delta-diagnostic
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -349,6 +372,7 @@ jobs:
       - run: uv sync --locked --group fabric-demo
       - run: uv run --locked --no-sync python -m pytest -q tests/demo/fabric tests/demo/content
   pure-wheel:
+    needs: delta-diagnostic
     # PF-03: the T-29 pure wheel is py3-none-any and under 28.6 MB, and the UDF helpers and
     # function_app.py pass on Python 3.11 with only PyPI numpy, pyarrow and pandas under them
     # and SHAPE_KERNEL=python (no native kernel). Must be green on every PR.
@@ -366,6 +390,7 @@ jobs:
       - run: uv sync --locked
       - run: uv run --locked --no-sync bash scripts/ci_pure_wheel.sh python
   bench-quick:
+    needs: delta-diagnostic
     # Verifiers, then the quick benchmark (D1, D2, retail small+medium; 3 runs) against the
     # Shape 0.9.1. On a private repository the standard runner has 2 vCPUs, so ratios are
     # informational until the repository is public (O-05).
@@ -419,6 +444,7 @@ jobs:
             ${{ github.workspace }}/bench-out/results.json
             ${{ github.workspace }}/bench-out/verify/
   build:
+    needs: delta-diagnostic
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -449,6 +475,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: {name: distributions, path: dist/*}
   vscode-extension:
+    needs: delta-diagnostic
     # W6-04: build, test and package the VS Code extension; the .vsix is a run artifact, never published.
     runs-on: ubuntu-latest
     defaults: {run: {working-directory: editors/vscode}}
