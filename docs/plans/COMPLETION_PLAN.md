@@ -2034,8 +2034,11 @@ RefEngine 3.0.1 commands and their Shape equivalents. Every row needs an e2e tes
 
 ## 11. Status tracker
 
-Work packages are listed in execution order. The next work package is the first `todo` row whose `Depends` are all `done` (§0.1). Update this table in the same commit as the work. Status values: `todo`, `wip`,
-`done`, `blocked` (blocked means an escalation has been logged in §2.3).
+Work packages are listed in execution order. The next work package is the first `todo` row whose `Depends` are all `done` (§0.1). Update this table in the same commit as the work. Status values: `todo`, `wip`, `done`, `blocked`, `deferred` and `not started`.
+Blocked and deferred rows name the outstanding Owner decision or external dependency.
+The 2026-10-26 reconciliation records merged public work; account-dependent validation
+is not implied by a `done` implementation row. Historical lane records retain their
+original checkpoints; the merged PR and its checks govern final acceptance.
 
 | # | WP | Status | Commit |
 |---|---|---|---|
@@ -2102,11 +2105,11 @@ Work packages are listed in execution order. The next work package is the first 
 | 55 | P5-02 | done | 2d0a1d3 |
 | 56 | P5-03 | done | 19e8e6a |
 | 57 | P5-04 | done (lead STREAM-EMIT in-process 14.27x on 2.10 GHz; stream verifier and negative control exit 0) | 08d3f7e |
-| 58 | P6-01a | wip (merged into build/main-plan in INT-16, 2026-10-04; T-21 seed-1042 misses accepted as chance (owner); GEN-IN round 3 open in lane/P6-01-perf-domains and lane/P6-01-perf-engine) | |
-| 59 | P6-01b | wip (merged into build/main-plan in INT-16, 2026-10-04; T-21 seed-1042 misses accepted as chance (owner); GEN-IN round 3 open in lane/P6-01-perf-domains and lane/P6-01-perf-engine) | |
-| 60 | P6-01c | wip (merged into build/main-plan in INT-16, 2026-10-04; T-21 seed-1042 misses accepted as chance (owner); GEN-IN round 3 open in lane/P6-01-perf-domains and lane/P6-01-perf-engine) | |
-| 61 | P6-01d | wip (merged into build/main-plan in INT-16, 2026-10-04; T-21 seed-1042 misses accepted as chance (owner); GEN-IN round 3 open in lane/P6-01-perf-domains and lane/P6-01-perf-engine) | |
-| 62 | P6-01e | wip (merged into build/main-plan in INT-16, 2026-10-04, with the seed study lane/P6-01e-seed: the 18 composite cells' seed-1042 misses are chance, CMP-2 allow-list corrected; GEN-IN round 3 open) | |
+| 58 | P6-01a | blocked: Owner ruling on GEN-IN round 3 | Owner ruling required; earlier integration is not completion of GEN-IN round 3. |
+| 59 | P6-01b | blocked: Owner ruling on GEN-IN round 3 | Owner ruling required; earlier integration is not completion of GEN-IN round 3. |
+| 60 | P6-01c | blocked: Owner ruling on GEN-IN round 3 | Owner ruling required; earlier integration is not completion of GEN-IN round 3. |
+| 61 | P6-01d | blocked: Owner ruling on GEN-IN round 3 | Owner ruling required; earlier integration is not completion of GEN-IN round 3. |
+| 62 | P6-01e | blocked: Owner ruling on GEN-IN round 3 | Owner ruling required; earlier integration is not completion of GEN-IN round 3. |
 | 63 | P6-02 | done | 0f8c36e |
 | 64 | P6-03 | done | 50d7be4 |
 | 65 | P6-04 | done | Lanes P6-04a and P6-04b, integrated in INT-12 (2026-10-03, §2.3). |
@@ -2145,19 +2148,19 @@ Work packages are listed in execution order. The next work package is the first 
 | 97 | W5-01 | done | Integrated in INT-16 (2026-10-04, §2.3); issue #62. |
 | 98 | W5-02 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #63. |
 | 99 | W1-08 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #66. |
-| 100 | W1-09 | wip (merged into build/main-plan in INT-16, 2026-10-04; path, encoding and winutils fixes in; the Spark tests still fail on Windows in Nightly run 37202803596, issue #763) | |
+| 100 | W1-09 | done | [Scheduled Windows Spark/Delta job](https://github.com/sqllocks/shape/actions/runs/40296225466/job/121482842837), pinned Hadoop setup and Fabric demo tests passed. |
 | 101 | W1-10 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #88. |
 | 102 | W1-11 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #89. |
 | 103 | W1-12 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #90. |
 | 104 | W1-13 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #230. |
 | 105 | W1-14 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #91. |
-| 106 | W1-15 | todo (held with W8-04, #768: re-applied in INT-20 and reverted before landing, because its cross-CPU proof failed (AVX-512 vs AVX2: 33 of 405 tests in each kernel); held for a lane that makes the distribution generators bit-identical across CPUs) | Issue #92. |
+| 106 | W1-15 | done | [Portable math and cross-CPU acceptance](lane_status/W8-04b.md); `tests/generation/test_w1_15_pinned_fixtures.py`. |
 | 107 | W1-16 | done | Integrated in INT-16 (2026-10-04, §2.3); issue #68. |
-| 108 | W1-17 | wip (merged into build/main-plan in INT-18 through lane/W7-05, 2026-10-05; the lane's later commits are not integrated) | |
+| 108 | W1-17 | done | `tests/chaos/test_input_check.py`, `tests/bridge/test_chaos_1_2.py`; [bridge safety acceptance](lane_status/W7-05.md). |
 | 109 | W1-18 | done | Integrated in INT-17, landed with INT-18 (2026-10-05, §2.3); issue #94. |
 | 110 | W2-04 | done | Integrated in INT-14 (2026-10-03, §2.3); issue #69. |
-| 111 | W2-05 | todo | |
-| 112 | W2-06 | wip (merged in INT-17; gap: a plain `shape profile semantic-model://...` of one table does not record `hidden: true` in the profile, `shape profile-model` does; W2-06.md) | Integrated in INT-17, landed with INT-18 (2026-10-05, §2.3); issue #95. |
+| 111 | W2-05 | blocked: Fabric capacity (O-07) | Owner action O-07 (§9). |
+| 112 | W2-06 | done | [Source acceptance](lane_status/W2-06.md); hidden-column carry-through completed by W9-12, [PR33](https://github.com/sqllocks/shape/pull/33), merge `404fed82`. |
 | 113 | W2-07 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #231 (shard P1 failure #771 fixed in c1999097). |
 | 114 | W2-08 | done (live Snowflake, Databricks and Synapse tests wait on the owner's secrets, §9) | Integrated in INT-17, landed with INT-18 (2026-10-05, §2.3); issue #96. |
 | 115 | W2-09 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #97. |
@@ -2183,26 +2186,49 @@ Work packages are listed in execution order. The next work package is the first 
 | 135 | W5-05 | done (real-server seeding confirmed by the databases-e2e job of Nightly run 37251176423) | Integrated in INT-18 (2026-10-05, §2.3); issue #81. |
 | 136 | W5-06 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #82. |
 | 137 | W5-07 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #83. |
-| 138 | W5-08 | wip (integrated in INT-19, landed with INT-20; the Anonymeter integration's `numpy<1.27` pin conflicts with T-07's numpy>=2.0 floor, open for the lead) | Integrated in INT-19, landed with INT-20 (2026-10-05, §2.3); issue #84. |
+| 138 | W5-08 | done | [Integration acceptance](lane_status/W5-08.md); incompatible Anonymeter extra withdrawn by [PR22](https://github.com/sqllocks/shape/pull/22), merge `9833f816`; no incompatible install promised. |
 | 139 | W5-09 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #85. |
 | 140 | W5-10 | done | Integrated in INT-17, landed with INT-18 (2026-10-05, §2.3); issue #86. |
 | 141 | W6-01 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #234. |
 | 142 | W6-02 | done | Integrated in INT-15 (2026-10-03, §2.3); issue #75. |
 | 143 | W6-03 | done | Integrated in INT-19, landed with INT-20 (2026-10-05, §2.3); issue #235. |
 | 144 | W6-04 | done | Integrated in INT-17, landed with INT-18 (2026-10-05, §2.3); issue #87. |
-| 145 | W7-02 | wip (integrated in INT-18 (2026-10-05, §2.3); one part of item 5 blocked, W7-02.md) | Issue #141. |
+| 145 | W7-02 | done | [OneLake acceptance](lane_status/W7-02.md); permanent `FileNotFoundError`/`PermissionError` bypass retry in `src/shape/streaming/emit/runtime.py`, covered by `tests/streaming/emit/test_runtime.py`. |
 | 146 | W7-04 | done | Integrated in INT-19, landed with INT-20 (2026-10-05, §2.3); issue #142. |
-| 147 | W7-05 | wip (integrated in INT-18 (2026-10-05, §2.3); lane/W7-05b (bridge `suite_list` and `suite_run`) merged in INT-20, but no lane status file records it complete) | Issue #227. |
+| 147 | W7-05 | done | `tests/bridge/test_suites_1_2.py` completes the suite-list/run dependency; [analysis-command acceptance](lane_status/W7-05.md). |
 | 148 | W7-06 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #143. |
 | 149 | W7-07 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #145. |
 | 150 | W7-01 | wip (integrated in INT-20; item 1, the live Git sync test, is built but has not run live: it needs the O-02 and O-12 secrets) | Integrated in INT-20 (2026-10-05, §2.3); issue #139. |
 | 151 | W7-03 | done (mixtures and seasonality opt-in with the univariate depth, `--univariate`, for T-19) | Integrated in INT-20 (2026-10-05, §2.3); issue #226. |
-| 152 | W8-01 | wip (merged in INT-20; no lane status file records it complete) | Integrated in INT-20 (2026-10-05, §2.3); issue #564. |
+| 152 | W8-01 | done | `plugins/shape-healthcare-standards/tests/test_companion_tables_contract.py` and `test_companion_tables_introspection.py`; stable `tables` option in `docs/plugins/healthcare-standards.md`. |
 | 153 | W8-02 | done | Integrated in INT-20 (2026-10-05, §2.3); issue #565. |
 | 154 | W8-03 | done | Integrated in INT-20 (2026-10-05, §2.3); issue #566. |
-| 155 | W8-04 | todo (held with W1-15, #768: merged in INT-20 and reverted before landing; its byte-identical corpus failed the cross-CPU proof) | Issue #567. |
-| 156 | W8-05 | todo (lane blocked, nothing built: it needs W5-03's vault and W1-11's safe capture in its base) | Issue #568. |
+| 155 | W8-04 | done | [Portable math and cross-CPU acceptance](lane_status/W8-04b.md); `tests/generation/test_w8_04b_cross_cpu.py` and `test_w8_04_byte_identity.py`. |
+| 156 | W8-05 | done | Bridge 1.4 vault management; targeted red/green and final CI in [public finish evidence](lane_status/public-finish-2026-10-26.md). |
 | 157 | W8-06 | done (reserved identifiers stay the default) | Integrated in INT-20 (2026-10-05, §2.3); issue #766. |
+
+| 158 | W9-01 | done | [PR45](https://github.com/sqllocks/shape/pull/45), merge `43d3f9ae`; [lane acceptance](lane_status/W9-01.md). |
+| 159 | W9-02 | done | [PR37](https://github.com/sqllocks/shape/pull/37), merge `314749d3`; [lane acceptance](lane_status/W9-02.md). |
+| 160 | W9-03 | done | [PR49](https://github.com/sqllocks/shape/pull/49), merge `77a1c2a5`; [lane acceptance](lane_status/W9-03.md). |
+| 161 | W9-04 | done | [PR49](https://github.com/sqllocks/shape/pull/49), merge `77a1c2a5`; [lane acceptance](lane_status/W9-04.md). |
+| 162 | W9-05 | done | [PR48](https://github.com/sqllocks/shape/pull/48), merge `68275984`; [lane acceptance](lane_status/W9-05.md). |
+| 163 | W9-06 | done | [PR49](https://github.com/sqllocks/shape/pull/49), merge `77a1c2a5`; [lane acceptance](lane_status/W9-06.md). |
+| 164 | W9-07 | done | [PR49](https://github.com/sqllocks/shape/pull/49), merge `77a1c2a5`; [lane acceptance](lane_status/W9-07.md). |
+| 165 | W9-08 | done | [PR32](https://github.com/sqllocks/shape/pull/32), merge `35addfc4`; [lane acceptance](lane_status/W9-08.md). |
+| 166 | W9-09 | done | [PR48](https://github.com/sqllocks/shape/pull/48), merge `68275984`; [lane acceptance](lane_status/W9-09.md). |
+| 167 | W9-10 | done | [PR29](https://github.com/sqllocks/shape/pull/29), merge `90fbff99`; [lane acceptance](lane_status/W9-10.md). |
+| 168 | W9-11 | done | [PR30](https://github.com/sqllocks/shape/pull/30), merge `5c6d46ff`; [lane acceptance](lane_status/W9-11.md). |
+| 169 | W9-12 | done | [PR33](https://github.com/sqllocks/shape/pull/33), merge `404fed82`; [lane acceptance](lane_status/W9-12.md). |
+| 170 | W9-13 | done | [PR48](https://github.com/sqllocks/shape/pull/48), merge `68275984`; [lane acceptance](lane_status/W9-13.md). |
+| 171 | W9-14 | blocked: COPY parameter policy (Owner) | Owner ruling required for Redshift COPY parameters. |
+| 172 | W9-15 | done | [PR39](https://github.com/sqllocks/shape/pull/39), merge `3b19d05b`; [lane acceptance](lane_status/W9-15.md). |
+| 173 | W9-16 | done | [PR48](https://github.com/sqllocks/shape/pull/48), merge `68275984`; [lane acceptance](lane_status/W9-16.md). |
+| 174 | FRZ-01 | done | [PR50](https://github.com/sqllocks/shape/pull/50), merge `953ccec7`; [required Nightly comparison gate](https://github.com/sqllocks/shape/actions/runs/40272534667) (five parity shards, parity-publish and sqlserver-e2e passed; overall Nightly had unrelated failures). |
+| 175 | W10-01 | not started | Design spike first; scope imported from `claude/fervent-noether-92tgm2`, commit `8f2c328` (§13). |
+| 176 | rules-apply | deferred: awaiting Premium contract | Public/Premium contract required before implementation. |
+| 177 | suite selected-input | deferred: awaiting Premium contract | Public/Premium contract required before implementation. |
+| 178 | copy-generation | deferred: awaiting Premium contract | Public/Premium contract required before implementation. |
+| 179 | ISO packs | blocked: licence (O-13) | ISO-4217 and ISO-639 packs remain unshipped pending Owner licence ruling. |
 
 | Gate | Status |
 |---|---|
@@ -2742,6 +2768,7 @@ The owner delegated decisions to the lead on 2026-10-03 (§2.3). These work pack
 | W8-04 | #567 | Byte-identical CSV, JSON Lines and SQL output per engine version on every supported platform | W1-15 |
 | W8-05 | #568 | Value vault management through the bridge (status, verify, key rewrap, column policy), never values or key material | W5-03, P6-11 |
 | W8-06 | #766 | One switch for realistic identifiers for a whole run (`identifiers="realistic"`, `--identifiers`, schema default); the default stays reserved | none |
+| W10-01 | not filed | Ephemeral test environments: `shape env up/down` from a profile + seed + targets + size; pytest fixture; Action support; idempotent teardown. Shape owns the data and loading only; provisioning stays with Testcontainers/compose/Terraform. Not started; design spike first. | W9-04, W9-01, W5-05 |
 
 P6-11 (`shape bridge`) is specified further by issue #56; its `demo_*` commands follow P6-12 and the rest start now (owner standing instruction: whatever can run in parallel, do).
 
