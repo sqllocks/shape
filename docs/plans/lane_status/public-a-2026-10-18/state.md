@@ -300,3 +300,38 @@ race confirmed; PR37/batch do not change that code. Oracle owns isolated minimal
 repair with deterministic red/green; fold into SAME final batch under Owner
 fixeverythingonePR/speed scope, no second PR/CI cycle. No rerun-to-hide failure.
 Final exact-headCI remains mandatory beforemerge.
+
+
+## SINGLE FINAL PR OPEN — #49
+
+https://github.com/sqllocks/shape/pull/49 is READY, exacthead
+23c90c0f6fff5f6ed3d418b9a2986677ecde83f3, basedactualmain314749d.
+IncludesALLfourremainingissues4/5/7/8 plusOwnerCIacceleration andminimal
+pre-existingmaincancellationracerepair. Closesallfouronlywhenmerged.
+NootherimplementationPR remains active. PR49attachedtochat.
+
+UNIQUEfix6e8fac8 mergedwithonlycorecanonicalkeyargumentconflictresolved
+toPKunionUNIQUE; fullBridgepostvalidationhookretained. ReviewerOct25
+APPROVEDfinalexact23c for4/5/7+Bridge/CI/security; DeltareviewerAPPROVED
+8productandjobs6037repair. All118newcommitsDCOchecked.
+PostconflicttargetedBridge/frozen/UNIQUE/constraintselection280passed
+EACHkernel (11.90sdefault,16.26sPython). Ruff/format/mypy3shared
+modules/wording/diffgreen. Broader43changedmodulesstrictmypy passed;
+114changedPythonRuff/format passedbeforelast3modulepatch.
+Golden390files+28refusalsgreen, noextraMySQLrefusals.
+
+FullCIstartedONLYnowonthefinishedbatch. Exactheadruns:
+- CI https://github.com/sqllocks/shape/actions/runs/40259512617
+- Wheels https://github.com/sqllocks/shape/actions/runs/40259512606
+- Security https://github.com/sqllocks/shape/actions/runs/40259512623
+- Container https://github.com/sqllocks/shape/actions/runs/40259512521
+- Documentation https://github.com/sqllocks/shape/actions/runs/40259512533
+- DCO https://github.com/sqllocks/shape/actions/runs/40259512500
+- action-selftest https://github.com/sqllocks/shape/actions/runs/40259512531
+
+ThesearePENDING,notgreenevidence. Pollalltriggeredchecks includingWheels
+andbothkernels;diagnoseanyfailuretargetedwithoutweakeninggates. Keep
+frequentuserupdates; noendingtowait. Onceallgreen/current/reviewed,merge
+promptlyviaAPImergecommitwithexactSHAguardandsignedmessage. Check
+ContractLeadquestionspathaftermerge. RecordCIgreenURLs/mergedSHAinfinal
+reportonthisscratchbranch,withoutanotherbookkeepingPR/CIcycle.
