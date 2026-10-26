@@ -153,9 +153,10 @@ def column_definitions(
                 sql_type = native_type(field, dialect)
         if sql_type is None:
             sql_type = core_sql._column_type(field, info, dialect, key=field.name in key)
+            value_type = field.type.value_type if pat.is_dictionary(field.type) else field.type
             if (
-                core_sql._logical_type(field.type) == "string"
-                and not (pat.is_string(field.type) or pat.is_large_string(field.type))
+                core_sql._logical_type(value_type) == "string"
+                and not (pat.is_string(value_type) or pat.is_large_string(value_type))
                 and not info.get("max_length")
             ):
                 sql_type = _TEXT[dialect]

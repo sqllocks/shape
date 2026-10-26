@@ -2,6 +2,7 @@
 
 import json
 
+import pyarrow as pa
 import pytest
 
 from shape.cli.main import main
@@ -247,3 +248,29 @@ def test_nested_type_preview_uses_recorded_arrow_schema_without_generation(
         == 0
     )
     assert expected in json.loads(capsys.readouterr().out)["ddl"][0]["sql"]
+
+
+@pytest.mark.parametrize("dialect", ["postgres", "mysql"])
+@pytest.mark.parametrize(
+    "value_type,metadata,pg,my",
+    [
+        (pa.int8(), None, "SMALLINT", "TINYINT"),
+        (pa.string(), {b"shape.type": b"uuid"}, "UUID", "CHAR(36)"),
+        (pa.string(), None, "TEXT", "TEXT"),
+    ],
+)
+def test_offline_dictionary_ddl_preserves_value_type_without_connection(
+    dialect, value_type, metadata, pg, my, monkeypatch
+):
+    from shape_databases import MySqlSink, PostgresSink
+
+    cls = PostgresSink if dialect == "postgres" else MySqlSink
+    sink = cls(connect=lambda **kwargs: pytest.fail("connected during DDL"))
+    monkeypatch.setattr(
+        sink, "resolve_auth", lambda *args: pytest.fail("resolved credentials during DDL")
+    )
+    schema = pa.schema([pa.field("value", pa.dictionary(pa.int8(), value_type), metadata=metadata)])
+    uri = "postgresql://shape@h/db" if dialect == "postgres" else "mysql://shape@h/db"
+    ddl = sink.ddl(uri, "items", schema)
+    expected = pg if dialect == "postgres" else my
+    assert f" {expected} NULL" in ddl
