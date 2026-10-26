@@ -81,6 +81,12 @@ jobs:
       - run: uv run --locked --no-sync python scripts/check_v1_done.py
       # W5-05: the smoke suite of starter scenarios, each against its answer key
       - run: uv run --locked --no-sync python -m shape suite run smoke --scale small
+      - name: Check write acceptance before full suite
+        run: >-
+          uv run --locked --no-sync python -m pytest -q -p pytest_annotate
+          tests/builtins/test_w9_03_types.py tests/generation/test_delta_features.py
+          tests/generation/test_unique_string_width.py tests/bridge/test_design_1_3.py
+          tests/generation/test_write_constraint_ddl.py
       # The Fabric demo tests need Java, PySpark and unixODBC; they and the demo content tests
       # run in the fabric-demo job below.
       # --cov-fail-under is the measured coverage (86.55% on P0-06), rounded down.
