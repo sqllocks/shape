@@ -50,7 +50,11 @@ def capture_day(ds: str, data: Path, context: dict[str, Any] | None = None) -> d
         doc = context if context is not None else json.loads(CONTEXT.read_text())
         if ds not in WORKLOADS:
             raise RecordingError("unknown capture-date replay workload")
-        if doc.get("provenance") != PROVENANCE or doc.get("workloads") != WORKLOADS:
+        if (
+            set(doc) != {"provenance", "workloads"}
+            or doc.get("provenance") != PROVENANCE
+            or doc.get("workloads") != WORKLOADS
+        ):
             raise RecordingError("capture-date replay provenance/context mismatch")
         p = doc["provenance"]
         start, end, session = [
