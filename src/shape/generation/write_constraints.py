@@ -97,6 +97,7 @@ class ConstraintDDL:
     foreign_keys: tuple[str, ...]
     defaults: Mapping[str, str]
     notes: tuple[str, ...]
+    unique_columns: frozenset[str] = frozenset()
 
 
 def identifier(name: Any, dialect: str) -> str:
@@ -203,6 +204,7 @@ def compile_constraints(
     defaults: dict[str, str] = {}
     notes: list[str] = []
     used_names: set[str] = set()
+    unique_columns: set[str] = set()
 
     def note(kind: str) -> None:
         text = f"{dialect} cannot hold {kind} constraints; they are not written"
@@ -232,6 +234,8 @@ def compile_constraints(
 
     for index, values in enumerate(items("unique")):
         cols = names(values)
+        if dialect != "databricks":
+            unique_columns.update(values)
         if dialect == "databricks":
             note("UNIQUE")
         elif dialect == "tsql-fabric-warehouse":
@@ -295,4 +299,11 @@ def compile_constraints(
             f"CONSTRAINT {name(ref['name'])} FOREIGN KEY ({cols}) "
             f"REFERENCES {parent} ({targets}){suffix}"
         )
-    return ConstraintDDL(tuple(definitions), tuple(after), tuple(foreign), defaults, tuple(notes))
+    return ConstraintDDL(
+        tuple(definitions),
+        tuple(after),
+        tuple(foreign),
+        defaults,
+        tuple(notes),
+        frozenset(unique_columns),
+    )

@@ -195,6 +195,7 @@ def test_script_sink_writes_constraints_and_notes_in_their_phases(tmp_path, dial
                 )
             ],
             sql_dialect=dialect,
+            columns={"name": {"max_length": 64}},
             **declaration(),
         )
         == 1

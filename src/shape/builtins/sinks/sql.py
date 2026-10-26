@@ -502,10 +502,11 @@ class SqlSink:
             lines.append(f"-- {_comment(', '.join(q(c) for c in key))} is the logical primary key.")
         lines.append(f"CREATE TABLE {qualified} (")
         defs = []
+        indexed = set(key) | constraints.unique_columns
         for field in schema:
             info = meta.get(field.name, {})
             nullable = bool(info.get("nullable", True)) and field.name not in key
-            sql_type = _column_type(field, info, type_dialect, key=field.name in key)
+            sql_type = _column_type(field, info, type_dialect, key=field.name in indexed)
             if field.name in constraints.defaults:
                 sql_type += f" DEFAULT {constraints.defaults[field.name]}"
             if info.get("identity") and dialect == "tsql" and not fabric:

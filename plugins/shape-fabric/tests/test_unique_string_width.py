@@ -2,10 +2,10 @@
 
 import pyarrow as pa
 import pytest
-
-from shape.errors import ShapeError
 from shape_fabric import _tsql
 from shape_fabric.sqldb import SqlDatabaseWriter, constraint_plan
+
+from shape.errors import ShapeError
 
 
 @pytest.mark.parametrize("warehouse,limit", [(False, 4000), (True, 8000)])
