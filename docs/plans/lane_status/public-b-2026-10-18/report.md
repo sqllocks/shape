@@ -83,7 +83,7 @@ The reviewed committed registry is `benchmarks/vs_refengine/comparison_contract.
 
 ## Remaining work and Owner actions
 
-Monitor dispatched-main Nightly40272534667 and the conditional acceptance PR in parallel. Root owns `/workspace/shape-frz-acceptance`, branch `lane/FRZ-01-acceptance`; its review/current-main/all triggered gates are required before merge, along with qualifying Nightly evidence. Never merge or close20 on pending/canceled results. All original red failures remain historical evidence; only exact finalb9 source greens qualified48.
+Monitor dispatched-main Nightly40272534667 and the conditional acceptance PR in parallel. Ready [acceptance PR50](https://github.com/sqllocks/shape/pull/50), exact signed/pushed clean head `0ebed21ff09eca3ecab4b0132b0347ba82eaa3c3`, has independent APPROVAL by metadata_oct25. Its44-line document records criteria/provenance without claiming pending Nightly success; locked public/whitespace checks pass. Root owns `/workspace/shape-frz-acceptance`, branch `lane/FRZ-01-acceptance`; current-main/all triggered PR50 gates are required before root merges, along with qualifying Nightly evidence. Never merge or close20 on pending/canceled results. All original red failures remain historical evidence; only exact finalb9 source greens qualified48.
 
 BigQuery's former source dependency is resolved: PR35 closed unmerged and was superseded by [PR45](https://github.com/sqllocks/shape/pull/45), mergedOctober25. Its fresh lane has none of the old journal branch's unmerged ancestry. The Owner decimal rule remains0<=scale<=precision before connecting, with the column named in the error. PR48 already includes and tests the shared depth interface across the combined sources.
 
