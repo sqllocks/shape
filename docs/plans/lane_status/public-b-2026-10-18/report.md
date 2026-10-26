@@ -4,6 +4,12 @@ Work continues. **4 of9 assigned issues merged (44.4%);5 remain unmerged (55.6%)
 
 Current main is `90fbff999bc95e255b3dbd90b76278441a735b41` after root merged PR29 at23:09:58UTC. Newmain [CI](https://github.com/sqllocks/shape/actions/runs/40243508314), [Docs](https://github.com/sqllocks/shape/actions/runs/40243508311), [Security](https://github.com/sqllocks/shape/actions/runs/40243508316) all SUCCESS, verified October26 at00:47:31UTC; all27corejobs passed. PriorOraclemain3b19 after LeadA39 is fullygreen: Its [Documentation](https://github.com/sqllocks/shape/actions/runs/40235435374), [Security](https://github.com/sqllocks/shape/actions/runs/40235435418) and [CI](https://github.com/sqllocks/shape/actions/runs/40235435384) all passed, with all27 core jobs green, verified22:55:23UTC. Prior mainc1ff1c8 completed all triggered workflows successfully. PR29 was refreshed when main advanced; its previous incomplete CI does not qualify for the new head.
 
+## Active combined delivery PR
+
+[PR48](https://github.com/sqllocks/shape/pull/48) is ready and contains all five remaining implementations, exact signed/pushed head `b86a707734ab7c286880eb5c37b27d2cebb44383`, based on current main314749d. Full independent Wanted/security/scope review APPROVED this exact head; a second reviewer approved broker/FRZ preservation. All required hosted workflows are running on this final head. Original per-lane merge stages below are historical; the combined PR replaces repeated full CI after each separate merge.
+
+Targeted integration evidence: broker223+6cases eachkernel, cloud12red→90green eachkernel, BigQuery92green eachkernel, Iceberg4red→136green eachkernel, asyncBigQuery9red plus linear-time timeout red→70combinedsecuritygreen eachkernel. Ruff/format, mypy711 and publicwording pass. Actual191plugin transcripts match exactly. Original acceptance proofs and pendinglive actions remain recorded. #20 stays open until required dispatched-main Nightly and a subsequent acceptance PR.
+
 ## Issue status
 
 | Issue | Status / PR | Exact pushed source head or merge SHA |
