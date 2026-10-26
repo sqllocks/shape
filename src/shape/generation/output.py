@@ -226,10 +226,17 @@ def _options(fmt: str, schema: GenSchema, table: str, options: Mapping[str, Any]
         # the generation policy selecting keys/all/none. Keep the namespaces
         # separate while retaining the SQL sink's policy spelling.
         policy = options.get("sql_constraints")
+        selection = options.get("constraints")
+        legacy_policy = isinstance(selection, str) and selection in {
+            "keys",
+            "all",
+            "none",
+            "keep",
+            "disable",
+        }
         if policy is None:
-            selection = options.get("constraints")
-            policy = selection if fmt == "sql" or isinstance(selection, str) else "keys"
-        if fmt == "delta" and isinstance(merged.get("constraints"), str):
+            policy = selection if fmt == "sql" or legacy_policy else "keys"
+        if fmt == "delta" and legacy_policy:
             merged.pop("constraints")
         derived = sql_options(
             schema,

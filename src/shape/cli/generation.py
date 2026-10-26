@@ -300,23 +300,43 @@ def _delta_feature_options(a: argparse.Namespace) -> dict[str, Any]:
     return {k: v for k, v in given.items() if k in supported}
 
 
-def _delta_protocol(a: argparse.Namespace) -> dict[str, Any]:
-    if getattr(a, "format", None) != "delta" and not any(
-        str(t).startswith(("delta+abfss://", "delta+abfs://"))
-        for t in (getattr(a, "to", None) or [])
-    ):
-        return {}
-    options = _delta_feature_options(a)
-    if not options:
-        return {}
+def _delta_protocol(a: argparse.Namespace, schema: GenSchema, order: list[str]) -> dict[str, Any]:
+    """Plan the same per-table Delta options as the write, without opening storage."""
+    from shape.generation.output import _options
+    from shape.io.targets import scheme_of, sink_names_by_scheme
     from shape.plugins.host import default_host
 
+    targets = getattr(a, "to", None) or []
+    if targets:
+        registered = sink_names_by_scheme()
+        if not any(registered.get(scheme_of(target) or "") == "delta" for target in targets):
+            return {}
+        from shape.cli.to import target_options
+
+        options = target_options(a, a.format, targets, offline=True)
+        tables = [options.for_sink("delta", schema, table) for table in order]
+    elif getattr(a, "format", None) == "delta":
+        file_options = _sink_options(a)
+        tables = [_options("delta", schema, table, file_options) for table in order]
+    else:
+        return {}
     sink = default_host().get("shape.sinks", "delta")
-    return {"delta_protocol": sink.feature_plan(options)}
+    plans = [sink.feature_plan(options) for options in tables]
+    if not plans:
+        return {}
+    protocol = {
+        "min_reader_version": max(plan["min_reader_version"] for plan in plans),
+        "min_writer_version": max(plan["min_writer_version"] for plan in plans),
+        "reader_features": sorted({f for plan in plans for f in plan["reader_features"]}),
+        "writer_features": sorted({f for plan in plans for f in plan["writer_features"]}),
+    }
+    if not _delta_feature_options(a) and not protocol["writer_features"]:
+        return {}
+    return {"delta_protocol": protocol}
 
 
-def _print_delta_protocol(a: argparse.Namespace) -> None:
-    doc = _delta_protocol(a)
+def _print_delta_protocol(a: argparse.Namespace, schema: GenSchema, order: list[str]) -> None:
+    doc = _delta_protocol(a, schema, order)
     if doc:
         p = doc["delta_protocol"]
         print(
@@ -612,13 +632,13 @@ def _generate_schema(
         run.set(rows=plan.total_rows, tables=len(plan.order))
         constraints = _constraint_preview(a, schema, list(plan.order))
         if a.json:
-            payload = {**plan.to_dict(), **_delta_protocol(a)}
+            payload = {**plan.to_dict(), **_delta_protocol(a, schema, list(plan.order))}
             if constraints:
                 payload["constraint_ddl"] = constraints
             _dump(payload)
         else:
             print(plan.render())
-            _print_delta_protocol(a)
+            _print_delta_protocol(a, schema, list(plan.order))
             if constraints:
                 print("\nConstraint DDL (preview):")
                 print("\n".join(constraints))
@@ -690,11 +710,22 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     if a.dry_run:
         plan = engine.dry_run()
         run.set(rows=plan.total_rows, tables=len(plan.order))
+        constraints = _constraint_preview(a, schema, list(plan.order))
         if a.json:
-            _dump({**plan.to_dict(), **_mark_vault(plan, mode), **_delta_protocol(a)})
+            payload = {
+                **plan.to_dict(),
+                **_mark_vault(plan, mode),
+                **_delta_protocol(a, schema, list(plan.order)),
+            }
+            if constraints:
+                payload["constraint_ddl"] = constraints
+            _dump(payload)
         else:
             print(plan.render())
-            _print_delta_protocol(a)
+            _print_delta_protocol(a, schema, list(plan.order))
+            if constraints:
+                print("\nConstraint DDL (preview):")
+                print("\n".join(constraints))
             if vault_run is not None:
                 print(f"vault columns: {', '.join(mode['vaulted_columns'])}")
         return 0 if plan.ok else 1

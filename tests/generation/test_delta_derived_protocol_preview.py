@@ -173,6 +173,7 @@ def test_fitted_profile_preview_includes_contract_delta_checks(
     tmp_path, monkeypatch, capsys, as_json
 ):
     import pyarrow as pa
+
     import shape
 
     profile = tmp_path / "profile.shape"

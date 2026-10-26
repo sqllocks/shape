@@ -546,7 +546,16 @@ shape generate retail --format delta -o lake --dry-run --json \
   --sink-config delta.deletion_vectors=true
 shape generate retail --format delta -o lake \
   --sink-config 'delta.table_properties={"owner":"analytics"}'
+shape generate retail --format delta -o lake --sql-constraints all --contract contract.json \
+  --sink-config delta.constraints=true
 ```
+
+The CLI accepts `delta.constraints=true`, `delta.constraints=false` or a JSON
+object containing `not_null` and structured `check` entries. These feature values
+compose with the separate `--sql-constraints` policy. False adds no automatic
+named not-null checks; schema and contract checks selected by `all` still apply.
+Dry-run uses the same per-table derived options as the write and reports their
+protocol union for schema, fitted-profile and Delta URI destinations.
 
 `--dry-run` reports `delta_protocol` (minimum reader/writer versions and the feature
 union), resolves no sign-in, and creates no table. `shape doctor --delta-table
