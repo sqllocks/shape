@@ -218,6 +218,7 @@ class DatabaseSink:
             options.get("primary_key") or (),
             schema,
             None,
+            options=dict(options),
         )
         self.check_schema(schema, plan)
         return self.create_table_sql(plan, schema, None)
