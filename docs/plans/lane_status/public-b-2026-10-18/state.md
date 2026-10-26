@@ -1,50 +1,46 @@
 # Public B current recovery state
 
-Unattended run. Never end to wait or ask. After restart/compaction read this file and `/workspace/attachments/e304682d-bc67-494c-8b2e-3d8b1436dda0/5-NEW-WINDOW-shape-public-B.md`, then continue. Latest chat instructions override original full-local/serial-queue rules. Scratch worktree `/workspace/shape`, branch `lead/public-b-2026-10-18`; DCO every commit and push immediately.
+Updated 2026-10-26 after PR48 merge and authenticated Nightly dispatch. Unattended run: never end to wait or ask. After restart read this file and `/workspace/attachments/e304682d-bc67-494c-8b2e-3d8b1436dda0/5-NEW-WINDOW-shape-public-B.md`. Latest Owner chat overrides original local-full and serial-lane rules. Scratch `/workspace/shape`, branch `lead/public-b-2026-10-18`; DCO every commit and push immediately.
 
-## Active delivery
+## Delivered and current main
 
-**4/9 issues merged (44.4%); 5/9 remain (55.6%).** Final b9 head is signed/pushed and independently approved. All six ancillary workflows have succeeded; core CI is 24/27 successful, with Ubuntu3.13 heavy, Windows3.11 coverage and the minimum-dependencies second kernel suite running. No failure reported as of 2026-10-26T04:42UTC. Supporting certificate PR40 is outside this denominator.
+**8/9 assigned issues merged (88.9%); 1/9 remains (11.1%): #20 acceptance.** No implementation is parked. Supporting certificate PR40 is outside the denominator. No live-account success is claimed.
 
-Owner explicitly demanded whatever steps are needed to accelerate delivery. Lead B consolidated ALL FIVE remaining reviewed implementations into ONE READY PR, eliminating repeated full CI after each separate merge. This REPLACES all old per-lane merge stages/holds. Do not refresh/restart/merge the old five source PRs independently. Their descriptions now point to48; preserve them as review history.
+[PR48](https://github.com/sqllocks/shape/pull/48) MERGED at **2026-10-26T05:06:58Z**, merge/current main **682759841dcffd56dff62f74dc90ac18286cc600**. Exact independently approved source **b9e9f50cb611886afabb4cfa1a73e01998aa2525**; metadata_oct25 reviewed full Wanted/security/scope and formats_oct25 reviewed broker/FRZ preservation. All seven triggered source workflows SUCCESS, 42 successful checks and only two structural publish skips. Source acceptance is complete; merged-main CI is separate and not yet claimed green.
 
-**PR https://github.com/sqllocks/shape/pull/48** (ready/non-draft, artifact attached successfully). Final signed/pushed/clean local=remote=PR head **b9e9f50cb611886afabb4cfa1a73e01998aa2525**. Branch `lead/public-b-integration`, worktree `/workspace/shape-public-b-integration`. Full independent Wanted/security/scope APPROVED metadata_oct25 exactb9e9f50; second34/42 preservation review APPROVED formats_oct25 exactb9e9f50. Every old lane product/acceptance remains included. No pending code/review/Owner decision. Hosted native Windows databasejob121372437276 SUCCESS on FINAL46dc; allremainingfinalcoregates stillrequired. Old289 failed only plugin trust boundary and is superseded; code repair and exact review are complete. Root solely handles merges.
+GitHub issue API verified #10 CLOSED05:06:59Z, #17/#6/#14 CLOSED05:07:00Z through48. Issues9/12/13/11 were already merged. #20 remains OPEN:48 uses Refs20, not closure.
 
-Contains current main **314749d37aba9141a2ff68a33cfdb91e8a87cca5**, otherSession PR37 Snowflake/Databricks. Main moved just as31 finished all7old-source workflows green; old31head24a lacks314749d and was NOT merged. That base-change cost prompted consolidation. Current main314749d CI40252269760 finishedFAILURE:26SUCCESS/1knownmacOS3.11cancellationrace, Docs/SecuritySUCCESS. This is otherSession37, notourmerge; our90fbmainfullygreen. The actualraceisfixed/reviewedin289; do notrerunobsoleteunfixedmainaspassingproof. Our preceding merged dbt main90fb is fully green.
+| Source workflow | Green run |
+|---|---|
+| CI (27/27 jobs) | https://github.com/sqllocks/shape/actions/runs/40264320674 |
+| Wheels (10/10 jobs) | https://github.com/sqllocks/shape/actions/runs/40264320723 |
+| Documentation | https://github.com/sqllocks/shape/actions/runs/40264320625 |
+| DCO | https://github.com/sqllocks/shape/actions/runs/40264320666 |
+| Security | https://github.com/sqllocks/shape/actions/runs/40264320751 |
+| Container | https://github.com/sqllocks/shape/actions/runs/40264320624 |
+| action-selftest | https://github.com/sqllocks/shape/actions/runs/40264320807 |
 
-## Current exact-head gates
+Owner speed directive consolidated all five remaining implementations into48, replacing every old serial stage/hold. Do not refresh, restart or merge old PRs31/34/42/43/47; preserve their original proofs as history. Root solely handles merges and future integration/acceptance source edits.
 
-All seven workflows on FINALb9 REQUIRED before merge:
+## Current acceptance task
 
-| Workflow | Run | Latest known stage |
+Root dispatched [Nightly40272534667](https://github.com/sqllocks/shape/actions/runs/40272534667) with **empty confirm**, 2026-10-26T05:07:08.557663Z; created05:07:09Z, event workflow_dispatch/main, exact head **682759841dcffd56dff62f74dc90ac18286cc600**. This is the first qualifying candidate run; currently PENDING, never claimed green. Initial five parity shards and sqlserver-e2e queued; record-baseline confirmed SKIPPED. Root builds a ready conditional acceptance PR in `/workspace/shape-frz-acceptance`, branch `lane/FRZ-01-acceptance`, from merged main, running its CI in parallel with Nightly.
+
+Close20 ONLY through that subsequent acceptance PR after BOTH its exact-head/current-main/independently reviewed full gates and the qualifying main Nightly succeed. Required Nightly jobs: parity-suite(profile,stream,generate-1,generate-2,generate-3), parity-publish, sqlserver-e2e, all SUCCESS. Recording must remain SKIPPED. Inspect parity-suite results/nightly artifacts: exact run head, clean tree/full_suite, every shard exit0, no missing or failed workloads, exactly TWO authenticated not_comparable ITEMS with implementation=shape and list/struct workload names, passed=required-2. `nightly.IMPLS=("shape",)` and `run.expected_ids` return only shape; baseline copy aggregation does not double-count the category. Manual run is separate from the scheduled seven-day streak. No recording or comparison policy changes.
+
+formats_oct25 now watches Nightly actual job steps and failure-level live annotations; no raw archives. metadata_oct25 watches main. Root owns scratch except explicit delegation: formats updates state/report for this milestone, DCO and immediate push. Availability through2026-10-26T12:00UTC; renew before bound.
+
+## Included source history
+
+| Issue | Original PR/head | Delivery |
 |---|---|---|
-| CI |40264320674|24/27 successful; three jobs running|
-| Wheels |40264320723|SUCCESS; all10jobs|
-| Documentation |40264320625|SUCCESS|
-| DCO |40264320666|SUCCESS|
-| Security |40264320751|SUCCESS|
-| Container |40264320624|SUCCESS|
-| action-selftest |40264320807|SUCCESS|
+|10 formats|34 / 9b3e7375694514faeefa779c11f05bb13e1a8e2b|MERGED through48|
+|17 Iceberg|31 / 24a145795a0f33f95d125fa0a7123f76b959d780|MERGED through48|
+|20 FRZ|42 / 53bc24958788830669a00d47e9048c76418a475d|Implementation merged48; acceptance OPEN|
+|6 nested|43 / e5d6dd3d8351854b7967f145f5c7aeb6c1c32f5e|MERGED through48|
+|14 BigQuery|47 / 8228f87e699bb3524bf26f4fa4fefc6d0449856e|MERGED through48|
 
-Historical failures: b86Windows1failed929passed, helper-onlybad1 SAMEprivateassert1failed932passed. Confirmed CPython3.11.10+ mkdir0700 explicitSY/BA/OW grants survive inherited-onlyACLhelper. FIXED in289: onfresh-empty BQstagingonly remove exact documented SIDs then final existingrestrict (SYSTEMcurrentidentityregranted), beforeanycontent; originalstrictACL/POSIX/allprivatepredicate preserved, boundedactualACL/principaldiagnostics. Threeordering/failclosed+6bootstrap controlsREDbothkernels→101BQGREENeachkernel. NativeWindows databasejob121364875439 SUCCESS on289 inCI40258183976: strictBQprivacy blockerCLEARED. This is hostedWindowsproof, nevera localWindowsclaim.
-
-Inheritedmain314749d macOS3.11 cancellationrace1failed18568passed was unrelated to48: jobs.py/tests identicalearliermain90fb. FIXED in289 usingexistingOSsidecarlock forcomplete durableupdate read/mutate/write, memoryunchanged, ACLhelperunchanged. Deterministicnewcontrol1REDeachkernel→41GREENeachkernelinclunchangedoriginalassertion, no sleep/timeouts loosened. Metadatafullreview+formats34/42subset APPROVEDsignedremote289, nooutstandingblockers. RootfinalRuff/format2148,mypy711,publicclean;40coresecuritypassedagainbothkernelsaftercombinedrepairs. Fresh currentmain314749d ancestryverifiedbeforepush. Pending/canceled checks never pass. Root canceled ONLY obsolete initialf302 integration CI/Wheels/Docs/Security/Container, plus obsolete individual34 core40243543568 after exact-head verification, freeing runners. No current finalb9 run canceled. Rootcanceledobsolete46dCI40260761739 aftermin-versionstestplacementfailure. Rootcanceledobsolete289CI40258183976 after deterministictrustfailure; old17SUCCESS/1FAIL/9CANCELLED isnotpassing evidence. Root requested cancellationONLYobsoletefailedbad1CI40256165922 after verifying its head, freeingworkflowconcurrency. Do not archive polling logs, gate JSON, heartbeats or receipt indexes. Update current state only at meaningful milestones.
-
-**NEXT:** monitor48, merge immediately once every triggered workflow/job succeeds on exactapprovedb9, nonempty complete rollup and fresh currentmain ancestry. Use `/workspace/public-b-validation/merge_ready.py 48 b9e9f50cb611886afabb4cfa1a73e01998aa2525 --merge`; root separately confirms independent approval (already bound). API merge commit with DCO; never direct main push. If main moves, refresh ONLY integration once, push; clean refresh NO local reruns. Actual code conflicts: targeted affected tests only and rebind review. Assign concrete failures to original module authors in parallel; no full local suite.
-
-After48 merge, #10/#17/#6/#14 close through48, leaving20 acceptance outstanding. Run the acceptance PR CI IN PARALLEL with Nightly: once dispatched-mainrunID exists, prepare a ready docs-only acceptance PR with its link and closureconditions, without claiming pendingNightly success. Independently review it and let its exact-head CI run while Nightly runs; merge it ONLY after BOTH qualifyingNightly and allacceptancePRgates are green/current/reviewed. This avoids another serial fullCI cycle after Nightly; record finalgreenlinks inPRbody/scratch once known, no fabricatedresult. Dispatch Nightly on main with EMPTYconfirm (never recording confirmation). Require ALL5parity shards +parity-publish+sqlserver-e2e SUCCESS, record-baseline SKIPPED; verify artifacts samecommit/full_suite/no missingfailed/not_comparableexactly2/passed=required-2. Close20 ONLY via subsequent acceptance PR linking qualifying dispatched-main run. No qualifying Nightly dispatched yet.
-
-## Included implementation source history
-
-|Issue|Original PR|Included source head|
-|---|---|---|
-|10 formats|34|9b3e7375694514faeefa779c11f05bb13e1a8e2b|
-|17 Iceberg|31|24a145795a0f33f95d125fa0a7123f76b959d780|
-|20 FRZ|42|53bc24958788830669a00d47e9048c76418a475d|
-|6 nested|43|e5d6dd3d8351854b7967f145f5c7aeb6c1c32f5e|
-|14 BigQuery|47|8228f87e699bb3524bf26f4fa4fefc6d0449856e|
-
-Merged issues:9/PR32→35addfc4c310b85a62cbe7f315e1d50fb8e426f8;12/PR30→5c6d46ff1703db9fd2307bc4ebd4fb087e9af733;13/PR33→404fed823b271525b8802254312ded28f1c5aaa8;11/PR29→90fbff999bc95e255b3dbd90b76278441a735b41. Green source/merged CI links and original red/green evidence in report.md and original lane records. Do not claim canceled historical main5c/53 CI as passes. Latest own90fb main ALL3SUCCESS verified Oct26T00:47:31UTC: CI40243508314 all27jobs,Docs40243508311,Security40243508316. Supporting cert40→53d3d0c1a740fcca0665c216c3ebdabaaac95e49, sourceallgreen; excluded9issue count.
+Earlier delivery:9/PR32→35addfc4c310b85a62cbe7f315e1d50fb8e426f8;12/PR30→5c6d46ff1703db9fd2307bc4ebd4fb087e9af733;13/PR33→404fed823b271525b8802254312ded28f1c5aaa8;11/PR29→90fbff999bc95e255b3dbd90b76278441a735b41. Source/merged green links and original red/green proof remain in report.md/lane records. Canceled historical main5c/53 CI is never a pass. Supporting cert40→53d3d0c1a740fcca0665c216c3ebdabaaac95e49 is excluded from assigned denominator.
 
 ## Combined targeted proof and review
 
@@ -59,6 +55,15 @@ Lane `docs/plans/lane_status/public-b-integration.md` on48 contains PRlink, deci
 
 Independent reviewers verified all original Wanted/security/scope, unchanged FRZ recordings/thresholds/date provenance/name aliases, child privacy, shared DB/Oracle/cloud/BQ/Iceberg depth, safe URI handling, additive requirements/docs/lock and DCO. No gate/assertion/test weakened, skipped, deleted or xfailed.
 
+Additional combined repairs, all tests-first and reviewed:
+
+- Strict BQ staging privacy: original Windows private assertion failed; explicit CPython bootstrap grants removed only on fresh empty staging, then existing helper regrants current identity. 3 ordering/fail-closed +6 bootstrap controls RED each kernel→101 BQ GREEN each; actual Windows strict database job succeeded on final source. No POSIX/private assertion weakened.
+- Architecture guard: direct plugin subprocess produced two RED hits each kernel; bootstrap logic moved into existing core restrict_to_current_user(remove_bootstrap=False), BQ True for fresh staging. Default other callers unchanged; no generic runner/allowlist. 170 BQ+scale+trust GREEN each kernel.
+- Inherited durable cancellation race: deterministic1 RED each kernel→41 job tests GREEN each, existing assertion/timeouts preserved. OS lock covers complete read-modify-write; in-memory behavior unchanged.
+- Optional dependency boundary: eight async BQ cases failed in minimum core environment; function AST/parameter assertions relocated unchanged into mandatory plugin test_bigquery_jobs.py. Six core redactor controls remain active with plugin blocked. Baseline8RED/6pass→6coreGREEN and184 BQ/scale/trust/core GREEN each kernel. No product, CI environment, guard, marker or skip change.
+
+Actual combined289 targeted acceptance regenerated only candidate seed1042 for healthcare/capital_markets, authenticated all five original baseline seed outputs, and passed all original clauses a–f:80/80 and64/64 columns. Both actual time-only/AMPM fixtures PASS every original field/zero mismatches. Separately two recorded TypeErrors NOT COMPARABLE/exit3, never passes/timing credit. Existing baseline0.9.1 env Arrow26 differs candidateArrow25; no whole-environment or timing claim. No recording/fixture/reference/env/source changes. Numerical/benchmark/broker product bytes unchanged from289 through finalb9; no repeat run needed.
+
 ## Owner comparison decisions and pending live
 
 NOTCOMPARABLE ONLY authenticated recorded0.9.1 error/no-values workloads: `profile:edge/x_pq_list.parquet` (list TypeError), `profile:edge/x_pq_nested.parquet` (struct TypeError). Reviewed registry `benchmarks/vs_refengine/comparison_contract.py`. Report separately, NEVERpasses/timing credit. All recorded-value comparisons unchanged; no rerecording. Four repaired value workloads actualPASS: healthcare80/80columns, capital_markets64/64, time-only/AMPM0mismatches each. Name normalization uses authenticated reference lineage, never values/frequencies/order-fitting. Capturedate replay independently authenticated Oct13 source/run context before computation; no output masks or explicit-date changes. Full details original FRZ record.
@@ -67,9 +72,7 @@ BQ Ownerdecimal0<=scale<=precision beforeconnect, columnnamed; LeadA45 sourceint
 
 No implementation parked. Pending external live actions, never claimed passing: broker/EventHubs/SchemaRegistry accounts/emulators;Eventhouse emulator/account; semantic measure+rolefixture expectedmetadata/visibleRows; IcebergREST/MinIO images; BQO14generate→write→profile/datasetidentity accounts. dbt8actualDuckDBoffline acceptance passed, no account requirement. Premium and LeadA branches/issues are not touched; narrow alreadymerged shared-interface changes only where own Wanted requires.
 
-## Agents, environment and hard stops
-
-Root owns integration/scratch commits and all merges. formats_oct25 watches48fullCI/Wheels; metadata_oct25 independent/mainwatch. Both available through **2026-10-26T12:00UTC**; renew before bound. Completed authors available viafollowup: eventhouse(cloud/broker),bigquery(BQ/security),iceberg(nativeSDK/depth),dbt(merged29). No activefileownership; rootcommittedtestplacementrepairb9, cleanpushed. Productcodeunchangedfrom46d. Authorscompletedandavailableviafollowup. Rootownsallfutureintegrationchanges; metadataread-onlyreview/mainwatch, formatsfinalCI/Wheelswatch. Ghostdbt_resume/recover are stale, do not resurrect. User original prompt explicitly authorizes per-issue agents and independent reviewer.
+## Environment and hard stops
 
 Cloudskill c5/cloud-environment-runtime read on recovery; current enforcedunrestricted HTTP/networkpolicy VPNfalse; GHready and actual gitlsremote+ghAPI exit0. Preserve proxy/CA/auth, never print tokens/env/secretfiles/changegitconfig/globalsettings. Transient scratch503 recovered immediately; no persistent credential failure. Persistent401/403/failedpush hardstop only after actual5/10/20min gitlsremote+ghAPI retries allfail; do useful local work between. Logs404/blob403 not auth failure if APIs work.
 
@@ -79,18 +82,3 @@ User wants progress updates without asking: meaningful updates aboutminute, full
 
 Failure log access: CLI log download hits sidecar403 on Azureblob, not GHauth; do not bypass proxy/routing or print signedURLs onstderr. Installed standard GitHub connector `github_fetch_workflow_job_logs` with configured Primarysqllocks link_id link_6abacc0c2f408191aff9ab5aec95acde works and supplied actual traceback. Use connector for future joblogs, filter only failure text; no rawlog archives. GitHub API/credentials remain working.
 
-FRZ COMBINED289 acceptance COMPLETE: four actualVALUE workloadsPASS separately—healthcare80/80columns/capital_markets64/64 fulloriginalclausesa–f; time-onlyCSV+AMPMCSV alloriginalfields0mismatches each. Separately two authenticatedrecordedlist/structParquetTypeErrors NOTCOMPARABLE/exit3, neverpasses/timingcredit. Candidate seed1042 generatedfrom289; originalall5baseline seedbytesauthenticatedagainstUNCHANGEDrecords. Existingbaselineenv0.9.1Arrow26 differscandidateArrow25 asbefore; no whole-environment/timingclaim. No rerecord/reference/env/sourcechanges. Allfive48lightworkflows+Wheelsall10SUCCESS; core17of27green/10running at02:31UTC, no failure. Rootawaitsall27/currenthead/mainbeforemerge, thenmainNightly+parallelacceptancePR.
-
-Architecture repair completed:289nativeWindowsDBpassedbutmacOS3.14ordinarysuiteFAILEDonly tests/plugins/test_trust_reach.py (2directBQsubprocesshits;18928otherpassed). Rootacknowledged targetedarchitecturecheck shouldhave runbeforepush. FIX46dc moves ONLYbootstrapremoval intoEXISTINGcore restrict_to_current_user(*,remove_bootstrap=False), BQTrueonfreshdir/file; defaultothercallers/Wincommandsequence/SYSTEMregrant unchanged, no genericrunner/ASTevasion/allowlist/policychange. ExistingTrustguardREDbothkernels→101BQ+41scale+28trust=170GREENeachkernel. RootfinalRuff/format2148,mypy711,publicclean. AlloriginalWanted/securityreview rebound46dc. ALWAYSincludeunchangedtests/plugins/test_trust_reach.py in targetedverificationwhenplugin capabilitieschange.
-
-FRZfourvaluePASS+twoNOTCOMPARABLEcombined289proofretained: numerical/profile/generation/broker/benchmark code byte-identical46dc; onlytrustedACLhelperboundary moved. No repeatedbenchmark/newrerecord/timingclaim. FutureNightly MAIN onpost48merge stillstrictclosuregate; prepareacceptancePR CIinparallel asabove. Current46dcfullCIjuststarted~02:47UTC; no failureobserved.
-
-Final46dc ancillary gates COMPLETE: ALL5lightworkflowssuccess (DCO40260761801,Security40260761738,Container40260761735,selftest40260761911,Docs40260761862) +Wheels40260761912all10SUCCESS. CoreCI40260761739 has17of27SUCCESS/10running, nofailure. NativeWindowsdatabase121372437276SUCCESS on46dc, strictprivacyretained. Formatsnowalso polls failure-level LIVEannotationsonrunningchecks every~5min (earlyerrorsbeforelongjobends), currentlyzero; no archives. Corefullsuite issolepremergegateleft. No code/reviewpending, finalSHAunchanged.
-
-CURRENT46dc gate milestone: all6ancillaryworkflows (Wheelsall10+Docs+DCO+Security+Container+selftest) SUCCESS onEXACT46dc. NativeWindowsdatabase job121372437276SUCCESS confirmingstrictACLoperationaftertrustedhelpermove. CI40260761739 remains17/27SUCCESS+10running, nofailureannotationsfromallrunningchecks. Rootmergesonlyfullcoreworkflow+rollupgreen/freshmain/currentapprovedhead. No morecode orreviewpending.
-
-LATESTb9test-onlyrepair:46d min-versions job121372437150 failed8asyncBQcases becausecore-onlyenvrightlyomitsoptionalshape_databases;18940otherspassed. Fixedbyrelocating8params+entireasyncfunctionASTUNCHANGED tonewmandatoryplugin tests/test_bigquery_jobs.py; retained5coreURI+1linear controlsindependentofplugin. Coreoptionalimportblockcontrol8RED/6passbeforemove→6GREENaftereachkernel, absenceassertedbefore/after. All184BQ+pluginasync+scale+trust+coretargetedtestsGREENeachkernel; no product/CIenv/gate/marker/skip/guard/assertionchange. RootRuff/format,mypy711,publicclean. Fullindependentmetadata+formatsreview reboundEXACTb9. Alwaysverifynewcoreteststouchingoptionalpluginsunderabsencecontrol, orplaceintegrationcasesinownerplugin suite; neverimportorskip tohidefailure.
-
-Currentb9all7gatesjuststarted~03:30UTC. DCO/Container/Security/selftestSUCCESS;Docs/Wheelsrunning;CI40264320674all27required. NativeWindowsdatabaseSUCCESSalreadyincludingnew8asynccases. Minversionsordinarysuiteactive03:31:53; zeroFAILliveannotations(all16runningqueried03:35). Old46d ended18SUCCESS/1minFAIL/8CANCELLED, neverpassingfinalevidence. Formatsliveannotationcadencenow~1minute batch, noarchives. No code/reviewpending; onlyexact-head hostedgatesremain.
-
-Recovery milestone 2026-10-26T04:42UTC: exactb9 39successful checks, three running, only two structuralpublish skips. Fullreview and allsix ancillaryworkflows green; main unchanged314749d. No unpushed ownedbranch head (three oldlane refs are behindremote; genericwork branch is originalbase). Conditionalacceptance template prepared outside repo; create finalreadyPR with actualmerge/runprovenance immediately after48merge. Confirmed nightly IMPLS=(shape,) soexactlytwoNCitems/passed=required-2, notfour. Heavy nested1GB acceptance explicitlyparametrizes bothkernels and runsinCI; no missinglocalmode. Root persistentwatch377 active; resume it aftercompaction.
