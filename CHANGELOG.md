@@ -6,6 +6,7 @@ Status: available.
 
 ## Unreleased
 
+- Speed CI core tests on macOS and Windows with two workers and reuse native build dependencies; test coverage and acceptance gates remain enforced.
 - PostgreSQL sources retain native array element types, and Databricks sources parse declared
   recursive catalog types. Source URIs refuse writer-only nested options before connecting.
 
@@ -2089,6 +2090,10 @@ Converting a full capture to the safe form now gives a different content ID when
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
 
+- W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+  catalog row counts and whole-database profiles through the KQL endpoint.
+  Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
+
 ### W9-10
 
 - Read dbt semantic models and list singular tests in import metadata.
@@ -2106,9 +2111,6 @@ Converting a full capture to the safe form now gives a different content ID when
   bridge arguments are `tables` and `sample_rows`. Catalog-only capture uses sample size zero.
 - Database profiles and bridge database artifacts use existing safe capture rules.
 
-- W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
-  catalog row counts and whole-database profiles through the KQL endpoint.
-  Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
 
 ### W9-08: broker message metadata
 
