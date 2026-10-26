@@ -6,7 +6,7 @@ Updated 2026-10-26; final integration in progress. This file is the current chec
 
 Continue until all seven assigned issues are merged or legitimately parked. Do not end a turn merely to wait or ask. Original prompt: `/workspace/attachments/9302a188-787d-4428-9403-3510325ce6a1/4-NEW-WINDOW-shape-public-A.md`. Read it and this state after any restart.
 
-**3/7 merged (42.9% done), 4/7 remaining (57.1%). All four remaining issues are in ONE READY integration PR #49; zero parked.** #2/PR45, #16/PR39 and #3/PR37 are merged. Current main is314749d37aba9141a2ff68a33cfdb91e8a87cca5. Final PR https://github.com/sqllocks/shape/pull/49 closes #4/#5/#7/#8 together, exact head7c2091cc7612b742b24ebf5403a054355902b13a on lead/public-a-integration-2026-10-26 in /workspace/public-a-W9-06. Root owns the clean/released batch. All builders and independent reviewers have finished; every required scope is approved at this head. Current exact-head CI is running; poll /tmp/public-a-poll-final.py. Do not make additional changes without an actual failure or base move. Once every triggered check is green/current, merge promptly through the merge-commit API with exact SHA guard and DCO message. Historical PR38/41/44 are closed superseded; their issues stay open until49 merges. All Owner decisions are resolved, including Bridge1.3; frozen artifacts remain unchanged. Latest CI corrections cover current-server documentation version fields, a Python3.14 fixture literal in traceback source and portable file-URI failure injection on Windows. All original assertions remain intact. An additive five-module CI acceptance step now runs before the unchanged full core suite on every existing platform. Their precise evidence and current run IDs are in the final sections below.
+**3/7 merged (42.9% done), 4/7 remaining (57.1%). All four remaining issues are in ONE READY integration PR #49; zero parked.** #2/PR45, #16/PR39 and #3/PR37 are merged. Current main is682759841dcffd56dff62f74dc90ac18286cc600. Final PR https://github.com/sqllocks/shape/pull/49 closes #4/#5/#7/#8 together, exact head57da2566365c440b36b65d33f028c187443ef176 on lead/public-a-integration-2026-10-26 in /workspace/public-a-W9-06. Root owns the clean/released batch. All builders and independent reviewers have finished; every required scope is approved at this head. Current exact-head CI is running; poll /tmp/public-a-poll-final.py. Do not make additional changes without an actual failure or base move. Once every triggered check is green/current, merge promptly through the merge-commit API with exact SHA guard and DCO message. Historical PR38/41/44 are closed superseded; their issues stay open until49 merges. All Owner decisions are resolved, including Bridge1.3; frozen artifacts remain unchanged. Latest CI corrections cover current-server documentation version fields, a Python3.14 fixture literal in traceback source and portable file-URI failure injection on Windows. All original assertions remain intact. An additive five-module CI acceptance step now runs before the unchanged full core suite on every existing platform. Their precise evidence and current run IDs are in the final sections below. Main advanced while the previous head was at41/42green, forcing this ONE current-base refresh. Jobs conflict uses main security/locking implementation byte for byte plus our regression; four newly introduced 1.2 archive schemas now reflect the latest main publication. Refreshed targeted tests355passed EACHkernel, APIs0break, conformance33/33,191plugins/108requirements. Reviewers APPROVED exact57da; new CI is running. Raw full PR whitespace check includes preserved historical CRLF/EOF bytes; do not claim it is clean or alter frozen bytes.
 
 Give meaningful commentary at least every60seconds while working, quantified totals about every5minutes and immediately on merge/blocker changes. CI counts are a separate metric from issues merged.
 
@@ -407,3 +407,35 @@ This verifies portable URI injection, privacy assertions, SQL types/UNIQUE,
 Bridge1.3 and constraint acceptance across platforms. No failed check currently.
 FullCI/remainingchecks stillRUNNING; do notmergeuntilallrequiredgreen.
 Samecurrentrunsandguardedscriptsabove; no furtherbranchchangesarepending.
+
+
+## ONE refreshed base after Public B completed its batch — 57da256
+
+Actualmainmoved682759841dcffd56dff62f74dc90ac18286cc600 while7cCI
+was41/42green. Read-onlyfetchconfirmedmergeconflict; no oldheadresultis
+mergeevidence. Signed/pushedrefresh57da2566365c440b36b65d33f028c187443ef176
+parents7c+682. Jobs.pyexactmainretainsBsecurityACL/advisorylockfix andour
+separatedeterministicregression. Bothdocsectionsretained;108requirements
+exactA/Bunion;191registrations. Allnightly/benchmarkcontentexactmain.
+Fournew1.2archiveJSONscopiedexactlatestpublishedmain;all207archive
+blobsnowmatch682,all211existing1.0/1.1frozenblobsunchanged. Root1.3
+schemasretainBfieldswithonlyserverversionmetadatachanged. No broad
+regenerationoroldfixture/assertionchanges. OracleexactarchiveAPPROVED.
+
+Targetedjobs+Bridgeallreplay/1.3/Iceberg/storedprofiles/docs1.2:
+355passedEACHkernel(19.96sdefault,30.71sPython). No localfullsuite.
+Ruff/format/mypyjobs,wording,stable/pluginAPI0breaking,conformance33/33,
+uvlockcheckgreen. uvsyncactual1.69spreparationreusedcachednativebuild
+(Rusttreeunchanged). ReviewerOct25APPROVEDexact57da,remote/DCO/
+mainancestry/options/108requirementblocks/CIgateequivalenceverified.
+RawPRdiffwhitespaceincludespreservedarchivedCRLF/EOF;donotalterfrozen
+bytesorclaimrawwhitespacecheckclean.
+
+CURRENTexactheadruns: CI40273519563,Wheels40273519573,Security40273519553,
+Container40273519543,Documentation40273519574,DCO40273519595,
+action-selftest40273519568. AllPENDINGinitially. SamePR49/all4issues.
+/tmp/public-a-poll-final.py and /tmp/public-a-merge-final.py BOTHupdated
+to57da. Guardedmergescriptchecks42+success/all7workflowsoverallgreen/
+currentmainancestry+baseSHA,thenPRmergeAPImergecommitexactSHAguard+DCO.
+DO NOT invoke untilallgreen. Continueupdates/poll,nomorecodechanges
+withoutactualfailureoranotherbasemove. Finalreportafterall7closed.
