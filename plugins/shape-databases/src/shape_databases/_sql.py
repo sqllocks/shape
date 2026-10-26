@@ -25,6 +25,7 @@ import pyarrow.types as pat  # type: ignore[import-untyped]
 
 from shape.builtins.sinks import sql as core_sql
 from shape.errors import ShapeError
+from shape.generation.write_constraints import ConstraintDDL
 
 from .nested import is_nested, native_json, native_type, postgres_array, validate_json_shape
 
@@ -186,6 +187,7 @@ def create_table_sql(
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
     nested: str = "native",
+    constraints: ConstraintDDL | None = None,
 ) -> str:
     for name in schema.names:
         check_identifier(name, "column", dialect)
@@ -193,13 +195,21 @@ def create_table_sql(
         if name not in schema.names:
             raise ShapeError(f"primary key column {name!r} is not a column of {table!r}")
     defs = [
-        f"  {quote(name, dialect)} {sql_type} {'NULL' if nullable else 'NOT NULL'}"
+        f"  {quote(name, dialect)} {sql_type}"
+        + (
+            f" DEFAULT {constraints.defaults[name]}"
+            if constraints and name in constraints.defaults
+            else ""
+        )
+        + f" {'NULL' if nullable else 'NOT NULL'}"
         for name, sql_type, nullable in column_definitions(
             schema, first, columns or {}, primary_key, dialect, nested
         )
     ]
     if primary_key:
         defs.append(f"  PRIMARY KEY ({', '.join(quote(c, dialect) for c in primary_key)})")
+    if constraints:
+        defs.extend("  " + clause for clause in constraints.definitions)
     body = ",\n".join(defs)
     return f"CREATE TABLE {qualified(schema_name, table, dialect)} (\n{body}\n)"
 

@@ -1,0 +1,219 @@
+"""W9-04: coordinated reruns preserve the complete prior dataset on failure."""
+
+import os
+import uuid
+
+import pyarrow as pa
+import pytest
+from shape_databases import WriteError
+
+from shape.errors import ShapeError
+from shape.generation.engine import Engine
+from shape.generation.output import TargetOptions, write_targets
+from shape.generation.schema import Column, GenSchema, Model, Relationship, Table
+
+pytestmark = pytest.mark.emulator
+
+
+def definition(start):
+    parent = Table(
+        "parent", {"id": Column("id", "integer", {"strategy": "sequence", "start": start})}, ["id"]
+    )
+    child = Table(
+        "child",
+        {
+            "id": Column("id", "integer", {"strategy": "sequence", "start": start}),
+            "parent_id": Column(
+                "parent_id", "integer", {"strategy": "foreign_key", "ref": "parent.id"}
+            ),
+            "amount": Column("amount", "integer", {"strategy": "constant", "value": 2}),
+        },
+        ["id"],
+    )
+    return GenSchema(
+        Model("rerun", "rerun"),
+        {"parent": parent, "child": child},
+        [Relationship("fk_child_parent", "parent", "child", ["id"], ["parent_id"])],
+        [],
+    )
+
+
+def engine(start):
+    return Engine(definition(start), row_counts={"parent": 3, "child": 3}, seed=42, chunk_rows=2)
+
+
+@pytest.fixture(params=["postgres", "mysql"])
+def rerun_database(request):
+    dialect = request.param
+    if dialect == "postgres":
+        import psycopg
+
+        conn = psycopg.connect(
+            host="localhost",
+            user="shape",
+            dbname="shape",
+            password=os.environ["SHAPE_POSTGRES_PASSWORD"],
+            autocommit=True,
+        )
+    else:
+        import pymysql
+
+        conn = pymysql.connect(
+            host="127.0.0.1",
+            user="shape",
+            database="shape",
+            password=os.environ["SHAPE_MYSQL_PASSWORD"],
+            autocommit=True,
+        )
+    prefix = "rr_" + uuid.uuid4().hex[:10] + "_"
+    uri = (
+        "postgresql://shape@localhost:5432/shape"
+        if dialect == "postgres"
+        else "mysql://shape@localhost:3306/shape"
+    )
+
+    def q(name):
+        char = '"' if dialect == "postgres" else "`"
+        return char + name.replace(char, char + char) + char
+
+    def execute(sql):
+        with conn.cursor() as cursor:
+            cursor.execute(sql)
+            return cursor.fetchall() if cursor.description else []
+
+    def rows():
+        return {
+            name: list(execute(f"SELECT * FROM {q(prefix + name)} ORDER BY id"))
+            for name in ("parent", "child")
+        }
+
+    def options(**kwargs):
+        return TargetOptions(constraints="all", extra={dialect: {"table_prefix": prefix}}, **kwargs)
+
+    try:
+        assert write_targets(engine(1), [uri], options()) == {uri: {"parent": 3, "child": 3}}
+        yield uri, prefix, execute, rows, options, q
+    finally:
+        for name in ("external", "child", "parent"):
+            execute(f"DROP TABLE IF EXISTS {q(prefix + name)}")
+        conn.close()
+
+
+@pytest.mark.parametrize(
+    "rerun_database,mode",
+    [("postgres", "truncate"), ("postgres", "replace"), ("mysql", "truncate")],
+    indirect=["rerun_database"],
+)
+def test_all_owned_truncate_rerun_keeps_constraints_and_replaces_all_rows(rerun_database, mode):
+    uri, _, _, rows, options, _ = rerun_database
+    assert write_targets(engine(10), [uri], options(write_mode=mode)) == {
+        uri: {"parent": 3, "child": 3}
+    }
+    found = rows()
+    assert found["parent"] == [(10,), (11,), (12,)]
+    assert [row[0] for row in found["child"]] == [10, 11, 12]
+    assert {row[1] for row in found["child"]} <= {10, 11, 12}
+
+
+@pytest.mark.parametrize(
+    "rerun_database,mode",
+    [("postgres", "truncate"), ("postgres", "replace"), ("mysql", "truncate")],
+    indirect=["rerun_database"],
+)
+def test_later_child_failure_rolls_back_the_whole_coordinated_rerun(
+    rerun_database, monkeypatch, mode
+):
+    uri, _, _, rows, options, _ = rerun_database
+    before = rows()
+    replacement = engine(10)
+    original = replacement.iter_chunks
+    planted_rows = []
+
+    def planted(name, size=None):
+        for number, batch in enumerate(original(name, size)):
+            if name == "child" and number:
+                index = batch.schema.get_field_index("parent_id")
+                batch = batch.set_column(
+                    index, "parent_id", pa.array([999999] * batch.num_rows, type=pa.int64())
+                )
+                planted_rows.append(batch.num_rows)
+            yield batch
+
+    monkeypatch.setattr(replacement, "iter_chunks", planted)
+    with pytest.raises(WriteError, match="fk_child_parent") as error:
+        write_targets(replacement, [uri], options(write_mode=mode))
+    assert planted_rows == [1]
+    assert error.value.rows_committed == 0
+    assert rows() == before
+
+
+def test_incompatible_chunk_commits_refuse_before_coordinated_mutation(rerun_database):
+    uri, _, _, rows, options, _ = rerun_database
+    before = rows()
+    with pytest.raises(ShapeError, match="fk_child_parent"):
+        write_targets(engine(10), [uri], options(write_mode="truncate", commit_rows=1))
+    assert rows() == before
+
+
+@pytest.mark.parametrize(
+    "rerun_database,mode",
+    [("postgres", "truncate"), ("postgres", "replace"), ("mysql", "truncate")],
+    indirect=["rerun_database"],
+)
+def test_external_incoming_foreign_key_is_named_and_every_table_is_preserved(rerun_database, mode):
+    uri, prefix, execute, rows, options, q = rerun_database
+    execute(
+        f"CREATE TABLE {q(prefix + 'external')} (parent_id BIGINT, CONSTRAINT fk_external_ref "
+        f"FOREIGN KEY (parent_id) REFERENCES {q(prefix + 'parent')} (id))"
+    )
+    execute(f"INSERT INTO {q(prefix + 'external')} VALUES (1)")
+    before = rows()
+    with pytest.raises(ShapeError, match="fk_external_ref"):
+        write_targets(engine(10), [uri], options(write_mode=mode))
+    assert rows() == before
+    assert list(execute(f"SELECT parent_id FROM {q(prefix + 'external')}")) == [(1,)]
+
+
+@pytest.mark.parametrize("rerun_database", ["mysql"], indirect=True)
+def test_mysql_referenced_replace_refuses_before_implicit_ddl_commits(rerun_database):
+    uri, _, _, rows, options, _ = rerun_database
+    before = rows()
+    with pytest.raises(ShapeError, match="fk_child_parent"):
+        write_targets(engine(10), [uri], options(write_mode="replace"))
+    assert rows() == before
+
+
+@pytest.mark.parametrize("rerun_database", ["mysql"], indirect=True)
+def test_mixed_existing_and_new_tables_refuse_before_any_destructive_preparation(rerun_database):
+    uri, prefix, execute, rows, options, q = rerun_database
+    constraint = "fk_external_mixed_" + prefix
+    execute(f"CREATE TABLE {q(prefix + 'a')} (id BIGINT PRIMARY KEY)")
+    execute(f"INSERT INTO {q(prefix + 'a')} VALUES (999)")
+    execute(
+        f"CREATE TABLE {q(prefix + 'external')} (parent_id BIGINT, CONSTRAINT {q(constraint)} "
+        f"FOREIGN KEY (parent_id) REFERENCES {q(prefix + 'parent')} (id))"
+    )
+    execute(f"INSERT INTO {q(prefix + 'external')} VALUES (1)")
+    before = rows()
+    schema = definition(10)
+    tables = {
+        "a": Table("a", {"id": Column("id", "integer", {"strategy": "sequence"})}, ["id"]),
+        **schema.tables,
+        "new": Table("new", {"id": Column("id", "integer", {"strategy": "sequence"})}, ["id"]),
+    }
+    replacement = Engine(
+        GenSchema(schema.model, tables, schema.relationships, []),
+        row_counts={name: 3 for name in tables},
+        seed=42,
+        chunk_rows=2,
+    )
+    try:
+        with pytest.raises(ShapeError) as error:
+            write_targets(replacement, [uri], options(write_mode="truncate"))
+        assert list(execute(f"SELECT id FROM {q(prefix + 'a')}")) == [(999,)]
+        assert rows() == before
+        assert list(execute(f"SELECT parent_id FROM {q(prefix + 'external')}")) == [(1,)]
+        assert any(name in str(error.value) for name in (constraint, "fk_child_parent"))
+    finally:
+        for name in ("new", "a"):
+            execute(f"DROP TABLE IF EXISTS {q(prefix + name)}")

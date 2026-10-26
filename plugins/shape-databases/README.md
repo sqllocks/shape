@@ -29,6 +29,36 @@ is opened, so core and the rest of Shape never carry them (the Snowflake and Dat
 are extras of this plugin only, not of core). A sink without its driver fails with the
 `pip install` line above, exit 2 on the command line.
 
+## Generated constraints and reruns
+
+`shape generate` defaults to `--sql-constraints keys`; `all` adds supported structured
+CHECK and literal DEFAULT clauses, and `none` (also `keep`) omits derived declarations.
+Use `--contract FILE` for JSON/YAML contract declarations. The core generation path
+prepares all tables before loading parents and then children. DuckDB is the dialect
+exception: it creates foreign keys inline, with parent tables created first.
+
+PostgreSQL, MySQL and DuckDB enforce foreign keys, UNIQUE and CHECK constraints and
+support literal defaults. Snowflake foreign/unique keys are informational, with DEFAULT
+but no CHECK support. Databricks Unity Catalog keys are informational; CHECK uses
+`ALTER TABLE`, while UNIQUE and DEFAULT are unsupported. Unsupported declarations are
+reported as warnings and SQL-script notes rather than silently omitted.
+
+Python sink options accept `foreign_keys` entries with `name`, `columns`, `ref_table`
+and `ref_columns`; `unique` is a list of column lists; `checks` contains named structured
+`expression` objects; `defaults` maps columns to literal values. CHECK expressions use
+the allowlisted comparison, conjunction, membership and null-test operations, never raw
+SQL. Identifiers are quoted and inserted values remain parameters.
+
+Existing-table writes verify requested catalog declarations before mutation. PostgreSQL
+and MySQL CHECK/DEFAULT verification requires temporary-table creation permission.
+All-owned datasets can rerun with coordinated transactional `truncate` on PostgreSQL
+and MySQL; PostgreSQL also supports coordinated `replace`. A late failure restores the
+old dataset. MySQL replacement DDL cannot provide that rollback guarantee and is
+refused with the foreign-key name. DuckDB referenced-table reruns, external incoming
+references and incompatible chunk commits are likewise refused when enforcement cannot
+be preserved. Unrelated writes keep their existing transaction and committed-row rules.
+See [the destination guide](../../docs/SINKS.md#generated-sql-constraints).
+
 ## Cloud sources
 
 The `shape.sources` entries `snowflake` and `databricks` read tables and profile schema

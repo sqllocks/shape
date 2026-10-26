@@ -69,10 +69,11 @@ def add_to_arguments(
     )
     g.add_argument(
         "--sql-constraints",
-        choices=("keep", "disable"),
-        help="mssql:// targets: keep (the default) or disable the foreign key and check "
-        "constraints of tables that already exist while loading, then validate them (exit 1 and "
-        "the constraints named when one does not hold)",
+        choices=("keep", "disable", "keys", "all", "none"),
+        help="databases and SQL: keys (default) writes primary, foreign and unique keys; "
+        "all also writes checks and literal defaults; none writes only primary keys. "
+        "keep is the legacy alias for none. mssql:// disable temporarily disables "
+        "existing foreign key and check constraints, then validates them",
     )
     if with_sink_config:
         g.add_argument(
@@ -179,6 +180,21 @@ def sign_in_options(a: argparse.Namespace, name: str, *, offline: bool = False) 
     return options
 
 
+def constraint_contract(a: argparse.Namespace) -> dict[str, Any] | None:
+    """Load the optional generation contract before any target connection."""
+    path = getattr(a, "contract", None)
+    if path is None:
+        return None
+    from pathlib import Path
+
+    from shape.cli.validate import load_document
+
+    document = load_document(Path(path))
+    if not isinstance(document, dict):
+        raise ValueError("contract must be an object")
+    return document
+
+
 def target_options(
     a: argparse.Namespace, fmt: str, targets: list[str] | None = None, *, offline: bool = False
 ) -> Any:
@@ -227,6 +243,7 @@ def target_options(
         manifest=a.manifest,
         partition_by=list(a.partition_by) if getattr(a, "partition_by", None) else None,
         constraints=getattr(a, "sql_constraints", None),
+        contract=constraint_contract(a),
         extra=extra,
     )
 

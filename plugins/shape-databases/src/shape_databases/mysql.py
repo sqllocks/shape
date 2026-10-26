@@ -62,6 +62,7 @@ class MySqlSink(DatabaseSink):
     """``RecordBatch``es for one table to a MySQL table with batched multi-row ``INSERT``."""
 
     name = "mysql"
+    prepare_constraints = DatabaseSink._prepare_constraint_tables
     schemes = ("mysql",)
     dialect = "mysql"
     password_env = ("SHAPE_MYSQL_PASSWORD", "MYSQL_PWD")
@@ -80,6 +81,13 @@ class MySqlSink(DatabaseSink):
     exists_sql = (
         "SELECT 1 FROM information_schema.tables "
         "WHERE table_schema = COALESCE(%s, DATABASE()) AND table_name = %s"
+    )
+
+    incoming_constraints_sql = (
+        "SELECT DISTINCT k.CONSTRAINT_NAME AS inbound_constraint_name "
+        "FROM information_schema.KEY_COLUMN_USAGE k "
+        "WHERE k.REFERENCED_TABLE_SCHEMA = COALESCE(%s, DATABASE()) "
+        "AND k.REFERENCED_TABLE_NAME = %s ORDER BY inbound_constraint_name"
     )
 
     def create_schema_sql(self, schema_name: str) -> str:

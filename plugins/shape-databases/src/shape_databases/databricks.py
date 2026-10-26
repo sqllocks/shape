@@ -143,6 +143,7 @@ class DatabricksSink(DatabaseSink):
     """``RecordBatch``es for one table to a Delta table with batched, bound ``INSERT``."""
 
     name = "databricks"
+    prepare_constraints = DatabaseSink._prepare_constraint_tables
     schemes = ("databricks",)
     dialect = "databricks"
     password_env = ("DATABRICKS_TOKEN",)
@@ -151,6 +152,22 @@ class DatabricksSink(DatabaseSink):
         "SELECT 1 FROM information_schema.tables "
         "WHERE table_schema = COALESCE(?, current_schema()) AND table_name = ?"
     )
+
+    def _incoming_constraint(self, conn: Any, plan: Plan) -> str | None:
+        from ._cloud_constraint_catalog import incoming_constraint
+
+        return incoming_constraint(conn, plan, self.dialect)
+
+    def _verify_existing_constraints(
+        self,
+        conn: Any,
+        plan: Plan,
+        schema: pa.Schema,
+        first: pa.RecordBatch | None,
+    ) -> None:
+        from ._cloud_constraint_catalog import verify_existing_constraints
+
+        verify_existing_constraints(conn, plan, schema, self.dialect)
 
     # -- plan --------------------------------------------------------------------------------
     def parse_target(self, uri: str) -> Target:
@@ -243,6 +260,7 @@ class DatabricksSink(DatabaseSink):
             plan.columns,
             plan.primary_key,
             plan.options.get("nested", "native"),
+            constraints=self._constraint_ddl(plan, schema),
         )
 
     # -- connection --------------------------------------------------------------------------

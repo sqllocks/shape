@@ -68,6 +68,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import uuid
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Any
 
@@ -75,6 +76,11 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.types as pat  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.generation.write_constraints import (
+    _PREPARED_CONSTRAINTS,
+    ConstraintDDL,
+    compile_constraints,
+)
 
 from . import _sql
 from ._base import as_int, as_text, one_of, parse_uri
@@ -185,6 +191,7 @@ def create_table_sql(
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
     nested: str = "native",
+    constraints: ConstraintDDL | None = None,
 ) -> str:
     columns = columns or {}
     unknown = [c for c in primary_key if c not in schema.names]
@@ -195,12 +202,22 @@ def create_table_sql(
         meta = columns.get(field.name, {})
         required = field.name in primary_key or not bool(meta.get("nullable", True))
         sql_type = duckdb_type(field, meta, nested=nested)
+        default = (
+            f" DEFAULT {constraints.defaults[field.name]}"
+            if constraints and field.name in constraints.defaults
+            else ""
+        )
         lines.append(
-            f"  {_quote(_check_name(field.name, 'column'))} {sql_type}"
+            f"  {_quote(_check_name(field.name, 'column'))} {sql_type}{default}"
             f"{' NOT NULL' if required else ''}"
         )
     if primary_key:
         lines.append(f"  PRIMARY KEY ({', '.join(_quote(c) for c in primary_key)})")
+    if constraints:
+        # Owner-approved DuckDB exception: parents exist before this inline FK phase.
+        lines.extend(
+            "  " + clause for clause in (*constraints.definitions, *constraints.foreign_keys)
+        )
     return f"CREATE TABLE {_qualified(schema_name, table)} (\n" + ",\n".join(lines) + "\n)"
 
 
@@ -290,7 +307,121 @@ class DuckDbSink:
         "nested": one_of("native", "json"),
     }
 
+    @staticmethod
+    def _constraints(
+        options: Mapping[str, Any],
+        schema: pa.Schema,
+        schema_name: str,
+        table: str,
+    ) -> ConstraintDDL:
+        try:
+            return compile_constraints(
+                options,
+                columns=schema.names,
+                table=table,
+                dialect="duckdb",
+                schema_name=schema_name,
+            )
+        except ValueError as exc:
+            raise ShapeError(str(exc)) from None
+
+    def prepare_constraints(self, uri: str, tables: Mapping[str, Mapping[str, Any]]) -> None:
+        """Prepare all schemas and parent-first inline constraints before any data is loaded."""
+        path, query = _file_path(uri, self.uri_params)
+        prepared: dict[str, tuple[str, str, pa.Schema, Mapping[str, Any], str]] = {}
+        dependencies: dict[str, set[str]] = {}
+        for table, options in tables.items():
+            _check_name(table, "table")
+            schema = options.get("schema")
+            if not isinstance(schema, pa.Schema):
+                raise ShapeError(f"table {table!r}: constraint preparation needs an Arrow schema")
+            schema_name = _check_name(
+                options.get("schema_name", query.get("schema", DEFAULT_SCHEMA)), "schema"
+            )
+            mode = options.get("write_mode", query.get("write_mode", "create"))
+            if mode not in WRITE_MODES:
+                raise ShapeError(f"unknown write mode {mode!r}")
+            nested = nested_mode(options.get("nested", query.get("nested", "native")))
+            ddl = self._constraints(options, schema, schema_name, table)
+            create_table_sql(
+                schema_name,
+                table,
+                schema,
+                columns=options.get("columns"),
+                primary_key=options.get("primary_key") or [],
+                nested=nested,
+                constraints=ddl,
+            )
+            prepared[table] = (schema_name, mode, schema, options, nested)
+            dependencies[table] = {
+                ref["ref_table"]
+                for ref in options.get("foreign_keys", [])
+                if ref["ref_table"] in tables and ref["ref_table"] != table
+            }
+            for ref in options.get("foreign_keys", []):
+                if ref["ref_table"] in tables:
+                    parent = tables[ref["ref_table"]].get("schema")
+                    if isinstance(parent, pa.Schema) and any(
+                        column not in parent.names for column in ref["ref_columns"]
+                    ):
+                        raise ShapeError(f"foreign key {ref['name']!r}: unknown parent column")
+        order: list[str] = []
+        pending = set(prepared)
+        while pending:
+            ready = [
+                name for name in prepared if name in pending and not dependencies[name] & pending
+            ]
+            if not ready:
+                raise ShapeError("cross-table foreign key cycle cannot be prepared by DuckDB")
+            order.extend(ready)
+            pending.difference_update(ready)
+        if not order:
+            return
+        driver = _driver()
+        con = None
+        try:
+            with _CONNECTION_LOCK:
+                con = driver.connect(path)
+            with _SCHEMA_LOCK:
+                for schema_name in dict.fromkeys(item[0] for item in prepared.values()):
+                    if schema_name != DEFAULT_SCHEMA:
+                        con.execute(f"CREATE SCHEMA IF NOT EXISTS {_quote(schema_name)}")
+            con.begin()
+            for table in order:
+                schema_name, mode, schema, options, nested = prepared[table]
+                self._prepare(
+                    con,
+                    schema_name,
+                    table,
+                    mode,
+                    schema,
+                    options.get("columns") or {},
+                    options.get("primary_key") or [],
+                    nested,
+                    options,
+                )
+            con.commit()
+        except ShapeError:
+            if con is not None:
+                self._rollback(con)
+            raise
+        except Exception as exc:
+            if con is not None:
+                self._rollback(con)
+            raise WriteError(
+                f"preparing DuckDB constraints failed ({type(exc).__name__}): {exc}"
+            ) from None
+        finally:
+            if con is not None:
+                with _CONNECTION_LOCK:
+                    con.close()
+
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        if (
+            "prepared_constraints" in options
+            and options["prepared_constraints"] is not _PREPARED_CONSTRAINTS
+        ):
+            raise ShapeError("prepared_constraints is an internal preparation marker")
         path, query = _file_path(uri, self.uri_params)
         nested = nested_mode(options.get("nested", query.get("nested", "native")))
         mode = options.get("write_mode", query.get("write_mode", "create"))
@@ -322,7 +453,13 @@ class DuckDbSink:
             )
         # The complete first schema is known before importing the driver or opening a file.
         create_table_sql(
-            schema_name, table, use_schema, columns=meta, primary_key=key, nested=nested
+            schema_name,
+            table,
+            use_schema,
+            columns=meta,
+            primary_key=key,
+            nested=nested,
+            constraints=self._constraints(options, use_schema, schema_name, table),
         )
         duckdb = _driver()
         return self._write(
@@ -338,6 +475,7 @@ class DuckDbSink:
             key,
             commit_rows,
             nested,
+            options,
         )
 
     def _write(
@@ -354,6 +492,7 @@ class DuckDbSink:
         key: list[str],
         commit_rows: int | None,
         nested: str,
+        options: Mapping[str, Any],
     ) -> int:
         try:
             with _CONNECTION_LOCK:
@@ -368,7 +507,7 @@ class DuckDbSink:
                     with _SCHEMA_LOCK:
                         con.execute(f"CREATE SCHEMA IF NOT EXISTS {_quote(schema_name)}")
                 con.begin()
-                self._prepare(con, schema_name, table, mode, schema, meta, key, nested)
+                self._prepare(con, schema_name, table, mode, schema, meta, key, nested, options)
                 if commit_rows:
                     con.commit()  # the table is there for readers before the first rows
                     con.begin()
@@ -395,9 +534,26 @@ class DuckDbSink:
                 kept = (
                     f"; {committed[0]} rows were committed before it failed" if committed[0] else ""
                 )
+                names = [
+                    item["name"]
+                    for kind in ("checks", "foreign_keys")
+                    for item in options.get(kind, [])
+                ]
+                if "unique" in str(exc).lower():
+                    from shape.generation.write_constraints import unique_constraint_name
+
+                    names.extend(
+                        unique_constraint_name(table, index, "duckdb")
+                        for index, _ in enumerate(options.get("unique", []))
+                    )
+                named = (
+                    "; configured constraints: " + ", ".join(names)
+                    if names and "constraint" in str(exc).lower()
+                    else ""
+                )
                 failure = WriteError(
                     f"writing {_qualified(schema_name, table)} in {path} failed "
-                    f"({type(exc).__name__}): {exc}{kept}",
+                    f"({type(exc).__name__}): {exc}{named}{kept}",
                     committed[0],
                 )
         finally:
@@ -419,6 +575,89 @@ class DuckDbSink:
         ).fetchone()
         return row is not None
 
+    def _verify_existing_constraints(
+        self,
+        con: Any,
+        schema_name: str,
+        table: str,
+        schema: pa.Schema,
+        meta: Mapping[str, Mapping[str, Any]],
+        key: Sequence[str],
+        nested: str,
+        options: Mapping[str, Any],
+    ) -> None:
+        """Compare catalog declarations before appending or deleting any existing row."""
+        rows = con.execute(
+            "SELECT constraint_type, constraint_column_names, expression, "
+            "referenced_table, referenced_column_names FROM duckdb_constraints() "
+            "WHERE database_name = current_database() AND schema_name = ? AND table_name = ?",
+            [schema_name, table],
+        ).fetchall()
+        if key and not any(row[0] == "PRIMARY KEY" and row[1] == list(key) for row in rows):
+            raise ShapeError(f"existing table {table!r}: PRIMARY KEY differs")
+        for reference in options.get("foreign_keys", []):
+            wanted = (
+                "FOREIGN KEY",
+                reference["columns"],
+                None,
+                reference["ref_table"],
+                reference["ref_columns"],
+            )
+            if wanted not in rows:
+                raise ShapeError(
+                    f"existing table {table!r}: foreign key {reference['name']!r} differs"
+                )
+        for columns in options.get("unique", []):
+            if not any(row[0] == "UNIQUE" and row[1] == columns for row in rows):
+                raise ShapeError(f"existing table {table!r}: UNIQUE {columns!r} is missing")
+        if not options.get("checks") and not options.get("defaults"):
+            return
+        plan = self._constraints(options, schema, schema_name, table)
+        # DuckDB normalizes CHECK/default expressions itself. A temporary empty table
+        # supplies that canonical spelling without executing any catalog expression.
+        probe = "shape_constraint_" + uuid.uuid4().hex
+        expected = ConstraintDDL(plan.definitions, (), (), plan.defaults, ())
+        ddl = create_table_sql(
+            DEFAULT_SCHEMA,
+            probe,
+            schema,
+            columns=meta,
+            primary_key=key,
+            nested=nested,
+            constraints=expected,
+        )
+        con.execute(ddl.replace("CREATE TABLE ", "CREATE TEMP TABLE ", 1))
+        try:
+            checks = con.execute(
+                "SELECT expression FROM duckdb_constraints() WHERE database_name = 'temp' "
+                "AND table_name = ? AND constraint_type = 'CHECK'",
+                [probe],
+            ).fetchall()
+            actual = {row[2] for row in rows if row[0] == "CHECK"}
+            if any(expression[0] not in actual for expression in checks):
+                names = ", ".join(check["name"] for check in options.get("checks", []))
+                raise ShapeError(f"existing table {table!r}: CHECK constraints differ ({names})")
+            defaults = dict(
+                con.execute(
+                    "SELECT column_name, column_default FROM information_schema.columns "
+                    "WHERE table_catalog = current_database() AND table_schema = ? "
+                    "AND table_name = ?",
+                    [schema_name, table],
+                ).fetchall()
+            )
+            expected_defaults = dict(
+                con.execute(
+                    "SELECT column_name, column_default FROM information_schema.columns "
+                    "WHERE table_catalog = 'temp' AND table_name = ?",
+                    [probe],
+                ).fetchall()
+            )
+            for column in plan.defaults:
+                if defaults.get(column) != expected_defaults.get(column):
+                    raise ShapeError(f"existing table {table!r}: DEFAULT for {column!r} differs")
+        finally:
+            con.execute(f"DROP TABLE {_qualified(DEFAULT_SCHEMA, probe)}")
+
     def _prepare(
         self,
         con: Any,
@@ -429,13 +668,33 @@ class DuckDbSink:
         meta: Mapping[str, Mapping[str, Any]],
         key: Sequence[str],
         nested: str,
+        options: Mapping[str, Any],
     ) -> None:
         name = _qualified(schema_name, table)
         exists = self._exists(con, schema_name, table)
+        if options.get("prepared_constraints") is _PREPARED_CONSTRAINTS:
+            if not exists:
+                raise ShapeError(f"prepared table {table!r} is missing before loading")
+            return
         if mode == "create" and exists:
             raise ShapeError(
                 f"table {table} already exists; set write_mode to append, truncate, replace or "
                 "upsert to write into it"
+            )
+        if exists and mode in ("replace", "truncate"):
+            incoming = con.execute(
+                "SELECT constraint_name FROM duckdb_constraints() "
+                "WHERE schema_name = ? AND referenced_table = ? ORDER BY constraint_name",
+                [schema_name, table],
+            ).fetchone()
+            if incoming:
+                raise ShapeError(
+                    f"cannot {mode} referenced table {table!r}: foreign key {incoming[0]!r} "
+                    "must be preserved; no data was loaded"
+                )
+        if exists and mode != "replace":
+            self._verify_existing_constraints(
+                con, schema_name, table, schema, meta, key, nested, options
             )
         if mode == "replace" and exists:
             con.execute(f"DROP TABLE {name}")
@@ -445,7 +704,13 @@ class DuckDbSink:
         if not exists:
             con.execute(
                 create_table_sql(
-                    schema_name, table, schema, columns=meta, primary_key=key, nested=nested
+                    schema_name,
+                    table,
+                    schema,
+                    columns=meta,
+                    primary_key=key,
+                    nested=nested,
+                    constraints=self._constraints(options, schema, schema_name, table),
                 )
             )
 

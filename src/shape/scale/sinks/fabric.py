@@ -122,7 +122,7 @@ class _DatabaseSink(WriterSink):
         if self._schema is not None and table in self._schema.tables:
             from shape.generation.output import sql_options
 
-            options.update(sql_options(self._schema, table))
+            options.update(sql_options(self._schema, table, constraints="none"))
         return options
 
 

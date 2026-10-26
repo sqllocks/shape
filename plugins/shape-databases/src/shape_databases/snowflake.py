@@ -131,6 +131,7 @@ class SnowflakeSink(DatabaseSink):
     """``RecordBatch``es for one table to a Snowflake table: Parquet, ``PUT``, ``COPY INTO``."""
 
     name = "snowflake"
+    prepare_constraints = DatabaseSink._prepare_constraint_tables
     schemes = ("snowflake",)
     dialect = "snowflake"
     password_env = ("SNOWFLAKE_PASSWORD",)
@@ -139,6 +140,22 @@ class SnowflakeSink(DatabaseSink):
         "SELECT 1 FROM information_schema.tables "
         "WHERE table_schema = COALESCE(%s, CURRENT_SCHEMA()) AND table_name = %s"
     )
+
+    def _incoming_constraint(self, conn: Any, plan: Plan) -> str | None:
+        from ._cloud_constraint_catalog import incoming_constraint
+
+        return incoming_constraint(conn, plan, self.dialect)
+
+    def _verify_existing_constraints(
+        self,
+        conn: Any,
+        plan: Plan,
+        schema: pa.Schema,
+        first: pa.RecordBatch | None,
+    ) -> None:
+        from ._cloud_constraint_catalog import verify_existing_constraints
+
+        verify_existing_constraints(conn, plan, schema, self.dialect)
 
     # -- plan --------------------------------------------------------------------------------
     def parse_target(self, uri: str) -> Target:
@@ -198,6 +215,7 @@ class SnowflakeSink(DatabaseSink):
             plan.columns,
             plan.primary_key,
             plan.options.get("nested", "native"),
+            constraints=self._constraint_ddl(plan, schema),
         )
 
     def _peek(

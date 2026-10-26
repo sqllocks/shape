@@ -243,3 +243,10 @@ def test_a_writer_that_stops_reading_early_is_an_error_not_a_hang():
     assert not worker.is_alive(), "the sink hung"
     assert isinstance(outcome[0], RuntimeError)
     assert "'t'" in str(outcome[0]) and "returned before" in str(outcome[0])
+
+
+def test_scale_database_options_preserve_primary_only_constraints():
+    writer = RecordingWriter()
+    run([WarehouseSink("warehouse://host/db", "onelake://ws/lh/Files", writer=writer)])
+    for call in writer.calls:
+        assert not {"foreign_keys", "unique", "checks", "defaults"} & call["options"].keys()

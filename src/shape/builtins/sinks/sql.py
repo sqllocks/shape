@@ -33,6 +33,7 @@ import pyarrow.types as pat  # type: ignore[import-untyped]
 
 import shape
 from shape.builtins.sources.files import output_path
+from shape.generation.write_constraints import ConstraintDDL, compile_constraints
 from shape.io.store import replace_atomically
 from shape.plugins.schemes import require_scheme
 from shape.security.sqltext import postgres_text, tsql_text
@@ -360,6 +361,21 @@ class SqlSink:
 
         lines: list[str] = []
         type_dialect = "tsql-fabric-warehouse" if fabric else dialect
+        constraints = (
+            compile_constraints(
+                options,
+                columns=schema.names,
+                table=table,
+                dialect=type_dialect,
+                schema_name=options.get("schema_name"),
+                table_prefix=options.get("table_prefix") or "",
+            )
+            if any(k in options for k in ("foreign_keys", "unique", "checks", "defaults"))
+            else ConstraintDDL((), (), (), {}, ())
+        )
+        for note in constraints.notes:
+            log.warning("%s", note)
+            lines.append("-- NOTE: " + _comment(note))
         if options.get("drop", True):
             if dialect == "tsql" and not fabric:
                 name_literal = qualified.replace("'", "''")
@@ -380,6 +396,8 @@ class SqlSink:
             info = meta.get(field.name, {})
             nullable = bool(info.get("nullable", True)) and field.name not in key
             sql_type = _column_type(field, info, type_dialect)
+            if field.name in constraints.defaults:
+                sql_type += f" DEFAULT {constraints.defaults[field.name]}"
             if info.get("identity") and dialect == "tsql" and not fabric:
                 spec = info["identity"] if isinstance(info["identity"], Mapping) else {}
                 seed = _identity_number(spec.get("start", 1), "identity start")
@@ -395,8 +413,13 @@ class SqlSink:
                 if dialect == "mysql"
                 else f"    CONSTRAINT {q('PK_' + table)} PRIMARY KEY ({cols})"
             )
+        defs.extend("    " + clause for clause in constraints.definitions)
         lines.append(",\n".join(defs))
         lines.append(");")
         if use_go:
             lines.append("GO")
+        for clause in (*constraints.after_create, *constraints.foreign_keys):
+            lines.append(f"ALTER TABLE {qualified} ADD {clause};")
+            if use_go:
+                lines.append("GO")
         return "\n".join(lines)
