@@ -59,6 +59,7 @@ def cmd_report_card(args: dict[str, Any], ctx: Context) -> Any:
         tiers=[int(t) for t in args["tiers"]] if args.get("tiers") else (1, 2),
         holdout=args.get("holdout"),
         manifest=args.get("manifest"),
+        data_format=args.get("format", "auto"),
         require=list(args.get("require") or ()),
     )
     data = card.to_dict()
@@ -121,6 +122,12 @@ COMMANDS = [
                 "the synthetic data: a data file, or a folder with one file per table",
                 True,
                 path="read",
+            ),
+            "format": Arg(
+                "string",
+                "input data format for real, synthetic and holdout (default auto)",
+                enum=("auto", "csv", "parquet", "jsonl"),
+                since="1.4",
             ),
             "config": Arg(
                 "string",

@@ -32,6 +32,12 @@ def add_arguments(sub: Any) -> None:
     rc.add_argument("real", metavar="REAL")
     rc.add_argument("synthetic", metavar="SYNTHETIC")
     rc.add_argument(
+        "--format",
+        choices=("auto", "csv", "parquet", "jsonl"),
+        default="auto",
+        help="input data format for real, synthetic and holdout (default: auto)",
+    )
+    rc.add_argument(
         "--config", metavar="VERIFY.json", help="a shape-verify-config file (see docs/VERIFY.md)"
     )
     rc.add_argument(
@@ -95,6 +101,7 @@ def run(a: argparse.Namespace) -> int:
         tiers=_tiers(a.tiers),
         holdout=a.holdout,
         manifest=a.manifest,
+        data_format=a.format,
         require=[s.strip() for s in a.require.split(",") if s.strip()],
     )
     data = card.to_dict()
