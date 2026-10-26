@@ -85,7 +85,7 @@ def test_wanted1_original_retail_without_decimal_dimensions_is_refused(tmp_path,
 def test_wanted5_temporal_preview_matches_actual_write(tmp_path, declared, unit, output_type):
     import argparse
 
-    from shape_databases._sql import create_table_sql
+    from shape_databases import PostgresSink
 
     from shape.cli.generation import _target_ddl
     from shape.generation.engine import Engine
@@ -118,8 +118,8 @@ def test_wanted5_temporal_preview_matches_actual_write(tmp_path, declared, unit,
     )
     preview = _target_ddl(args, schema)[0]["sql"]
     result = Engine(schema, row_counts={"items": 1}).generate()
-    actual = create_table_sql(
-        None, "items", result.tables["items"].schema, "postgres", **sql_options(schema, "items")
+    actual = PostgresSink().ddl(
+        args.to[0], "items", result.tables["items"].schema, **sql_options(schema, "items")
     )
     assert preview == actual
 
@@ -163,3 +163,30 @@ def test_wanted5_preview_never_resolves_vault_credentials(tmp_path, monkeypatch)
         sink_config=["postgres.password=kv://vault-one/password"],
     )
     assert "CREATE TABLE" in _target_ddl(args, schema)[0]["sql"]
+
+
+@pytest.mark.parametrize("feature", ["checks", "defaults", "nested"])
+def test_offline_ddl_retains_constraint_and_nested_options(monkeypatch, feature):
+    import pyarrow as pa
+    from shape_databases import PostgresSink
+
+    sink = PostgresSink(connect=lambda **kw: pytest.fail("connected"))
+    schema = pa.schema([("id", pa.int32())])
+    options = {}
+    if feature == "checks":
+        options["checks"] = [
+            {
+                "name": "positive",
+                "expression": {"op": ">", "left": {"column": "id"}, "right": {"literal": 0}},
+            }
+        ]
+        expected = 'CONSTRAINT "positive" CHECK'
+    elif feature == "defaults":
+        options["defaults"] = {"id": 7}
+        expected = "DEFAULT 7"
+    else:
+        schema = pa.schema([("id", pa.list_(pa.int32()))])
+        options["nested"] = "json"
+        expected = '"id" TEXT'
+    ddl = sink.ddl("postgresql://shape@localhost/db", "items", schema, **options)
+    assert expected in ddl
