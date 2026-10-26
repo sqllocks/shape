@@ -13,6 +13,7 @@ import queue
 import threading
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from concurrent.futures import ThreadPoolExecutor
+from itertools import chain
 from pathlib import Path
 from typing import Any
 
@@ -68,7 +69,13 @@ def writer_format_versions(formats: Iterable[str]) -> dict[str, int]:
     return out
 
 
-def sql_options(schema: GenSchema, table: str) -> dict[str, Any]:
+def sql_options(
+    schema: GenSchema,
+    table: str,
+    *,
+    constraints: str = "keys",
+    contract: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     """The per-table options the ``sql`` sink takes from the generation schema."""
     tdef = schema.tables[table]
     columns: dict[str, dict[str, Any]] = {}
@@ -88,7 +95,16 @@ def sql_options(schema: GenSchema, table: str) -> dict[str, Any]:
                 "step": int(c.generator.get("step", 1)),
             }
         columns[c.name] = meta
-    return {"primary_key": list(tdef.primary_key), "columns": columns}
+    from shape.generation.sql_constraints import derive_constraints
+
+    if constraints == "keep":
+        constraints = "none"  # legacy explicit policy: keep existing constraints untouched
+
+    return {
+        "primary_key": list(tdef.primary_key),
+        "columns": columns,
+        **derive_constraints(schema, table, constraints=constraints, contract=contract),
+    }
 
 
 def identity_references(schema: GenSchema, table: str) -> list[dict[str, str]]:
@@ -205,8 +221,31 @@ def _refuse_nested(fmt: str, schema: GenSchema, table: str) -> None:
 def _options(fmt: str, schema: GenSchema, table: str, options: Mapping[str, Any]) -> dict[str, Any]:
     _refuse_nested(fmt, schema, table)
     merged: dict[str, Any] = dict(options)
+    if fmt in ("sql", "delta"):
+        # Delta's ``constraints`` option is its table-feature bool/mapping, not
+        # the generation policy selecting keys/all/none. Keep the namespaces
+        # separate while retaining the SQL sink's policy spelling.
+        policy = options.get("sql_constraints")
+        selection = options.get("constraints")
+        legacy_policy = isinstance(selection, str) and selection in {
+            "keys",
+            "all",
+            "none",
+            "keep",
+            "disable",
+        }
+        if policy is None:
+            policy = selection if fmt == "sql" or legacy_policy else "keys"
+        if fmt == "delta" and legacy_policy:
+            merged.pop("constraints")
+        derived = sql_options(
+            schema,
+            table,
+            constraints=policy or "keys",
+            contract=options.get("contract"),
+        )
+        merged = {**derived, **merged}
     if fmt == "sql":
-        merged = {**sql_options(schema, table), **merged}
         model = schema.model
         merged.setdefault(
             "header",
@@ -500,6 +539,7 @@ class TargetOptions:
         manifest: bool = False,
         partition_by: list[str] | None = None,
         constraints: str | None = None,
+        contract: Mapping[str, Any] | None = None,
         extra: Mapping[str, Mapping[str, Any]] | None = None,
     ) -> None:
         self.fmt = fmt
@@ -514,6 +554,7 @@ class TargetOptions:
         self.manifest = manifest
         self.partition_by = partition_by
         self.constraints = constraints
+        self.contract = contract
         #: the generation schema when ``for_sink`` is not given it (``shape emit``): a SQL Server
         #: target takes only what ``upsert`` and identity columns need from it, so the tables an
         #: emit creates keep the DDL they always had
@@ -555,9 +596,26 @@ class TargetOptions:
                     raise ValueError(f"unknown --write-mode {self.write_mode!r} for a database")
                 out["write_mode"] = db_mode
             if schema is not None:
-                db = sql_options(schema, table)
-                out["primary_key"] = db["primary_key"]
-                out["columns"] = db["columns"]
+                out.update(
+                    sql_options(
+                        schema,
+                        table,
+                        constraints=(self.constraints or "keys")
+                        if name
+                        in {
+                            "postgres",
+                            "mysql",
+                            "duckdb",
+                            "sqlserver",
+                            "sql-database",
+                            "warehouse",
+                            "snowflake",
+                            "databricks",
+                        }
+                        else "none",
+                        contract=self.contract,
+                    )
+                )
             if name == "sqlserver":
                 self._sqlserver(out, schema, table)
             elif (
@@ -567,6 +625,12 @@ class TargetOptions:
                 and table in self.schema_hint.tables
             ):  # an emit has no schema here: an upsert still needs the key to match rows on
                 out["primary_key"] = list(self.schema_hint.tables[table].primary_key)
+        if name == "delta" and schema is not None:
+            out.update(
+                sql_options(
+                    schema, table, constraints=self.constraints or "keys", contract=self.contract
+                )
+            )
         if self.constraints == "disable":
             if name != "sqlserver":
                 raise ValueError("--sql-constraints disable applies to mssql:// targets only")
@@ -622,6 +686,12 @@ def _feed(
         if finished is not None:
             finished.set()
 
+    from shape.generation.write_constraints import _PreparedTransaction
+
+    transaction = options.get("_constraint_transaction")
+    if isinstance(transaction, _PreparedTransaction):
+        with transaction.lock:
+            return int(sink.write(uri, table, batches(), **options))
     return int(sink.write(uri, table, batches(), **options))
 
 
@@ -634,9 +704,10 @@ def preflight(
     """Let every sink that has a ``preflight(uri, {table: options})`` refuse an impossible
     combination of options for the whole run, before anything is generated or written."""
     for uri, name, sink in sinks:
+        planned = {table: options.for_sink(name, schema, table) for table in tables}
         check = getattr(sink, "preflight", None)
         if check is not None:
-            check(uri, {table: options.for_sink(name, schema, table) for table in tables})
+            check(uri, planned)
 
 
 def write_targets(
@@ -658,15 +729,70 @@ def write_targets(
     result = engine.generate() if post else None
     names = list(result.generation_order if result is not None else engine.order)
     preflight(sinks, options, engine.schema, names)
+    # A supporting database creates every table and adds the foreign keys before
+    # data loads. That keeps constraint violations inside the normal load
+    # transaction, including its commit_rows accounting. Only one batch per
+    # table is read to discover the actual Arrow schemas before this phase.
+    preparing = {
+        i: prepare
+        for i, (_, _, sink) in enumerate(sinks)
+        if options.constraints not in ("none", "keep")
+        and callable(prepare := getattr(sink, "prepare_constraints", None))
+    }
+    from shape.generation.write_constraints import _PreparedTransaction
+
+    transactions: dict[int, _PreparedTransaction] = {}
+    sources: dict[str, Iterator[pa.RecordBatch]] = {}
+    schemas: dict[str, pa.Schema] = {}
+    if preparing:
+        first_batches: dict[str, pa.RecordBatch | None] = {}
+        for name in names:
+            if result is not None:
+                table = result.tables[name]
+                source = iter(table.to_batches())
+                schemas[name] = table.schema
+            else:
+                source = engine.iter_chunks(name, chunk_rows)
+            first = next(source, None)
+            if first is not None:
+                schemas[name] = first.schema
+            elif name not in schemas:
+                raise ValueError(f"table {name!r} produced no batches and no Arrow schema")
+            first_batches[name] = first
+            sources[name] = chain(() if first is None else (first,), source)
+        try:
+            for index, prepare in preparing.items():
+                uri, sink_name, _ = sinks[index]
+                transaction = prepare(
+                    uri,
+                    {
+                        name: {
+                            **options.for_sink(sink_name, engine.schema, name),
+                            "schema": schemas[name],
+                            "first_batch": first_batches[name],
+                        }
+                        for name in names
+                    },
+                )
+                if isinstance(transaction, _PreparedTransaction):
+                    transactions[index] = transaction
+        except BaseException:
+            for transaction in transactions.values():
+                transaction.finish(False)
+            raise
     written: dict[str, dict[str, int]] = {redact(u): {} for u in uris}
     lock = threading.Lock()
 
-    def one(name: str) -> None:
+    def load_one(name: str) -> None:
         schema: pa.Schema | None = None
-        if result is not None:
+        source: Iterator[pa.RecordBatch]
+        if name in sources:
+            schema = schemas[name]
+            source = _prefetch(sources[name])
+        elif result is not None:
             table = result.tables[name]
             schema = table.schema
-            source: Iterator[pa.RecordBatch] = iter(table.to_batches())
+            source = iter(table.to_batches())
         else:
             source = _prefetch(engine.iter_chunks(name, chunk_rows))
         queues = [queue.Queue[Any](maxsize=_QUEUE_DEPTH) for _ in sinks]
@@ -678,6 +804,13 @@ def write_targets(
             opts = options.for_sink(sink_name, engine.schema, name)
             if schema is not None:
                 opts["schema"] = schema
+            if i in preparing:
+                from shape.generation.write_constraints import _PREPARED_CONSTRAINTS
+
+                opts["prepared_constraints"] = _PREPARED_CONSTRAINTS
+            if i in transactions:
+                opts["_constraint_transaction"] = transactions[i]
+                opts["connection"] = transactions[i].connection
             finished = threading.Event()
             try:
                 counts[i] = _feed(sink, uri, name, queues[i], opts, finished)
@@ -708,5 +841,34 @@ def write_targets(
             for (uri, _, _), rows in zip(sinks, counts, strict=True):
                 written[redact(uri)][name] = rows
 
-    _run_parallel(names, one, _writers(max_workers))
+    transaction_run_lock = threading.Lock()
+
+    def one(name: str) -> None:
+        if transactions:
+            # All retained destinations must process the same table together: allowing
+            # different tables to acquire different destination locks can deadlock the
+            # bounded fan-out queues. Destinations for this table still run in parallel.
+            with transaction_run_lock:
+                load_one(name)
+        else:
+            load_one(name)
+
+    try:
+        if preparing:
+            for level in engine.levels:
+                _run_parallel(level, one, _writers(max_workers))
+        else:
+            _run_parallel(names, one, _writers(max_workers))
+    except BaseException:
+        for transaction in transactions.values():
+            transaction.finish(False)
+        raise
+    else:
+        try:
+            for transaction in transactions.values():
+                transaction.finish(True)
+        except BaseException:
+            for transaction in transactions.values():
+                transaction.finish(False)
+            raise
     return written

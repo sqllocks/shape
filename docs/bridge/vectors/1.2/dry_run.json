@@ -1,0 +1,83 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "retail-small",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "retail",
+          "scale": "small"
+        },
+        "command": "dry_run",
+        "id": "retail-small"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "dry_run",
+        "id": "retail-small",
+        "ok": true,
+        "result": {
+          "domain": "retail",
+          "estimated_bytes": 2472500,
+          "generation_order": [
+            "customer",
+            "address",
+            "product_category",
+            "product",
+            "promotion",
+            "store",
+            "order",
+            "order_line",
+            "return"
+          ],
+          "issues": [],
+          "missing_strategies": [],
+          "ok": true,
+          "planned_rows": {
+            "address": 1500,
+            "customer": 1000,
+            "order": 5000,
+            "order_line": 12500,
+            "product": 500,
+            "product_category": 50,
+            "promotion": 200,
+            "return": 850,
+            "store": 150
+          },
+          "scale": "small",
+          "total_rows": 21750
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-scale",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "retail",
+          "scale": "gigantic"
+        },
+        "command": "dry_run",
+        "id": "unknown-scale"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "dry_run",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "unknown scale 'gigantic'; the presets are: fabric_demo, small, medium, large, xlarge, warehouse, xxl, xxxl"
+        },
+        "id": "unknown-scale",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "dry_run",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

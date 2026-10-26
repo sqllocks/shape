@@ -736,6 +736,25 @@ requirements:
   owner: integrations
 
 
+- id: SHAPE-SINK-002
+  title: Opt-in Delta writer features
+  level: L1
+  milestone: M1
+  priority: MUST
+  text: Delta write features are opt-in, declare their protocol and feature requirements, reject unsupported installed writers before mutation, and preserve the default reader 1 / writer 2 output. Constraint violations name the rule and leave the previous version unchanged.
+  verify: [unit, conformance, compatibility]
+  owner: sinks
+
+- id: SHAPE-SINK-003
+  title: Native nested database values
+  level: L1
+  milestone: W9-06
+  priority: MUST
+  text: Database sinks support documented native list, struct and map types, preserve null and empty containers, apply explicit temporal normalization, and refuse unsupported nested shapes before connecting with the column and truthful alternative named. JSON transports preserve decimal and temporal text, reject ambiguous object map keys and non-finite values, and retain an explicit legacy JSON mode. Matching sources retain native physical types; JSON-backed restoration requires the original Arrow schema, parses once and refuses ambiguous data or precision loss.
+  verify: [unit, conformance]
+  owner: databases
+
+
 - id: SHAPE-ICEBERG-001
   title: Optional Iceberg catalogs
   text: Iceberg sources and sinks load their optional dependency only when used and accept local SQL or named catalogs with credential references.
@@ -801,6 +820,18 @@ requirements:
   verify: [unit, conformance, roundtrip]
   owner: fabric
 
+- id: SHAPE-SINK-001
+  title: SQL write type fidelity
+  text: SQL sinks resolve supported Arrow widths, temporal units and UTC instants, explicit decimal dimensions and declared or unbounded string widths consistently in writes and offline DDL previews.
+  verify: [sql-write-type-conformance]
+  tests:
+    - tests/builtins/test_w9_03_types.py
+    - tests/cli/test_w9_03_ddl.py
+    - plugins/shape-databases/tests/test_w9_03_ddl.py
+    - plugins/shape-databases/tests/test_w9_03.py
+    - plugins/shape-fabric/tests/test_w9_03.py
+  owner: generation
+
 - id: SHAPE-STREAM-METADATA-001
   title: Broker message metadata
   level: L1
@@ -809,6 +840,16 @@ requirements:
   text: Kafka and Event Hubs support column keys and headers, preserve replay identity, refuse reserved header names and unknown metadata columns before sending, and optionally decode broker metadata outside default drift comparisons.
   verify: [conformance]
   owner: streaming
+
+- id: SHAPE-SINK-004
+  title: Derived database write constraints
+  level: L1
+  milestone: W9-04
+  priority: MUST
+  text: Generation derives named foreign keys, unique keys, structured checks and literal defaults under keys/all/none policies. Supported dialects enforce declarations; informational or unsupported kinds are explicit. Preparation precedes loading, safe coordinated reruns retain transaction rollback, violations retain exact committed-row accounting, and dry runs expose constraint DDL without opening connections.
+  verify: [unit, conformance, compatibility, database-emulator]
+  owner: databases
+
 
 - id: SHAPE-NESTED-CHILD-001
   title: Nested child profiling

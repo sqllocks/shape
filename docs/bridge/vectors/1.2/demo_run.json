@@ -1,0 +1,86 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "dry-run",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "dry_run": true,
+          "rows": 100,
+          "scenario": "retail"
+        },
+        "command": "demo_run",
+        "id": "dry-run"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "demo_run",
+        "id": "dry-run",
+        "ok": true,
+        "result": {
+          "artifact_count": 0,
+          "error": null,
+          "fidelity_score": null,
+          "mode": "inference",
+          "scenario": "retail",
+          "session_id": "<any>",
+          "success": true
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-scenario",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "scenario": "ghost"
+        },
+        "command": "demo_run",
+        "id": "unknown-scenario"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "demo_run",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "scenario 'ghost' not found. Available: adventureworks, enterprise, healthcare, retail"
+        },
+        "id": "unknown-scenario",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-rows",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "rows": "100"
+        },
+        "command": "demo_run",
+        "id": "bad-rows"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "demo_run",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'rows' must be of type integer, got str"
+        },
+        "id": "bad-rows",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "demo_run",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

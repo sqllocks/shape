@@ -102,7 +102,7 @@ def test_every_1_1_vector_gets_the_recorded_response_from_the_1_2_bridge(
             monkeypatch.setattr("shape.scale.http.urllib_transport", FakeFabric())
         actual = bridge.handle(substitute(one["request"], str(directory)))
         expected = substitute(one["response"], str(directory))
-        assert actual["api_version"] == API_VERSION == "1.2"  # the one field that differs
+        assert actual["api_version"] == API_VERSION == "1.3"  # the one field that differs
         assert differences(without_version(expected), without_version(actual)) == [], (
             path.stem,
             one["name"],

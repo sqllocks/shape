@@ -287,9 +287,12 @@ class BigQuerySink(DatabaseSink):
             raise ShapeError("truncate_ns must be true or false")
         plan = super().plan(uri, table, opts)
         if "max_bytes_billed" not in options and "max_bytes_billed" in plan.target.params:
-            opts["max_bytes_billed"] = _integer(
-                plan.target.params["max_bytes_billed"], "max_bytes_billed", 1
-            )
+            plan.options = {
+                **plan.options,
+                "max_bytes_billed": _integer(
+                    plan.target.params["max_bytes_billed"], "max_bytes_billed", 1
+                ),
+            }
         identifier(plan.table, "table")
         if plan.schema_name:
             identifier(plan.schema_name, "dataset")

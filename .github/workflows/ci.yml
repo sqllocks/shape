@@ -52,6 +52,10 @@ jobs:
       # semantic_model output (tests/demo_cmd) needs it; shape-kafka: the dry run of a kafka://
       # sink (tests/cli/test_dry_run.py, W1-14 x W2-09); the plan's environment (§1) installs the
       # first-party plugins.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/shape-kernel
+          shared-key: native-ci-release
       - run: uv sync --locked
       # T-27 scope: src tests plugins benchmarks/vs_refengine rust (only the paths that exist yet).
       - run: uv run --locked --no-sync ruff check src tests plugins benchmarks/vs_refengine
@@ -77,6 +81,12 @@ jobs:
       - run: uv run --locked --no-sync python scripts/check_v1_done.py
       # W5-05: the smoke suite of starter scenarios, each against its answer key
       - run: uv run --locked --no-sync python -m shape suite run smoke --scale small
+      - name: Check write acceptance before full suite
+        run: >-
+          uv run --locked --no-sync python -m pytest -q -p pytest_annotate
+          tests/builtins/test_w9_03_types.py tests/generation/test_delta_features.py
+          tests/generation/test_unique_string_width.py tests/bridge/test_design_1_3.py
+          tests/generation/test_write_constraint_ddl.py
       # The Fabric demo tests need Java, PySpark and unixODBC; they and the demo content tests
       # run in the fabric-demo job below.
       # --cov-fail-under is the measured coverage (86.55% on P0-06), rounded down.
@@ -84,7 +94,7 @@ jobs:
       # (marker "realtime") run on Linux only; the macOS and Windows hosted runners freeze the
       # whole process (20-90 ms on macOS, 4-5.6 s on Windows).
       - run: >-
-          uv run --locked --no-sync python -m pytest -q -p pytest_annotate -m "not emulator and not live and not heavy and not nightly${{ matrix.os != 'ubuntu-latest' && ' and not realtime' || '' }}"
+          uv run --locked --no-sync python -m pytest -q -p pytest_annotate ${{ runner.os != 'Linux' && '-n 2 --dist=loadscope' || '' }} -m "not emulator and not live and not heavy and not nightly${{ matrix.os != 'ubuntu-latest' && ' and not realtime' || '' }}"
           --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/docs
           --cov=shape --cov-fail-under=86
       # million-value differential and property tests: run without coverage tracing (10x faster)
@@ -141,6 +151,10 @@ jobs:
           version: "0.8.17"
           python-version: "3.11"
           enable-cache: true
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/shape-kernel
+          shared-key: native-ci-release
       - run: uv sync --locked
       # DuckDB downloads its delta extension on first use; fetch it now, as the user the tests
       # run as, so the delta-fallback and fingerprint tests load it from the local cache offline.
@@ -183,6 +197,10 @@ jobs:
         run: |
           echo "SHAPE_DOCS_DBT_PACKAGES=$RUNNER_TEMP/docs-dbt-packages" >> "$GITHUB_ENV"
           echo "PIP_FIND_LINKS=$RUNNER_TEMP/docs-build-wheels" >> "$GITHUB_ENV"
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/shape-kernel
+          shared-key: native-ci-release
       - run: uv sync --locked --group docs
       - run: uv run --locked --no-sync python scripts/check_docs_requirements.py
       - name: SQL Server client runtime
@@ -237,6 +255,10 @@ jobs:
           version: "0.8.17"
           python-version: "3.11"
           enable-cache: true
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/shape-kernel
+          shared-key: native-ci-release
       - run: uv sync --locked
       - run: uv run --locked --no-sync python scripts/offline_lock.py generate "$RUNNER_TEMP/offline-lock"
       - run: uv run --locked --no-sync python scripts/offline_lock.py check "$RUNNER_TEMP/offline-lock"
@@ -259,6 +281,10 @@ jobs:
           version: "0.8.17"
           python-version: "3.11"
           enable-cache: true
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/shape-kernel
+          shared-key: native-ci-release
       - run: uv sync --locked
       - run: uv run --locked --no-sync python scripts/check_plugin_skeletons.py --build "${{ runner.temp }}/skeleton-wheels"
       - shell: bash
@@ -285,6 +311,10 @@ jobs:
           python-version: "3.11"
           enable-cache: true
       # shape-databases: the fabric write-path tests check that another database's sink refuses upsert (W2-10)
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/shape-kernel
+          shared-key: native-ci-release
       - run: uv sync --locked
       # The plugins' contract tests (no external service); emulator, live and dbt-build runs are nightly.
       - run: uv run --locked --no-sync python -m pytest -q -m "not emulator and not live and not dbt" plugins/shape-kafka/tests plugins/shape-eventhubs/tests plugins/shape-sqlserver/tests plugins/shape-fabric/tests plugins/shape-dbt/tests plugins/shape-behavior/tests plugins/shape-healthcare-codes/tests plugins/shape-healthcare-standards/tests
@@ -304,6 +334,10 @@ jobs:
           version: "0.8.17"
           python-version: "3.11"
           enable-cache: true
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/shape-kernel
+          shared-key: native-ci-release
       - run: uv sync --locked
       # #334: the two tests in tests/ that need shape-databases run here, the only job with it
       # (they generate from an installed domain, hence shape-domains).
@@ -330,6 +364,10 @@ jobs:
           version: "0.8.17"
           python-version: "3.13"
           enable-cache: true
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/shape-kernel
+          shared-key: native-ci-release
       - run: uv sync --locked
       - run: uv run --locked --no-sync pip-audit --skip-editable
   fabric-demo:
@@ -346,6 +384,10 @@ jobs:
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '17'}
       - run: sudo apt-get update -q && sudo apt-get install -y -q unixodbc
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/shape-kernel
+          shared-key: native-ci-release
       - run: uv sync --locked --group fabric-demo
       - run: uv run --locked --no-sync python -m pytest -q tests/demo/fabric tests/demo/content
   pure-wheel:
@@ -363,6 +405,10 @@ jobs:
           python-version: "3.11"
           enable-cache: true
       - run: sudo apt-get update -q && sudo apt-get install -y -q unixodbc
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/shape-kernel
+          shared-key: native-ci-release
       - run: uv sync --locked
       - run: uv run --locked --no-sync bash scripts/ci_pure_wheel.sh python
   bench-quick:
@@ -429,6 +475,10 @@ jobs:
           version: "0.8.17"
           python-version: "3.13"
           enable-cache: true
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust/shape-kernel
+          shared-key: native-ci-release
       - run: uv sync --locked
       - run: uv build
       - name: User installation from the built wheel (plain pip, clean venv)

@@ -20,7 +20,7 @@ from shape.errors import ShapeError
 
 URI = "snowflake://shape@xy12345.eu-west-1/SHAPE_DB/PUBLIC?warehouse=WH&role=LOADER"
 COPY = (
-    'COPY INTO "customer" FROM @%"customer" FILE_FORMAT = (TYPE = PARQUET) '
+    'COPY INTO "customer" FROM @%"customer" FILE_FORMAT = (TYPE = PARQUET USE_LOGICAL_TYPE = TRUE) '
     "MATCH_BY_COLUMN_NAME = CASE_SENSITIVE PURGE = TRUE"
 )
 BEGIN = "-----BEGIN " + "PRIVATE KEY-----"
@@ -80,6 +80,7 @@ def test_connection_parameters_come_from_the_uri(server):
         "warehouse": "WH",
         "role": "LOADER",
         "autocommit": False,
+        "session_parameters": {"TIMEZONE": "UTC"},
         "password": "pw",
     }
 
@@ -147,7 +148,7 @@ def test_schema_name_table_prefix_primary_key_and_columns(server):
     )
     create = next(s for s in server.statements() if s.startswith("CREATE TABLE"))
     assert create.startswith('CREATE TABLE "App"."gen_customer" (')
-    assert '"id" NUMBER(38,0) NOT NULL' in create
+    assert '"id" NUMBER(19,0) NOT NULL' in create
     assert '"name" VARCHAR(40) NOT NULL' in create
     assert 'PRIMARY KEY ("id")' in create
     assert 'COPY INTO "App"."gen_customer" FROM @"App".%"gen_customer" ' in "\n".join(
@@ -440,7 +441,7 @@ def test_hostile_table_and_column_names_are_quoted(server, name):
     statements = server.statements()
     create = next(s for s in statements if s.startswith("CREATE TABLE"))
     assert create.startswith(f"CREATE TABLE {quoted}.{quoted} (")
-    assert f"  {quoted} NUMBER(38,0)," in create
+    assert f"  {quoted} NUMBER(19,0)," in create
     assert f"COPY INTO {quoted}.{quoted} FROM @{quoted}.%{quoted} " in "\n".join(statements)
     assert server.tables[(name, name)] == [(1, "a"), (2, "b")]
 
@@ -483,10 +484,10 @@ def test_duplicate_column_names_are_refused(server):
 def test_type_map():
     f = pa.field
     cases = [
-        (pa.int8(), "NUMBER(38,0)"),
-        (pa.int64(), "NUMBER(38,0)"),
-        (pa.uint64(), "NUMBER(38,0)"),
-        (pa.float32(), "FLOAT"),
+        (pa.int8(), "NUMBER(3,0)"),
+        (pa.int64(), "NUMBER(19,0)"),
+        (pa.uint64(), "DECIMAL(20,0)"),
+        (pa.float32(), "FLOAT(24)"),
         (pa.float64(), "FLOAT"),
         (pa.decimal128(10, 2), "NUMBER(10,2)"),
         (pa.decimal128(38, 0), "NUMBER(38,0)"),
@@ -494,10 +495,11 @@ def test_type_map():
         (pa.large_string(), "VARCHAR"),
         (pa.bool_(), "BOOLEAN"),
         (pa.date32(), "DATE"),
-        (pa.timestamp("us"), "TIMESTAMP_NTZ"),
-        (pa.timestamp("ns"), "TIMESTAMP_NTZ"),
-        (pa.timestamp("us", "UTC"), "TIMESTAMP_TZ"),
-        (pa.timestamp("us", "Europe/Berlin"), "TIMESTAMP_TZ"),
+        (pa.time64("us"), "TIME(6)"),
+        (pa.timestamp("us"), "TIMESTAMP_NTZ(6)"),
+        (pa.timestamp("ns"), "TIMESTAMP_NTZ(9)"),
+        (pa.timestamp("us", "UTC"), "TIMESTAMP_TZ(6)"),
+        (pa.timestamp("us", "Europe/Berlin"), "TIMESTAMP_TZ(6)"),
         (pa.binary(), "BINARY"),
         (pa.large_binary(), "BINARY"),
         (pa.list_(pa.int32()), "VARIANT"),
@@ -510,7 +512,7 @@ def test_type_map():
 
 
 @pytest.mark.parametrize(
-    "arrow", [pa.duration("us"), pa.time64("us"), pa.null(), pa.decimal256(40, 2)]
+    "arrow", [pa.duration("us"), pa.decimal128(12, -2), pa.null(), pa.decimal256(40, 2)]
 )
 def test_a_type_that_cannot_be_stored_is_refused_before_connecting(server, arrow):
     batch = pa.RecordBatch.from_arrays([pa.array([None], arrow)], names=["weird"])

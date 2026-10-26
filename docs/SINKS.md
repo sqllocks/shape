@@ -196,6 +196,42 @@ and the writer makes the value `NULL` before staging or inserting it, so a pool,
 database never receives one. Reading the table back gives `NULL` where `NaN` was written, and the
 dataset id of the read-back differs from the NaN-bearing input for that reason alone.
 
+### Generated SQL constraints
+
+For `shape generate`, `--sql-constraints keys` is the default: primary keys, foreign keys
+and declared unique keys are created before loading rows. `all` also derives supported
+CHECK and literal DEFAULT clauses from the generation schema and `--contract FILE`
+(JSON or YAML). `none` omits derived constraints; `keep` is its compatibility alias.
+The existing `disable` option retains the SQL Server loading behavior described below.
+These generation defaults do not change `emit`, seed or scale workflows.
+
+| Destination | Constraint behavior |
+|---|---|
+| PostgreSQL, MySQL, DuckDB, SQL Server and Fabric SQL database | Enforced foreign keys, UNIQUE and CHECK constraints; literal DEFAULT clauses |
+| Fabric Warehouse | Informational foreign keys and UNIQUE constraints (`NOT ENFORCED`); no CHECK or DEFAULT |
+| Snowflake | Informational foreign keys and UNIQUE constraints; DEFAULT; no CHECK |
+| Databricks Unity Catalog | Informational primary/foreign keys; CHECK through `ALTER TABLE`; no UNIQUE or DEFAULT |
+
+Unsupported declarations produce a warning and a `-- NOTE:` in SQL scripts. Checks use
+structured comparisons, conjunctions, membership and null tests; free-form SQL, regular
+expression checks, triggers, sequences and deferred constraints are outside this feature.
+Identifiers are quoted and row values remain bound parameters. `--dry-run` shows the
+resolved DDL without opening a connection or writing data artifacts.
+
+Shape prepares every table before loading and writes parents before children. DuckDB alone
+uses parent-first inline foreign keys because it cannot add them afterward. Constraints
+remain enforced. An existing destination must match the requested declarations before an
+append or truncate; PostgreSQL/MySQL CHECK and DEFAULT verification also needs permission to
+create temporary tables.
+
+For a dataset whose referenced tables all belong to the run, PostgreSQL, MySQL and SQL
+Server coordinate `truncate` in one transaction; PostgreSQL and SQL Server also coordinate
+`replace`. A later batch failure restores the previous dataset. MySQL `replace`, DuckDB
+reruns that cannot preserve enforced references, external incoming foreign keys and
+incompatible `--commit-rows` combinations are refused before mutation, naming the
+constraint. Other writes retain their existing transaction and committed-row accounting.
+Failures name the constraint and include row details when the database supplies them.
+
 ## Confirming a non-local target
 
 Writing to a database, OneLake, Event Hubs or Kafka is harmless on synthetic data and harmful on
@@ -239,8 +275,10 @@ refusal unless it passes `True` or sets the variable. Plugin commands such as
   anything is written. `shape from-ddl` writes `"identity": true` for `IDENTITY`, `SERIAL`,
   `BIGSERIAL` and `AUTO_INCREMENT` columns. A schema with no `identity` produces the DDL and
   scripts it always did. Fabric Warehouse has no identity semantics: it ignores the key.
-* **Constraints.** `--sql-constraints keep|disable` (`generate` and `emit`; the sink option
-  `constraints`, default `keep`). `disable` runs `ALTER TABLE ... NOCHECK CONSTRAINT ALL` on every
+* **Constraints.** Generation supports `--sql-constraints keys|all|none` as described above.
+  The low-level sink option `constraints=keep|disable` retains its default `keep`, and
+  `emit` retains its existing `keep|disable` behavior. `disable` runs
+  `ALTER TABLE ... NOCHECK CONSTRAINT ALL` on every
   table the run writes that already exists, loads, then `ALTER TABLE ... WITH CHECK CHECK
   CONSTRAINT ALL`. When a constraint does not hold the rows stay, the run **exits 1** and names
   each table and constraint (`dbo.order.FK_order_customer`) and says it was **left disabled**; the
@@ -266,7 +304,8 @@ refusal unless it passes `True` or sets the variable. Plugin commands such as
 `pip install 'sqllocks-shape[duckdb]'` (the `sqllocks-shape-databases[duckdb]` extra; DuckDB is
 never a core dependency). `duckdb:///PATH.duckdb` is relative to the working directory and
 `duckdb:////abs/path.duckdb` absolute; `?schema=main` names the DuckDB schema (created when
-missing). Arrow batches are scanned by DuckDB directly, with no per-row conversion. Tables are
+missing). In the default native mode, Arrow batches are scanned directly, without per-row
+conversion. Tables are
 created from the schema:
 
 | Arrow type | DuckDB column |
@@ -280,14 +319,97 @@ created from the schema:
 | date, time | `DATE`, `TIME` |
 | timestamp (no zone, µs / ns / ms / s) | `TIMESTAMP` / `TIMESTAMP_NS` / `TIMESTAMP_MS` / `TIMESTAMP_S` |
 | timestamp with a zone | `TIMESTAMPTZ` |
+| list (including large/fixed-size), struct, map | `T[]`, `STRUCT("field" T, ...)`, `MAP(K, V)`, recursively |
 
-The schema's primary key is a `PRIMARY KEY`. A type DuckDB cannot hold (nested values, durations)
+The schema's primary key is a `PRIMARY KEY`. A type DuckDB cannot hold (for example durations)
 is refused with the column named. `--write-mode` takes `create` (default), `append`, `truncate`,
 `replace` and `upsert` (`INSERT OR REPLACE` on the primary key; without one:
 `upsert needs a primary key on <table>`, exit 2). One table is one transaction; `--commit-rows N`
 commits every N rows so another connection sees them. A database file locked by another process is
 exit 2 with DuckDB's message. Reading the tables back gives the same `shape.repro.dataset_id` as
 the generated tables.
+
+The matching `shape.sources` DuckDB reader from `sqllocks-shape-integrations` opens the file
+read-only: `duckdb:///abs/path.duckdb?table=main.NAME`. Its path follows that source's URI
+syntax (three slashes for an absolute path). In Python,
+`DuckDbSource().read(uri, batch_size=65536)` yields the stored Arrow types and values;
+`schema(uri)` reads the table schema. It uses UTC for timestamp instants. A missing file
+is refused without creating it; writer-only URI parameters are refused before opening.
+
+### Native nested database values
+
+The database writers and Delta accept `nested=native` (default) or `nested=json`. Database
+writers also accept it as a URI parameter. On the command line use
+`--sink-config postgres.nested=json`, substituting the sink name (including `delta`).
+This option does not change the `sql` script sink or SQL Server/Fabric targets.
+
+| Arrow container | PostgreSQL | MySQL | Databricks | DuckDB | Snowflake |
+|---|---|---|---|---|---|
+| scalar list | matching `T[]` | `JSON` | `ARRAY<T>` | `T[]` | `VARIANT` (`ARRAY` with `typed`) |
+| struct | `JSONB` | `JSON` | `STRUCT<field: T, ...>` | `STRUCT(field T, ...)` | `VARIANT` (`OBJECT` with `typed`) |
+| list of structs | `JSONB` | `JSON` | `ARRAY<STRUCT<...>>` | `STRUCT(...)[]` | `VARIANT` (`ARRAY` with `typed`) |
+| map | `JSONB` | `JSON` | `MAP<STRING, V>` | `MAP(K,V)` | `VARIANT` (`OBJECT` with `typed`) |
+
+PostgreSQL arrays are text-format COPY data with array quoting, not SQL expressions. Native
+Databricks values are bound JSON passed to `from_json` with the resolved recursive schema and
+`FAILFAST` parsing. Its JSON transport requires string map keys; non-string map keys and
+unsupported leaves fail before connecting, naming the column and `nested=json` alternative.
+Duplicate Databricks map keys are refused rather than collapsed; an invalid later streaming
+batch reports how many earlier rows were committed. PostgreSQL arrays of lists are refused
+before connecting; `nested=json` stores their JSON text instead.
+
+Snowflake keeps `VARIANT` by default; `nested=typed` selects unstructured `ARRAY`/`OBJECT`.
+Native/typed Parquet COPY explicitly uses the vectorized scanner and logical types so null
+array entries retain their positions. Empty structs and non-string map keys cannot use this
+Parquet object transport; errors name the column and suggest adding fields or preencoding a
+JSON string. A manually preencoded Arrow string writes as `VARCHAR`; it does not restore a
+native VARIANT/OBJECT automatically. Unsupported Parquet leaves and invalid nested decimal
+precision/scale are also refused before connecting. Duplicate object map keys are refused.
+Nested binary requires manual base64 encoding into Arrow strings before writing: a lossless
+Parquet-to-VARIANT binary read-back mapping has not been verified. This applies to typed
+and legacy modes too; top-level binary columns keep their scalar mapping.
+Live connector validation remains an Owner action.
+
+The explicit `json` mode keeps the earlier text/VARIANT paths: PostgreSQL `TEXT`, MySQL
+`LONGTEXT`, Databricks `STRING`, Snowflake's existing VARIANT staging; DuckDB uses `VARCHAR`
+JSON text. Delta's explicit `json` mode stores nested columns as UTF-8 JSON text too. Native
+Delta maps retain key/value entries. Native Delta timestamps at every nesting depth read
+back in UTC with microsecond precision, matching its scalar and list behavior; submicrosecond
+precision is not retained. For example, timestamp nanoseconds `1767323045123456789` read back
+as timestamp microseconds `1767323045123456`, including inside map values. Compare native
+Delta values after this explicit UTC/microsecond normalization. Delta uses the existing
+table protocol defaults. Unsupported nested Delta leaves name the
+column and the `nested=json` alternative before storage is accessed.
+Native writes preserve SQL NULL versus empty containers. PostgreSQL/MySQL JSON values and
+Databricks JSON parameters encode decimals as exact text, temporal values as ISO text and binary values as base64; map
+entries use key/value pairs where the target permits duplicates, and Databricks maps use JSON
+objects. Non-finite numbers are refused by the native JSON transport.
+Nanosecond Arrow time fields cannot cross the PostgreSQL/MySQL Python JSON or array
+transport exactly; these shapes are refused before connecting. Preencode exact time values
+as Arrow strings before writing. The JSON fallback also uses Python time values and does
+not recover their discarded nanoseconds. Databricks nested timestamp values with nonzero
+submicroseconds are refused before binding; use JSON text storage to keep their digits.
+PostgreSQL native timestamp arrays likewise require at most microsecond precision;
+nanosecond Arrow timestamp array schemas are refused with the JSON text alternative.
+
+PostgreSQL scalar arrays, Databricks containers, DuckDB and Delta have native Arrow read-back
+types. Databricks child types come from `full_data_type` catalogs, without child profiling.
+JSON-backed
+columns may read as JSON text; restoring their Arrow types requires the original Arrow schema
+from the caller. Automatic child-schema recovery is not promised. Compare parsed values with
+that schema after normalizing map/JSON key order, decimal scale and temporal instants. Corrupt
+or schema-mismatched JSON must be refused, rather than coerced. Parse the source JSON exactly
+once: a quoted JSON string is not an object or array, duplicate object fields are ambiguous,
+and JSON-looking string children remain strings. Native DuckDB lists read back
+as variable lists; nested time and zoned timestamps use the documented scalar microsecond
+normalization, with UTC for instant comparisons. Exact duplicate struct field names must be
+renamed; they cannot be represented unambiguously by the JSON fallback either.
+
+`shape_databases.nested_readback.restore_json_column(raw_values, original_field)` performs
+that strict schema-guided JSON restoration. It preserves exact decimal values and nanosecond
+timestamps/times where the original type can hold them, and refuses precision loss. This
+helper applies to JSON-backed physical columns; native Databricks catalog child types and
+PostgreSQL array element types must be read directly rather than reconstructed from JSON.
 
 ## Secrets
 
@@ -368,6 +490,198 @@ column without quoting its data. Decimal scale must be between zero and precisio
 as required by Iceberg; unsupported scales are rejected before catalog writes.
 
 
+## Delta table features (opt-in)
+
+The default Delta write still uses reader **1** / writer **2**, no table features,
+and no configuration. Zone-less timestamps are rewritten to UTC, preserving their
+wall-clock value. Existing golden files and benchmark fixtures are unchanged.
+`DeltaSink.write` and `open_table` accept these options. Opt-ins require the
+verified `deltalake>=1.6.6` release and their public APIs; refusals name both the
+installed and required versions before writing. The published `deltalake>=0.17`
+range remains available for default writes:
+
+The Delta sink's read-only `feature_plan(options)` method returns the minimum
+protocol and feature lists without importing the native writer or opening storage.
+The command-line dry run uses this method through the installed sink plugin.
+
+Custom `table_properties` keys outside the `delta.` namespace are allowed, except
+Shape's reserved fingerprint property. Engine properties are restricted to these
+verified protocol-neutral keys: `delta.appendOnly`, `delta.checkpointInterval`,
+`delta.checkpoint.writeStatsAsJson`, `delta.checkpoint.writeStatsAsStruct`,
+`delta.deletedFileRetentionDuration`, `delta.logRetentionDuration`,
+`delta.setTransactionRetentionDuration`, `delta.dataSkippingNumIndexedCols`,
+`delta.dataSkippingStatsColumns`, `delta.enableExpiredLogCleanup`,
+`delta.targetFileSize`, `delta.randomizeFilePrefixes`, `delta.randomPrefixLength`,
+and `delta.isolationLevel`. The native writer validates their values before a
+requested property reaches the destination. Other engine properties are refused
+before storage opens: use the supported feature options below. This keeps the
+offline protocol plan accurate and prevents properties from enabling unsupported
+change data feed, row tracking, type widening, v2 checkpoints or Iceberg features.
+
+Declare `generated_columns` when creating a new table. Appends retain and enforce
+its existing expressions. Adding or changing generated expressions on an existing
+table is table maintenance and is refused before its version or rows change;
+create a new table with the requested generated columns instead.
+
+| Option | Value and effect | Required protocol |
+|---|---|---|
+| `table_properties` | String-to-string object passed as `configuration` on creation; changed properties are committed after a successful append. Custom properties compose with `shape.fingerprint`. Feature/protocol and fingerprint properties are reserved for their dedicated options. | 1 / 2 for ordinary properties |
+| `constraints` | `not_null` is a list of column names; `check` maps names to the structured expressions below. Raw SQL checks are refused. `true` derives not-null checks from nonnullable Arrow fields and `columns` metadata. Checks are added after the first data commit. | reader 1 / writer 3; `checkConstraints` |
+| `checks` | A list of `{name, expression}` objects produced by the shared generation-schema and contract derivation. Uses the same structured-expression validation as `constraints.check`. | reader 1 / writer 3; `checkConstraints` |
+| `column_mapping` | `"name"` creates a mapped table with stable physical names and positive ids in each field's metadata. Conversion of an existing unmapped table and renaming are table maintenance by another engine. | reader 2 / writer 5; `columnMapping` |
+| `deletion_vectors` | `true` enables `delta.enableDeletionVectors` and its reader/writer feature. This opt-in adds no deletion-vector actions, deletes, merges or upserts. Another engine may later update the table. | reader 3 / writer 7; `deletionVectors` |
+| `generated_columns` | `{"day": "CAST(ts AS DATE)"}` writes `delta.generationExpression`. The batch must supply the column with exactly the expression's result, including null semantics; disagreement is refused naming the column. | reader 1 / writer 4; `generatedColumns` |
+| `timestamp_ntz` | `true` retains zone-less timestamps; zoned timestamps keep their zone-aware instant. False retains the default UTC rewrite. | reader 3 / writer 7; `timestampNtz` |
+
+Native `map<timestamp_ntz>` with `column_mapping=name` is refused before storage access: no verified deltalake release supports this combination (verified feature minimum 1.6.6). Use `timestamp_ntz=false` for native UTC values or `nested=json`. Unmapped native timestamp maps are supported; `delta.appendOnly=true` is applied to the empty initialized table before user rows are written.
+
+Protocols compose by taking the highest reader/writer version; writer 7 advertises
+feature lists. Delta-rs may add supporting features to the stored protocol. The
+installed version's public APIs are checked before writing. The implementation is
+verified with **deltalake 1.6.6**; this is a tested version, not a new dependency
+floor. A missing API produces an error naming the option, installed version and
+required capability, with 1.6.6 as the verified release. The `[delta]` extra's
+`deltalake>=0.17` floor is unchanged. No additional core dependency is introduced.
+
+Checks and generated expressions are validated before touching the destination;
+a rejected append keeps its previous table version and properties. Adding checks
+also validates existing rows. Opt-in validation materializes pending batches and
+uses a temporary local Delta table; adding checks to an existing table also reads
+its current rows. Choose appropriate micro-batch thresholds for large inputs.
+Existing constraints and generated expressions continue to apply on an append
+even when their options are omitted. Errors name rules/columns and omit native
+error bodies, which can contain row values or sign-in information.
+
+```python
+from shape.builtins.sinks.delta import DeltaSink
+
+DeltaSink().write(
+    "lake", "events", batches,
+    generated_columns={"day": "CAST(ts AS DATE)"},
+    partition_by=["day"],
+    constraints={"not_null": ["ts"]},
+    table_properties={"owner": "analytics"},
+)
+```
+
+Checks use the same constrained expression vocabulary as SQL sink derivation.
+An operand is `{"column": "amount"}` or `{"literal": 0}`. Comparisons have
+`op` (`=`, `<`, `<=`, `>` or `>=`), `left` and `right`; `and` has an `args` list;
+`in` has `left` and scalar `values`; `is_null` has `left`. Literal values are
+strings, booleans, null or finite numbers. Unknown columns, extra members, compound
+literals, trees deeper than 32 levels and trees over 1,024 nodes are refused.
+Column identifiers and literals are quoted separately before native validation.
+
+For example, an amount bound is structured data:
+
+```python
+positive = {"op": ">=", "left": {"column": "amount"}, "right": {"literal": 0}}
+DeltaSink().write("lake", "orders", batches, constraints={"check": {"positive": positive}})
+```
+
+The existing `sql_options` derivation can supply schema business rules and a
+contract's numeric bounds or accepted values without accepting SQL text:
+
+```python
+from shape.generation.output import sql_options
+
+derived = sql_options(schema, "events", constraints="all", contract=contract)
+DeltaSink().write(
+    "lake", "events", batches,
+    checks=derived["checks"], columns=derived["columns"], constraints=True,
+)
+```
+
+Use existing `--sink-config` options without new command-line flags:
+
+```sh
+shape generate retail --format delta -o lake --dry-run --json \
+  --sink-config delta.column_mapping=name \
+  --sink-config delta.deletion_vectors=true
+shape generate retail --format delta -o lake \
+  --sink-config 'delta.table_properties={"owner":"analytics"}'
+shape generate retail --format delta -o lake --sql-constraints all --contract contract.json \
+  --sink-config delta.constraints=true
+```
+
+The CLI accepts `delta.constraints=true`, `delta.constraints=false` or a JSON
+object containing `not_null` and structured `check` entries. These feature values
+compose with the separate `--sql-constraints` policy. False adds no automatic
+named not-null checks; schema and contract checks selected by `all` still apply.
+Dry-run uses the same per-table derived options as the write and reports their
+protocol union for schema, fitted-profile and Delta URI destinations.
+
+`--dry-run` reports `delta_protocol` (minimum reader/writer versions and the feature
+union), resolves no sign-in, and creates no table. `shape doctor --delta-table
+lake/events --json` reports the actual reader/writer versions and both stored
+feature lists, while retaining its PyArrow-reader compatibility warning. For
+correct native readback of mapped or advertised-DV tables with deltalake 1.6.6,
+use its public DataFusion reader:
+
+```python
+from deltalake import DeltaTable, QueryBuilder
+import pyarrow as pa
+
+table = DeltaTable("lake/events")
+rows = pa.table(QueryBuilder().register("events", table).execute("SELECT * FROM events").read_all())
+```
+
+The native PyArrow scanner can return nulls for mapped columns or refuse the DV
+feature; Shape's existing W2-03 read fallback handles those cases through DuckDB.
+
+## SQL type fidelity on write
+
+Requirement: SHAPE-SINK-001.
+
+Arrow types resolve directly to SQL DDL; integer widths and decimal precision are not
+inferred from values. The script and live PostgreSQL/MySQL maps are shared.
+
+| Arrow | PostgreSQL | MySQL | T-SQL | Fabric Warehouse | Snowflake | Databricks |
+|---|---|---|---|---|---|---|
+| int8 / int16 / int32 / int64 | SMALLINT / SMALLINT / INTEGER / BIGINT | TINYINT / SMALLINT / INT / BIGINT | SMALLINT / SMALLINT / INT / BIGINT | SMALLINT / SMALLINT / INT / BIGINT | NUMBER(3,0) / NUMBER(5,0) / NUMBER(10,0) / NUMBER(19,0) | TINYINT / SMALLINT / INT / BIGINT |
+| uint8 / uint16 / uint32 | next signed width | next signed width | TINYINT / INT / BIGINT | SMALLINT / INT / BIGINT | NUMBER(5,0) / NUMBER(10,0) / NUMBER(19,0) | SMALLINT / INT / BIGINT |
+| uint64 | NUMERIC(20,0) | DECIMAL(20,0) | DECIMAL(20,0) | DECIMAL(20,0) | DECIMAL(20,0) | DECIMAL(20,0) |
+| float32 | REAL | FLOAT | REAL | REAL | FLOAT(24) | FLOAT |
+| zoned timestamp | TIMESTAMPTZ(p) | TIMESTAMP(p) | DATETIMEOFFSET(p) | DATETIME2(6) | TIMESTAMP_TZ(p) | TIMESTAMP |
+| zone-less timestamp | TIMESTAMP(p) | DATETIME(p) | DATETIME2(p) | DATETIME2(p) | TIMESTAMP_NTZ(p) | TIMESTAMP_NTZ |
+| time32 / time64 | TIME(p) | TIME(p) | TIME(p) | TIME(p) | TIME(p) | TIME(6) |
+| uuid metadata | UUID | CHAR(36) | UNIQUEIDENTIFIER | VARCHAR(36) | VARCHAR(36) | VARCHAR(36) |
+
+Unsigned values use the next signed width; uint64 needs 20 decimal digits. T-SQL int8
+uses SMALLINT because TINYINT is unsigned. Timestamp/time units s, ms, us and ns mean
+0, 3, 6 and 9 fractional digits, capped at the dialect's limit (7 for T-SQL, 6 for
+PostgreSQL, MySQL and Fabric Warehouse). Snowflake supports 9; Databricks timestamps
+store microseconds. A zoned timestamp keeps its instant to the microsecond. Writes
+normalize to UTC, with +00:00 in offset-capable types; MySQL sets its write session to
+UTC, and Warehouse stores UTC in DATETIME2(6). Read-back comparisons normalize to
+UTC-aware values. The original zone name is not preserved. Zone-less values stay zone-less.
+
+Decimals always use the Arrow precision and scale, otherwise `columns.precision` and
+`columns.scale`; incomplete or invalid dimensions are refused with the column name.
+PostgreSQL accepts Arrow decimal256 precision and negative/excess scales; negative
+or greater-than-precision scales require PostgreSQL 15 or later. The other dialects
+refuse those scales rather than changing the value.
+UUID is selected by `columns.type="uuid"` or Arrow field metadata `type=uuid`.
+String lengths come from `columns.max_length` (generation-schema declared widths are
+forwarded there). Unspecified strings are unbounded: TEXT for PostgreSQL/MySQL,
+NVARCHAR(MAX) for T-SQL, VARCHAR(MAX) in script Warehouse DDL, VARCHAR for Snowflake,
+and STRING for Databricks. The live Warehouse writer also uses VARCHAR(MAX) (the service stores up to 16 MB);
+T-SQL and Warehouse string key columns require explicit `max_length`; an undeclared
+width is refused before any connection, naming the column. Shape never guesses a key width. Synapse retains its separate columnstore-compatible
+8000-character limit. The previous VARCHAR(255) default
+and first-batch string sizing are removed; a short first batch cannot truncate a later one.
+
+T-SQL declared strings beyond 4000 characters and Warehouse declared strings beyond
+8000 characters use their unbounded `MAX` types. Such widths on key columns are
+refused before connecting because `MAX` columns cannot be indexed. Declared widths
+are preserved without clamping; backend limits on actual index values still apply.
+
+`shape generate schema.json --to postgresql://user@host/db --dry-run` prints the
+resolved CREATE TABLE statements without generating rows, signing in, connecting or
+writing. `--json` adds a `ddl` list to the generation plan, each with `target`, `table`
+and `sql`. SQL database sink adapters expose the optional offline
+`ddl(uri, table, arrow_schema, **options)` hook; values and credentials never enter DDL.
+
 ## Complete local run
 
 Run these commands in order after preparing the fixtures above.
@@ -408,3 +722,5 @@ bound array DML. Use `oracle://user@host:1521/service?schema=S`, or `tcps://` fo
 defaults to 50000. Empty strings are refused; `empty_string=null` permits conversion only
 for nullable non-key columns. Oracle DDL commits implicitly, including replace and truncate.
 See the plugin README's Oracle section for types, wallets, transaction limits and the source.
+
+UUID fields read from a source use Arrow field metadata `shape.type=uuid`; writers also accept the earlier `type=uuid` metadata key.

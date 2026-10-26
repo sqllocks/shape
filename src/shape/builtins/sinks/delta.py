@@ -23,14 +23,56 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable, Iterable, Iterator
-from typing import Any
+from typing import Any, NoReturn
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.builtins.sinks import delta_features as features
 from shape.builtins.sources.files import output_path
+from shape.errors import ShapeError
+from shape.io.nested_values import is_nested, json_batch, nested_mode, validate_json_shape
 from shape.plugins.schemes import require_scheme
 
 CLOUD_PREFIX = "delta+"
+
+
+def feature_plan(options: dict[str, Any]) -> dict[str, Any]:
+    """Report opt-in protocol requirements without opening storage."""
+    return features.feature_plan(options)
+
+
+def _uses_features(
+    dl: Any, location: str, options: dict[str, Any], storage: dict[str, str] | None
+) -> bool:
+    if features.parse(options).active:
+        return True
+    if location.startswith(("abfss://", "abfs://")):
+        # The default cloud path has no new metadata/network request. Its native
+        # writer already enforces stored invariants; inspect rules only on failure.
+        return False
+    else:
+        from pathlib import Path
+
+        if not (Path(location) / "_delta_log").is_dir():
+            return False
+        prior = features.existing_table(dl, location, storage)
+    constraints, generated = features.persisted_rules(prior)
+    return bool(constraints or generated)
+
+
+def _rejected_write(dl: Any, location: str, storage: dict[str, str] | None) -> NoReturn:
+    try:
+        prior = features.existing_table(dl, location, storage)
+        constraints, generated = features.persisted_rules(prior)
+    except Exception:
+        raise ValueError("Delta write refused; check the schema, path and sign-in") from None
+    if generated:
+        raise ValueError(
+            f"generated_columns {', '.join(sorted(generated))}: batch rejected"
+        ) from None
+    if constraints:
+        raise ValueError(f"constraint {', '.join(sorted(constraints))}: batch rejected") from None
+    raise ValueError("Delta write refused; check the schema, path and sign-in") from None
 
 
 def _deltalake() -> Any:
@@ -152,9 +194,15 @@ class DeltaTableWriter:
         options: dict[str, Any],
         storage: dict[str, str] | None,
     ) -> None:
-        self._write = _deltalake().write_deltalake
+        self._nested = nested_mode(options.get("nested", "native"))
+        schema = _nested_schema(schema, self._nested)
+        self._dl = _deltalake()
+        self._write = self._dl.write_deltalake
+        self._options = dict(options)
+        self._features = features.parse(options)
+        features.require_capabilities(self._dl, options, self._features, schema)
         self._location = location
-        self._schema = _utc_timestamps(schema)
+        self._schema = schema if self._features.ntz else _utc_timestamps(schema)
         self._storage = storage
         self._partition_by = options.get("partition_by") or None
         self._mode = options.get("mode", "overwrite")
@@ -171,6 +219,8 @@ class DeltaTableWriter:
 
     def write_batch(self, batch: pa.RecordBatch) -> None:
         if batch.num_rows:
+            if self._nested == "json":
+                batch = json_batch(batch)
             self._pending.append(batch)
             self._pending_rows += batch.num_rows
         if self.commit_rows is None and self.commit_seconds is None:
@@ -192,17 +242,26 @@ class DeltaTableWriter:
         self._commit(self._pending)
 
     def _commit(self, batches: list[pa.RecordBatch]) -> None:
-        reader = pa.RecordBatchReader.from_batches(
-            self._schema, iter([b.cast(self._schema) for b in batches])
-        )
-        self._write(
-            self._location,
-            reader,
-            mode=self._mode,
-            partition_by=self._partition_by,
-            storage_options=self._storage,
-            **_schema_mode(self._mode),
-        )
+        options = {**self._options, "mode": self._mode}
+        if _uses_features(self._dl, self._location, options, self._storage):
+            features.write_features(
+                self._dl, self._location, batches, self._schema, options, self._storage
+            )
+        else:
+            reader = pa.RecordBatchReader.from_batches(
+                self._schema, iter([b.cast(self._schema) for b in batches])
+            )
+            try:
+                self._write(
+                    self._location,
+                    reader,
+                    mode=self._mode,
+                    partition_by=self._partition_by,
+                    storage_options=self._storage,
+                    **_schema_mode(self._mode),
+                )
+            except Exception:
+                _rejected_write(self._dl, self._location, self._storage)
         self.rows += self._pending_rows
         self.commits += 1
         self._pending, self._pending_rows = [], 0
@@ -223,13 +282,64 @@ def _schema_mode(mode: str) -> dict[str, str]:
     return {"schema_mode": "overwrite"} if mode == "overwrite" else {}
 
 
+def _nested_schema(schema: pa.Schema, mode: str) -> pa.Schema:
+    fields = []
+    for field in schema:
+        if is_nested(field.type):
+            validate_json_shape(field.type, field.name)
+            if mode == "native":
+                _check_nested_type(field.type, field.name)
+            else:
+                field = field.with_type(pa.string())
+        fields.append(field)
+    return schema if mode == "native" else pa.schema(fields, metadata=schema.metadata)
+
+
+def _check_nested_type(kind: pa.DataType, column: str) -> None:
+    if pa.types.is_dictionary(kind):
+        _check_nested_type(kind.value_type, column)
+        return
+    if pa.types.is_struct(kind) and len(kind):
+        for child in kind:
+            _check_nested_type(child.type, column)
+        return
+    if pa.types.is_list(kind) or pa.types.is_large_list(kind) or pa.types.is_fixed_size_list(kind):
+        _check_nested_type(kind.value_type, column)
+        return
+    if pa.types.is_map(kind):
+        _check_nested_type(kind.key_type, column)
+        _check_nested_type(kind.item_type, column)
+        return
+    supported = (
+        pa.types.is_signed_integer(kind)
+        or pa.types.is_boolean(kind)
+        or pa.types.is_string(kind)
+        or pa.types.is_large_string(kind)
+        or pa.types.is_binary(kind)
+        or pa.types.is_large_binary(kind)
+        or pa.types.is_fixed_size_binary(kind)
+        or pa.types.is_date(kind)
+        or pa.types.is_timestamp(kind)
+        or pa.types.is_float32(kind)
+        or pa.types.is_float64(kind)
+        or (
+            pa.types.is_decimal(kind) and kind.precision <= 38 and 0 <= kind.scale <= kind.precision
+        )
+    )
+    if not supported:
+        raise ShapeError(
+            f"column {column!r}: nested leaf {kind} cannot be stored natively in Delta; "
+            "use nested=json"
+        )
+
+
 def _utc_timestamps(schema: pa.Schema) -> pa.Schema:
-    """``schema`` with every time-zone-less timestamp (at any nesting depth) made a UTC one."""
+    """``schema`` with timestamps at every nesting depth represented in UTC."""
     return pa.schema([f.with_type(_utc_type(f.type)) for f in schema], metadata=schema.metadata)
 
 
 def _utc_type(t: pa.DataType) -> pa.DataType:
-    if pa.types.is_timestamp(t) and t.tz is None:
+    if pa.types.is_timestamp(t) and t.tz != "UTC":
         return pa.timestamp(t.unit, tz="UTC")
     if pa.types.is_list(t) or pa.types.is_large_list(t) or pa.types.is_fixed_size_list(t):
         item = t.value_field.with_type(_utc_type(t.value_type))
@@ -255,6 +365,12 @@ class DeltaSink:
     name = "delta"
     schemes = ("file", "delta+abfss", "delta+abfs")
     extension = ""  # no file extension: a directory per table
+    feature_options = features.FEATURE_OPTIONS
+
+    @staticmethod
+    def feature_plan(options: dict[str, Any]) -> dict[str, Any]:
+        """Report protocol requirements through the plugin without opening storage."""
+        return features.feature_plan(options)
 
     def open_table(
         self, uri: str, table: str, schema: pa.Schema | None = None, **options: Any
@@ -265,11 +381,16 @@ class DeltaSink:
             schema = options.get("schema")
         if schema is None:
             raise ValueError("a Delta table needs a schema: pass `schema`")
+        schema = _nested_schema(schema, nested_mode(options.get("nested", "native")))
+        feature_options = features.parse(options)
+        schema = feature_options.schema(schema)
+        features.require_capabilities(_deltalake(), options, feature_options, schema)
         location, storage = _location(uri, table, options)
         return DeltaTableWriter(location, schema, options, storage)
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         require_scheme(self, uri)
+        nested = nested_mode(options.get("nested", "native"))
         stream = iter(batches)
         first = next(stream, None)
         schema = first.schema if first is not None else options.get("schema")
@@ -277,7 +398,12 @@ class DeltaSink:
             raise ValueError(
                 "a Delta table needs a schema: pass `schema` when there are no batches"
             )
-        schema = _utc_timestamps(schema)
+        schema = _nested_schema(schema, nested)
+        feature_options = features.parse(options)
+        schema = feature_options.schema(schema)
+        dl = _deltalake()
+        features.require_capabilities(dl, options, feature_options, schema)
+        schema = schema if feature_options.ntz else _utc_timestamps(schema)
         if options.get("fingerprint") and (
             options.get("commit_rows") or options.get("commit_seconds")
         ):
@@ -306,7 +432,7 @@ class DeltaSink:
             if uri.startswith(CLOUD_PREFIX):
                 raise ValueError("fingerprint writes a local Delta table only")
         location, storage = _location(uri, table, options)
-        write_deltalake = _deltalake().write_deltalake
+        write_deltalake = dl.write_deltalake
         rows = 0
         kept: list[pa.RecordBatch] = []
 
@@ -314,26 +440,33 @@ class DeltaSink:
             nonlocal rows
             if first is not None:
                 rows += first.num_rows
-                cast = first.cast(schema)
+                cast = (json_batch(first) if nested == "json" else first).cast(schema)
                 if stamp:
                     kept.append(cast)
                 yield cast
             for batch in stream:
                 rows += batch.num_rows
-                cast = batch.cast(schema)
+                cast = (json_batch(batch) if nested == "json" else batch).cast(schema)
                 if stamp:
                     kept.append(cast)
                 yield cast
 
         mode = options.get("mode", "overwrite")
-        write_deltalake(
-            location,
-            pa.RecordBatchReader.from_batches(schema, counted()),
-            mode=mode,
-            partition_by=options.get("partition_by") or None,
-            storage_options=storage,
-            **_schema_mode(mode),
-        )
+        reader = pa.RecordBatchReader.from_batches(schema, counted())
+        if _uses_features(dl, location, options, storage):
+            features.write_features(dl, location, reader, schema, options, storage)
+        else:
+            try:
+                write_deltalake(
+                    location,
+                    reader,
+                    mode=mode,
+                    partition_by=options.get("partition_by") or None,
+                    storage_options=storage,
+                    **_schema_mode(mode),
+                )
+            except Exception:
+                _rejected_write(dl, location, storage)
         if stamp:
             from shape.fingerprint import KEY, dump, for_sink, set_delta_property
 

@@ -33,6 +33,7 @@ import pyarrow.types as pat  # type: ignore[import-untyped]
 
 import shape
 from shape.builtins.sources.files import output_path
+from shape.generation.write_constraints import ConstraintDDL, compile_constraints
 from shape.io.store import replace_atomically
 from shape.plugins.schemes import require_scheme
 from shape.security.sqltext import postgres_text, tsql_text
@@ -145,6 +146,7 @@ def _dimension(value: Any, what: str) -> int:
     if (
         isinstance(value, bool)
         or not isinstance(value, int | float)
+        or not math.isfinite(value)
         or value != int(value)
         or value < 0
     ):
@@ -159,22 +161,111 @@ def _identity_number(value: Any, what: str) -> int:
     return int(value)
 
 
-def _column_type(field: pa.Field, meta: Mapping[str, Any], dialect: str) -> str:
-    logical = str(meta.get("type") or _logical_type(field.type))
-    table = _TYPES[dialect]
-    template = table.get(logical, table["string"])
-    arrow_type = field.type
-    precision = meta.get("precision") or (
-        arrow_type.precision if pat.is_decimal(arrow_type) else None
-    )
-    scale = meta.get("scale")
-    if scale is None:
-        scale = arrow_type.scale if pat.is_decimal(arrow_type) else 2
-    return template.format(
-        length=_dimension(meta.get("max_length") or 255, "max_length"),
-        precision=_dimension(precision or 18, "precision"),
-        scale=_dimension(scale, "scale"),
-    )
+def _column_type(
+    field: pa.Field, meta: Mapping[str, Any], dialect: str, *, key: bool = False
+) -> str:
+    """Resolve a declared column without inspecting data or guessing decimal dimensions."""
+    t = field.type
+    if pat.is_dictionary(t):
+        t = t.value_type
+    logical = str(meta.get("type") or _logical_type(t))
+    metadata = field.metadata or {}
+    if logical == "uuid" or any(metadata.get(k) == b"uuid" for k in (b"shape.type", b"type")):
+        return _TYPES[dialect]["uuid"]
+    if pat.is_decimal(t) or logical == "decimal":
+        precision = t.precision if pat.is_decimal(t) else meta.get("precision")
+        scale = t.scale if pat.is_decimal(t) else meta.get("scale")
+        try:
+            p = _dimension(precision, "precision")
+            if (
+                dialect == "postgres"
+                and isinstance(scale, int | float)
+                and not isinstance(scale, bool)
+            ):
+                s = _dimension(abs(scale), "scale") * (-1 if scale < 0 else 1)
+            else:
+                s = _dimension(scale, "scale")
+        except ValueError as exc:
+            raise ValueError(f"column {field.name!r}: {exc}") from None
+        cap = {"postgres": 1000, "mysql": 65, "tsql": 38, "tsql-fabric-warehouse": 38}[dialect]
+        valid_scale = (
+            -1000 <= s <= 1000
+            if dialect == "postgres"
+            else 0 <= s <= min(p, 30 if dialect == "mysql" else p)
+        )
+        if not 1 <= p <= cap or not valid_scale:
+            raise ValueError(f"column {field.name!r}: invalid decimal precision/scale ({p},{s})")
+        return _TYPES[dialect]["decimal"].format(precision=p, scale=s)
+    if logical == "integer":
+        if not pat.is_integer(t):
+            return "BIGINT"
+        bits = t.bit_width
+        if pat.is_unsigned_integer(t):
+            if bits == 64:
+                return "NUMERIC(20,0)" if dialect == "postgres" else "DECIMAL(20,0)"
+            if bits == 8 and dialect == "tsql":
+                return "TINYINT"
+            bits *= 2
+        maps = {
+            "tsql": {8: "SMALLINT", 16: "SMALLINT", 32: "INT", 64: "BIGINT"},
+            "tsql-fabric-warehouse": {8: "SMALLINT", 16: "SMALLINT", 32: "INT", 64: "BIGINT"},
+            "postgres": {8: "SMALLINT", 16: "SMALLINT", 32: "INTEGER", 64: "BIGINT"},
+            "mysql": {8: "TINYINT", 16: "SMALLINT", 32: "INT", 64: "BIGINT"},
+        }
+        return maps[dialect][bits]
+    if logical == "float" and pat.is_floating(t) and t.bit_width <= 32:
+        return "FLOAT" if dialect == "mysql" else "REAL"
+    if pat.is_timestamp(t) or pat.is_time(t):
+        precision = min({"s": 0, "ms": 3, "us": 6, "ns": 9}[t.unit], 7 if dialect == "tsql" else 6)
+        if pat.is_time(t):
+            return f"TIME({precision})"
+        if t.tz is not None:
+            prefix = {
+                "tsql": "DATETIMEOFFSET",
+                "tsql-fabric-warehouse": "DATETIME2",
+                "postgres": "TIMESTAMPTZ",
+                "mysql": "TIMESTAMP",
+            }[dialect]
+            if dialect == "tsql-fabric-warehouse":
+                precision = 6
+        else:
+            prefix = {
+                "tsql": "DATETIME2",
+                "tsql-fabric-warehouse": "DATETIME2",
+                "postgres": "TIMESTAMP",
+                "mysql": "DATETIME",
+            }[dialect]
+        return f"{prefix}({precision})"
+    if logical == "string" or logical not in _TYPES[dialect]:
+        length = meta.get("max_length")
+        if length is None and not (pat.is_string(t) or pat.is_large_string(t)):
+            return _TYPES[dialect]["string"].format(length=255)
+        if length is None:
+            if key and dialect.startswith("tsql"):
+                raise ValueError(
+                    f"column {field.name!r}: indexed string requires explicit max_length"
+                )
+            return {
+                "tsql": "NVARCHAR(MAX)",
+                "tsql-fabric-warehouse": "VARCHAR(MAX)",
+                "postgres": "TEXT",
+                "mysql": "TEXT",
+            }[dialect]
+        try:
+            length = _dimension(length, "max_length")
+        except ValueError as exc:
+            raise ValueError(f"column {field.name!r}: {exc}") from None
+        if length < 1:
+            raise ValueError(f"column {field.name!r}: max_length must be positive")
+        limit = {"tsql": 4000, "tsql-fabric-warehouse": 8000}.get(dialect)
+        if limit is not None and length > limit:
+            if key:
+                raise ValueError(
+                    f"column {field.name!r}: indexed string max_length {length} exceeds {limit}"
+                )
+            return "NVARCHAR(MAX)" if dialect == "tsql" else "VARCHAR(MAX)"
+        return _TYPES[dialect]["string"].format(length=length)
+    return _TYPES[dialect][logical]
 
 
 def _literal(value: Any, dialect: str) -> str:
@@ -196,7 +287,23 @@ def _literal(value: Any, dialect: str) -> str:
             return postgres_text(f"\\x{hexed}")
         return f"0x{hexed}" if dialect.startswith("tsql") else f"X'{hexed}'"
     if isinstance(value, dt.datetime):
-        text = value.replace(tzinfo=None).isoformat(sep=" ") if value.tzinfo else str(value)
+        if value.tzinfo is not None:
+            value = value.astimezone(dt.UTC)
+            if dialect in ("mysql", "tsql-fabric", "tsql-fabric-warehouse"):
+                value = value.replace(tzinfo=None)
+        # Drivers and zoned fidelity use microsecond instants; Arrow ns scalars may
+        # expose a datetime subclass whose isoformat would otherwise emit nanoseconds.
+        value = dt.datetime(
+            value.year,
+            value.month,
+            value.day,
+            value.hour,
+            value.minute,
+            value.second,
+            value.microsecond,
+            tzinfo=value.tzinfo,
+        )
+        text = str(value.isoformat(sep=" "))
     else:
         text = str(value) if not isinstance(value, (dt.date, dt.time)) else value.isoformat()
     escaped = text.replace("'", "''")
@@ -318,6 +425,10 @@ class SqlSink:
                         f"(columns: {', '.join(names)})"
                     )
                 columns = ", ".join(q(n) for n in names)
+                if dialect == "mysql" and any(
+                    pat.is_timestamp(f.type) and f.type.tz is not None for f in schema
+                ):
+                    handle.write("SET time_zone = '+00:00';\n\n")
                 if options.get("ddl", True):
                     handle.write(
                         self._ddl(
@@ -354,12 +465,29 @@ class SqlSink:
         fabric: bool,
         options: Mapping[str, Any],
         use_go: bool,
+        *,
+        _legacy_design_types: bool = False,
     ) -> str:
         def q(name: str) -> str:
             return _quote(name, dialect)
 
         lines: list[str] = []
         type_dialect = "tsql-fabric-warehouse" if fabric else dialect
+        constraints = (
+            compile_constraints(
+                options,
+                columns=schema.names,
+                table=table,
+                dialect=type_dialect,
+                schema_name=options.get("schema_name"),
+                table_prefix=options.get("table_prefix") or "",
+            )
+            if any(k in options for k in ("foreign_keys", "unique", "checks", "defaults"))
+            else ConstraintDDL((), (), (), {}, ())
+        )
+        for note in constraints.notes:
+            log.warning("%s", note)
+            lines.append("-- NOTE: " + _comment(note))
         if options.get("drop", True):
             if dialect == "tsql" and not fabric:
                 name_literal = qualified.replace("'", "''")
@@ -376,10 +504,22 @@ class SqlSink:
             lines.append(f"-- {_comment(', '.join(q(c) for c in key))} is the logical primary key.")
         lines.append(f"CREATE TABLE {qualified} (")
         defs = []
+        indexed = set(key) | constraints.unique_columns
         for field in schema:
             info = meta.get(field.name, {})
             nullable = bool(info.get("nullable", True)) and field.name not in key
-            sql_type = _column_type(field, info, type_dialect)
+            sql_type = _column_type(field, info, type_dialect, key=field.name in indexed)
+            if _legacy_design_types:
+                # Presentation only: canonical validation above must always run first.
+                logical = str(info.get("type") or _logical_type(field.type))
+                template = _TYPES[type_dialect].get(logical, _TYPES[type_dialect]["string"])
+                sql_type = template.format(
+                    length=info.get("max_length") or 255,
+                    precision=info.get("precision") or 18,
+                    scale=info.get("scale") if info.get("scale") is not None else 2,
+                )
+            if field.name in constraints.defaults:
+                sql_type += f" DEFAULT {constraints.defaults[field.name]}"
             if info.get("identity") and dialect == "tsql" and not fabric:
                 spec = info["identity"] if isinstance(info["identity"], Mapping) else {}
                 seed = _identity_number(spec.get("start", 1), "identity start")
@@ -395,8 +535,13 @@ class SqlSink:
                 if dialect == "mysql"
                 else f"    CONSTRAINT {q('PK_' + table)} PRIMARY KEY ({cols})"
             )
+        defs.extend("    " + clause for clause in constraints.definitions)
         lines.append(",\n".join(defs))
         lines.append(");")
         if use_go:
             lines.append("GO")
+        for clause in (*constraints.after_create, *constraints.foreign_keys):
+            lines.append(f"ALTER TABLE {qualified} ADD {clause};")
+            if use_go:
+                lines.append("GO")
         return "\n".join(lines)

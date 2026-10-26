@@ -13,7 +13,8 @@ def cloud_arrow_type(
 ) -> Any:
     """Translate catalog types, preserving numeric width, scale and timestamp zones.
 
-    Nested values cross this source boundary as JSON text. A Snowflake NUMBER(p,0)
+    This scalar mapper leaves nested types as text; DatabricksSource separately parses its
+    full catalog child types for native Arrow reads. A Snowflake NUMBER(p,0)
     uses the smallest signed Arrow integer containing every p-digit signed value;
     19 through 38 digits need decimal128.
     """

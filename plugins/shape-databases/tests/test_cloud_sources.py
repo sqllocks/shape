@@ -100,7 +100,9 @@ def cloud_fixture(dialect):
     schema = "PUBLIC" if snow else "demo"
     marker = "%s" if snow else "?"
     columns = (
-        "SELECT column_name, data_type, is_nullable, numeric_precision, numeric_scale FROM "
+        "SELECT column_name, "
+        + ("data_type" if snow else "full_data_type")
+        + ", is_nullable, numeric_precision, numeric_scale FROM "
         "information_schema.columns WHERE table_schema="
         + marker
         + " AND table_name="
@@ -346,21 +348,43 @@ def test_snowflake_informational_foreign_key_evidence():
 
 
 @pytest.mark.parametrize("dialect", ["snowflake", "databricks"])
-def test_nested_values_are_projected_to_json_before_arrow_fetch(dialect):
+def test_nested_values_use_json_projection_only_when_catalog_lacks_children(dialect):
     source, server, uri, schema, _ = cloud_fixture(dialect)
     column_query = next(q for q in server.catalog_answers if q.startswith("SELECT column_name"))
     names, _ = server.catalog_answers[column_query]
     server.catalog_answers[column_query] = (
         names,
-        [("payload", "VARIANT" if dialect == "snowflake" else "STRUCT", "YES", None, None)],
+        [
+            (
+                "payload",
+                "VARIANT" if dialect == "snowflake" else "STRUCT<key:ARRAY<INT>>",
+                "YES",
+                None,
+                None,
+            )
+        ],
     )
-    fields = pa.schema([pa.field("payload", pa.string(), metadata={b"shape.encoding": b"json"})])
+    nested_type = pa.struct([("key", pa.list_(pa.int32()))])
+    fields = (
+        pa.schema([pa.field("payload", pa.string(), metadata={b"shape.encoding": b"json"})])
+        if dialect == "snowflake"
+        else pa.schema([("payload", nested_type)])
+    )
     query = source._select(schema, "items", fields)
-    assert "TO_JSON" in query.upper()
-    server.arrow_results[query] = pa.table({"payload": ['{"key":[1,null]}', None]})
+    assert ("TO_JSON" in query.upper()) == (dialect == "snowflake")
+    server.arrow_results[query] = (
+        pa.table({"payload": ['{"key":[1,null]}', None]})
+        if dialect == "snowflake"
+        else pa.table({"payload": pa.array([{"key": [1, None]}, None], nested_type)})
+    )
     actual = pa.Table.from_batches(list(source.read(uri + "&table=items")))
-    assert actual.column("payload").to_pylist() == ['{"key":[1,null]}', None]
-    assert actual.schema.field("payload").metadata[b"shape.encoding"] == b"json"
+    if dialect == "snowflake":
+        assert actual.column("payload").to_pylist() == ['{"key":[1,null]}', None]
+        assert actual.schema.field("payload").metadata[b"shape.encoding"] == b"json"
+    else:
+        assert actual.column("payload").type == nested_type
+        assert actual.column("payload").to_pylist() == [{"key": [1, None]}, None]
+        assert b"shape.encoding" not in actual.schema.field("payload").metadata
 
 
 def test_databricks_unity_catalog_key_queries_are_schema_scoped():

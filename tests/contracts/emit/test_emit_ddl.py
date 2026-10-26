@@ -185,7 +185,7 @@ def test_allowed_values_quoting_nulls_and_empty_sets() -> None:
 def test_long_text_values_widen_the_column() -> None:
     c = {"columns": {"s": {"dtype": "string", "allowed_values": ["x" * 300]}}}
     assert "VARCHAR(300)" in ddl(c, "postgres").text
-    assert "VARCHAR(255)" in ddl({"columns": {"s": {"dtype": "string"}}}, "postgres").text
+    assert "TEXT" in ddl({"columns": {"s": {"dtype": "string"}}}, "postgres").text
 
 
 def test_identifiers_are_quoted_and_long_constraint_names_are_shortened_deterministically() -> None:
@@ -218,7 +218,7 @@ def test_a_column_with_no_dtype_gets_a_guessed_type_and_a_note() -> None:
 
 def test_an_unknown_dtype_is_not_expressed_and_falls_back() -> None:
     result = ddl({"columns": {"x": {"dtype": "object"}}}, "postgres")
-    assert ("x", "dtype") in rules(result) and "VARCHAR(255)" in result.text
+    assert ("x", "dtype") in rules(result) and "TEXT" in result.text
 
 
 def test_rules_that_say_nothing_are_not_reported() -> None:

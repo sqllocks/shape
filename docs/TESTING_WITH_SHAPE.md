@@ -166,7 +166,7 @@ Run these commands in order after preparing the fixtures above.
 <!-- example: 0 -->
 
 ```bash {.runnable-reference}
-pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO" -e "$SHAPE_DOCS_REPO/plugins/shape-domains"
+pip install --quiet --no-deps --no-build-isolation -e . -e plugins/shape-domains
 ```
 
 ??? info "Output (exit 0)"

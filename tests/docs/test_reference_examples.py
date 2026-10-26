@@ -57,6 +57,13 @@ def webhook() -> str:
     server.server_close()
 
 
+def _activate_page_environment(env: dict[str, str], directory: Path) -> None:
+    """Keep editable installs and active uv commands in the page's private environment."""
+    if (directory / ".venv/bin/python").exists():
+        env["PATH"] = str(directory / ".venv/bin") + ":" + env["PATH"]
+        env["VIRTUAL_ENV"] = str(directory / ".venv")
+
+
 @pytest.mark.parametrize("page", PAGES, ids=lambda p: Path(p).stem)
 def test_reference_page(page: str, tmp_path: Path, webhook: str) -> None:
     """Run setup and every page command, checking the entire recorded stream."""
@@ -120,8 +127,8 @@ def test_reference_page(page: str, tmp_path: Path, webhook: str) -> None:
         if actual != recorded:
             difference = list(difflib.unified_diff(recorded.splitlines(), actual.splitlines()))
             pytest.fail(f"{page}:{number}; transcript: {transcript}\n" + "\n".join(difference[:80]))
-        if number == "999" and (tmp_path / ".venv/bin/python").exists():
-            env["PATH"] = str(tmp_path / ".venv/bin") + ":" + env["PATH"]
+        if number == "999":
+            _activate_page_environment(env, tmp_path)
 
 
 def test_restored_example_inventory() -> None:

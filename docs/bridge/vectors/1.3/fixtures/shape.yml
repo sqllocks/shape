@@ -1,0 +1,12 @@
+format: shape-project
+version: 1
+name: vectors
+sources:
+  orders:
+    path: a.csv
+    contract: contract.json
+    ignore: [status]
+    columns:
+      amount: {owner: finance@example.com}
+gates:
+  range_constraint: {mode: observe}

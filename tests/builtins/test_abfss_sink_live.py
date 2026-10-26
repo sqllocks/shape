@@ -86,3 +86,66 @@ def test_delta_commits_per_micro_batch() -> None:
         seen.append(sum(b.num_rows for b in DeltaSource().read(f"{base}/{table}")))
     assert writer.close() == 300
     assert seen == [100, 200, 300]
+
+
+@pytest.mark.parametrize(
+    "feature,options",
+    [
+        ("properties", {"table_properties": {"owner": "shape-live"}}),
+        (
+            "constraints",
+            {
+                "constraints": {
+                    "not_null": ["id"],
+                    "check": {
+                        "positive": {"op": ">", "left": {"column": "id"}, "right": {"literal": 0}}
+                    },
+                }
+            },
+        ),
+        ("mapping", {"column_mapping": "name"}),
+        ("vectors", {"deletion_vectors": True}),
+        ("generated", {"generated_columns": {"day": "CAST(ts AS DATE)"}, "partition_by": ["day"]}),
+        ("ntz", {"timestamp_ntz": True}),
+    ],
+)
+def test_delta_feature_tables_native_readback(feature: str, options: dict[str, Any]) -> None:
+    """W9-07: one table per feature in the existing nightly Fabric live job."""
+    from datetime import date, datetime
+
+    from deltalake import DeltaTable, QueryBuilder
+
+    from shape.builtins.sinks.azure import _with_environment_keys
+    from shape.builtins.sinks.delta import _location
+
+    base = required("SHAPE_LIVE_DELTA_URI")
+    table_name = f"shape_live_{feature}_{uuid.uuid4().hex[:8]}"
+    rows = pa.record_batch(
+        {
+            "id": [1, 2],
+            "ts": pa.array([datetime(2026, 1, 2), datetime(2026, 1, 3)], pa.timestamp("us")),
+            "day": pa.array([date(2026, 1, 2), date(2026, 1, 3)], pa.date32()),
+        }
+    )
+    location, storage = _location(base, table_name, {})
+    try:
+        assert DeltaSink().write(base, table_name, [rows], **options) == 2
+        table = DeltaTable(location, storage_options=storage)
+        actual = pa.table(
+            QueryBuilder()
+            .register("events", table)
+            .execute("SELECT id, day FROM events ORDER BY id")
+            .read_all()
+        )
+        assert actual.column("id").to_pylist() == [1, 2]
+        assert actual.column("day").to_pylist() == [date(2026, 1, 2), date(2026, 1, 3)]
+        protocol = table.protocol()
+        if feature in ("vectors", "ntz"):
+            assert (protocol.min_reader_version, protocol.min_writer_version) == (3, 7)
+        elif feature == "mapping":
+            assert (protocol.min_reader_version, protocol.min_writer_version) == (2, 5)
+    finally:
+        loc = azure.parse(location)
+        fs = azure._filesystem(loc, _with_environment_keys({}))
+        if fs.exists(loc.fs_path):
+            fs.rm(loc.fs_path, recursive=True)

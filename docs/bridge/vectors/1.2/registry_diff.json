@@ -1,0 +1,228 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "safe-forms",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "name": "orders",
+          "ref1": "first",
+          "ref2": "last",
+          "root": "${DIR}/feed_safe"
+        },
+        "command": "registry_diff",
+        "id": "safe-forms"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "registry_diff",
+        "id": "safe-forms",
+        "ok": true,
+        "result": {
+          "change_count": 4,
+          "changes": [
+            {
+              "baseline": 4801.646100000001,
+              "column": "amount",
+              "current": 45517.9272,
+              "kind": "mean_shift",
+              "score": 0.9481,
+              "severity": "medium"
+            },
+            {
+              "baseline": 2227.58931394113,
+              "column": "amount",
+              "current": 24943.214233028044,
+              "kind": "spread_change",
+              "score": 0.9107,
+              "severity": "medium"
+            },
+            {
+              "baseline": {
+                "p05": 1482.612,
+                "p25": 2858.2925,
+                "p50": 4743.145,
+                "p75": 6562.87,
+                "p95": 8446.795
+              },
+              "column": "amount",
+              "current": {
+                "p05": 5935.1435,
+                "p25": 25039.6475,
+                "p50": 46780.765,
+                "p75": 65981.9525,
+                "p95": 85054.6855
+              },
+              "kind": "distribution_shift",
+              "score": 0.9179,
+              "severity": "medium"
+            },
+            {
+              "baseline": 0.005,
+              "column": "note",
+              "current": 0.49,
+              "kind": "null_rate_change",
+              "score": 0.485,
+              "severity": "medium"
+            }
+          ],
+          "drifted": true,
+          "form": "safe",
+          "from": "828f07c958fc361fb5c346b8b284ad934723bdd9ddec5d135b132d5e4a1dc206",
+          "name": "orders",
+          "not_measured": [
+            {
+              "column": "amount",
+              "metric": "range",
+              "reason": "a safe form keeps bounds, not the minimum and maximum",
+              "table": null
+            },
+            {
+              "column": "amount",
+              "metric": "outlier_rate",
+              "reason": "a safe form does not hold the outlier rate",
+              "table": null
+            }
+          ],
+          "same": false,
+          "to": "13adcc218bb05558bc4fabed8ffa2f40f3f19cf1fc0ff5d622e12cf5f73bb312"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "raw-forms",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "name": "orders",
+          "ref1": "first",
+          "ref2": "last",
+          "root": "${DIR}/feed_raw"
+        },
+        "command": "registry_diff",
+        "id": "raw-forms"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "registry_diff",
+        "id": "raw-forms",
+        "ok": true,
+        "result": {
+          "change_count": 5,
+          "changes": [
+            {
+              "baseline": null,
+              "column": "amount",
+              "current": null,
+              "kind": "mean_shift",
+              "redacted": true,
+              "score": 0.9481,
+              "severity": "medium"
+            },
+            {
+              "baseline": null,
+              "column": "amount",
+              "current": null,
+              "kind": "spread_change",
+              "redacted": true,
+              "score": 0.9107,
+              "severity": "medium"
+            },
+            {
+              "baseline": null,
+              "column": "amount",
+              "current": null,
+              "kind": "distribution_shift",
+              "redacted": true,
+              "score": 0.9213,
+              "severity": "medium"
+            },
+            {
+              "baseline": null,
+              "column": "amount",
+              "current": null,
+              "kind": "range_change",
+              "redacted": true,
+              "score": 0.9732,
+              "severity": "low"
+            },
+            {
+              "baseline": 0.005,
+              "column": "note",
+              "current": 0.49,
+              "kind": "null_rate_change",
+              "score": 0.485,
+              "severity": "medium"
+            }
+          ],
+          "drifted": true,
+          "form": "raw",
+          "from": "8d968bb37b2834607511ca719edb9fc870d182ccb7e369962c236937d016a611",
+          "name": "orders",
+          "not_measured": [],
+          "same": false,
+          "to": "660348321b4bfa9d9c362ecd2833243362dcf2616bd7c8a8520fdbe97fbb56bc"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-name",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "name": "ghost",
+          "ref1": "first",
+          "ref2": "last",
+          "root": "${DIR}/feed_safe"
+        },
+        "command": "registry_diff",
+        "id": "unknown-name"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "registry_diff",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "ghost@first is not recorded in the registry"
+        },
+        "id": "unknown-name",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "needs-two-refs",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "name": "n",
+          "root": "r"
+        },
+        "command": "registry_diff",
+        "id": "needs-two-refs"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "registry_diff",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "registry_diff needs the argument 'ref1'"
+        },
+        "id": "needs-two-refs",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "registry_diff",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

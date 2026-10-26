@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+      "type": "string"
+    },
+    "args": {
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "description": "a verify configuration file",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.0"
+        },
+        "format": {
+          "description": "the data format (default: auto)",
+          "enum": [
+            "auto",
+            "csv",
+            "parquet",
+            "jsonl"
+          ],
+          "type": "string",
+          "x-since": "1.0"
+        },
+        "path": {
+          "description": "a data file or a directory of data files",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.0"
+        },
+        "project": {
+          "description": "a shape.yml project file; its settings apply as for `--project FILE` (the bridge never looks for one on its own)",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.1"
+        },
+        "schema": {
+          "description": "a gate schema (or a Shape model v2) file",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.0"
+        },
+        "source": {
+          "description": "the real data the data was made from (a file or directory, read with the same `format` as `path`): runs the memorization gate, and the utility gate when the configuration has a utility section",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.1"
+        },
+        "statistical": {
+          "description": "add the KS and chi-squared tests",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "strict": {
+          "description": "a warning fails the run",
+          "type": "boolean",
+          "x-since": "1.0"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "type": "object"
+    },
+    "command": {
+      "const": "verify"
+    },
+    "id": {
+      "maxLength": 128,
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "async": {
+          "default": false,
+          "description": "for a command that can run as a job: return a job id at once and run in the background",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "include_raw_values": {
+          "default": false,
+          "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "max_inline_bytes": {
+          "default": 262144,
+          "description": "a result part larger than this is written to a file and returned as a reference",
+          "minimum": 1024,
+          "type": "integer",
+          "x-since": "1.0"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "command",
+    "args"
+  ],
+  "title": "verify request",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.0"
+}

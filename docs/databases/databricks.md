@@ -62,7 +62,8 @@ come from Unity Catalog `information_schema.table_constraints`, `key_column_usag
 
 TINYINT, SMALLINT, INT and BIGINT retain int8, int16, int32 and int64 widths.
 DECIMAL(p,s) uses decimal128(p,s). TIMESTAMP uses UTC; TIMESTAMP_NTZ has no timezone.
-ARRAY, STRUCT and MAP cross this source boundary as JSON text. Catalog row counts,
+ARRAY, STRUCT and MAP retain recursive native Arrow types from `full_data_type` catalog
+declarations. This parses declared child types and does not profile child fields. Catalog row counts,
 `sampled_rows` and `sampling` distinguish the population and sampled distributions;
 zero requested sample rows reads the catalog only.
 

@@ -11,7 +11,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scale"))
 
-from bridge_helpers import ROWS, Caller, Caller11, Caller12, write_csv  # noqa: E402
+from bridge_helpers import ROWS, Caller, Caller11, Caller12, Caller13, write_csv  # noqa: E402
 
 from shape.bridge.core import Bridge  # noqa: E402
 
@@ -60,3 +60,8 @@ def schema_file(tmp_path) -> Path:
 @pytest.fixture
 def csv_pair(tmp_path) -> tuple[Path, Path]:
     return write_csv(tmp_path / "a.csv"), write_csv(tmp_path / "b.csv", shift=1)
+
+
+@pytest.fixture
+def api13(bridge) -> Caller13:
+    return Caller13(bridge)

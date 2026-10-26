@@ -299,3 +299,108 @@ def test_upsert_with_identity_keep_keeps_the_generated_identity_values(schema):
     table = f"{_tsql.ident(schema)}.[customer]"
     keys = [r[0] for r in query(f"SELECT customer_id FROM {table} ORDER BY customer_id")]
     assert keys == [1000 + 5 * i for i in range(10)]
+
+
+def test_full_retail_all_constraints_and_named_planted_violation(schema):
+    """W9-04 Wanted 5, on the real SQL Server used by the existing nightly job."""
+    import copy
+
+    from shape.generation.domains import load_domain
+    from shape.generation.engine import Engine
+    from shape.generation.output import TargetOptions, write_targets
+
+    definition = copy.deepcopy(load_domain("retail").schema)
+    for table in definition.tables.values():
+        for column in table.columns.values():
+            if column.type == "decimal":
+                column.precision, column.scale = 18, 2
+    engine = Engine(definition, scale="small", seed=1042)
+    contract = {"tables": {"product": {"columns": {"unit_price": {"min": 0, "default": 1}}}}}
+    options = TargetOptions(constraints="all", contract=contract, extra={"sqlserver": LOGIN})
+    uri = uri_for(schema)
+    expected = dict(engine.row_counts)
+    assert len(expected) == 9 and sum(expected.values()) == 21750
+    assert write_targets(engine, [uri], options, max_workers=1) == {uri: expected}
+    assert {name: count(schema, name) for name in expected} == expected
+    product = Engine(definition, scale="small", seed=1042).generate().tables["product"].slice(0, 1)
+    key = product.schema.get_field_index("product_id")
+    cost = product.schema.get_field_index("cost")
+    product = product.set_column(key, "product_id", pa.array([1000000], type=pa.int64()))
+    product = product.set_column(cost, "cost", product.column("unit_price"))
+    load_options = options.for_sink("sqlserver", definition, "product")
+    load_options["write_mode"] = "append"
+    with pytest.raises(WriteError, match="cost_less_than_price") as error:
+        SqlServerSink().write(uri, "product", product.to_batches(), **load_options)
+    assert error.value.rows_committed == 0
+    assert count(schema, "product") == expected["product"]
+
+
+def test_matching_compound_check_allows_existing_append(schema):
+    """Exercise SQL Server's catalog normalization of generated conjunctions."""
+    options = {
+        **LOGIN,
+        "primary_key": ["id"],
+        "checks": [
+            {
+                "name": "ck_amount_range",
+                "expression": {
+                    "op": "and",
+                    "args": [
+                        {"op": ">=", "left": {"column": "amount"}, "right": {"literal": 0}},
+                        {"op": "<=", "left": {"column": "amount"}, "right": {"literal": 10}},
+                    ],
+                },
+            }
+        ],
+    }
+    sink = SqlServerSink()
+    uri = uri_for(schema)
+    first = pa.RecordBatch.from_pydict({"id": [1], "amount": [3]})
+    second = pa.RecordBatch.from_pydict({"id": [2], "amount": [5]})
+    assert sink.write(uri, "bounded", [first], **options) == 1
+    assert sink.write(uri, "bounded", [second], write_mode="append", **options) == 1
+    assert count(schema, "bounded") == 2
+
+
+def test_w9_03_catalog_widths_decimal_and_datetimeoffset(schema):
+    import datetime as dt
+    from decimal import Decimal
+
+    from shape.repro import dataset_id
+
+    value = dt.datetime(2024, 1, 2, 3, 4, 5, 999999, tzinfo=dt.timezone(dt.timedelta(hours=9)))
+    arrow = pa.schema(
+        [("small", pa.int16()), ("amount", pa.decimal128(12, 4)), ("at", pa.timestamp("us", "UTC"))]
+    )
+    batch = pa.RecordBatch.from_pydict(
+        {
+            "small": [-32768, 32767],
+            "amount": [Decimal("-99999999.9999"), Decimal("0.0001")],
+            "at": [value, None],
+        },
+        schema=arrow,
+    )
+    SqlServerSink().write(uri_for(schema), "types", [batch], **LOGIN)
+    conn = _tsql.connect(CS)
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT DATA_TYPE, NUMERIC_PRECISION, NUMERIC_SCALE "
+            "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? "
+            "ORDER BY ORDINAL_POSITION",
+            schema,
+            "types",
+        )
+        types = cursor.fetchall()
+        assert types[0][0] == "smallint"
+        assert tuple(types[1]) == ("decimal", 12, 4)
+        assert types[2][0] == "datetimeoffset"
+        from shape_sqlserver.source import SqlServerSource
+
+        read = pa.Table.from_batches(
+            SqlServerSource().read(uri_for(schema, table="types"), connection=conn)
+        )
+        assert read["at"][0].as_py() == value.astimezone(dt.UTC)
+        assert dataset_id({"items": read}) == dataset_id({"items": pa.Table.from_batches([batch])})
+    finally:
+        conn.close()

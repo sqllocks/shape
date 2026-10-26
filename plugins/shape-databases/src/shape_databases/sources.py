@@ -23,12 +23,35 @@ from .postgres import PostgresSink
 
 SHAPE_API = "1.0"
 
+_SOURCE_URI_KEYS = {
+    "postgres": frozenset(
+        {"sslmode", "sslrootcert", "sslcert", "sslkey", "connect_timeout", "application_name"}
+    ),
+    "mysql": frozenset(
+        {
+            "ssl_ca",
+            "ssl_cert",
+            "ssl_key",
+            "ssl_verify_cert",
+            "ssl_verify_identity",
+            "ssl",
+            "ssl-mode",
+            "charset",
+            "connect_timeout",
+        }
+    ),
+}
+
 
 def catalog_field(name: str, sql_type: str, nullable: bool) -> pa.Field:
     """Map a declared SQL type, keeping width, scale, zone and nullability."""
     kind = sql_type.lower().strip()
     kind = re.sub(r"^(timestamp|datetime|time)\(\d+\)", r"\1", kind)
     metadata = {b"shape.sql_type": sql_type.encode()}
+    if kind.endswith("[]"):
+        child = catalog_field(name, kind[:-2], True)
+        if (child.metadata or {}).get(b"shape.encoding") is None:
+            return pa.field(name, pa.list_(child.type), nullable=nullable, metadata=metadata)
     types = {
         "smallint": pa.int16(),
         "int2": pa.int16(),
@@ -128,7 +151,17 @@ class DatabaseSource:
         batch_size = _integer(options.get("batch_size", 65536), "batch_size", 1)
         _integer(options.get("sample_rows", 1000), "sample_rows", 0)
         target = parse_uri(
-            uri, self.sink.schemes, {**self.sink.uri_params, "table": as_text, "schema": as_text}
+            uri,
+            self.sink.schemes,
+            {
+                **{
+                    key: value
+                    for key, value in self.sink.uri_params.items()
+                    if key in _SOURCE_URI_KEYS[self.sink.dialect]
+                },
+                "table": as_text,
+                "schema": as_text,
+            },
         )
         params = dict(target.params)
         table = params.pop("table", None)

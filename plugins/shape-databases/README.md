@@ -1,8 +1,9 @@
 # sqllocks-shape-databases
 
 Shape plugin: write generated tables straight into a running database, or a local DuckDB file
-(`shape.sinks`), and stream PostgreSQL/MySQL tables (`shape.sources`). Five sinks live here. `postgres` and `mysql` match the dialects of the built-in
-`sql` script sink (same quoting, same Arrow-to-database type map); `snowflake` and `databricks`
+(`shape.sinks`), and stream PostgreSQL/MySQL tables (`shape.sources`). Five sinks live here.
+`postgres` and `mysql` match the built-in `sql` script sink for scalar columns (same quoting
+and scalar type map); native nested columns use the database types below. `snowflake` and `databricks`
 have their own type maps (see [Snowflake](#snowflake) and [Databricks](#databricks)); `duckdb`
 writes Arrow batches into a DuckDB file:
 
@@ -28,6 +29,36 @@ is opened, so core and the rest of Shape never carry them (the Snowflake and Dat
 are extras of this plugin only, not of core). A sink without its driver fails with the
 `pip install` line above, exit 2 on the command line.
 
+## Generated constraints and reruns
+
+`shape generate` defaults to `--sql-constraints keys`; `all` adds supported structured
+CHECK and literal DEFAULT clauses, and `none` (also `keep`) omits derived declarations.
+Use `--contract FILE` for JSON/YAML contract declarations. The core generation path
+prepares all tables before loading parents and then children. DuckDB is the dialect
+exception: it creates foreign keys inline, with parent tables created first.
+
+PostgreSQL, MySQL and DuckDB enforce foreign keys, UNIQUE and CHECK constraints and
+support literal defaults. Snowflake foreign/unique keys are informational, with DEFAULT
+but no CHECK support. Databricks Unity Catalog keys are informational; CHECK uses
+`ALTER TABLE`, while UNIQUE and DEFAULT are unsupported. Unsupported declarations are
+reported as warnings and SQL-script notes rather than silently omitted.
+
+Python sink options accept `foreign_keys` entries with `name`, `columns`, `ref_table`
+and `ref_columns`; `unique` is a list of column lists; `checks` contains named structured
+`expression` objects; `defaults` maps columns to literal values. CHECK expressions use
+the allowlisted comparison, conjunction, membership and null-test operations, never raw
+SQL. Identifiers are quoted and inserted values remain parameters.
+
+Existing-table writes verify requested catalog declarations before mutation. PostgreSQL
+and MySQL CHECK/DEFAULT verification requires temporary-table creation permission.
+All-owned datasets can rerun with coordinated transactional `truncate` on PostgreSQL
+and MySQL; PostgreSQL also supports coordinated `replace`. A late failure restores the
+old dataset. MySQL replacement DDL cannot provide that rollback guarantee and is
+refused with the foreign-key name. DuckDB referenced-table reruns, external incoming
+references and incompatible chunk commits are likewise refused when enforcement cannot
+be preserved. Unrelated writes keep their existing transaction and committed-row rules.
+See [the destination guide](../../docs/SINKS.md#generated-sql-constraints).
+
 ## Cloud sources
 
 The `shape.sources` entries `snowflake` and `databricks` read tables and profile schema
@@ -52,7 +83,8 @@ Snowflake profiles record the warehouse the session actually used in provenance.
 | Snowflake `TIMESTAMP_NTZ`; Databricks `TIMESTAMP_NTZ` | zone-less `timestamp(us)` |
 | Snowflake `TIMESTAMP_TZ` / `TIMESTAMP_LTZ`; Databricks `TIMESTAMP` | `timestamp(us, tz=UTC)` |
 | `DATE` / `TIME` / `BOOLEAN` / `BINARY` | `date32` / `time64(us)` / `bool` / `binary` |
-| Snowflake `VARIANT` / `ARRAY` / `OBJECT`; Databricks `ARRAY` / `STRUCT` / `MAP` | JSON text (`string`) |
+| Snowflake `VARIANT` / `ARRAY` / `OBJECT` | JSON text (`string`) |
+| Databricks `ARRAY` / `STRUCT` / `MAP` | recursive native Arrow types from `full_data_type` |
 
 Catalog nullability and declared primary/foreign keys are retained. Relationships carry
 `evidence: "declared"`, including Snowflake's informational keys. Catalog population row
@@ -109,10 +141,13 @@ with the length of the stream.
 | `columns`, `primary_key`, `schema` | as for the `sql` sink: per-column `{type, nullable, max_length, precision, scale}`, key columns, and the Arrow schema for creating an empty table from no batches |
 | `password`, `credential`, `token_scope` | see Credentials |
 
+**Historical behavior before W9-03.** The following paragraph records the former
+writer; use [SQL type fidelity on write](#sql-type-fidelity-on-write) for current types.
+
 A missing table is created from the Arrow schema with the `sql` sink's types (`BIGINT`,
 `VARCHAR(n)`, `NUMERIC`/`DECIMAL`, `TIMESTAMP`/`DATETIME(6)`, `BOOLEAN`/`TINYINT(1)`, `BYTEA`/`LONGBLOB`,
 ...). String columns are sized to the first batch (at least 255); more than 4000 characters, and
-nested list/struct values (written as JSON text), become `TEXT` / `LONGTEXT`. A later, longer
+nested values with explicit `nested=json`, become `TEXT` / `LONGTEXT`. A later, longer
 value fails the write instead of being truncated. Timestamps with a zone are stored as UTC.
 
 All names (table, schema, columns) are checked and quoted: a hostile name stays one identifier,
@@ -166,6 +201,8 @@ table `customer` is `"customer"` (not `CUSTOMER`) and is queried quoted. A name 
 characters, with a control character or a leading or trailing space, is refused with the name in the
 message before any connection; so are two columns of one name.
 
+**Historical map before W9-03.** See [the current map](#sql-type-fidelity-on-write).
+
 **Type map from Arrow** (a type not listed, such as `time` or `duration`, is refused before any
 connection, with the column's name):
 
@@ -180,9 +217,17 @@ connection, with the column's name):
 | `timestamp` without a zone | `TIMESTAMP_NTZ` (zone-less, kept as written) |
 | `timestamp` with a zone | `TIMESTAMP_TZ`, stored as UTC |
 | `binary`, `large_binary`, `fixed_size_binary` | `BINARY` |
-| `list`, `struct`, `map` | `VARIANT` |
+| `list`, `struct`, `map` | `VARIANT`; `nested=typed` selects `ARRAY` for lists and `OBJECT` for structs/maps |
 
-Timestamps are staged in microseconds (nanoseconds are rounded to them).
+Scalar timestamps are staged in microseconds (nanoseconds are rounded to them).
+Native/typed nested COPY uses `USE_VECTORIZED_SCANNER=TRUE` and logical types to preserve null
+array positions. Parquet object maps require string keys and no duplicate entries; empty
+structs are refused before connecting. Errors name the column and suggest adding fields or
+preencoding a JSON string where the Parquet shape cannot be stored.
+Nested binary requires manually base64-encoding into Arrow strings before writing; its
+Parquet-to-VARIANT binary representation has no verified lossless read-back mapping.
+Top-level binary columns keep their scalar mapping. Other unsupported leaves, including
+durations that Parquet could physically encode as integers, are refused before connecting.
 
 **Transactions and what a failure leaves behind.** Snowflake commits DDL at once. The connection
 runs with `autocommit` off, so the `COPY INTO` is one transaction: a failure rolls the rows back, and
@@ -230,6 +275,8 @@ a column name with a space or one of `,;{}()=`, a tab or a newline (which Delta 
 refused; any name over 255 characters is refused; two columns that differ only in case are
 refused. All before any connection.
 
+**Historical map before W9-03.** See [the current map](#sql-type-fidelity-on-write).
+
 **Type map from Arrow** (a type not listed, such as `time` or `duration`, is refused before any
 connection, with the column's name):
 
@@ -246,7 +293,14 @@ connection, with the column's name):
 | `timestamp` without a zone | `TIMESTAMP_NTZ` |
 | `timestamp` with a zone | `TIMESTAMP`, stored as UTC |
 | `binary`, `large_binary`, `fixed_size_binary` | `BINARY` |
-| `list`, `struct`, `map` | `STRING`, as JSON text |
+| `list`, `struct`, `map` | recursive `ARRAY<T>`, `STRUCT<field: T, ...>`, `MAP<STRING, V>`; `nested=json` keeps `STRING` JSON text |
+
+Native nested values are bound JSON converted with `from_json` and `FAILFAST`, using the
+resolved recursive schema. ISO timestamp text contains `T`; decimals retain exact scale.
+The JSON transport requires string map keys. Non-string keys, empty structs, unsupported
+leaves and invalid decimal precision/scale fail before connecting, naming `nested=json` as
+the alternative. Duplicate map entries are refused instead of collapsed into an object.
+An invalid first batch fails before connecting; an invalid later batch reports committed rows.
 
 **Transactions and what a failure leaves behind.** A SQL warehouse commits every statement and has
 no rollback, so there is no transaction around a write. `commit_rows` is accepted and is the batch
@@ -286,7 +340,8 @@ DuckDbSink().write(
 `duckdb:///PATH.duckdb` is relative to the working directory, `duckdb:////abs/path.duckdb`
 absolute (Windows: `duckdb:///C:/data/x.duckdb`); a host, a password, no path and `:memory:` are
 refused. `?schema=` (or `schema_name=`) is the DuckDB schema, created when missing in a step of its
-own. Each Arrow batch is scanned by DuckDB as an Arrow table: no value is converted in Python.
+own. In the default native mode, each Arrow batch is scanned by DuckDB as an Arrow table:
+no value is converted in Python.
 
 | Arrow type | DuckDB column |
 |---|---|
@@ -301,14 +356,29 @@ own. Each Arrow batch is scanned by DuckDB as an Arrow table: no value is conver
 | time32 / time64 | `TIME` (nanoseconds cut to microseconds) |
 | timestamp, no zone: s / ms / us / ns | `TIMESTAMP_S` / `TIMESTAMP_MS` / `TIMESTAMP` / `TIMESTAMP_NS` |
 | timestamp with a zone | `TIMESTAMPTZ` |
+| list, large list, fixed-size list | `T[]`, recursively |
+| struct | `STRUCT("field" T, ...)`, recursively |
+| map | `MAP(K, V)`, recursively |
 
-Nested values and durations are refused with the column named. `primary_key` becomes a `PRIMARY KEY`;
+`nested="native"` is the default. `nested="json"` (also `?nested=json`) stores every nested
+column as JSON text in `VARCHAR`. This explicit fallback converts values in Python; decimal
+and temporal values retain their exact text, including decimal scale and timezone offsets.
+Maps use ordered key/value pairs, including non-string keys. SQL NULL containers stay NULL.
+Map order and JSON object key order do not affect equality. Native lists read back as variable
+lists; nested time and zoned timestamp values follow the scalar microsecond normalization,
+and zoned timestamp comparisons use UTC.
+
+Empty structs, struct field names that collide under ASCII case folding and unsupported nested
+leaves are refused before connecting, naming the column and `nested=json` alternative. Exact
+duplicate struct field names must instead be renamed to distinct names in every mode. Durations
+outside a nested JSON column are refused with the column named. `primary_key` becomes a `PRIMARY KEY`;
 a key column, or one whose `columns` entry says `"nullable": false`, is `NOT NULL`.
 
 | option | meaning |
 |---|---|
 | `write_mode` (or `?write_mode=`; the option wins) | `create` (default: an existing table is an error), `append` (create if missing), `truncate` (`DELETE`, then add; create if missing), `replace` (drop and create), `upsert` (`INSERT OR REPLACE` on the primary key; none: `upsert needs a primary key on <table>`) |
 | `commit_rows` | commit every N rows (rounded up to a batch) so another connection sees them |
+| `nested` | `native` (default), or `json` to store nested values as JSON text |
 | `schema_name`, `columns`, `primary_key`, `schema` | as above, as for the other sinks |
 
 One table is one transaction: a failure rolls back the rows, the table this call created and a
@@ -317,6 +387,47 @@ what stays). Tables of a run are written at the same time, each on its own conne
 another process holds locked is a `ShapeError` (exit 2) with DuckDB's message. Reading the tables
 back gives the same `shape.repro.dataset_id` as the generated tables. DuckDB is imported when a write
 starts, never at import time, and is never a core dependency.
+
+## Nested values in PostgreSQL and MySQL
+
+All database writers default to `nested=native`; the option also accepts `json` in Python or
+the URI. PostgreSQL scalar lists use matching arrays (`TEXT[]`, `INTEGER[]`,
+`NUMERIC(p,s)[]`, etc.) with text-format COPY values. Structs, maps and lists of structs use
+`JSONB`. MySQL uses `JSON` for every nested shape. PostgreSQL lists of lists fail before any
+connection, naming the column and the `nested=json` alternative. Explicit JSON mode preserves
+the earlier PostgreSQL `TEXT` and MySQL `LONGTEXT` encodings.
+
+Native JSON-backed values preserve NULL versus empty containers. Decimals are exact strings,
+dates/timestamps are ISO strings, binary values are base64 and maps use key/value pairs,
+preserving duplicate entries where the target can represent them. Non-finite numbers are
+refused. These JSON-backed columns may read back as JSON text; restore Arrow types only with
+the original caller-supplied schema, rejecting corrupt or schema-mismatched JSON. There is no
+automatic child-schema inference. PostgreSQL scalar arrays and DuckDB's native containers
+retain their declared read-back types. Map and JSON object key order are normalized for
+comparisons; temporal comparisons use the documented microsecond and UTC normalization.
+
+For JSON-backed source output, use
+`shape_databases.nested_readback.restore_json_column(raw_values, original_field)` with the
+original Arrow field. It parses exactly once, refuses duplicate object fields, quoted JSON
+in place of containers, corrupt values and schema mismatches, and leaves JSON-looking child
+strings unchanged. Exact decimal and temporal precision is retained or explicitly refused.
+PostgreSQL/MySQL native nested nanosecond time fields are refused before connection: the
+Python conversion would discard digits. Preencode exact times as Arrow strings first;
+`nested=json` also uses Python time values and cannot recover those digits.
+Native Databricks timestamps have microsecond precision; a nested value with nonzero finer
+digits is refused before binding, with `nested=json` as the text-storage alternative.
+PostgreSQL native timestamp array schemas with nanosecond precision are likewise refused;
+JSONB timestamp text and explicit JSON text can retain those extra digits.
+PostgreSQL source array element types come from catalog declarations, including decimal
+scale and timestamp zones, and read as native Arrow lists. Source URIs reject writer-only
+options such as `nested`, `write_mode` and `commit_rows` before connecting.
+
+The existing local DuckDB `shape.sources` reader is
+`shape_integrations.duckdb_source.DuckDbSource` (`sqllocks-shape-integrations`). Use
+`duckdb:///abs/path.duckdb?table=main.NAME`, then `schema(uri)` or
+`read(uri, batch_size=65536)` for native Arrow data, with UTC timestamp instants. It opens
+read-only, refuses writer URI options and never creates missing files. No catalog profiling
+capability is claimed for this local reader.
 
 ## Credentials
 
@@ -525,3 +636,53 @@ Local emulator: `docker compose -f ci/emulators/docker-compose.yml up -d --wait 
 set `ORACLE_PASSWORD=shape_emulator` and run
 `pytest -m emulator plugins/shape-databases/tests/test_oracle_emulator.py` with the oracle
 extra installed. The tests fail if the service or driver is unavailable; they do not skip.
+
+## SQL type fidelity on write
+
+Arrow types resolve directly to SQL DDL; integer widths and decimal precision are not
+inferred from values. The script and live PostgreSQL/MySQL maps are shared.
+
+| Arrow | PostgreSQL | MySQL | T-SQL | Fabric Warehouse | Snowflake | Databricks |
+|---|---|---|---|---|---|---|
+| int8 / int16 / int32 / int64 | SMALLINT / SMALLINT / INTEGER / BIGINT | TINYINT / SMALLINT / INT / BIGINT | SMALLINT / SMALLINT / INT / BIGINT | SMALLINT / SMALLINT / INT / BIGINT | NUMBER(3,0) / NUMBER(5,0) / NUMBER(10,0) / NUMBER(19,0) | TINYINT / SMALLINT / INT / BIGINT |
+| uint8 / uint16 / uint32 | next signed width | next signed width | TINYINT / INT / BIGINT | SMALLINT / INT / BIGINT | NUMBER(5,0) / NUMBER(10,0) / NUMBER(19,0) | SMALLINT / INT / BIGINT |
+| uint64 | NUMERIC(20,0) | DECIMAL(20,0) | DECIMAL(20,0) | DECIMAL(20,0) | DECIMAL(20,0) | DECIMAL(20,0) |
+| float32 | REAL | FLOAT | REAL | REAL | FLOAT(24) | FLOAT |
+| zoned timestamp | TIMESTAMPTZ(p) | TIMESTAMP(p) | DATETIMEOFFSET(p) | DATETIME2(6) | TIMESTAMP_TZ(p) | TIMESTAMP |
+| zone-less timestamp | TIMESTAMP(p) | DATETIME(p) | DATETIME2(p) | DATETIME2(p) | TIMESTAMP_NTZ(p) | TIMESTAMP_NTZ |
+| time32 / time64 | TIME(p) | TIME(p) | TIME(p) | TIME(p) | TIME(p) | TIME(6) |
+| uuid metadata | UUID | CHAR(36) | UNIQUEIDENTIFIER | VARCHAR(36) | VARCHAR(36) | VARCHAR(36) |
+
+Unsigned values use the next signed width; uint64 needs 20 decimal digits. T-SQL int8
+uses SMALLINT because TINYINT is unsigned. Timestamp/time units s, ms, us and ns mean
+0, 3, 6 and 9 fractional digits, capped at the dialect's limit (7 for T-SQL, 6 for
+PostgreSQL, MySQL and Fabric Warehouse). Snowflake supports 9; Databricks timestamps
+store microseconds. A zoned timestamp keeps its instant to the microsecond. Writes
+normalize to UTC, with +00:00 in offset-capable types; MySQL sets its write session to
+UTC, and Warehouse stores UTC in DATETIME2(6). Read-back comparisons normalize to
+UTC-aware values. The original zone name is not preserved. Zone-less values stay zone-less.
+
+Decimals always use the Arrow precision and scale, otherwise `columns.precision` and
+`columns.scale`; incomplete or invalid dimensions are refused with the column name.
+UUID is selected by `columns.type="uuid"` or Arrow field metadata `type=uuid`.
+String lengths come from `columns.max_length` (generation-schema declared widths are
+forwarded there). Unspecified strings are unbounded: TEXT for PostgreSQL/MySQL,
+NVARCHAR(MAX) for T-SQL, VARCHAR(MAX) in script Warehouse DDL, VARCHAR for Snowflake,
+and STRING for Databricks. The live Warehouse writer also uses VARCHAR(MAX) (the service stores up to 16 MB);
+T-SQL and Warehouse string key columns require explicit `max_length`; missing widths
+are refused before any connection, naming the column. No key width is guessed. Synapse retains its separate columnstore-compatible
+8000-character limit. The previous VARCHAR(255) default
+and first-batch string sizing are removed; a short first batch cannot truncate a later one.
+
+T-SQL declared strings beyond 4000 characters and Warehouse declared strings beyond
+8000 characters use their unbounded `MAX` types. Such widths on key columns are
+refused before connecting because `MAX` columns cannot be indexed. Declared widths
+are preserved without clamping; backend limits on actual index values still apply.
+
+`shape generate schema.json --to postgresql://user@host/db --dry-run` prints the
+resolved CREATE TABLE statements without generating rows, signing in, connecting or
+writing. `--json` adds a `ddl` list to the generation plan, each with `target`, `table`
+and `sql`. SQL database sink adapters expose the optional offline
+`ddl(uri, table, arrow_schema, **options)` hook; values and credentials never enter DDL.
+
+UUID fields read from a source use Arrow field metadata `shape.type=uuid`; writers also accept the earlier `type=uuid` metadata key.

@@ -304,7 +304,9 @@ table with a struct or list column has no CSV or TSV form).
 
 - `hashes.json` (`format: "shape-golden-bytes"`, integer `version`, currently 1) holds the
   `seed`, the `rows`, the `shape_version` that wrote it and the digest of each file
-  (`<spec>/<table>.<csv|tsv|jsonl|<dialect>.sql>`).
+  (`<spec>/<table>.<csv|tsv|jsonl|<dialect>.sql>`). Its optional `refusals` map records
+  the exact column-named diagnostic for SQL cases that declare decimals without dimensions;
+  their original inputs are retained. A v1 corpus without this field remains readable.
 - `lines.json` (`format: "shape-golden-bytes-lines"`) holds a short digest of every line, so a
   difference is reported as the first line that differs, with the line written now.
 
@@ -391,6 +393,6 @@ python scripts/golden_bytes.py --update   # rewrite the corpus
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    418 files match the golden byte corpus
-    wrote 418 file digests to tests/generation/golden_bytes/hashes.json
+    390 files and 28 named refusals match the golden byte corpus
+    wrote 390 file digests to tests/generation/golden_bytes/hashes.json
     ```

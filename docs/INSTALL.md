@@ -118,7 +118,7 @@ Run these commands in order after preparing the fixtures above.
 ```bash {.runnable-reference}
 python -m venv --copies --system-site-packages install-env
 . install-env/bin/activate
-python -m pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO"
+python -m pip install --quiet --no-deps --no-build-isolation -e .
 shape doctor
 shape conformance
 ```

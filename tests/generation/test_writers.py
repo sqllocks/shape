@@ -310,7 +310,7 @@ def test_sql_from_a_schema_carries_keys_and_nullability(tmp_path):
     write_result(result, "sql", tmp_path, sql_dialect="postgres")
     text = (tmp_path / "customer.sql").read_text("utf-8")
     assert 'PRIMARY KEY ("customer_id")' in text and '"name"' in text
-    assert re.search(r'"name"\s+VARCHAR\(255\)\s+NULL', text)  # null_rate 0.2 -> nullable
+    assert re.search(r'"name"\s+TEXT\s+NULL', text)  # null_rate 0.2 -> nullable
 
 
 def test_unknown_format_is_refused(tmp_path):

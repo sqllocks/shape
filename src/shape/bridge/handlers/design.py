@@ -1,8 +1,9 @@
 """``design`` and ``design_from_data`` (bridge 1.1).
 
 They call what ``shape design`` and ``shape design --from-data`` call (``shape.design``) and are
-read-only: the DDL and the derived tables come back in the result, nothing is written. For the
-same input the ``ddl`` text is byte for byte the file ``shape design -o`` writes, and ``tables`` is
+read-only: the DDL and the derived tables come back in the result, nothing is written.
+For bridge 1.3, the same input yields ``ddl`` byte for byte equal to ``shape design -o``;
+earlier minors keep their historical type presentation after validation. ``tables`` is
 the document ``--json`` writes.
 """
 
@@ -52,7 +53,7 @@ def read_design(path: str) -> Any:
 
 
 def cmd_design(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
-    from shape.design.ddl import emit_ddl
+    from shape.design.ddl import _emit_ddl
     from shape.design.engine import derive
     from shape.design.lint import lint
 
@@ -64,11 +65,12 @@ def cmd_design(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     if not passed:  # as on the command line: no DDL for a design with errors
         return {"lint": report, "tables": None, "ddl": None, "passed": False}
     result = derive(design, mode)
-    ddl = emit_ddl(
+    ddl = _emit_ddl(
         result,
         args.get("dialect", "tsql"),
         schema_name=args.get("schema_name"),
         drop=bool(args.get("drop")),
+        _legacy_design_types=ctx.minor < 3,
     )
     return {
         "lint": report,

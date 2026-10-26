@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "passed": {
+      "type": "boolean"
+    },
+    "project": {
+      "additionalProperties": true,
+      "properties": {
+        "baseline": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "file": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "format",
+        "version"
+      ],
+      "type": "object"
+    },
+    "violation_count": {
+      "type": "integer"
+    },
+    "violations": {
+      "anyOf": [
+        {
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "column": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "redacted": {
+                "type": "boolean"
+              },
+              "rule": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "properties": {
+            "bytes": {
+              "type": "integer"
+            },
+            "content_id": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "spilled": {
+              "const": true
+            }
+          },
+          "required": [
+            "spilled",
+            "content_id",
+            "path",
+            "bytes"
+          ],
+          "type": "object"
+        }
+      ]
+    }
+  },
+  "required": [
+    "passed",
+    "violation_count",
+    "violations"
+  ],
+  "title": "check result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.0"
+}

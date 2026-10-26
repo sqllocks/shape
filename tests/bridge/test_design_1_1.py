@@ -26,14 +26,22 @@ def cli(capsys, *argv):
 @pytest.mark.parametrize("mode", MODES)
 @pytest.mark.parametrize("dialect", DIALECTS)
 def test_ddl_and_tables_are_byte_identical_to_the_clis_files(
-    tmp_path, api11, capsys, name, mode, dialect
+    tmp_path, api13, capsys, name, mode, dialect
 ):
     path = write_design(tmp_path, name)
     sql, tables = tmp_path / "out.sql", tmp_path / "out.json"
     code, _, _ = cli(
         capsys, "design", path, "--mode", mode, "--dialect", dialect, "-o", sql, "--json", tables
     )
-    result = api11.ok("design", input=str(path), mode=mode, dialect=dialect)
+    if name in {"tiny", "keyless"} and mode == "3nf" and dialect.startswith("tsql"):
+        assert code == 2
+        error = api13.fail(
+            "design", "input.invalid_value", input=str(path), mode=mode, dialect=dialect
+        )
+        assert error["message"] == "column 'city': indexed string requires explicit max_length"
+        assert not sql.exists()
+        return
+    result = api13.ok("design", input=str(path), mode=mode, dialect=dialect)
     if code != 0:
         assert result["passed"] is False and result["ddl"] is None and result["tables"] is None
         return
@@ -49,20 +57,20 @@ def test_ddl_and_tables_are_byte_identical_to_the_clis_files(
 def test_the_lint_report_is_the_clis_lint_json(tmp_path, api11, capsys, name, mode):
     path = write_design(tmp_path, name)
     code, out, _ = cli(capsys, "design", path, "--mode", mode, "--lint")
-    result = api11.ok("design", input=str(path), mode=mode)
+    result = api11.ok("design", input=str(path), mode=mode, dialect="postgres")
     assert result["lint"] == json.loads(out)
     assert result["passed"] is (code == 0)
     assert result["passed"] is not any(f["severity"] == "error" for f in result["lint"])
 
 
-def test_schema_name_and_drop_are_applied(tmp_path, api11, capsys):
+def test_schema_name_and_drop_are_applied(tmp_path, api13, capsys):
     path = write_design(tmp_path, "retail")
     sql = tmp_path / "x.sql"
     cli(capsys, "design", path, "--mode", "star", "--schema-name", "dw", "--drop", "-o", sql)
-    result = api11.ok("design", input=str(path), mode="star", schema_name="dw", drop=True)
+    result = api13.ok("design", input=str(path), mode="star", schema_name="dw", drop=True)
     assert result["ddl"] == sql.read_text(encoding="utf-8")
     assert "[dw].[fact_sales]" in result["ddl"] and "DROP TABLE" in result["ddl"]
-    plain = api11.ok("design", input=str(path), mode="star")
+    plain = api13.ok("design", input=str(path), mode="star")
     assert "DROP TABLE" not in plain["ddl"] and "[dw]" not in plain["ddl"]
 
 
@@ -100,7 +108,7 @@ def test_a_design_with_errors_has_no_ddl_and_does_not_pass(tmp_path, api11, caps
 
 
 def test_a_warning_alone_still_passes(tmp_path, api11):
-    result = api11.ok("design", input=str(write_design(tmp_path, "keyless")))
+    result = api11.ok("design", input=str(write_design(tmp_path, "keyless")), dialect="postgres")
     assert result["passed"] is True and any(f["severity"] == "warning" for f in result["lint"])
     assert result["ddl"].startswith("-- Schema design")
 

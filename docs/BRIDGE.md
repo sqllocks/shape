@@ -106,7 +106,7 @@ The full list, with a sentence for each, is `error_codes` in
 
 ## Versions and the stability promise
 
-`api_version` is `MAJOR.MINOR`; this bridge speaks **1.2** and serves **1.0 to 1.2**.
+`api_version` is `MAJOR.MINOR`; this bridge speaks **1.3** and serves **1.0 to 1.3**.
 
 - **Minor versions only add:** a command, an optional argument, an option, a result field, an error
   code, a warning code. A client written for 1.0 keeps working on 1.7, so **a client ignores result
@@ -115,15 +115,15 @@ The full list, with a sentence for each, is `error_codes` in
   result field, error code or the meaning of any of them.
 - **A major version may break.** A bridge serves one major version. A request for another is refused
   with `usage.unsupported_version`, and the message names the supported range
-  (`... this bridge serves 1.0 to 1.2`). The response always carries the bridge's own
+  (`... this bridge serves 1.0 to 1.3`). The response always carries the bridge's own
   `api_version`, so a client can read it from the refusal.
 - A request with a newer *minor* than the bridge's is served, with the warning
   `newer_minor_version`: what the newer minor added is not available.
-- A request with **no `api_version`** is served as 1.2, with the warning `api_version_assumed`.
+- A request with **no `api_version`** is served as 1.3, with the warning `api_version_assumed`.
 - Persisted files declare their own `format` and integer `version` (the job file below, the vector
   files). A file written by a newer Shape is refused with `input.unsupported_format_version`, never
   misread. The job file `shape-bridge-job` and the vector files `shape-bridge-vectors` are still
-  version 1: a job file written by 1.0 or 1.1 is read unchanged by the 1.2 bridge.
+  version 1: a job file written by 1.0 or 1.1 is read unchanged by the 1.3 bridge.
 
 **The 1.0 promise.** A request that declares `"api_version": "1.0"` is answered exactly as the 1.0
 bridge answers it:
@@ -133,7 +133,7 @@ bridge answers it:
 - no result field or warning of 1.1 or 1.2 is added to the result of a 1.0 command (`verify`'s gates have no
   `details` for a 1.0 request, for example);
 - the one field that differs is the response's own `api_version`, which is the bridge's version
-  (`"1.2"`), as it always was.
+  (`"1.3"`), as it always was.
 
 Every command and every argument records the version that added it: `since` (`"1.0"`, `"1.1"` or `"1.2"`) in
 `index.json` (`commands.NAME.since`, and `commands.NAME.args` for each argument) and `x-since` in the
@@ -147,8 +147,8 @@ optional scikit-learn (extra `advanced`): replay it with scikit-learn absent or 
 the fidelity section also runs the adversarial test and its answer differs.
 The 1.0 contract is **frozen** in [`docs/bridge/schema/1.0/`](bridge/schema/1.0/index.json) and
 [`docs/bridge/vectors/1.0/`](bridge/vectors/1.0): `tests/bridge/test_compat_1_0.py` replays every 1.0
-vector against the 1.2 bridge (each response equals the recorded one in every field except
-`api_version`) and checks that the 1.2 schemas keep every 1.0 command, argument (name, type,
+vector against the 1.3 bridge (each response equals the recorded one in every field except
+`api_version`) and checks that the 1.3 schemas keep every 1.0 command, argument (name, type,
 required-ness, enum values, default), result property, error code and warning code.
 
 ## Commands
@@ -671,6 +671,21 @@ object per gate. A `verify` served as 1.0 has no `details`.
 ```
 
 
+## What's new in 1.3
+
+Bridge 1.3 design DDL matches the CLI and Python `emit_ddl` API: strings without
+`max_length` use `NVARCHAR(MAX)` on SQL Server, `VARCHAR(MAX)` on Fabric Warehouse,
+and `TEXT` on PostgreSQL and MySQL. This includes the date dimension name columns
+and derived city/country columns. Declare `max_length` for indexed SQL Server and
+Fabric string columns; a missing width fails with the column name before a connection.
+Requests declaring 1.1 or 1.2 retain historical DDL spellings, including their 255
+string widths, after the same validation. Version 1.0 negotiation is unchanged.
+The historical examples below retain their declared versions and responses.
+The current vectors are published under [`bridge/vectors/1.3`](bridge/vectors/1.3),
+including separate 1.3 date and city examples; the complete 1.2 schema and vector
+publication is frozen under [`bridge/schema/1.2`](bridge/schema/1.2/index.json) and
+[`bridge/vectors/1.2`](bridge/vectors/1.2). The current schema files advertise 1.3.
+
 ## What's new in 1.2
 
 Bridge 1.2 adds the analysis commands of the open engine, so an editor, a notebook or an agent no
@@ -699,7 +714,7 @@ message 1.1 gave, `proposals_list` and `proposals_propose` read decision files o
 `format_schema` lists the names 1.1 listed, and no 1.2 result field or warning is added. The 1.1
 contract is **frozen** in [`docs/bridge/schema/1.1/`](bridge/schema/1.1/index.json) and
 [`docs/bridge/vectors/1.1/`](bridge/vectors/1.1); `tests/bridge/test_compat_1_1.py` replays every 1.1
-vector against the 1.2 bridge and holds the 1.2 schemas to the 1.1 ones, next to the 1.0 replay.
+vector against the 1.3 bridge and holds the 1.2 schemas to the 1.1 ones, next to the 1.0 replay.
 The job file `shape-bridge-job` stays at version 1, and a job written by the 1.1 bridge is read by
 the 1.2 bridge.
 
@@ -1467,7 +1482,7 @@ echo '{"api_version": "1.0", "id": "r1", "command": "dry_run", "args": {"domain"
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    {"api_version": "1.2", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
+    {"api_version": "1.3", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
     ```
 
 <a id="local-example-112"></a>
@@ -1487,9 +1502,9 @@ EOF
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    {"api_version": "1.2", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
-    {"api_version": "1.2", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
-    {"api_version": "1.2", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
+    {"api_version": "1.3", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
+    {"api_version": "1.3", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
+    {"api_version": "1.3", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
     ```
 
 Oracle sources (`oracle://` and `tcps://`, from `sqllocks-shape-databases[oracle]`) support

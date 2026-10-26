@@ -451,6 +451,16 @@ def main() -> None:
 
     merge_1_1()
     merge_1_2()
+    # Add current-minor examples without rewriting historical requests.
+    import copy
+
+    for old in list(FILES["design"]["cases"]):
+        if old["name"] in {"star", "postgres-3nf"}:
+            new = copy.deepcopy(old)
+            new["name"] += "-1.3"
+            new["request"]["api_version"] = "1.3"
+            new["request"]["id"] = new["name"]
+            FILES["design"]["cases"].append(new)
     write_fixtures()
     for command, doc in FILES.items():
         with tempfile.TemporaryDirectory() as tmp:
