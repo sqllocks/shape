@@ -150,3 +150,7 @@ Root exact34rollup26SUCCESS/6running+2structuralpublishskips, ALLjobsstarted;31r
 ## All source jobs started Oct26 00:25UTC
 
 34core22SUCCESS/5running/0queued, minversionsgreen; Ubuntu3.13/14 finalkernel,Ubuntu3.11heavy,Ubuntu3.12+macOS3.11coverage. Rollup27SUCCESS/5running+2structuralpublishskips.31core23SUCCESS/4running (minversions,Ubuntu3.11/3.13,Windows3.14). IcebergWheels40243562771 solemacIntel3.11finallyIN_PROGRESS, actualpipinstallstepverified; other9jobssuccess.31rollup37SUCCESS/5running+2structuralpublishskips, no queuedchecks. No failures, no reruns/changes. Exactheads/currentreviewsunchanged. Counts4/9merged44.4%,5left55.6%,fullupdateprovided00:25. Scratchc85d13apushed. Continuefirstfullygreenmerge/refreshremainingonce.
+
+## Near-completion source CI Oct26 00:30UTC
+
+34rollup29SUCCESS/3running+2structuralpublishskips;31rollup39SUCCESS/3running+2structuralpublishskips.31Wheels40243562771 ALL10SUCCESS; Windows3.11and3.14+bothmacOS+Ubuntu3.12/3.14+zero-network+plugin-skeletons allSUCCESS. Remaining31core minversions+Ubuntu3.11/3.13. No failure. Metadata00:27:30 reaffirmed independentAPPROVAL exact24a145795a0f33f95d125fa0a7123f76b959d780 containingcurrentmain90fb; remoteunchanged. MainCI40243508314 remains22SUCCESS/5running/no failures; Ubuntu3.13kernel/macOS3.14heavyadvancing. Docs/SecuritymainSUCCESS. Rootmergefirstallgreen34or31viahelper immediately, thenrefreshremaining. Allotherheads/holdsunchanged. Counts4/9merged44.4%,5remaining55.6%; fullupdate00:30. Scratch037f171confirmedpushed.
