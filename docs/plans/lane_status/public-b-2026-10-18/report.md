@@ -93,12 +93,22 @@ BigQuery's former source dependency is resolved: PR35 closed unmerged and was su
 
 Pending external validation, none claimed passing:
 
-- #9/#10: Kafka/Event Hubs account round trips; broker emulators; Azure Schema Registry Avro round trip (scope approval already resolved).
+- #9/#10: selected hosted Kafka/Event Hubs emulator cases passed as detailed below; account round trips, Azure Schema Registry Avro and Event Hubs binary account validation remain pending. Kafka's matched metadata case asserts keys, not received headers.
 - #11: no account-dependent live requirement; actual offline DuckDB/dbt acceptance passed.
-- #12: Kusto/Eventhouse emulator and account read-back.
+- #12: the selected hosted Eventhouse emulator source round trip passed as detailed below; broader sampled Eventhouse and account validation remain pending.
 - #13: Owner measure/role fixture with expected metadata and role-visible rows. Existing live tests cover relationships/table reads; no role deployment or live query occurred.
 - #17: local source-built REST/MinIO services and actual round trips passed; fresh hosted PR50 validation remains required. No account-live pass claimed.
 - #14: O14 settings for live generate→write→profile and dataset identity agreement; no real BigQuery account used.
+
+## Specific hosted emulator evidence
+
+On dispatched-main [Nightly40272534667](https://github.com/sqllocks/shape/actions/runs/40272534667), exact head682759841dcffd56dff62f74dc90ac18286cc600, these existing emulator selections actually passed. Whole-selection totals are not counts of newly added coverage; none is an account-live claim.
+
+- [Kafka job121408250206](https://github.com/sqllocks/shape/actions/runs/40272534667/job/121408250206): SUCCESS,17passed139deselected, no skipped tests. The selected emulator-marked file includes `test_plain_binary_nested_read_write[avro]` and `[protobuf]`, each local-schema emit→read preserving nested child `{id:7}`, and `test_keyed_metadata_round_trip_emulator`, asserting emitted keys survive. That metadata case supplies headers but does not assert received headers; no header coverage is inferred.
+- [Event Hubs job121408250208](https://github.com/sqllocks/shape/actions/runs/40272534667/job/121408250208): SUCCESS,14passed65deselected, no skipped tests. Matched `test_keyed_metadata_round_trip_emulator` asserts `shape_key`, `shape-key` and `rehearsal` application-property values after emitter→emulator read-back. This does not cover Azure Schema Registry or Event Hubs binary account round trips.
+- [Fabric/Eventhouse job121408250367](https://github.com/sqllocks/shape/actions/runs/40272534667/job/121408250367): SUCCESS,10passed, no skipped tests. Matched `test_emitter_rows_profile_through_eventhouse_source` emits two rows and asserts EventhouseSource `profile_tables(sample_rows=0)` returns column `x` and two rows. Broader sampled profiling and account validation remain pending.
+
+These specific pending emulator actions are partly fulfilled. Original acceptance proofs and remaining live boundaries are preserved; no extra test execution or raw-log archive was created to establish this evidence.
 
 No implementation is parked, and no new Owner question is needed. Lead A branches/issues and Premium were not edited. All owned commits are pushed. Current exact heads, merge guards, agent ownership and holds are in [state.md](state.md). This remains an interim report until all assigned issues are merged or genuinely parked.
 
