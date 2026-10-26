@@ -26,10 +26,17 @@ from urllib.parse import parse_qsl, unquote, urlsplit
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.generation.write_constraints import (
+    _PREPARED_CONSTRAINTS,
+    ConstraintDDL,
+    _PreparedTransaction,
+    compile_constraints,
+)
 
 from . import _sql
 from ._auth import Secret, resolve_password, scrub
 from .errors import WriteError
+from .nested import nested_mode
 
 log = logging.getLogger("shape_databases")
 
@@ -177,6 +184,7 @@ class DatabaseSink:
     uri_params: Mapping[str, Callable[[str], Any]] = {}
     # ``SELECT 1`` when the table exists; parameters are (schema or None, table).
     exists_sql = ""
+    incoming_constraints_sql = ""
 
     def __init__(self, connect: Callable[..., Any] | None = None) -> None:
         self._connect = connect
@@ -190,6 +198,31 @@ class DatabaseSink:
         connection is opened."""
         return resolve_password(options, self.password_env), {}
 
+    def ddl(self, uri: str, table: str, schema: pa.Schema, **options: Any) -> str:
+        """Resolve CREATE TABLE offline; no credential references or connection are opened."""
+        target = self.parse_target(uri)
+        name = _sql.check_identifier(
+            str(options.get("table_prefix") or "") + table, "table", self.dialect
+        )
+        schema_name = options.get("schema_name") or target.params.get("schema")
+        if schema_name is not None:
+            _sql.check_identifier(schema_name, "schema", self.dialect)
+        plan = Plan(
+            target,
+            "create",
+            1,
+            None,
+            schema_name,
+            name,
+            options.get("columns") or {},
+            options.get("primary_key") or (),
+            schema,
+            None,
+            options=dict(options),
+        )
+        self.check_schema(schema, plan)
+        return self.create_table_sql(plan, schema, None)
+
     def create_table_sql(self, plan: Plan, schema: pa.Schema, first: pa.RecordBatch | None) -> str:
         return _sql.create_table_sql(
             plan.schema_name,
@@ -199,7 +232,24 @@ class DatabaseSink:
             first=first,
             columns=plan.columns,
             primary_key=plan.primary_key,
+            nested=plan.options.get("nested", "native"),
+            constraints=self._constraint_ddl(plan, schema),
         )
+
+    def _constraint_ddl(self, plan: Plan, schema: pa.Schema) -> ConstraintDDL:
+        if not any(k in plan.options for k in ("foreign_keys", "unique", "checks", "defaults")):
+            return ConstraintDDL((), (), (), {}, ())
+        try:
+            return compile_constraints(
+                plan.options,
+                columns=schema.names,
+                table=plan.table,
+                dialect=self.dialect,
+                schema_name=plan.schema_name,
+                table_prefix=plan.options.get("table_prefix") or "",
+            )
+        except ValueError as exc:
+            raise ShapeError(str(exc)) from None
 
     def keys_sql(self, plan: Plan) -> str:
         """``SELECT`` of the primary key columns of the planned table (``shape seed --mode append``
@@ -213,6 +263,7 @@ class DatabaseSink:
 
     def check_schema(self, schema: pa.Schema, plan: Plan) -> None:
         """Refuse, before any connection, a column the table cannot hold."""
+        self.create_table_sql(plan, schema, None)
 
     def connect_params(self, plan: Plan) -> dict[str, Any]:
         raise NotImplementedError
@@ -243,6 +294,11 @@ class DatabaseSink:
     def plan(self, uri: str, table: str, options: Mapping[str, Any]) -> Plan:
         dialect = self.dialect
         target = self.parse_target(uri)
+        nested = nested_mode(
+            options.get("nested", target.params.pop("nested", "native")),
+            typed=dialect == "snowflake",
+        )
+        options = {**options, "nested": nested}
         prefix = options.get("table_prefix") or ""
         if not isinstance(prefix, str):
             raise ShapeError("table_prefix must be a string")
@@ -277,7 +333,21 @@ class DatabaseSink:
         )
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        if (
+            "prepared_constraints" in options
+            and options["prepared_constraints"] is not _PREPARED_CONSTRAINTS
+        ):
+            raise ShapeError("prepared_constraints is an internal preparation marker")
+        transaction = options.get("_constraint_transaction")
+        if transaction is not None and not isinstance(transaction, _PreparedTransaction):
+            raise ShapeError("_constraint_transaction is internal coordinator state")
         plan = self.plan(uri, table, options)
+        if transaction is not None and (
+            plan.commit_rows or options.get("connection") is not transaction.connection
+        ):
+            raise ShapeError(
+                "prepared transaction requires its shared connection and default commits"
+            )
         first, rest = self._peek(batches, plan)
         use_schema = first.schema if first is not None else plan.schema
         if use_schema is None:
@@ -288,6 +358,9 @@ class DatabaseSink:
             _sql.check_identifier(name, "column", self.dialect)
         _sql.check_unique(use_schema.names, self.dialect)
         self.check_schema(use_schema, plan)
+        if self.dialect in {"postgres", "mysql", "snowflake", "databricks"}:
+            for note in self._constraint_ddl(plan, use_schema).notes:
+                log.warning("%s", note)
         injected = options.get("connection")
         label = plan.target.label
         secrets = [plan.secret, *plan.secrets]
@@ -304,7 +377,8 @@ class DatabaseSink:
             if plan.commit_rows:
                 conn.commit()  # the table is there for readers before the first rows arrive
             rows = self.load(conn, name, plan, first, rest, progress)
-            conn.commit()
+            if transaction is None:
+                conn.commit()
             log.debug("wrote %d rows to %s", rows, name)
             return rows
         except ShapeError:
@@ -369,19 +443,90 @@ class DatabaseSink:
         finally:
             cur.close()
 
+    def _verify_existing_constraints(
+        self,
+        conn: Any,
+        plan: Plan,
+        schema: pa.Schema,
+        first: pa.RecordBatch | None,
+    ) -> None:
+        if self.dialect in {"postgres", "mysql"}:
+            from ._constraint_catalog import verify_existing_constraints
+
+            verify_existing_constraints(
+                conn,
+                dialect=self.dialect,
+                schema_name=plan.schema_name,
+                table=plan.table,
+                schema=schema,
+                columns=plan.columns,
+                primary_key=plan.primary_key,
+                options=plan.options,
+                first=first,
+            )
+            return
+        raise ShapeError(
+            f"existing table {plan.table!r}: requested constraints cannot yet be verified"
+        )
+
+    def _incoming_constraint(self, conn: Any, plan: Plan) -> str | None:
+        if not self.incoming_constraints_sql:
+            return None
+        cursor = conn.cursor()
+        try:
+            cursor.execute(self.incoming_constraints_sql, (plan.schema_name, plan.table))
+            row = cursor.fetchone()
+            return str(row[0]) if row is not None else None
+        finally:
+            cursor.close()
+
     def _prepare(
         self, conn: Any, plan: Plan, schema: pa.Schema, first: pa.RecordBatch | None
     ) -> bool:
         """Make the table ready for the mode; return whether this call created it."""
+        return self._prepare_table(conn, plan, schema, first, defer_foreign_keys=False)
+
+    def _prepare_table(
+        self,
+        conn: Any,
+        plan: Plan,
+        schema: pa.Schema,
+        first: pa.RecordBatch | None,
+        *,
+        defer_foreign_keys: bool,
+    ) -> bool:
         dialect = self.dialect
         cur = conn.cursor()
         try:
             exists = self._exists(conn, plan)
+            if plan.options.get("prepared_constraints") is _PREPARED_CONSTRAINTS:
+                if not exists:
+                    raise ShapeError(f"prepared table {plan.table!r} is missing before loading")
+                return False
             if plan.mode == "create" and exists:
                 raise ShapeError(
                     f"table {plan.table} already exists; set write_mode to append, truncate "
                     "or replace to write into it"
                 )
+            if (
+                exists
+                and plan.mode != "replace"
+                and (
+                    (defer_foreign_keys and plan.primary_key)
+                    or any(
+                        plan.options.get(k)
+                        for k in ("foreign_keys", "unique", "checks", "defaults")
+                    )
+                )
+            ):
+                self._verify_existing_constraints(conn, plan, schema, first)
+            if exists and plan.mode in ("replace", "truncate"):
+                reference = self._incoming_constraint(conn, plan)
+                if reference is not None:
+                    raise ShapeError(
+                        f"cannot {plan.mode} referenced table {plan.table!r}: "
+                        f"foreign key {reference!r} must be preserved; no data was loaded"
+                    )
             if plan.mode == "replace" and exists:
                 cur.execute(_sql.drop_table_sql(plan.schema_name, plan.table, dialect))
                 exists = False
@@ -392,9 +537,253 @@ class DatabaseSink:
             if plan.schema_name:
                 cur.execute(self.create_schema_sql(plan.schema_name))
             cur.execute(self.create_table_sql(plan, schema, first))
+            constraints = self._constraint_ddl(plan, schema)
+            clauses = list(constraints.after_create)
+            if not defer_foreign_keys:
+                clauses.extend(constraints.foreign_keys)
+            for clause in clauses:
+                target = _sql.qualified(plan.schema_name, plan.table, dialect)
+                cur.execute(f"ALTER TABLE {target} ADD {clause}")
             return True
         finally:
             cur.close()
+
+    def _coordinated_rerun(
+        self,
+        conn: Any,
+        plans: list[tuple[Plan, pa.Schema, pa.RecordBatch | None]],
+        *,
+        owns_connection: bool,
+    ) -> _PreparedTransaction | None:
+        mode = plans[0][0].mode
+        if (
+            self.dialect not in {"postgres", "mysql"}
+            or mode not in {"truncate", "replace"}
+            or not all(plan.mode == mode and self._exists(conn, plan) for plan, _, _ in plans)
+        ):
+            return None
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                "SELECT current_schema()" if self.dialect == "postgres" else "SELECT DATABASE()"
+            )
+            default_schema = str(cur.fetchone()[0])
+            owned = {(plan.schema_name or default_schema, plan.table) for plan, _, _ in plans}
+            references = []
+            for plan, schema, first in plans:
+                if mode == "truncate":
+                    self._verify_existing_constraints(conn, plan, schema, first)
+                if self.dialect == "postgres":
+                    sql = (
+                        "SELECT DISTINCT con.conname AS coordinated_constraint_name, "
+                        "childns.nspname, child.relname "
+                        "FROM pg_catalog.pg_constraint con "
+                        "JOIN pg_catalog.pg_class parent ON parent.oid=con.confrelid "
+                        "JOIN pg_catalog.pg_namespace ns ON ns.oid=parent.relnamespace "
+                        "JOIN pg_catalog.pg_class child ON child.oid=con.conrelid "
+                        "JOIN pg_catalog.pg_namespace childns ON childns.oid=child.relnamespace "
+                        "WHERE con.contype='f' AND "
+                        "ns.nspname=COALESCE(%s::text,current_schema()::text) "
+                        "AND parent.relname=%s"
+                    )
+                else:
+                    sql = (
+                        "SELECT DISTINCT CONSTRAINT_NAME AS coordinated_constraint_name, "
+                        "TABLE_SCHEMA, TABLE_NAME "
+                        "FROM information_schema.KEY_COLUMN_USAGE "
+                        "WHERE REFERENCED_TABLE_SCHEMA=COALESCE(%s,DATABASE()) AND "
+                        "REFERENCED_TABLE_NAME=%s"
+                    )
+                cur.execute(sql, (plan.schema_name, plan.table))
+                references.extend(cur.fetchall())
+            for name, child_schema, child in references:
+                if (str(child_schema), str(child)) not in owned:
+                    raise ShapeError(
+                        f"cannot truncate: external foreign key {name!r} must be preserved"
+                    )
+            if not references:
+                return None
+            name = str(references[0][0])
+            if mode == "replace" and self.dialect == "mysql":
+                raise ShapeError(
+                    f"foreign key {name!r}: MySQL replace DDL commits implicitly; "
+                    "the previous dataset cannot be preserved"
+                )
+            if any(plan.commit_rows for plan, _, _ in plans):
+                raise ShapeError(
+                    f"foreign key {name!r}: coordinated truncate cannot preserve "
+                    "commit_rows granularity"
+                )
+            autocommit = getattr(conn, "autocommit", False)
+            if callable(autocommit):
+                autocommit = conn.get_autocommit()
+            if autocommit:
+                raise ShapeError(
+                    f"foreign key {name!r}: coordinated truncate requires a transaction"
+                )
+            targets = [
+                _sql.qualified(plan.schema_name, plan.table, self.dialect) for plan, _, _ in plans
+            ]
+            if mode == "replace":
+                for target in reversed(targets):
+                    cur.execute("DROP TABLE " + target)
+                for plan, schema, first in plans:
+                    self._prepare_table(conn, plan, schema, first, defer_foreign_keys=True)
+                for plan, schema, _ in plans:
+                    for clause in self._constraint_ddl(plan, schema).foreign_keys:
+                        target = _sql.qualified(plan.schema_name, plan.table, self.dialect)
+                        cur.execute(f"ALTER TABLE {target} ADD {clause}")
+            elif self.dialect == "postgres":
+                cur.execute("TRUNCATE TABLE " + ", ".join(targets))
+            else:
+                for plan, _, _ in plans:
+                    cur.execute(
+                        "SELECT ENGINE FROM information_schema.TABLES WHERE "
+                        "TABLE_SCHEMA=COALESCE(%s,DATABASE()) AND TABLE_NAME=%s",
+                        (plan.schema_name, plan.table),
+                    )
+                    row = cur.fetchone()
+                    if row is None or str(row[0]).lower() != "innodb":
+                        raise ShapeError(
+                            f"foreign key {name!r}: coordinated truncate requires InnoDB "
+                            "transactions"
+                        )
+                for target in reversed(targets):
+                    cur.execute("DELETE FROM " + target)
+            secrets = [secret for plan, _, _ in plans for secret in (plan.secret, *plan.secrets)]
+
+            def commit_error(exc: Exception) -> WriteError:
+                return WriteError(
+                    f"committing constrained dataset at {plans[0][0].target.label} failed "
+                    f"({type(exc).__name__}): {scrub(str(exc), secrets)}",
+                    0,
+                )
+
+            return _PreparedTransaction(
+                conn, owns_connection=owns_connection, error_factory=commit_error
+            )
+        finally:
+            cur.close()
+
+    def _prepare_constraint_tables(
+        self, uri: str, tables: Mapping[str, Mapping[str, Any]]
+    ) -> _PreparedTransaction | None:
+        """Create every target, then foreign keys, before the output engine sends rows."""
+        plans: list[tuple[Plan, pa.Schema, pa.RecordBatch | None]] = []
+        for table, raw in tables.items():
+            options = dict(raw)
+            first = options.pop("first_batch", None)
+            if first is not None and not isinstance(first, pa.RecordBatch):
+                raise ShapeError("first_batch must be an Arrow RecordBatch")
+            plan = self.plan(uri, table, options)
+            schema = first.schema if first is not None else plan.schema
+            if schema is None:
+                raise ShapeError(
+                    f"table {table!r} needs an Arrow schema before constraint preparation"
+                )
+            for name in schema.names:
+                _sql.check_identifier(name, "column", self.dialect)
+            _sql.check_unique(schema.names, self.dialect)
+            self.check_schema(schema, plan)
+            self._constraint_ddl(plan, schema)
+            plans.append((plan, schema, first))
+        if not plans:
+            return None
+        initial = plans[0][0]
+
+        def material(value: Any) -> Any:
+            return value.reveal() if isinstance(value, Secret) else value
+
+        for plan, _, _ in plans[1:]:
+            if (
+                plan.target != initial.target
+                or material(plan.secret) != material(initial.secret)
+                or {k: material(v) for k, v in plan.auth.items()}
+                != {k: material(v) for k, v in initial.auth.items()}
+                or plan.options.get("connection") is not initial.options.get("connection")
+                or plan.options.get("connect") is not initial.options.get("connect")
+            ):
+                raise ShapeError(
+                    "constraint preparation needs the same connection options for every table"
+                )
+        secrets = [s for plan, _, _ in plans for s in (plan.secret, *plan.secrets)]
+        injected = initial.options.get("connection")
+        conn = injected
+        retained = False
+        failure: WriteError
+
+        def rollback() -> None:
+            if conn is not None:
+                try:
+                    conn.rollback()
+                except Exception:  # noqa: S110  # nosec B110
+                    pass  # preserve the original, scrubbed preparation error
+
+        try:
+            if conn is None:
+                conn = self._open(
+                    initial, initial.target.label, secrets, initial.options.get("connect")
+                )
+            transaction = self._coordinated_rerun(conn, plans, owns_connection=injected is None)
+            if transaction is not None:
+                retained = True
+                return transaction
+            # Check every existing destination before the first DDL statement. In
+            # particular, MySQL TRUNCATE/CREATE can commit earlier mutations even
+            # when a later table would refuse its incoming reference.
+            for plan, schema, first in plans:
+                if not self._exists(conn, plan):
+                    continue
+                if plan.mode == "create":
+                    raise ShapeError(f"table {plan.table!r} already exists")
+                if plan.mode != "replace" and (
+                    plan.primary_key
+                    or any(
+                        plan.options.get(kind)
+                        for kind in ("foreign_keys", "unique", "checks", "defaults")
+                    )
+                ):
+                    self._verify_existing_constraints(conn, plan, schema, first)
+                if plan.mode in {"truncate", "replace"}:
+                    reference = self._incoming_constraint(conn, plan)
+                    if reference is not None:
+                        raise ShapeError(
+                            f"cannot {plan.mode} table {plan.table!r}: foreign key "
+                            f"{reference!r} must be preserved before any target mutation"
+                        )
+            created = set()
+            for plan, schema, first in plans:
+                if self._prepare_table(conn, plan, schema, first, defer_foreign_keys=True):
+                    created.add(plan.table)
+            cur = conn.cursor()
+            try:
+                for plan, schema, _ in plans:
+                    if plan.table not in created:
+                        continue
+                    for clause in self._constraint_ddl(plan, schema).foreign_keys:
+                        target = _sql.qualified(plan.schema_name, plan.table, self.dialect)
+                        cur.execute(f"ALTER TABLE {target} ADD {clause}")
+            finally:
+                cur.close()
+            conn.commit()
+            return None
+        except ShapeError:
+            rollback()
+            raise
+        except Exception as exc:
+            rollback()
+            failure = WriteError(
+                f"preparing constraints at {initial.target.label} failed "
+                f"({type(exc).__name__}): {scrub(str(exc), secrets)}",
+                0,
+            )
+        finally:
+            if conn is not None and injected is None and not retained:
+                try:
+                    conn.close()
+                except Exception:  # noqa: S110  # nosec B110
+                    pass  # closing must not replace the original result or error
+        raise failure
 
     def create_schema_sql(self, schema_name: str) -> str:
         return f"CREATE SCHEMA IF NOT EXISTS {_sql.quote(schema_name, self.dialect)}"

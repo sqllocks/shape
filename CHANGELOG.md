@@ -6,6 +6,49 @@ Status: available.
 
 ## Unreleased
 
+- Preserve cancellation across concurrent persisted job-store progress updates.
+
+- Bridge API 1.3 design DDL uses unbounded SQL strings consistently with the CLI and Python API. Bridge 1.1 and 1.2 retain historical DDL after canonical validation; indexed SQL Server strings still require an explicit `max_length`.
+
+- Run SQL/Delta write acceptance before the full CI suite on every platform, use two workers for macOS/Windows core tests and reuse native build dependencies; test coverage and acceptance gates remain enforced.
+- Generation derives SQL keys by default; `--sql-constraints all` adds supported structured
+  CHECK and literal DEFAULT clauses from schemas and JSON/YAML contracts. Database writes
+  verify existing declarations and preserve enforced references during supported dataset
+  reruns; unsafe combinations fail before mutation with a named constraint. DuckDB uses
+  parent-first inline foreign keys. Warehouse constraint limitations are reported explicitly.
+
+### W9-07: opt-in Delta table features
+
+- Delta `table_properties`, not-null/check `constraints`, `column_mapping="name"`,
+  `deletion_vectors=true`, `generated_columns` and `timestamp_ntz=true` use supported
+  delta-rs APIs, with capability refusals naming the installed and verified version.
+- Dry-run reports the feature protocol union; doctor reports actual protocol and
+  reader/writer feature lists. Failed validation names the rule or generated column
+  and keeps an existing table's version. Default output and pinned fixtures stay
+  unchanged. Renaming, deletion-vector actions and upsert are outside this package.
+
+
+- PostgreSQL sources retain native array element types, and Databricks sources parse declared
+  recursive catalog types. Source URIs refuse writer-only nested options before connecting.
+
+- Delta adds `nested=json` for explicit JSON text storage. Native maps keep their entries
+  and normalize nested timestamps to UTC and microsecond precision, matching scalar/list
+  read-back; unsupported nested shapes fail before storage.
+- DuckDB native container roundtrips use the existing read-only Source, with UTC instants.
+  JSON-backed read-back can restore caller-supplied Arrow types with strict one-pass parsing;
+  ambiguous JSON and temporal precision loss are refused.
+
+- Database sinks now default to native nested types: PostgreSQL scalar arrays/JSONB, MySQL
+  JSON and recursive Databricks ARRAY/STRUCT/MAP. `nested=json` preserves earlier text paths;
+  Snowflake also accepts `nested=typed` for ARRAY/OBJECT and uses vectorized nested Parquet
+  COPY to retain null array positions. Unsupported shapes fail before connecting; strict
+  JSON conversion refuses duplicate object map keys, non-finite numbers and malformed values.
+
+- DuckDB writes Arrow lists, structs and maps natively by default. The new `nested=json`
+  option stores nested values as JSON text; unsupported native shapes fail before connection
+  with their column and the JSON alternative named. Nested temporal values use the same
+  documented microsecond normalization as scalar values.
+
 - Iceberg catalog endpoints use `catalog_uri` without colliding with the destination URI.
   REST emulator startup builds the pinned official storage releases from source.
 
@@ -20,6 +63,7 @@ Status: available.
 
 
 - Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.
+
 - Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
 - Keep the locked development toolchain audit clear with compatible `filelock` 3.20.3 and patched `setuptools` 84.1.0.
 - Keep the fingerprint readback test compatible with DuckDB 2.
@@ -30,6 +74,15 @@ Status: available.
   from-profile` computes supported aggregates and lists unsupported DAX under `skipped`.
   Model diffs report `measure_change` and `role_change` with no numeric drift score.
   See `docs/SEMANTIC_MODEL.md`.
+
+- SQL writes preserve Arrow integer widths, decimal dimensions, float32 and temporal precision.
+  Zoned values keep their instant to the microsecond and normalize to UTC; zone names are not
+  preserved. Undeclared strings are now unbounded instead of VARCHAR(255), and database writers
+  no longer size strings from the first batch. `shape generate --to ... --dry-run` includes the
+  resolved DDL without connecting or generating values. T-SQL and Warehouse string key columns
+  require explicit `max_length`; missing widths are refused before connecting, naming the column.
+  See `docs/SINKS.md`.
+
 - Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.
 
 Development: the dev and CI environment is now locked with uv; user installs are unchanged.
@@ -2081,6 +2134,7 @@ Converting a full capture to the safe form now gives a different content ID when
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
 
+
 - W9-16: optional native Apache Iceberg source and sink with local SQLite/file or
   named catalogs, native nested types, width restoration, partition transforms,
   snapshot micro-batches/fingerprints, time travel and namespace profiling. CLI
@@ -2106,6 +2160,9 @@ Converting a full capture to the safe form now gives a different content ID when
   bridge arguments are `tables` and `sample_rows`. Catalog-only capture uses sample size zero.
 - Database profiles and bridge database artifacts use existing safe capture rules.
 
+- W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+  catalog row counts and whole-database profiles through the KQL endpoint.
+  Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
 
 ### W9-08: broker message metadata
 

@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 API_MAJOR = 1
-API_MINOR = 2
+API_MINOR = 3
 API_VERSION = f"{API_MAJOR}.{API_MINOR}"
 SUPPORTED_RANGE = f"{API_MAJOR}.0 to {API_VERSION}"
 

@@ -205,13 +205,24 @@ def test_emit_refuses_identity_server_with_a_foreign_key_too(world):
 
 
 def precreate(world, **flags):
-    """Load once so both tables exist, then empty them, and add a check the generated orders
-    break (their customer keys go up to 1095)."""
-    assert world.run("generate", world.schema(), "--to", URI, "--seed", 3)[0] == 0
+    """Prepare existing tables with a CHECK the generated orders break and a matching FK.
+
+    The explicit legacy policy keeps initial FK DDL out of the statement history these
+    append/disable tests inspect. Catalog constraints are attached in their original order.
+    """
+    assert (
+        world.run(
+            "generate", world.schema(), "--to", URI, "--seed", 3, "--sql-constraints", "keep"
+        )[0]
+        == 0
+    )
     for table in ("order", "customer"):
         world.server.tables[("dbo", table)].rows.clear()
     world.server.add_check(
         ("dbo", "order"), "CK_order_customer_small", lambda r: r["customer_id"] < 1020
+    )
+    world.server.add_foreign_key(
+        ("dbo", "order"), ["customer_id"], ("dbo", "customer"), ["customer_id"], "o_c"
     )
 
 

@@ -829,3 +829,30 @@ def test_windows_staging_removes_explicit_python_acl_grants(monkeypatch, fail_ta
         assert error.value.rows_committed == 0
         assert not server.loads and "test-project.dataset.items" not in server.tables
     assert paths and all(not path.exists() for path in paths)
+
+
+@pytest.mark.parametrize("explicit,expected", [(None, 64), (32, 32), (128, 128)])
+def test_sink_plan_retains_uri_cap_and_explicit_precedence_without_caller_alias(explicit, expected):
+    options = {} if explicit is None else {"max_bytes_billed": explicit}
+    original = dict(options)
+    plan = BigQuerySink().plan(URI + "&max_bytes_billed=64", "items", options)
+    assert options == original
+    assert plan.options["max_bytes_billed"] == expected
+    assert plan.options["nested"] == "native"
+    options["max_bytes_billed"] = 1
+    assert plan.options["max_bytes_billed"] == expected
+
+
+@pytest.mark.parametrize("estimate", [63, 64, 65])
+def test_uri_cap_exact_boundary_guards_before_paid_queries_and_loads(estimate):
+    server = FakeBigQuery(estimated_bytes=estimate)
+    sink = BigQuerySink(connect=server.connect)
+    if estimate > 64:
+        with pytest.raises(ShapeError, match="estimate 65 bytes exceeds max_bytes_billed=64"):
+            sink.write(URI + "&max_bytes_billed=64", "items", [batch()])
+        assert server.queries and all(config.dry_run for _, config in server.queries)
+        assert not server.loads and not server.tables
+    else:
+        assert sink.write(URI + "&max_bytes_billed=64", "items", [batch()]) == 5
+        assert any(not config.dry_run for _, config in server.queries)
+    assert all(config.maximum_bytes_billed == 64 for _, config in server.queries)

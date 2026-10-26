@@ -278,7 +278,17 @@ def test_a_sink_is_a_send_with_the_secret_redacted(world, capsys):
     assert "hunter2" not in text
     acts = json.loads(text)["actions"]
     assert acts and acts[0]["action"] == "send" and "broker:9092" in acts[0]["target"]
-    argv = ["generate", "retail", "--to", "mssql://sa:hunter2@db.example/prod", "--dry-run"]
+    from shape.generation.domains import load_domain
+
+    schema = load_domain("retail").schema.to_dict()
+    for table in schema["tables"].values():
+        for column in table["columns"].values():
+            if column["type"] == "decimal":
+                column["precision"] = 18
+                column["scale"] = 2
+    path = world / "explicit-sql-schema.json"
+    path.write_text(json.dumps(schema))
+    argv = ["generate", str(path), "--to", "mssql://sa:hunter2@db.example/prod", "--dry-run"]
     assert main(argv) in (0, 1)  # generate's own dry run: its plan, never a connection
     assert "hunter2" not in capsys.readouterr().out
 

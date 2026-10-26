@@ -37,6 +37,7 @@ errors remain errors; the writer never silently changes the server's identity.
 from __future__ import annotations
 
 import contextlib
+import logging
 import os
 import re
 import sys
@@ -45,20 +46,22 @@ import uuid
 import warnings
 import zlib
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from typing import Any, BinaryIO
+from typing import Any, BinaryIO, Self
 
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.generation.write_constraints import _PREPARED_CONSTRAINTS
 
 from . import _tsql, onelake
 from ._storage import Storage
 from .errors import WriteError, WriteResult
 from .lakehouse import write_batches
-from .sqldb import SqlConnection, check_mode, prepare_table, undo, write_many
+from .sqldb import SqlConnection, check_mode, constraint_plan, prepare_table, undo, write_many
 
 DEFAULT_CHUNK_ROWS = 1_000_000
+log = logging.getLogger(__name__)
 #: the most seconds one table may spend in the INSERT fallback (``SHAPE_WAREHOUSE_INSERT_SECONDS``
 #: overrides it): row-by-row loading into a Warehouse is far slower than COPY INTO, so a large
 #: table fails here with the cause instead of running for hours
@@ -151,7 +154,7 @@ class WarehouseWriter:
     def close(self) -> None:
         self.db.close()
 
-    def __enter__(self) -> WarehouseWriter:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *_exc: object) -> None:
@@ -171,8 +174,15 @@ class WarehouseWriter:
         columns: Mapping[str, Mapping[str, Any]] | None = None,
         primary_key: Sequence[str] = (),
         schema: pa.Schema | None = None,
+        foreign_keys: list[dict[str, Any]] | None = None,
+        unique: list[list[str]] | None = None,
+        checks: list[dict[str, Any]] | None = None,
+        defaults: Mapping[str, Any] | None = None,
+        prepared_constraints: Any = None,
     ) -> int:
         """Write one table; return the rows loaded."""
+        if prepared_constraints is not None and prepared_constraints is not _PREPARED_CONSTRAINTS:
+            raise ShapeError("prepared_constraints is an internal preparation marker")
         mode = check_mode(write_mode)
         if isinstance(chunk_rows, bool) or not isinstance(chunk_rows, int) or chunk_rows < 1:
             raise ShapeError("chunk_rows must be a positive integer")
@@ -186,16 +196,53 @@ class WarehouseWriter:
                 f"table {table!r} has no batches and no schema: pass schema= to create it empty"
             )
         use_schema = _tsql.normalize_schema(use_schema)
+        declarations = {
+            key: value
+            for key, value in (
+                ("foreign_keys", foreign_keys),
+                ("unique", unique),
+                ("checks", checks),
+                ("defaults", defaults),
+            )
+            if value is not None
+        }
+        compiled = constraint_plan(sname, table, use_schema, True, declarations)
+        _tsql.create_table_sql(
+            sname,
+            table,
+            use_schema,
+            warehouse=True,
+            columns=columns,
+            primary_key=primary_key,
+            constraint_ddl=compiled,
+        )
+        for note in compiled.notes:
+            log.warning("%s", note)
         folder = self._folder(table)
         created = False
         db = self.db
         try:
-            created = self._prepare(sname, table, mode, use_schema, columns, primary_key)
+            if declarations or prepared_constraints is _PREPARED_CONSTRAINTS:
+                created = prepare_table(
+                    db,
+                    sname,
+                    table,
+                    mode,
+                    use_schema,
+                    columns=columns,
+                    primary_key=primary_key,
+                    constraint_ddl=compiled,
+                    prepared_constraints=prepared_constraints,
+                    declarations={**declarations, "schema": use_schema},
+                )
+            else:
+                created = self._prepare(sname, table, mode, use_schema, columns, primary_key)
             if first is None:
                 return 0
             staged = self._stage(table, folder, first, stream, chunk_rows)
+            copy_mode = "append" if prepared_constraints is _PREPARED_CONSTRAINTS else mode
             try:
-                loaded = self._copy(sname, table, folder, mode, created, staged)
+                loaded = self._copy(sname, table, folder, copy_mode, created, staged)
             except Exception as exc:
                 # 13840 is a server-side OneLake token exchange failure, not a bad row.
                 # The client's storage token cannot be supplied to COPY INTO. Do not
@@ -219,7 +266,12 @@ class WarehouseWriter:
                 # Reapply an uncommitted truncate/replace after rollback. A table this
                 # call created was committed by prepare_table and is still present.
                 self._prepare(
-                    sname, table, "append" if created else mode, use_schema, columns, primary_key
+                    sname,
+                    table,
+                    "append" if created else copy_mode,
+                    use_schema,
+                    columns,
+                    primary_key,
                 )
                 loaded = self._insert_staged(sname, table, folder)
             if loaded != staged:

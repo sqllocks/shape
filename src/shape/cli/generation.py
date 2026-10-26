@@ -74,6 +74,11 @@ def _run_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "-o", "--output", "--out", metavar="DIR", help="the output directory (needed to write)"
     )
+    parser.add_argument(
+        "--contract",
+        metavar="FILE",
+        help="JSON or YAML contract for write keys, checks and defaults",
+    )
     parser.add_argument("--dry-run", action="store_true", help="plan the run; generate nothing")
     parser.add_argument("--json", action="store_true", help="print the result or the plan as JSON")
     parser.add_argument(
@@ -282,10 +287,78 @@ def _dump(obj: Any) -> None:
 # ---- generate -----------------------------------------------------------------------------
 
 
+def _delta_feature_options(a: argparse.Namespace) -> dict[str, Any]:
+    from shape.cli.to import sink_config
+    from shape.plugins.host import default_host
+
+    extra = sink_config(getattr(a, "sink_config", None), offline=bool(getattr(a, "dry_run", False)))
+    given = extra.get("delta", {})
+    if not given:
+        return {}
+    sink = default_host().get("shape.sinks", "delta")
+    supported = getattr(sink, "feature_options", ())
+    return {k: v for k, v in given.items() if k in supported}
+
+
+def _delta_protocol(a: argparse.Namespace, schema: GenSchema, order: list[str]) -> dict[str, Any]:
+    """Plan the same per-table Delta options as the write, without opening storage."""
+    from shape.generation.output import _options
+    from shape.io.targets import scheme_of, sink_names_by_scheme
+    from shape.plugins.host import default_host
+
+    targets = getattr(a, "to", None) or []
+    if targets:
+        registered = sink_names_by_scheme()
+        if not any(registered.get(scheme_of(target) or "") == "delta" for target in targets):
+            return {}
+        from shape.cli.to import target_options
+
+        options = target_options(a, a.format, targets, offline=True)
+        tables = [options.for_sink("delta", schema, table) for table in order]
+    elif getattr(a, "format", None) == "delta":
+        file_options = _sink_options(a)
+        tables = [_options("delta", schema, table, file_options) for table in order]
+    else:
+        return {}
+    sink = default_host().get("shape.sinks", "delta")
+    plans = [sink.feature_plan(options) for options in tables]
+    if not plans:
+        return {}
+    protocol = {
+        "min_reader_version": max(plan["min_reader_version"] for plan in plans),
+        "min_writer_version": max(plan["min_writer_version"] for plan in plans),
+        "reader_features": sorted({f for plan in plans for f in plan["reader_features"]}),
+        "writer_features": sorted({f for plan in plans for f in plan["writer_features"]}),
+    }
+    if not _delta_feature_options(a) and not protocol["writer_features"]:
+        return {}
+    return {"delta_protocol": protocol}
+
+
+def _print_delta_protocol(a: argparse.Namespace, schema: GenSchema, order: list[str]) -> None:
+    doc = _delta_protocol(a, schema, order)
+    if doc:
+        p = doc["delta_protocol"]
+        print(
+            f"Delta protocol: reader {p['min_reader_version']} / writer {p['min_writer_version']}; "
+            f"reader features: {', '.join(p['reader_features']) or 'none'}; "
+            f"writer features: {', '.join(p['writer_features']) or 'none'}"
+        )
+
+
 def _sink_options(a: argparse.Namespace) -> dict[str, Any]:
     """The writer options the command line sets (only those given)."""
     fmt = a.format
     options: dict[str, Any] = {}
+    if fmt in ("sql", "delta"):
+        from shape.cli.to import constraint_contract
+
+        policy = getattr(a, "sql_constraints", None)
+        if policy is not None:
+            options["sql_constraints"] = policy
+        contract = constraint_contract(a)
+        if contract is not None:
+            options["contract"] = contract
     if fmt == "sql":
         options["sql_dialect"] = a.sql_dialect
         for key, value in (
@@ -302,6 +375,7 @@ def _sink_options(a: argparse.Namespace) -> dict[str, Any]:
             if value is not None:
                 options[key] = value
     elif fmt == "delta":
+        options.update(_delta_feature_options(a))
         options["mode"] = a.delta_mode
         if getattr(a, "table_prefix", ""):
             options["table_prefix"] = a.table_prefix
@@ -392,6 +466,124 @@ def cmd_composite(a: argparse.Namespace) -> int:
     return _generate_schema(a, lambda: resolve(a.target).schema, {})
 
 
+def _constraint_preview(a: argparse.Namespace, schema: GenSchema, order: list[str]) -> list[str]:
+    """Show derived SQL constraint DDL without generating rows or opening a target."""
+    from shape.cli import to
+    from shape.generation.output import _options
+
+    choices: list[tuple[str, dict[str, dict[str, Any]]]] = []
+    targets = getattr(a, "to", None) or []
+    if targets:
+        from shape.io.targets import scheme_of, sink_names_by_scheme
+
+        dialects = {
+            "postgres": "postgres",
+            "mysql": "mysql",
+            "duckdb": "duckdb",
+            "sqlserver": "tsql",
+            "sql-database": "tsql",
+            "warehouse": "tsql-fabric-warehouse",
+            "snowflake": "snowflake",
+            "databricks": "databricks",
+        }
+        options = to.target_options(a, a.format, targets, offline=True)
+        registered = sink_names_by_scheme()
+        for target in targets:
+            name = registered.get(scheme_of(target) or "")
+            # A generic dry-run plan has never required an optional sink to be
+            # installed. Only registered backends can supply a dialect preview.
+            if name is not None and name in dialects:
+                choices.append(
+                    (
+                        dialects[name],
+                        {table: options.for_sink(name, schema, table) for table in order},
+                    )
+                )
+    elif a.format == "sql":
+        file_options = _sink_options(a)
+        choices.append(
+            (
+                a.sql_dialect,
+                {table: _options("sql", schema, table, file_options) for table in order},
+            )
+        )
+    result: list[str] = []
+    for dialect, table_options in choices:
+        result.extend(_render_constraint_preview(schema, order, dialect, table_options))
+    return result
+
+
+def _render_constraint_preview(
+    schema: GenSchema,
+    order: list[str],
+    dialect: str,
+    table_options: dict[str, dict[str, Any]],
+) -> list[str]:
+    from shape.generation.write_constraints import compile_constraints, identifier
+
+    result: list[str] = []
+    foreign: list[str] = []
+    for table in order:
+        derived = table_options[table]
+        schema_name = derived.get("schema_name")
+        prefix = derived.get("table_prefix") or ""
+        plan = compile_constraints(
+            derived,
+            columns=schema.tables[table].column_names,
+            table=table,
+            dialect=dialect,
+            schema_name=schema_name,
+            table_prefix=prefix,
+        )
+        if dialect == "duckdb":
+            from importlib import import_module
+
+            import pyarrow as pa  # type: ignore[import-untyped]
+
+            from shape.generation.engine import arrow_type
+
+            # This renderer belongs to the optional plugin, loaded at the same runtime
+            # boundary as its sink rather than as a typed dependency of core.
+            create_table_sql = import_module("shape_databases.duckdb_sink").create_table_sql
+
+            arrow_schema = pa.schema(
+                [
+                    (column.name, arrow_type(column))
+                    for column in schema.tables[table].columns.values()
+                ]
+            )
+            result.append(
+                create_table_sql(
+                    schema_name or "main",
+                    prefix + table,
+                    arrow_schema,
+                    columns=derived.get("columns"),
+                    primary_key=derived.get("primary_key") or [],
+                    nested=derived.get("nested", "native"),
+                    constraints=plan,
+                )
+                + ";"
+            )
+            continue
+        qualified = (identifier(schema_name, dialect) + ".") if schema_name else ""
+        qualified += identifier(prefix + table, dialect)
+        result.extend("-- NOTE: " + note for note in plan.notes)
+        result.extend(
+            f"ALTER TABLE {qualified} ADD {clause};"
+            for clause in (*plan.definitions, *plan.after_create)
+        )
+        for column, value in plan.defaults.items():
+            quoted = identifier(column, dialect)
+            clause = (
+                f"ADD DEFAULT {value} FOR {quoted}"
+                if dialect == "tsql"
+                else f"ALTER COLUMN {quoted} SET DEFAULT {value}"
+            )
+            result.append(f"ALTER TABLE {qualified} {clause};")
+        foreign.extend(f"ALTER TABLE {qualified} ADD {clause};" for clause in plan.foreign_keys)
+    return result + foreign
+
+
 def _generate_schema(
     a: argparse.Namespace, load: Callable[[], GenSchema], per_table: dict[str, int]
 ) -> int:
@@ -438,10 +630,23 @@ def _generate_schema(
     if a.dry_run:
         plan = engine.dry_run()
         run.set(rows=plan.total_rows, tables=len(plan.order))
+        ddl = _target_ddl(a, engine.schema)
+        constraints = _constraint_preview(a, schema, list(plan.order))
         if a.json:
-            _dump(plan.to_dict())
+            payload = {**plan.to_dict(), **_delta_protocol(a, schema, list(plan.order))}
+            if constraints:
+                payload["constraint_ddl"] = constraints
+            if ddl:
+                payload["ddl"] = ddl
+            _dump(payload)
         else:
             print(plan.render())
+            for statement in ddl:
+                print(statement["sql"])
+            _print_delta_protocol(a, schema, list(plan.order))
+            if constraints:
+                print("\nConstraint DDL (preview):")
+                print("\n".join(constraints))
         return 0 if plan.ok else 1
     return _generate(a, engine)
 
@@ -510,10 +715,27 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     if a.dry_run:
         plan = engine.dry_run()
         run.set(rows=plan.total_rows, tables=len(plan.order))
+        ddl = _target_ddl(a, engine.schema)
+        constraints = _constraint_preview(a, schema, list(plan.order))
         if a.json:
-            _dump({**plan.to_dict(), **_mark_vault(plan, mode)})
+            payload = {
+                **plan.to_dict(),
+                **_mark_vault(plan, mode),
+                **_delta_protocol(a, schema, list(plan.order)),
+            }
+            if constraints:
+                payload["constraint_ddl"] = constraints
+            if ddl:
+                payload["ddl"] = ddl
+            _dump(payload)
         else:
             print(plan.render())
+            for statement in ddl:
+                print(statement["sql"])
+            _print_delta_protocol(a, schema, list(plan.order))
+            if constraints:
+                print("\nConstraint DDL (preview):")
+                print("\n".join(constraints))
             if vault_run is not None:
                 print(f"vault columns: {', '.join(mode['vaulted_columns'])}")
         return 0 if plan.ok else 1
@@ -886,3 +1108,75 @@ def run(a: argparse.Namespace) -> int:
 
 
 __all__ = ["COMMANDS", "add_arguments", "load_target", "run"]
+
+
+def _target_ddl(a: argparse.Namespace, schema: GenSchema) -> list[dict[str, str]]:
+    """Resolve declared output column types without executing any generator or signing in."""
+    if not getattr(a, "to", None):
+        return []
+    import pyarrow as pa
+
+    from shape.cli.to import target_options
+    from shape.io.targets import scheme_of, sink_for_target, sink_names_by_scheme
+    from shape.plugins.schemes import redact
+
+    opts = target_options(
+        a, "parquet" if a.format == "summary" else a.format, list(a.to), offline=True
+    )
+    result = []
+    registered = sink_names_by_scheme()
+    for uri in a.to:
+        if (scheme_of(uri) or "") not in registered:
+            continue
+        name, sink = sink_for_target(uri)
+        ddl = getattr(sink, "ddl", None)
+        if not callable(ddl):
+            continue
+        for table in schema.tables.values():
+            fields = []
+            for col in table.columns.values():
+                typ = col.generator.get("output_type") or col.type
+                types = {
+                    "integer": pa.int64(),
+                    "int64": pa.int64(),
+                    "float": pa.float64(),
+                    "float64": pa.float64(),
+                    "boolean": pa.bool_(),
+                    "bool": pa.bool_(),
+                    "string": pa.string(),
+                    "uuid": pa.string(),
+                    "binary": pa.binary(),
+                    "date": pa.date32(),
+                    "timestamp": pa.timestamp("us"),
+                    "time": pa.time64("us"),
+                }
+                if col.strategy == "nested":
+                    from shape.profile.nested import arrow_type_from_spec
+
+                    arrow = arrow_type_from_spec(col.generator["arrow_type_spec"])
+                elif not col.generator.get("output_type") and col.strategy == "choice":
+                    arrow = pa.array(col.generator.get("values", [])).type
+                elif not col.generator.get("output_type") and col.strategy == "constant":
+                    arrow = pa.scalar(col.generator.get("value")).type
+                elif not col.generator.get("output_type") and col.strategy == "temporal":
+                    arrow = pa.timestamp(str(col.generator.get("unit", "us")))
+                elif typ == "decimal":
+                    if col.precision is None or col.scale is None:
+                        raise ValueError(
+                            f"column {table.name}.{col.name}: decimal needs precision and scale"
+                        )
+                    arrow = pa.decimal128(col.precision, col.scale)
+                else:
+                    arrow = types.get(str(typ), pa.string())
+                fields.append(pa.field(col.name, arrow))
+            options = opts.for_sink(name, schema, table.name)
+            if opts.write_mode:
+                options["write_mode"] = opts.write_mode
+            result.append(
+                {
+                    "target": redact(uri),
+                    "table": table.name,
+                    "sql": ddl(uri, table.name, pa.schema(fields), **options),
+                }
+            )
+    return result

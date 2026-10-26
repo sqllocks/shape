@@ -279,8 +279,25 @@ def test_generate_to_one_nonlocal_among_several_refuses_them_all(
 def test_generate_to_dry_run_needs_no_confirmation(
     capsys: Any, schema_file: Path, sockets: list[Any]
 ) -> None:
-    code, _, err = run(capsys, "generate", schema_file, "--to", PG, "--dry-run")
+    code, _, err = run(
+        capsys, "generate", schema_file, "--to", "mssql://sql.example/shape", "--dry-run"
+    )
     assert code == 0, err
+    assert sockets == []
+
+
+def test_generate_dry_run_with_uninstalled_sink_keeps_offline_plan(
+    capsys: Any, schema_file: Path, sockets: list[Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("shape.io.targets.sink_names_by_scheme", lambda: {})
+
+    def no_sink_load(target: str) -> Any:
+        raise AssertionError("an uninstalled sink must not be loaded for a dry-run plan")
+
+    monkeypatch.setattr("shape.io.targets.sink_for_target", no_sink_load)
+    code, out, err = run(capsys, "generate", schema_file, "--to", PG, "--dry-run", "--json")
+    assert code == 0, err
+    assert "constraint_ddl" not in json.loads(out)
     assert sockets == []
 
 

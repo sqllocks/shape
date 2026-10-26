@@ -60,6 +60,6 @@
   ],
   "title": "proposals_propose result",
   "type": "object",
-  "x-api-version": "1.2",
+  "x-api-version": "1.3",
   "x-since": "1.1"
 }

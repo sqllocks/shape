@@ -133,7 +133,10 @@ def test_a_self_reference_gets_its_foreign_key() -> None:
             [
                 {
                     "name": "emp",
-                    "attributes": [{"name": "id"}, {"name": "mgr", "references": "emp"}],
+                    "attributes": [
+                        {"name": "id", "max_length": 64},
+                        {"name": "mgr", "references": "emp", "max_length": 64},
+                    ],
                     "keys": [["id"]],
                 }
             ]
@@ -274,3 +277,11 @@ def test_from_data_types_int_mixed_with_decimal_as_decimal() -> None:
     rows = [{"id": 1, "v": 1}, {"id": 2, "v": Decimal("2.5")}]
     attr = design_from_rows(rows, name="t").entities[0].attribute("v")
     assert (attr.type, attr.scale) == ("decimal", 1)
+
+
+def test_unbounded_string_key_ddl_refusal_is_a_named_design_error() -> None:
+    from shape.design.ddl import emit_ddl
+
+    doc = _doc([{"name": "emp", "attributes": [{"name": "id"}], "keys": [["id"]]}])
+    with pytest.raises(DesignError, match="column 'id'.*max_length"):
+        emit_ddl(derive(DesignInput.from_dict(doc), "3nf"))

@@ -15,6 +15,7 @@ from . import _sql
 from ._base import Plan
 from .cloud_sources import cloud_arrow_type
 from .databricks import DatabricksSink
+from .nested_readback import databricks_type
 from .snowflake import SnowflakeSink
 from .sources import DatabaseSource, _integer
 
@@ -50,6 +51,8 @@ class CloudSource(DatabaseSource):
         batch_size = _integer(options.get("batch_size", 65536), "batch_size", 1)
         parts = urlsplit(uri)
         query = parse_qsl(parts.query, keep_blank_values=True)
+        if any(key == "nested" for key, _ in query):
+            raise ShapeError("source URI does not accept writer option nested")
         tables = [v for k, v in query if k == "table"]
         if len(tables) > 1:
             raise ShapeError("table must appear at most once")
@@ -84,8 +87,9 @@ class CloudSource(DatabaseSource):
         return "%s" if self.sink.dialect == "snowflake" else "?"
 
     def _columns(self, cur: Any, schema: str, table: str) -> pa.Schema:
+        type_column = "full_data_type" if self.sink.dialect == "databricks" else "data_type"
         cur.execute(
-            "SELECT column_name, data_type, is_nullable, numeric_precision, numeric_scale "
+            f"SELECT column_name, {type_column}, is_nullable, numeric_precision, numeric_scale "
             "FROM information_schema.columns WHERE table_schema="
             + self.marker
             + " AND table_name="
@@ -103,12 +107,19 @@ class CloudSource(DatabaseSource):
                 "MAP",
             }
             metadata = {b"shape.sql_type": str(kind).encode()}
-            if nested:
+            native = self.sink.dialect == "databricks" and str(kind).upper().split("<")[0] in {
+                "ARRAY",
+                "STRUCT",
+                "MAP",
+            }
+            if nested and not native:
                 metadata[b"shape.encoding"] = b"json"
             fields.append(
                 pa.field(
                     str(name),
-                    cloud_arrow_type(self.sink.dialect, str(kind), precision, scale),
+                    databricks_type(str(kind), str(name))
+                    if native
+                    else cloud_arrow_type(self.sink.dialect, str(kind), precision, scale),
                     nullable=nullable in (True, "YES"),
                     metadata=metadata,
                 )

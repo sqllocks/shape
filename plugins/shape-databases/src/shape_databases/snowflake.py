@@ -43,7 +43,7 @@ import importlib
 import shutil
 import tempfile
 import warnings
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -56,6 +56,7 @@ from . import _cloud, _sql
 from ._auth import Secret, resolve_password
 from ._base import DatabaseSink, Plan, Target, as_text, chain_batches, parse_uri
 from .errors import CredentialError
+from .nested import validate_object_maps
 
 INSTALL = "pip install 'sqllocks-shape-databases[snowflake]'"
 _PEM_START = "-----BEGIN"
@@ -130,14 +131,31 @@ class SnowflakeSink(DatabaseSink):
     """``RecordBatch``es for one table to a Snowflake table: Parquet, ``PUT``, ``COPY INTO``."""
 
     name = "snowflake"
+    prepare_constraints = DatabaseSink._prepare_constraint_tables
     schemes = ("snowflake",)
     dialect = "snowflake"
     password_env = ("SNOWFLAKE_PASSWORD",)
-    uri_params = {"warehouse": as_text, "role": as_text}
+    uri_params = {"warehouse": as_text, "role": as_text, "nested": as_text}
     exists_sql = (
         "SELECT 1 FROM information_schema.tables "
         "WHERE table_schema = COALESCE(%s, CURRENT_SCHEMA()) AND table_name = %s"
     )
+
+    def _incoming_constraint(self, conn: Any, plan: Plan) -> str | None:
+        from ._cloud_constraint_catalog import incoming_constraint
+
+        return incoming_constraint(conn, plan, self.dialect)
+
+    def _verify_existing_constraints(
+        self,
+        conn: Any,
+        plan: Plan,
+        schema: pa.Schema,
+        first: pa.RecordBatch | None,
+    ) -> None:
+        from ._cloud_constraint_catalog import verify_existing_constraints
+
+        verify_existing_constraints(conn, plan, schema, self.dialect)
 
     # -- plan --------------------------------------------------------------------------------
     def parse_target(self, uri: str) -> Target:
@@ -180,18 +198,53 @@ class SnowflakeSink(DatabaseSink):
         return None, auth
 
     def check_schema(self, schema: pa.Schema, plan: Plan) -> None:
-        _cloud.check_types(schema, self.dialect, plan.columns, plan.primary_key)
+        _cloud.check_types(
+            schema,
+            self.dialect,
+            plan.columns,
+            plan.primary_key,
+            plan.options.get("nested", "native"),
+        )
 
     def create_table_sql(self, plan: Plan, schema: pa.Schema, first: pa.RecordBatch | None) -> str:
         qualified = _sql.qualified(plan.schema_name, plan.table, self.dialect)
         return _cloud.create_table_sql(
-            qualified, schema, self.dialect, plan.columns, plan.primary_key
+            qualified,
+            schema,
+            self.dialect,
+            plan.columns,
+            plan.primary_key,
+            plan.options.get("nested", "native"),
+            constraints=self._constraint_ddl(plan, schema),
         )
+
+    def _peek(
+        self, batches: Iterable[pa.RecordBatch], plan: Plan
+    ) -> tuple[pa.RecordBatch | None, Iterator[pa.RecordBatch]]:
+        first, rest = super()._peek(batches, plan)
+        if first is not None:
+            self.check_schema(first.schema, plan)
+            failure = None
+            try:
+                self._check_object_values(first)
+            except ValueError as exc:
+                failure = ShapeError(str(exc))
+            if failure is not None:
+                raise failure
+        return first, rest
+
+    @staticmethod
+    def _check_object_values(batch: pa.RecordBatch) -> None:
+        for field, column in zip(batch.schema, batch.columns, strict=True):
+            if _cloud.is_nested(field.type):
+                for value in column.to_pylist():
+                    validate_object_maps(value, field.type, field.name)
 
     # -- connection --------------------------------------------------------------------------
     def connect_params(self, plan: Plan) -> dict[str, Any]:
         t = plan.target
         params: dict[str, Any] = {"account": t.host, "user": t.user, "autocommit": False}
+        params["session_parameters"] = {"TIMEZONE": "UTC"}
         if t.database:
             params["database"] = t.database
         for key in ("schema", "warehouse", "role"):
@@ -234,10 +287,11 @@ class SnowflakeSink(DatabaseSink):
         return f"@%{table}"
 
     @staticmethod
-    def copy_sql(qualified: str, stage: str) -> str:
+    def copy_sql(qualified: str, stage: str, *, nested: bool = False) -> str:
         # identifiers only, each checked and quoted
+        options = " USE_LOGICAL_TYPE = TRUE" + (" USE_VECTORIZED_SCANNER = TRUE" if nested else "")
         return (
-            f"COPY INTO {qualified} FROM {stage} FILE_FORMAT = (TYPE = PARQUET) "
+            f"COPY INTO {qualified} FROM {stage} FILE_FORMAT = (TYPE = PARQUET{options}) "
             "MATCH_BY_COLUMN_NAME = CASE_SENSITIVE PURGE = TRUE"
         )  # nosec B608
 
@@ -265,6 +319,7 @@ class SnowflakeSink(DatabaseSink):
         def rows() -> Iterator[pa.RecordBatch]:
             for batch in chain_batches(first, rest):
                 _sql.check_batch(first.schema, batch, plan.table)
+                self._check_object_values(batch)
                 yield _cloud.parquet_batch(batch)
 
         def groups() -> Iterator[tuple[list[pa.RecordBatch], bool]]:
@@ -283,7 +338,10 @@ class SnowflakeSink(DatabaseSink):
 
         def copy() -> None:
             nonlocal pending, loaded
-            cur.execute(self.copy_sql(qualified, stage))
+            native_nested = plan.options.get("nested", "native") != "json" and any(
+                _cloud.is_nested(field.type) for field in first.schema
+            )
+            cur.execute(self.copy_sql(qualified, stage, nested=native_nested))
             got = _loaded_rows(cur)
             if got != pending:
                 raise ShapeError(

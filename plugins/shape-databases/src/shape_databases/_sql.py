@@ -25,6 +25,9 @@ import pyarrow.types as pat  # type: ignore[import-untyped]
 
 from shape.builtins.sinks import sql as core_sql
 from shape.errors import ShapeError
+from shape.generation.write_constraints import ConstraintDDL
+
+from .nested import is_nested, native_json, native_type, postgres_array, validate_json_shape
 
 WRITE_MODES = ("create", "append", "truncate", "replace")
 DEFAULT_BATCH_SIZE = 5000
@@ -130,36 +133,33 @@ def positive_int(value: Any, name: str, *, optional: bool = False) -> int | None
     return value
 
 
-def _observed_length(column: pa.ChunkedArray | pa.Array) -> int:
-    if not (pat.is_string(column.type) or pat.is_large_string(column.type)):
-        return -1
-    longest = pc.max(pc.utf8_length(column)).as_py()
-    return int(longest or 0)
-
-
 def column_definitions(
     schema: pa.Schema,
     first: pa.RecordBatch | None,
     meta: Mapping[str, Mapping[str, Any]],
     key: Sequence[str],
     dialect: str,
+    nested: str = "native",
 ) -> list[tuple[str, str, bool]]:
-    """``(name, sql type, nullable)`` per column: core's type map, with string columns wide
-    enough for the first batch (a later, longer value fails the write rather than truncating)."""
+    """``(name, sql type, nullable)`` per column: core's type map.
+    ``first`` is retained for API compatibility but never determines a column width."""
     out: list[tuple[str, str, bool]] = []
-    for index, field in enumerate(schema):
+    for field in schema:
         info: dict[str, Any] = dict(meta.get(field.name, {}))
         sql_type: str | None = None
-        if core_sql._logical_type(field.type) == "string" and not info.get("max_length"):
-            seen = _observed_length(first.column(index)) if first is not None else 0
-            if not (pat.is_string(field.type) or pat.is_large_string(field.type)):
-                seen = -1
-            if seen < 0 or seen > MAX_VARCHAR:
-                sql_type = _TEXT[dialect]  # nested, dictionary or very long text
-            else:
-                info["max_length"] = max(255, seen)
+        if is_nested(field.type):
+            validate_json_shape(field.type, field.name)
+            if nested == "native":
+                sql_type = native_type(field, dialect)
         if sql_type is None:
-            sql_type = core_sql._column_type(field, info, dialect)
+            sql_type = core_sql._column_type(field, info, dialect, key=field.name in key)
+            value_type = field.type.value_type if pat.is_dictionary(field.type) else field.type
+            if (
+                core_sql._logical_type(value_type) == "string"
+                and not (pat.is_string(value_type) or pat.is_large_string(value_type))
+                and not info.get("max_length")
+            ):
+                sql_type = _TEXT[dialect]
         nullable = bool(info.get("nullable", True)) and field.name not in key
         out.append((field.name, sql_type, nullable))
     return out
@@ -174,6 +174,8 @@ def create_table_sql(
     first: pa.RecordBatch | None = None,
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
+    nested: str = "native",
+    constraints: ConstraintDDL | None = None,
 ) -> str:
     for name in schema.names:
         check_identifier(name, "column", dialect)
@@ -181,13 +183,21 @@ def create_table_sql(
         if name not in schema.names:
             raise ShapeError(f"primary key column {name!r} is not a column of {table!r}")
     defs = [
-        f"  {quote(name, dialect)} {sql_type} {'NULL' if nullable else 'NOT NULL'}"
+        f"  {quote(name, dialect)} {sql_type}"
+        + (
+            f" DEFAULT {constraints.defaults[name]}"
+            if constraints and name in constraints.defaults
+            else ""
+        )
+        + f" {'NULL' if nullable else 'NOT NULL'}"
         for name, sql_type, nullable in column_definitions(
-            schema, first, columns or {}, primary_key, dialect
+            schema, first, columns or {}, primary_key, dialect, nested
         )
     ]
     if primary_key:
         defs.append(f"  PRIMARY KEY ({', '.join(quote(c, dialect) for c in primary_key)})")
+    if constraints:
+        defs.extend("  " + clause for clause in constraints.definitions)
     body = ",\n".join(defs)
     return f"CREATE TABLE {qualified(schema_name, table, dialect)} (\n{body}\n)"
 
@@ -220,7 +230,9 @@ def _json(value: Any) -> str:
     return json.dumps(value, default=str, ensure_ascii=False)
 
 
-def _converter(field: pa.Field, dialect: str) -> Callable[[Any], Any] | None:
+def _converter(
+    field: pa.Field, dialect: str, nested: str = "native"
+) -> Callable[[Any], Any] | None:
     """The per-value fix a column needs before it reaches the driver, or ``None``.
 
     Timestamps lose their zone as UTC (the column type has none, as in the script dialect);
@@ -228,8 +240,16 @@ def _converter(field: pa.Field, dialect: str) -> Callable[[Any], Any] | None:
     so they become NULL (as in the script dialect)."""
     kind = field.type
     if pat.is_timestamp(kind) and kind.tz is not None:
-        return lambda v: None if v is None else _utc_naive(v)
-    if pat.is_list(kind) or pat.is_large_list(kind) or pat.is_struct(kind) or pat.is_map(kind):
+        return lambda v: (
+            None
+            if v is None
+            else (v.astimezone(dt.UTC) if dialect == "postgres" else _utc_naive(v))
+        )
+    if is_nested(kind):
+        if nested == "native":
+            if dialect == "postgres" and native_type(field, dialect).endswith("[]"):
+                return postgres_array
+            return lambda value: native_json(value, field, dialect)
         return lambda v: None if v is None else _json(v)
     if pat.is_duration(kind):
         return lambda v: None if v is None else str(v)
@@ -249,8 +269,10 @@ def row_iterator(
     return zip(*columns, strict=True)
 
 
-def converters_for(schema: pa.Schema, dialect: str) -> list[Callable[[Any], Any] | None]:
-    return [_converter(field, dialect) for field in schema]
+def converters_for(
+    schema: pa.Schema, dialect: str, nested: str = "native"
+) -> list[Callable[[Any], Any] | None]:
+    return [_converter(field, dialect, nested) for field in schema]
 
 
 def _declared_integer(field: pa.Field, meta: Mapping[str, Mapping[str, Any]]) -> bool:
@@ -279,4 +301,8 @@ def normalize(
                     f"a whole number in the int64 range ({exc})"
                 ) from None
         arrays.append(column)
-    return pa.RecordBatch.from_arrays(arrays, names=batch.schema.names)
+    schema = pa.schema(
+        [field.with_type(column.type) for field, column in zip(batch.schema, arrays, strict=True)],
+        metadata=batch.schema.metadata,
+    )
+    return pa.RecordBatch.from_arrays(arrays, schema=schema)

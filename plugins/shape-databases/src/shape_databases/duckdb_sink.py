@@ -27,9 +27,18 @@ time32 / time64                        ``TIME`` (nanoseconds are cut to microsec
 timestamp, no zone: s / ms / us / ns   ``TIMESTAMP_S`` / ``TIMESTAMP_MS`` / ``TIMESTAMP`` /
                                        ``TIMESTAMP_NS``
 timestamp with a zone                  ``TIMESTAMPTZ`` (microseconds)
+list (including large/fixed lists)     ``T[]`` recursively
+struct                                ``STRUCT("field" T, ...)`` recursively
+map                                   ``MAP(K, V)`` recursively
 =====================================  ====================================================
 
-Anything else (nested values, durations) is refused with the column named: convert it first. The
+Nested values use native Arrow scans by default (``nested="native"``). ``nested="json"``
+stores nested columns as JSON text in ``VARCHAR``; maps are ordered key/value pairs. Map order
+and JSON key order do not affect value equality. Empty structs, duplicate struct field names
+and unsupported nested leaves are refused before connecting, naming ``nested=json`` as the
+alternative. Lists read back as variable lists; times and zoned timestamps, including nested
+ones, use microseconds, and zoned timestamps read back in the session zone (UTC for comparison).
+Anything else (for example durations) is refused with the column named: convert it first. The
 primary key (``primary_key``) is a ``PRIMARY KEY`` constraint; a column is ``NOT NULL`` when it is
 a key column or its ``columns`` entry says ``"nullable": false``. Reading the table back gives
 the same ``shape.repro.dataset_id`` as the tables that were written.
@@ -59,6 +68,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import uuid
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Any
 
@@ -66,10 +76,16 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.types as pat  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.generation.write_constraints import (
+    _PREPARED_CONSTRAINTS,
+    ConstraintDDL,
+    compile_constraints,
+)
 
 from . import _sql
 from ._base import as_int, as_text, one_of, parse_uri
 from .errors import WriteError
+from .nested import is_nested, json_batch, nested_mode, validate_json_shape
 
 log = logging.getLogger("shape_databases")
 
@@ -91,6 +107,7 @@ _INTS = {
     (False, 64): "UBIGINT",
 }
 _TIMESTAMPS = {"s": "TIMESTAMP_S", "ms": "TIMESTAMP_MS", "us": "TIMESTAMP", "ns": "TIMESTAMP_NS"}
+_ASCII_CASE = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 
 
 def _quote(name: str) -> str:
@@ -109,11 +126,37 @@ def _qualified(schema_name: str, table: str) -> str:
     return f"{_quote(schema_name)}.{_quote(table)}"
 
 
-def duckdb_type(field: pa.Field, meta: Mapping[str, Any]) -> str:
+def duckdb_type(field: pa.Field, meta: Mapping[str, Any], *, nested: str = "native") -> str:
     """The DuckDB column type that holds Arrow ``field`` (see the module docstring)."""
     kind = field.type
     if pat.is_dictionary(kind):
         kind = kind.value_type
+    if is_nested(kind):
+        validate_json_shape(kind, field.name)
+        if nested == "json":
+            return "VARCHAR"
+        try:
+            if pat.is_list(kind) or pat.is_large_list(kind) or pat.is_fixed_size_list(kind):
+                item = pa.field(field.name, kind.value_type)
+                return f"{duckdb_type(item, {})}[]"
+            if pat.is_struct(kind):
+                names = [child.name.translate(_ASCII_CASE) for child in kind]
+                if not names or len(names) != len(set(names)):
+                    raise ShapeError("struct needs non-empty, distinct field names")
+                parts = [
+                    f"{_quote(_check_name(child.name, 'struct field'))} "
+                    f"{duckdb_type(pa.field(field.name, child.type), {})}"
+                    for child in kind
+                ]
+                return "STRUCT(" + ", ".join(parts) + ")"
+            key = duckdb_type(pa.field(field.name, kind.key_type), {})
+            value = duckdb_type(pa.field(field.name, kind.item_type), {})
+            return f"MAP({key}, {value})"
+        except ShapeError as exc:
+            raise ShapeError(
+                f"column {field.name!r}: nested type {kind} cannot be stored natively "
+                f"({exc}); use nested=json"
+            ) from None
     if pat.is_boolean(kind):
         return "BOOLEAN"
     if pat.is_integer(kind):
@@ -147,6 +190,8 @@ def create_table_sql(
     *,
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
+    nested: str = "native",
+    constraints: ConstraintDDL | None = None,
 ) -> str:
     columns = columns or {}
     unknown = [c for c in primary_key if c not in schema.names]
@@ -156,13 +201,49 @@ def create_table_sql(
     for field in schema:
         meta = columns.get(field.name, {})
         required = field.name in primary_key or not bool(meta.get("nullable", True))
+        sql_type = duckdb_type(field, meta, nested=nested)
+        default = (
+            f" DEFAULT {constraints.defaults[field.name]}"
+            if constraints and field.name in constraints.defaults
+            else ""
+        )
         lines.append(
-            f"  {_quote(_check_name(field.name, 'column'))} {duckdb_type(field, meta)}"
+            f"  {_quote(_check_name(field.name, 'column'))} {sql_type}{default}"
             f"{' NOT NULL' if required else ''}"
         )
     if primary_key:
         lines.append(f"  PRIMARY KEY ({', '.join(_quote(c) for c in primary_key)})")
+    if constraints:
+        # Owner-approved DuckDB exception: parents exist before this inline FK phase.
+        lines.extend(
+            "  " + clause for clause in (*constraints.definitions, *constraints.foreign_keys)
+        )
     return f"CREATE TABLE {_qualified(schema_name, table)} (\n" + ",\n".join(lines) + "\n)"
+
+
+def _normalized_type(kind: pa.DataType) -> pa.DataType:
+    if pat.is_dictionary(kind):
+        return _normalized_type(kind.value_type)
+    if pat.is_list(kind) or pat.is_large_list(kind) or pat.is_fixed_size_list(kind):
+        field = kind.value_field.with_type(_normalized_type(kind.value_type))
+        if pat.is_fixed_size_list(kind):
+            return pa.list_(field, kind.list_size)
+        return pa.large_list(field) if pat.is_large_list(kind) else pa.list_(field)
+    if pat.is_struct(kind):
+        return pa.struct([child.with_type(_normalized_type(child.type)) for child in kind])
+    if pat.is_map(kind):
+        return pa.map_(
+            kind.key_field.with_type(_normalized_type(kind.key_type)),
+            kind.item_field.with_type(_normalized_type(kind.item_type)),
+            keys_sorted=kind.keys_sorted,
+        )
+    if pat.is_time64(kind) and kind.unit == "ns":
+        return pa.time64("us")
+    if pat.is_float16(kind):
+        return pa.float32()
+    if pat.is_timestamp(kind) and kind.tz is not None and kind.unit != "us":
+        return pa.timestamp("us", kind.tz)
+    return kind
 
 
 def normalize(batch: pa.RecordBatch) -> pa.RecordBatch:
@@ -171,18 +252,18 @@ def normalize(batch: pa.RecordBatch) -> pa.RecordBatch:
     arrays = []
     changed = False
     for column in batch.columns:
-        kind = column.type
-        if pat.is_dictionary(kind):
-            column, kind = column.cast(kind.value_type), kind.value_type
-            changed = True
-        if pat.is_time(kind) and kind.bit_width == 64 and kind.unit == "ns":
-            column, changed = column.cast(pa.time64("us"), safe=False), True
-        elif pat.is_float16(kind):
-            column, changed = column.cast(pa.float32()), True
-        elif pat.is_timestamp(kind) and kind.tz is not None and kind.unit != "us":
-            column, changed = column.cast(pa.timestamp("us", kind.tz), safe=False), True
+        target = _normalized_type(column.type)
+        if target != column.type:
+            column, changed = column.cast(target, safe=False), True
         arrays.append(column)
-    return pa.RecordBatch.from_arrays(arrays, names=batch.schema.names) if changed else batch
+    fields = [
+        field.with_type(column.type) for field, column in zip(batch.schema, arrays, strict=True)
+    ]
+    return (
+        pa.RecordBatch.from_arrays(arrays, schema=pa.schema(fields, metadata=batch.schema.metadata))
+        if changed
+        else batch
+    )
 
 
 def _file_path(uri: str, allowed: Mapping[str, Any]) -> tuple[str, dict[str, Any]]:
@@ -223,10 +304,126 @@ class DuckDbSink:
         "schema": as_text,
         "write_mode": one_of(*WRITE_MODES),
         "commit_rows": as_int,
+        "nested": one_of("native", "json"),
     }
 
-    def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+    @staticmethod
+    def _constraints(
+        options: Mapping[str, Any],
+        schema: pa.Schema,
+        schema_name: str,
+        table: str,
+    ) -> ConstraintDDL:
+        try:
+            return compile_constraints(
+                options,
+                columns=schema.names,
+                table=table,
+                dialect="duckdb",
+                schema_name=schema_name,
+            )
+        except ValueError as exc:
+            raise ShapeError(str(exc)) from None
+
+    def prepare_constraints(self, uri: str, tables: Mapping[str, Mapping[str, Any]]) -> None:
+        """Prepare all schemas and parent-first inline constraints before any data is loaded."""
         path, query = _file_path(uri, self.uri_params)
+        prepared: dict[str, tuple[str, str, pa.Schema, Mapping[str, Any], str]] = {}
+        dependencies: dict[str, set[str]] = {}
+        for table, options in tables.items():
+            _check_name(table, "table")
+            schema = options.get("schema")
+            if not isinstance(schema, pa.Schema):
+                raise ShapeError(f"table {table!r}: constraint preparation needs an Arrow schema")
+            schema_name = _check_name(
+                options.get("schema_name", query.get("schema", DEFAULT_SCHEMA)), "schema"
+            )
+            mode = options.get("write_mode", query.get("write_mode", "create"))
+            if mode not in WRITE_MODES:
+                raise ShapeError(f"unknown write mode {mode!r}")
+            nested = nested_mode(options.get("nested", query.get("nested", "native")))
+            ddl = self._constraints(options, schema, schema_name, table)
+            create_table_sql(
+                schema_name,
+                table,
+                schema,
+                columns=options.get("columns"),
+                primary_key=options.get("primary_key") or [],
+                nested=nested,
+                constraints=ddl,
+            )
+            prepared[table] = (schema_name, mode, schema, options, nested)
+            dependencies[table] = {
+                ref["ref_table"]
+                for ref in options.get("foreign_keys", [])
+                if ref["ref_table"] in tables and ref["ref_table"] != table
+            }
+            for ref in options.get("foreign_keys", []):
+                if ref["ref_table"] in tables:
+                    parent = tables[ref["ref_table"]].get("schema")
+                    if isinstance(parent, pa.Schema) and any(
+                        column not in parent.names for column in ref["ref_columns"]
+                    ):
+                        raise ShapeError(f"foreign key {ref['name']!r}: unknown parent column")
+        order: list[str] = []
+        pending = set(prepared)
+        while pending:
+            ready = [
+                name for name in prepared if name in pending and not dependencies[name] & pending
+            ]
+            if not ready:
+                raise ShapeError("cross-table foreign key cycle cannot be prepared by DuckDB")
+            order.extend(ready)
+            pending.difference_update(ready)
+        if not order:
+            return
+        driver = _driver()
+        con = None
+        try:
+            with _CONNECTION_LOCK:
+                con = driver.connect(path)
+            with _SCHEMA_LOCK:
+                for schema_name in dict.fromkeys(item[0] for item in prepared.values()):
+                    if schema_name != DEFAULT_SCHEMA:
+                        con.execute(f"CREATE SCHEMA IF NOT EXISTS {_quote(schema_name)}")
+            con.begin()
+            for table in order:
+                schema_name, mode, schema, options, nested = prepared[table]
+                self._prepare(
+                    con,
+                    schema_name,
+                    table,
+                    mode,
+                    schema,
+                    options.get("columns") or {},
+                    options.get("primary_key") or [],
+                    nested,
+                    options,
+                )
+            con.commit()
+        except ShapeError:
+            if con is not None:
+                self._rollback(con)
+            raise
+        except Exception as exc:
+            if con is not None:
+                self._rollback(con)
+            raise WriteError(
+                f"preparing DuckDB constraints failed ({type(exc).__name__}): {exc}"
+            ) from None
+        finally:
+            if con is not None:
+                with _CONNECTION_LOCK:
+                    con.close()
+
+    def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        if (
+            "prepared_constraints" in options
+            and options["prepared_constraints"] is not _PREPARED_CONSTRAINTS
+        ):
+            raise ShapeError("prepared_constraints is an internal preparation marker")
+        path, query = _file_path(uri, self.uri_params)
+        nested = nested_mode(options.get("nested", query.get("nested", "native")))
         mode = options.get("write_mode", query.get("write_mode", "create"))
         if mode not in WRITE_MODES:
             raise ShapeError(f"unknown write mode {mode!r}; choose one of {', '.join(WRITE_MODES)}")
@@ -254,9 +451,31 @@ class DuckDbSink:
             raise ShapeError(
                 f"table {table!r} has no batches and no schema: pass schema= to create it empty"
             )
+        # The complete first schema is known before importing the driver or opening a file.
+        create_table_sql(
+            schema_name,
+            table,
+            use_schema,
+            columns=meta,
+            primary_key=key,
+            nested=nested,
+            constraints=self._constraints(options, use_schema, schema_name, table),
+        )
         duckdb = _driver()
         return self._write(
-            duckdb, path, schema_name, table, mode, use_schema, first, it, meta, key, commit_rows
+            duckdb,
+            path,
+            schema_name,
+            table,
+            mode,
+            use_schema,
+            first,
+            it,
+            meta,
+            key,
+            commit_rows,
+            nested,
+            options,
         )
 
     def _write(
@@ -272,6 +491,8 @@ class DuckDbSink:
         meta: Mapping[str, Mapping[str, Any]],
         key: list[str],
         commit_rows: int | None,
+        nested: str,
+        options: Mapping[str, Any],
     ) -> int:
         try:
             with _CONNECTION_LOCK:
@@ -286,12 +507,21 @@ class DuckDbSink:
                     with _SCHEMA_LOCK:
                         con.execute(f"CREATE SCHEMA IF NOT EXISTS {_quote(schema_name)}")
                 con.begin()
-                self._prepare(con, schema_name, table, mode, schema, meta, key)
+                self._prepare(con, schema_name, table, mode, schema, meta, key, nested, options)
                 if commit_rows:
                     con.commit()  # the table is there for readers before the first rows
                     con.begin()
                 rows = self._load(
-                    con, schema_name, table, mode, first, rest, schema, commit_rows, committed
+                    con,
+                    schema_name,
+                    table,
+                    mode,
+                    first,
+                    rest,
+                    schema,
+                    commit_rows,
+                    committed,
+                    nested,
                 )
                 con.commit()
                 log.debug("wrote %d rows to %s in %s", rows, table, path)
@@ -304,9 +534,26 @@ class DuckDbSink:
                 kept = (
                     f"; {committed[0]} rows were committed before it failed" if committed[0] else ""
                 )
+                names = [
+                    item["name"]
+                    for kind in ("checks", "foreign_keys")
+                    for item in options.get(kind, [])
+                ]
+                if "unique" in str(exc).lower():
+                    from shape.generation.write_constraints import unique_constraint_name
+
+                    names.extend(
+                        unique_constraint_name(table, index, "duckdb")
+                        for index, _ in enumerate(options.get("unique", []))
+                    )
+                named = (
+                    "; configured constraints: " + ", ".join(names)
+                    if names and "constraint" in str(exc).lower()
+                    else ""
+                )
                 failure = WriteError(
                     f"writing {_qualified(schema_name, table)} in {path} failed "
-                    f"({type(exc).__name__}): {exc}{kept}",
+                    f"({type(exc).__name__}): {exc}{named}{kept}",
                     committed[0],
                 )
         finally:
@@ -328,6 +575,89 @@ class DuckDbSink:
         ).fetchone()
         return row is not None
 
+    def _verify_existing_constraints(
+        self,
+        con: Any,
+        schema_name: str,
+        table: str,
+        schema: pa.Schema,
+        meta: Mapping[str, Mapping[str, Any]],
+        key: Sequence[str],
+        nested: str,
+        options: Mapping[str, Any],
+    ) -> None:
+        """Compare catalog declarations before appending or deleting any existing row."""
+        rows = con.execute(
+            "SELECT constraint_type, constraint_column_names, expression, "
+            "referenced_table, referenced_column_names FROM duckdb_constraints() "
+            "WHERE database_name = current_database() AND schema_name = ? AND table_name = ?",
+            [schema_name, table],
+        ).fetchall()
+        if key and not any(row[0] == "PRIMARY KEY" and row[1] == list(key) for row in rows):
+            raise ShapeError(f"existing table {table!r}: PRIMARY KEY differs")
+        for reference in options.get("foreign_keys", []):
+            wanted = (
+                "FOREIGN KEY",
+                reference["columns"],
+                None,
+                reference["ref_table"],
+                reference["ref_columns"],
+            )
+            if wanted not in rows:
+                raise ShapeError(
+                    f"existing table {table!r}: foreign key {reference['name']!r} differs"
+                )
+        for columns in options.get("unique", []):
+            if not any(row[0] == "UNIQUE" and row[1] == columns for row in rows):
+                raise ShapeError(f"existing table {table!r}: UNIQUE {columns!r} is missing")
+        if not options.get("checks") and not options.get("defaults"):
+            return
+        plan = self._constraints(options, schema, schema_name, table)
+        # DuckDB normalizes CHECK/default expressions itself. A temporary empty table
+        # supplies that canonical spelling without executing any catalog expression.
+        probe = "shape_constraint_" + uuid.uuid4().hex
+        expected = ConstraintDDL(plan.definitions, (), (), plan.defaults, ())
+        ddl = create_table_sql(
+            DEFAULT_SCHEMA,
+            probe,
+            schema,
+            columns=meta,
+            primary_key=key,
+            nested=nested,
+            constraints=expected,
+        )
+        con.execute(ddl.replace("CREATE TABLE ", "CREATE TEMP TABLE ", 1))
+        try:
+            checks = con.execute(
+                "SELECT expression FROM duckdb_constraints() WHERE database_name = 'temp' "
+                "AND table_name = ? AND constraint_type = 'CHECK'",
+                [probe],
+            ).fetchall()
+            actual = {row[2] for row in rows if row[0] == "CHECK"}
+            if any(expression[0] not in actual for expression in checks):
+                names = ", ".join(check["name"] for check in options.get("checks", []))
+                raise ShapeError(f"existing table {table!r}: CHECK constraints differ ({names})")
+            defaults = dict(
+                con.execute(
+                    "SELECT column_name, column_default FROM information_schema.columns "
+                    "WHERE table_catalog = current_database() AND table_schema = ? "
+                    "AND table_name = ?",
+                    [schema_name, table],
+                ).fetchall()
+            )
+            expected_defaults = dict(
+                con.execute(
+                    "SELECT column_name, column_default FROM information_schema.columns "
+                    "WHERE table_catalog = 'temp' AND table_name = ?",
+                    [probe],
+                ).fetchall()
+            )
+            for column in plan.defaults:
+                if defaults.get(column) != expected_defaults.get(column):
+                    raise ShapeError(f"existing table {table!r}: DEFAULT for {column!r} differs")
+        finally:
+            con.execute(f"DROP TABLE {_qualified(DEFAULT_SCHEMA, probe)}")
+
     def _prepare(
         self,
         con: Any,
@@ -337,13 +667,34 @@ class DuckDbSink:
         schema: pa.Schema,
         meta: Mapping[str, Mapping[str, Any]],
         key: Sequence[str],
+        nested: str,
+        options: Mapping[str, Any],
     ) -> None:
         name = _qualified(schema_name, table)
         exists = self._exists(con, schema_name, table)
+        if options.get("prepared_constraints") is _PREPARED_CONSTRAINTS:
+            if not exists:
+                raise ShapeError(f"prepared table {table!r} is missing before loading")
+            return
         if mode == "create" and exists:
             raise ShapeError(
                 f"table {table} already exists; set write_mode to append, truncate, replace or "
                 "upsert to write into it"
+            )
+        if exists and mode in ("replace", "truncate"):
+            incoming = con.execute(
+                "SELECT constraint_name FROM duckdb_constraints() "
+                "WHERE schema_name = ? AND referenced_table = ? ORDER BY constraint_name",
+                [schema_name, table],
+            ).fetchone()
+            if incoming:
+                raise ShapeError(
+                    f"cannot {mode} referenced table {table!r}: foreign key {incoming[0]!r} "
+                    "must be preserved; no data was loaded"
+                )
+        if exists and mode != "replace":
+            self._verify_existing_constraints(
+                con, schema_name, table, schema, meta, key, nested, options
             )
         if mode == "replace" and exists:
             con.execute(f"DROP TABLE {name}")
@@ -351,7 +702,17 @@ class DuckDbSink:
         elif mode == "truncate" and exists:
             con.execute(f"DELETE FROM {name}")  # nosec B608 - quoted names only
         if not exists:
-            con.execute(create_table_sql(schema_name, table, schema, columns=meta, primary_key=key))
+            con.execute(
+                create_table_sql(
+                    schema_name,
+                    table,
+                    schema,
+                    columns=meta,
+                    primary_key=key,
+                    nested=nested,
+                    constraints=self._constraints(options, schema, schema_name, table),
+                )
+            )
 
     def _load(
         self,
@@ -364,6 +725,7 @@ class DuckDbSink:
         schema: pa.Schema,
         commit_rows: int | None,
         committed: list[int],
+        nested: str,
     ) -> int:
         if first is None:
             return 0
@@ -389,7 +751,8 @@ class DuckDbSink:
                 )
             if raw.num_rows == 0:
                 continue
-            con.register(_VIEW, pa.Table.from_batches([normalize(raw)]))
+            ready = json_batch(raw) if nested == "json" else normalize(raw)
+            con.register(_VIEW, pa.Table.from_batches([ready]))
             try:
                 con.execute(sql)
             finally:

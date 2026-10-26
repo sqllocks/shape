@@ -1,0 +1,90 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "sources",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/shape.yml"
+        },
+        "command": "project_show",
+        "id": "sources"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "project_show",
+        "id": "sources",
+        "ok": true,
+        "result": {
+          "file": "${DIR}/shape.yml",
+          "format": "shape-project",
+          "gates": {
+            "range_constraint": "observe"
+          },
+          "name": "vectors",
+          "sources": {
+            "orders": {
+              "baseline": null,
+              "contract": "${DIR}/contract.json",
+              "dataset": false,
+              "path": "${DIR}/a.csv"
+            }
+          },
+          "version": 1
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-file",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/none.yml"
+        },
+        "command": "project_show",
+        "id": "missing-file"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "project_show",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.yml"
+        },
+        "id": "missing-file",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "needs-a-path",
+      "request": {
+        "api_version": "1.1",
+        "args": {},
+        "command": "project_show",
+        "id": "needs-a-path"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "project_show",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "project_show needs the argument 'path'"
+        },
+        "id": "needs-a-path",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "project_show",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

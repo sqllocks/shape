@@ -62,6 +62,7 @@ class MySqlSink(DatabaseSink):
     """``RecordBatch``es for one table to a MySQL table with batched multi-row ``INSERT``."""
 
     name = "mysql"
+    prepare_constraints = DatabaseSink._prepare_constraint_tables
     schemes = ("mysql",)
     dialect = "mysql"
     password_env = ("SHAPE_MYSQL_PASSWORD", "MYSQL_PWD")
@@ -75,10 +76,18 @@ class MySqlSink(DatabaseSink):
         "ssl-mode": _ssl_mode,
         "charset": as_text,
         "connect_timeout": as_int,
+        "nested": as_text,
     }
     exists_sql = (
         "SELECT 1 FROM information_schema.tables "
         "WHERE table_schema = COALESCE(%s, DATABASE()) AND table_name = %s"
+    )
+
+    incoming_constraints_sql = (
+        "SELECT DISTINCT k.CONSTRAINT_NAME AS inbound_constraint_name "
+        "FROM information_schema.KEY_COLUMN_USAGE k "
+        "WHERE k.REFERENCED_TABLE_SCHEMA = COALESCE(%s, DATABASE()) "
+        "AND k.REFERENCED_TABLE_NAME = %s ORDER BY inbound_constraint_name"
     )
 
     def create_schema_sql(self, schema_name: str) -> str:
@@ -94,6 +103,7 @@ class MySqlSink(DatabaseSink):
         if t.database:
             params["database"] = t.database
         params.setdefault("charset", DEFAULT_CHARSET)
+        params["init_command"] = "SET time_zone = '+00:00'"
         self._apply_tls(plan, params)
         params["local_infile"] = False
         params["autocommit"] = False
@@ -181,7 +191,9 @@ class MySqlSink(DatabaseSink):
         marks = ", ".join(["%s"] * len(names))
         # Identifiers only, each checked and quoted; every value is a bound parameter.
         statement = f"INSERT INTO {qualified} ({columns}) VALUES ({marks})"  # nosec B608
-        converters = _sql.converters_for(first.schema, self.dialect)
+        converters = _sql.converters_for(
+            first.schema, self.dialect, plan.options.get("nested", "native")
+        )
         step = min(plan.batch_size, plan.commit_rows or plan.batch_size)
 
         def rows() -> Iterator[tuple[Any, ...]]:
