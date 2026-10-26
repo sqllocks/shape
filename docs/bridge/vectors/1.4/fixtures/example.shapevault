@@ -1,0 +1,21 @@
+{
+  "algorithm": "AES-256-GCM",
+  "columns": {
+    "t.status": {
+      "ciphertext": "Wzjtks2VdN2BJAQCH+0T8bynTdaW3XhvuvK9jMnggfuGZpk7GEPQtr6rVRwQ1K7unHvLmA==",
+      "nonce": "zDwdO2QgKEkioGjI",
+      "policy": "categories"
+    }
+  },
+  "format": "shape-vault",
+  "kek_id": "630dcd2966c43366",
+  "min_shape_version": "0.9.0",
+  "profile_content_id": "0260b9926e9a5fc44af76e9d2ac48811d15c47cfd6255af3e289bca593e280db",
+  "shape_version": "0.9.3",
+  "vault_id": "4b13d6a232c5f72cf7d0e6d0b72063f1",
+  "version": 1,
+  "wrapped_key": {
+    "ciphertext": "jsNt4ebRlFAgVjlVOHdJw7zTsKKdw2ZFI6KqOa1HpP5LPs4TzvR862LesV90QNS/",
+    "nonce": "Mb5AqTYIfDrm6grd"
+  }
+}

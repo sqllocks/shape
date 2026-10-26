@@ -22,7 +22,7 @@ Handler = Callable[[dict[str, Any], "Context"], dict[str, Any]]
 _TYPES = ("string", "integer", "number", "boolean", "object", "array")
 
 #: The versions a command or argument can have been added in, with their minor number.
-SINCE = {"1.0": 0, "1.1": 1, "1.2": 2, "1.3": 3}
+SINCE = {"1.0": 0, "1.1": 1, "1.2": 2, "1.3": 3, "1.4": 4}
 #: What a command can do to the system outside the bridge's own job files (published as
 #: ``effects`` in ``index.json``).
 EFFECTS = ("reads_files", "writes_files", "cancels", "network")

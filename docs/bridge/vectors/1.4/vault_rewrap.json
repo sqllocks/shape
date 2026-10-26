@@ -1,0 +1,70 @@
+{
+  "api_version": "1.4",
+  "cases": [
+    {
+      "name": "metadata",
+      "request": {
+        "api_version": "1.4",
+        "args": {
+          "dry_run": true,
+          "kek": "env://SHAPE_VECTOR_VAULT_OLD",
+          "new_kek": "env://SHAPE_VECTOR_VAULT_NEW",
+          "out_shape": "${DIR}/rewrapped.shape",
+          "out_vault": "${DIR}/rewrapped.shapevault",
+          "shape": "${DIR}/vault-profile.shape",
+          "vault": "${DIR}/example.shapevault"
+        },
+        "command": "vault_rewrap",
+        "id": "vault_rewrap-0"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "vault_rewrap",
+        "id": "vault_rewrap-0",
+        "ok": true,
+        "result": {
+          "columns": [
+            "t.status"
+          ],
+          "dry_run": true,
+          "notices": [],
+          "ok": true,
+          "signed": false,
+          "writes": [
+            "${DIR}/rewrapped.shapevault",
+            "${DIR}/rewrapped.shape"
+          ]
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-input",
+      "request": {
+        "api_version": "1.4",
+        "args": {
+          "vault": "${DIR}/example.shapevault"
+        },
+        "command": "vault_rewrap",
+        "id": "vault_rewrap-1"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "vault_rewrap",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "vault_rewrap needs the argument 'shape'"
+        },
+        "id": "vault_rewrap-1",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "vault_rewrap",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

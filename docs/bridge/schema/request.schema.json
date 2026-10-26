@@ -57,6 +57,10 @@
         "suite_run",
         "timelapse",
         "validate",
+        "vault_policy",
+        "vault_rewrap",
+        "vault_status",
+        "vault_verify",
         "verify"
       ]
     },
@@ -99,5 +103,5 @@
   ],
   "title": "bridge request",
   "type": "object",
-  "x-api-version": "1.3"
+  "x-api-version": "1.4"
 }

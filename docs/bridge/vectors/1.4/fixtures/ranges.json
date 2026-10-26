@@ -1,0 +1,9 @@
+{
+  "format": "shape-verify-config",
+  "version": 1,
+  "ranges": {
+    "a.amount": {
+      "max": 50
+    }
+  }
+}

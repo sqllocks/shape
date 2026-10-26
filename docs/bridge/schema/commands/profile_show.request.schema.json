@@ -64,6 +64,6 @@
   ],
   "title": "profile_show request",
   "type": "object",
-  "x-api-version": "1.3",
+  "x-api-version": "1.4",
   "x-since": "1.1"
 }

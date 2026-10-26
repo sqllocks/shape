@@ -54,7 +54,7 @@ A request:
 
 | field | meaning |
 |---|---|
-| `api_version` | `"MAJOR.MINOR"`. Optional (assumed current, 1.1, with a warning) but you should send it. A request that declares `"1.0"` is answered as the 1.0 bridge answers it (below). |
+| `api_version` | `"MAJOR.MINOR"`. Optional (assumed current, 1.4, with a warning) but you should send it. A request that declares `"1.0"` is answered as the 1.0 bridge answers it (below). |
 | `id` | Any string or integer of at most 128 characters. Echoed in the response; use it to match answers. |
 | `command` | One of the commands below. |
 | `args` | The command's arguments (an object; `null` means none). Unknown names are refused. A `null` value is the same as leaving the argument out. |
@@ -106,7 +106,7 @@ The full list, with a sentence for each, is `error_codes` in
 
 ## Versions and the stability promise
 
-`api_version` is `MAJOR.MINOR`; this bridge speaks **1.3** and serves **1.0 to 1.3**.
+`api_version` is `MAJOR.MINOR`; this bridge speaks **1.4** and serves **1.0 to 1.4**.
 
 - **Minor versions only add:** a command, an optional argument, an option, a result field, an error
   code, a warning code. A client written for 1.0 keeps working on 1.7, so **a client ignores result
@@ -115,11 +115,11 @@ The full list, with a sentence for each, is `error_codes` in
   result field, error code or the meaning of any of them.
 - **A major version may break.** A bridge serves one major version. A request for another is refused
   with `usage.unsupported_version`, and the message names the supported range
-  (`... this bridge serves 1.0 to 1.3`). The response always carries the bridge's own
+  (`... this bridge serves 1.0 to 1.4`). The response always carries the bridge's own
   `api_version`, so a client can read it from the refusal.
 - A request with a newer *minor* than the bridge's is served, with the warning
   `newer_minor_version`: what the newer minor added is not available.
-- A request with **no `api_version`** is served as 1.3, with the warning `api_version_assumed`.
+- A request with **no `api_version`** is served as 1.4, with the warning `api_version_assumed`.
 - Persisted files declare their own `format` and integer `version` (the job file below, the vector
   files). A file written by a newer Shape is refused with `input.unsupported_format_version`, never
   misread. The job file `shape-bridge-job` and the vector files `shape-bridge-vectors` are still
@@ -1512,3 +1512,36 @@ Oracle sources (`oracle://` and `tcps://`, from `sqllocks-shape-databases[oracle
 by default. Oracle connection credentials and wallet passwords are never artifact metadata.
 The catalog count and LAST_ANALYZED describe the population; sampled distributions describe
 only the bounded sample. See the database plugin README for exact counts and type mapping.
+
+
+## Vault management (API 1.4)
+
+`vault_status` takes `vault` and returns the header, column names, policies and
+ciphertext sizes without opening the vault. `vault_verify` takes `vault`, `shape`,
+optional `kek` and optional `verify` (a profile signature public key file). A failed
+verification is a successful response with `result.ok: false` and metadata checks.
+
+`vault_rewrap` takes `vault`, `shape`, `kek`, `new_kek`, `out_vault`, `out_shape`,
+optional `dry_run`, `key` (signing key file) and `passphrase_env`. It calls the existing
+`shape vault rekey` operation: both the data key and wrapping key rotate, the input
+files stay intact, and existing output paths are refused. The profile components
+stay byte-identical; its manifest references the new vault, so an existing signature
+is dropped unless `key` signs the new profile. Notices explain this in the result.
+A dry run checks the pair and keys and returns planned writes without writing.
+The output vault must be ignored by Git, as for the command line.
+
+`vault_policy` takes a `policy` JSON file and returns its validated policy metadata.
+Optional `column` (`TABLE.COLUMN`) and `classification` resolve its effective
+policy using the existing explicit-column, classification, then default precedence.
+It does not change an encrypted vault's retention policy or decrypt its payload.
+
+Keys are references (`env://NAME`, `file://PATH`, a key file path or a registered
+credential reference), never literals. Standard input belongs to the bridge and
+cannot supply signing keys, verification keys or passphrases. None of these commands
+returns key material, ciphertext or decrypted data, even with `include_raw_values`.
+Earlier minor requests do not recognize these commands. The 1.3 schemas are frozen
+in `docs/bridge/schema/1.3/`; the existing 1.3 vectors remain unchanged.
+
+Bridge 1.4 `report_card` accepts optional `format` (`auto`, `csv`, `parquet`,
+`jsonl`), matching the command line `--format` and Python `data_format`. The default
+`auto` preserves extension-based discovery.

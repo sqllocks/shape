@@ -53,7 +53,7 @@ def vector_cases() -> list[dict]:
 
 
 def test_the_document_has_a_whats_new_in_1_2_and_says_what_the_bridge_speaks():
-    assert "this bridge speaks **1.3** and serves **1.0 to 1.3**" in DOC
+    assert "this bridge speaks **1.4** and serves **1.0 to 1.4**" in DOC
     assert "## What's new in 1.2" in DOC and "The 1.1 promise" in DOC
     assert "docs/bridge/schema/1.1/" in DOC and "test_compat_1_1.py" in DOC
     for name in NEW:
