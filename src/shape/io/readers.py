@@ -685,7 +685,9 @@ def _files_source(
     def open_batches() -> Iterator[pa.RecordBatch]:
         for i, p in enumerate(paths):
             if kind == "parquet":
-                pf = _readable(p, kind, pq.ParquetFile, p)
+                # File-wide prefetch retains nested column buffers across the
+                # whole file, defeating bounded child scans despite small batches.
+                pf = _readable(p, kind, lambda path=p: pq.ParquetFile(path, pre_buffer=False))
                 stream: Iterator[pa.RecordBatch] = pf.iter_batches(batch_size=size, columns=columns)
             elif kind == "ipc":
                 stream = (

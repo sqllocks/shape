@@ -736,6 +736,45 @@ requirements:
   owner: integrations
 
 
+- id: SHAPE-ICEBERG-001
+  title: Optional Iceberg catalogs
+  text: Iceberg sources and sinks load their optional dependency only when used and accept local SQL or named catalogs with credential references.
+  verify: [conformance, offline-iceberg]
+  tests: [tests/builtins/test_iceberg.py, tests/security/test_iceberg_credentials.py]
+  owner: plugins
+- id: SHAPE-ICEBERG-002
+  title: Atomic Iceberg snapshots
+  text: Iceberg writes validate native transforms and schemas before data writes, reject evolution, and commit one snapshot per batch with optional fingerprints.
+  verify: [conformance, offline-iceberg]
+  tests: [tests/builtins/test_iceberg.py]
+  owner: plugins
+- id: SHAPE-ICEBERG-003
+  title: Native Iceberg type fidelity
+  text: Iceberg retains native nested types and source integer widths; unsupported precision and implicit nanosecond loss are refused by column name.
+  verify: [conformance, offline-iceberg]
+  tests: [tests/builtins/test_iceberg.py]
+  owner: plugins
+- id: SHAPE-ICEBERG-004
+  title: Iceberg snapshot provenance
+  text: Iceberg profiles record catalog, identifier and snapshot provenance, accept snapshot time travel and namespaces, and take row counts from snapshot summaries.
+  verify: [conformance, offline-iceberg]
+  tests: [tests/builtins/test_iceberg.py]
+  owner: plugins
+- id: SHAPE-ICEBERG-005
+  title: Iceberg command integration
+  text: Generation, profiling and bridge commands accept Iceberg URIs without persisting credentials and preserve dataset identity across offline round trips.
+  verify: [conformance, offline-iceberg, secret-scan]
+  tests: [tests/builtins/test_iceberg.py, tests/bridge/test_iceberg.py, tests/security/test_iceberg_credentials.py]
+  owner: plugins
+
+- id: SHAPE-STREAM-009
+  title: Binary broker formats
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Local Avro and Protobuf events have no registry prefix, retain nested types, and reject incompatible reader rows without coercion. Registry Avro readers resolve and cache each writer schema id.
+  verify: [conformance, tests/streaming/test_binary_formats.py]
+  owner: streaming
 - id: SHAPE-CLOUD-001
   title: Cloud database catalog and Arrow sources
   level: L1
@@ -770,6 +809,23 @@ requirements:
   text: Kafka and Event Hubs support column keys and headers, preserve replay identity, refuse reserved header names and unknown metadata columns before sending, and optionally decode broker metadata outside default drift comparisons.
   verify: [conformance]
   owner: streaming
+
+- id: SHAPE-NESTED-CHILD-001
+  title: Nested child profiling
+  level: L1
+  milestone: W9-05
+  priority: MUST
+  text: Nested profiles retain child statistics under their owning column, exact or bounded by mode, with depth, paths, privacy and path-addressed consumers.
+  verify: [conformance]
+  owner: profiling
+- id: SHAPE-BIGQUERY-001
+  title: BigQuery bounded loads and guarded catalog sources
+  level: L1
+  milestone: W9-13
+  priority: MUST
+  text: BigQuery uses checked Parquet load jobs, reference-only credentials, exact type maps, Storage Read Arrow batches and declared catalog keys with bounded sampling and dry-run query limits.
+  verify: [bigquery-conformance]
+  owner: databases
 
 - id: SHAPE-ORACLE-001
   title: Oracle thin-mode source and sink

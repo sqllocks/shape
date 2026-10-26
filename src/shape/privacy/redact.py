@@ -148,6 +148,45 @@ class _ColumnResult:
     entry: dict[str, Any]
 
 
+def _redact_child(child: Mapping[str, Any], k: int) -> dict[str, Any]:
+    # Element counts are not independent people. Suppress value-bearing surfaces
+    # regardless of their frequency until a row-level cohort proof exists.
+    c = _redact_column(
+        child,
+        k=k,
+        classified=True,
+        row_count=int(child.get("row_count", 0)),
+        sampled_rows=int(child.get("row_count", 0)),
+        previous={},
+    ).column
+    removed = dict(c.get("redacted", {}))
+    for key in (
+        "mean",
+        "std",
+        "hour_histogram",
+        "dow_histogram",
+        "temporal_histogram",
+        "quantiles",
+        "bounds",
+        "top",
+        "min",
+        "max",
+        "distribution_params",
+        "placeholders",
+        "value_counts_ext_order",
+        "univariate",
+        "mixture",
+        "tail_index",
+        "heaping",
+        "benford",
+    ):
+        if c.get(key) is not None:
+            c[key] = None
+            removed[key] = "child_values"
+    c["redacted"] = removed
+    return c
+
+
 def _redact_column(
     col: Mapping[str, Any],
     *,
@@ -159,6 +198,12 @@ def _redact_column(
 ) -> _ColumnResult:
     c = copy.deepcopy(dict(col))
     dtype = str(c.get("dtype"))
+    nested_length = (c.get("nested") or {}).get("length")
+    if isinstance(nested_length, dict):
+        # The existing fail-closed scanner does not permit extreme pairs under
+        # arbitrary keys. Keep aggregate length evidence without that surface.
+        nested_length.pop("min", None)
+        nested_length.pop("max", None)
     cardinality = int(c.get("cardinality") or 0)
     base = non_null_base(sampled_rows, c.get("null_count"), c.get("null_rate") or 0.0)
     pii = pii_gate_reason(c.get("pattern"), cardinality, row_count, _GATE, _column_rates(c))
@@ -253,6 +298,8 @@ def _redact_column(
             c.pop("placeholders", None)
 
     c["value_counts_ext_order"] = None
+    if isinstance(c.get("children"), list):
+        c["children"] = [_redact_child(child, k) for child in c["children"]]
 
     # every other cell surface obeys the same minimum cohort
     for key in ("hour_histogram", "dow_histogram"):

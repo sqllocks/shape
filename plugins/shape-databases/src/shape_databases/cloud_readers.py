@@ -37,11 +37,15 @@ class CloudSource(DatabaseSource):
             "connection",
             "batch_size",
             "sample_rows",
+            "max_depth",
             "tables",
             "name",
         }
         if set(options) - allowed:
             raise ShapeError("unknown source option: " + ", ".join(sorted(set(options) - allowed)))
+        from shape.profile.children import validate_depth
+
+        validate_depth(options.get("max_depth", 8))
         _integer(options.get("sample_rows", 1000), "sample_rows", 0)
         batch_size = _integer(options.get("batch_size", 65536), "batch_size", 1)
         parts = urlsplit(uri)

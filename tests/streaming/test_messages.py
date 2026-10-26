@@ -1,5 +1,6 @@
 """Broker messages to Arrow batches (P3-04): the decoding rules every stream source shares."""
 
+import json
 from datetime import UTC, datetime
 
 import pyarrow as pa
@@ -172,3 +173,24 @@ def test_group_by_partition_keeps_arrival_order_inside_each_partition():
 def test_decoding_is_deterministic():
     body = msgs('{"a": 1, "b": "x"}', '{"a": 2, "b": "y"}', ts=5_000_000)
     assert decode_messages(body).equals(decode_messages(body))
+
+
+@pytest.mark.parametrize("nested", [None, False, True])
+@pytest.mark.parametrize("binary_decoder", [False, True])
+def test_json_nested_opt_in_coexists_with_binary_decoder(nested, binary_decoder):
+    payload = {"child": {"n": 7}, "items": [1, 2]}
+    batch = decode_messages(
+        [StreamMessage("0", 0, json.dumps(payload))],
+        nested=nested,
+        decoder=(lambda _: dict(payload)) if binary_decoder else None,
+    )
+    assert batch is not None
+    if binary_decoder or nested is True:
+        assert pa.types.is_struct(batch.schema.field("child").type)
+        assert pa.types.is_list(batch.schema.field("items").type)
+        assert batch.column("child").to_pylist() == [{"n": 7}]
+        assert batch.column("items").to_pylist() == [[1, 2]]
+    else:
+        assert batch.schema.field("child").type == pa.string()
+        assert batch.column("child").to_pylist() == ['{"n":7}']
+        assert batch.column("items").to_pylist() == ["[1,2]"]

@@ -9,6 +9,11 @@
     "args": {
       "additionalProperties": false,
       "properties": {
+        "confirm_remote": {
+          "description": "confirm writing to a non-local URI target",
+          "type": "boolean",
+          "x-since": "1.2"
+        },
         "domain": {
           "description": "an installed domain (see `list`) or a generation schema file",
           "type": "string",
@@ -68,6 +73,16 @@
           "description": "the seed (default: the schema's)",
           "type": "integer",
           "x-since": "1.0"
+        },
+        "sink_options": {
+          "description": "sink options; secrets must be credential references",
+          "type": "object",
+          "x-since": "1.2"
+        },
+        "to": {
+          "description": "a sink URI; Iceberg table targets take one generated table",
+          "type": "string",
+          "x-since": "1.2"
         }
       },
       "required": [

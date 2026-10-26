@@ -176,17 +176,25 @@ class Policy:
                 for p in patterns
             )
         names = [n for n in (column, f"{table}.{column}" if table else None) if n]
-        return any(fnmatch.fnmatchcase(n, p) for p in patterns for n in names)
+        return any(n == p or fnmatch.fnmatchcase(n, p) for p in patterns for n in names)
 
     def skips(self, table: str | None, column: str | None) -> bool:
         """True when the change on ``table.column`` is ignored (or outside ``only``)."""
-        if column in {
+        metadata_columns = {
             "_shape_key",
             "_shape_headers",
             "_shape_timestamp",
             "_shape_properties",
             "_shape_partition_key",
-        } and not (self.only and self._matches(self.only, table, column)):
+        }
+        metadata_child = column is not None and any(
+            column.startswith(f"$.{name}{suffix}")
+            for name in metadata_columns
+            for suffix in (".", "[", "{")
+        )
+        if (column in metadata_columns or metadata_child) and not (
+            self.only and self._matches(self.only, table, column)
+        ):
             return True
         if self.ignore and self._matches(self.ignore, table, column):
             return True
@@ -319,6 +327,8 @@ class View:
     # surfaces a safe capture removed (W1-11): what this side cannot be compared on
     suppressed: frozenset[str] = frozenset()
     unknown: frozenset[str] = frozenset()  # fields a merged profile could not compute (#618)
+    length_distribution: View | None = None
+    length_path: str | None = None
 
     @property
     def folded(self) -> bool:
@@ -503,6 +513,11 @@ def view_of_profile_column(col: Mapping[str, Any], rows: int) -> View:
         univariate={k: col[k] for k in _UNIVARIATE_FIELDS if col.get(k) is not None},
         suppressed=_suppressed(col),
     )
+    if nested and isinstance(col.get("length"), Mapping):
+        from shape.profile.children import field_path
+
+        view.length_distribution = view_of_profile_column(col["length"], col["length"]["row_count"])
+        view.length_path = str(col.get("path") or field_path("$", str(col.get("name", ""))))
     if dtype == "datetime":
         view.hour = col.get("hour_histogram")
         view.dow = col.get("dow_histogram")
@@ -605,6 +620,12 @@ def view_of_engine_column(col: Mapping[str, Any], rows: int) -> View:
         categories=categories,
         length_mean=_number(length.get("mean")) if dtype == "string" else None,
     )
+    if "children" in col and isinstance(col.get("length"), Mapping):
+        from shape.profile.children import field_path
+
+        view.length_distribution = view_of_engine_column(length, int(length["row_count"]))
+        view.length_mean = _number(length.get("mean"))
+        view.length_path = str(col.get("path") or field_path("$", str(col.get("name", ""))))
     if kind == "temporal":
         hour, dow = col.get("hour_hist"), col.get("dow_hist")
         view.hour = _normalise(hour)
@@ -657,6 +678,10 @@ def _profile_tables(obj: Any) -> dict[str, TableView]:
     for name, table in obj.tables.items():
         rows = int(table["row_count"])
         views = {c: view_of_profile_column(col, rows) for c, col in table["columns"].items()}
+        from shape.profile.children import walk
+
+        for path, child in walk(table["columns"]):
+            views[path] = view_of_profile_column(child, child["row_count"])
         if unknown:
             for view in views.values():
                 view.unknown = unknown
@@ -671,7 +696,12 @@ def _engine_table(table: Mapping[str, Any]) -> TableView:
         items = [(str(k), v) for k, v in cols.items()]
     else:
         items = [(str(c["name"]), c) for c in cols]
-    return TableView(rows, {n: view_of_engine_column(c, rows) for n, c in items})
+    from shape.profile.children import walk
+
+    views = {n: view_of_engine_column(c, rows) for n, c in items}
+    for path, child in walk(dict(items)):
+        views[path] = view_of_engine_column(child, child["row_count"])
+    return TableView(rows, views)
 
 
 def tables_of(obj: Any) -> tuple[dict[str, TableView], bool]:
@@ -946,7 +976,33 @@ def _diff_column(
     if base.length_mean is not None and cur.length_mean is not None:
         rel = abs(cur.length_mean - base.length_mean) / max(base.length_mean, 1e-9)
         if rel > th["length_ratio"]:
-            out.append(_change(name, "length_change", base.length_mean, cur.length_mean, rel))
+            out.append(
+                _change(
+                    name,
+                    "length_change",
+                    base.length_mean,
+                    cur.length_mean,
+                    rel,
+                )
+            )
+    if base.length_distribution is not None and cur.length_distribution is not None:
+        b_length, c_length = base.length_distribution, cur.length_distribution
+        if min(b_length.non_null, c_length.non_null) >= max(th["min_rows"], 1):
+            distance = _ks(b_length, c_length)
+            if (
+                distance is not None
+                and distance > th["ks_distance"]
+                and not any(c["kind"] == "length_change" for c in out)
+            ):
+                out.append(
+                    _change(
+                        base.length_path or name,
+                        "length_change",
+                        dict(b_length.quantiles),
+                        dict(c_length.quantiles),
+                        distance,
+                    )
+                )
     if base.dtype == "datetime" and cur.dtype == "datetime":
         out.extend(_diff_temporal(name, base, cur, th, enough))
     return out
@@ -1162,7 +1218,7 @@ def _diff_rows(base: TableView, cur: TableView, th: Mapping[str, Any]) -> list[d
 
 
 def _qualify(table: str, name: str, dataset: bool) -> str:
-    return f"{table}.{name}" if dataset else name
+    return f"{table}.{name}" if dataset and not name.startswith("$") else name
 
 
 def diff_records(
@@ -1210,12 +1266,16 @@ def diff_records(
                 ch = _change(
                     _qualify(tname, cname, dataset), "column_removed", "present", "absent", 1.0
                 )
+                if dataset and str(ch.get("column", "")).startswith("$"):
+                    ch["table"] = tname
                 changes.append((tname, cname, ch))
         for cname in ct.columns:
             if cname not in bt.columns and cname != _WINDOW_TIME:
                 ch = _change(
                     _qualify(tname, cname, dataset), "column_added", "absent", "present", 1.0
                 )
+                if dataset and str(ch.get("column", "")).startswith("$"):
+                    ch["table"] = tname
                 changes.append((tname, cname, ch))
         for cname, bv in bt.columns.items():
             if cname in ct.columns:
@@ -1225,6 +1285,8 @@ def diff_records(
                     _qualify(tname, cname, dataset), bv, ct.columns[cname], th, gaps
                 )
                 for ch in column_changes:
+                    if dataset and str(ch.get("column", "")).startswith("$"):
+                        ch["table"] = tname
                     changes.append((tname, cname, ch))
                 if skipped is not None and not policy.skips(tname, cname):
                     skipped.extend(gaps)

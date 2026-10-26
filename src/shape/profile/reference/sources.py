@@ -34,7 +34,7 @@ from .readers import (
     read_csv_detect,
 )
 
-_SUFFIXES = (".csv", ".parquet", ".jsonl", ".ndjson")
+_SUFFIXES = (".csv", ".parquet", ".jsonl", ".ndjson", ".ipc", ".arrow", ".feather")
 _INFERRED_KINDS = frozenset({"csv", "jsonl", "json", "ndjson"})  # Parquet, Delta and Excel declare
 
 _SOURCE_OPTIONS: ContextVar[dict[str, Any] | None] = ContextVar(
@@ -62,6 +62,8 @@ def _kind(path: Path) -> str:
     suffix = path.suffix.lower()
     if suffix == ".csv":
         return "csv"
+    if suffix in (".ipc", ".arrow", ".feather"):
+        return "ipc"
     if suffix == ".parquet":
         return "parquet"
     if suffix in (".jsonl", ".ndjson"):
@@ -198,6 +200,10 @@ def _read_files(
             tables.append(read_csv(p, threads, csv))
         elif kind == "parquet":
             tables.append(pq.read_table(p))
+        elif kind == "ipc":
+            from pyarrow.feather import read_table  # type: ignore[import-untyped]
+
+            tables.append(read_table(p))
         else:
             check_json_file(p)
             tables.append(pajson.read_json(p))

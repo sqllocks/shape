@@ -53,6 +53,11 @@
           "x-path": "read",
           "x-since": "1.0"
         },
+        "source_options": {
+          "description": "source options; Iceberg catalog and snapshot_id, credential references only",
+          "type": "object",
+          "x-since": "1.2"
+        },
         "tables": {
           "description": "database: table names to include",
           "items": {

@@ -242,7 +242,8 @@
                 "pass",
                 "fail",
                 "unavailable",
-                "error"
+                "error",
+                "not_comparable"
               ]
             },
             "exit_code": {

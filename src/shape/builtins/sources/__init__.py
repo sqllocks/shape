@@ -16,12 +16,14 @@ if TYPE_CHECKING:
     from .files import IpcSource as IpcSource
     from .files import JsonlSource as JsonlSource
     from .files import ParquetSource as ParquetSource
+    from .iceberg import IcebergSource as IcebergSource
     from .nested import JsonSource as JsonSource
     from .nested import XmlSource as XmlSource
 
 SHAPE_API = "1.0"
 
 _EXPORTS = {
+    "IcebergSource": "iceberg",
     "AbfssSource": "azure",
     "CsvSource": "files",
     "DeltaSource": "delta",

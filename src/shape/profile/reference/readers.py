@@ -140,6 +140,8 @@ class _Col:
     type_source: str = "declared"
     declared: str | None = None  # a declared column's type as the profile names types
     identifier: str | None = None  # the identifier rule's reason (see ``shape.io.identifiers``)
+    nested_depth: int = 8
+    nested_path: str | None = None
 
 
 def _is_string_view(typ: pa.DataType) -> bool:

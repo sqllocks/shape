@@ -24,12 +24,14 @@ import threading
 import time
 import uuid
 from collections.abc import Callable
+from contextlib import nullcontext
 from dataclasses import asdict, dataclass, field, fields
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from shape import compat
+from shape.demo.filelock import locked
 from shape.scale.http import FABRIC_API, Http, Transport
 
 logger = logging.getLogger(__name__)
@@ -91,7 +93,7 @@ def windows_current_user() -> str:
     return f"{domain}\\{user}" if domain else user
 
 
-def restrict_to_current_user(path: Path) -> None:
+def restrict_to_current_user(path: Path, *, remove_bootstrap: bool = False) -> None:
     """Make ``path`` (a directory or a file) readable and writable by the current user only.
 
     POSIX needs nothing here: directories are created with mode 0700 and files with 0600.
@@ -101,11 +103,23 @@ def restrict_to_current_user(path: Path) -> None:
     the result does not depend on what the parent (a profile, a temp folder, or the ACL Python 3.13
     gives ``mkdir(mode=0o700)``) hands down. Raises ``OSError`` when the ACL cannot be set: a store
     that cannot be made private is not used.
+
+    ``remove_bootstrap`` is for fresh empty staging paths only: remove CPython's explicit
+    SYSTEM, Administrators and OWNER RIGHTS grants before regranting the current identity.
+    The default preserves existing callers' ACL behavior.
     """
     if sys.platform != "win32":
         return
     rights = "(OI)(CI)F" if path.is_dir() else "F"
     try:
+        if remove_bootstrap:
+            subprocess.run(
+                ["icacls", str(path), "/remove:g", "*S-1-5-18", "*S-1-5-32-544", "*S-1-3-4"],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=30,
+            )
         done = subprocess.run(
             [
                 "icacls",
@@ -268,12 +282,19 @@ class JobStore:
 
     def update(self, job_id: str, **changes: Any) -> JobRecord:
         with self._lock:
-            record = self.get(job_id)
-            for key, value in changes.items():
-                if not hasattr(record, key):
-                    raise AttributeError(f"a job has no field {key!r}")
-                setattr(record, key, value)
-            return self.put(record)
+            if self._root is not None and not self._path(job_id).is_file():
+                # Preserve the missing-record error without creating a lock directory.
+                self.get(job_id)
+            transaction = nullcontext() if self._root is None else locked(self._path(job_id))
+            # The sidecar OS lock serializes the full read-modify-write with other stores.
+            # Otherwise a progress write can replace an already committed cancellation.
+            with transaction:
+                record = self.get(job_id)
+                for key, value in changes.items():
+                    if not hasattr(record, key):
+                        raise AttributeError(f"a job has no field {key!r}")
+                    setattr(record, key, value)
+                return self.put(record)
 
     def list(self) -> list[JobRecord]:
         with self._lock:

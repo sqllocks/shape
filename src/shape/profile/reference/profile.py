@@ -158,6 +158,10 @@ def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
         d["arrow_type"] = cp.arrow_type
         d["arrow_type_spec"] = cp.arrow_type_spec
         d["nested"] = cp.nested
+    if cp.children is not None:
+        d["children"] = cp.children
+    if cp.length is not None:
+        d["length"] = cp.length
     return d
 
 
@@ -199,6 +203,9 @@ def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
     out = _flat_summary(col)
     if col.get("arrow_type") is not None:  # a nested column also says which type it is
         out["arrow_type"] = col["arrow_type"]
+    for key in ("path", "row_count", "present", "length", "children"):
+        if key in col:
+            out[key] = copy.deepcopy(col[key])
     return out
 
 
@@ -420,6 +427,7 @@ def profile(
     decisions: Any = None,
     validators: Any = None,
     time_column: str | None = None,
+    max_depth: int = 8,
     sample_rows: int | None = None,
     tables: list[str] | None = None,
 ) -> Profile:
@@ -474,6 +482,9 @@ def profile(
     on every run and in both kernel modes. Nothing is sampled without ``sample``, and every table's
     profile records what was done in ``sampling`` (``docs/PROFILING_NOTES.md``).
 
+    ``max_depth`` limits nested struct/list/map child statistics (default 8; 0 keeps
+    opaque columns). Child paths and statistics stay below their owning column.
+
     ``time_column`` names the date or timestamp column that each numeric column's ``seasonality``
     is measured against (default: the table's only date or timestamp column; a dict of tables
     uses it for the tables that have it). It is an error when no table has the column, or when it
@@ -500,6 +511,9 @@ def profile(
     ``docs/JOINT.md``), which ``shape.diff`` compares and ``mixed_copula`` generation reads. They
     are off by default too: they add a fixed cost per table.
     """
+    from shape.profile.children import validate_depth
+
+    validate_depth(max_depth)
     if isinstance(source, str) and "://" in source:
         from shape.plugins.host import default_host
 
@@ -546,6 +560,7 @@ def profile(
                         "database profiling does not support: " + ", ".join(selected_options)
                     )
                 opts = dict(_SOURCE_OPTIONS.get() or {})
+                opts["max_depth"] = max_depth
                 if sample_rows is not None:
                     opts["sample_rows"] = sample_rows
                 if tables is not None:
@@ -553,6 +568,31 @@ def profile(
                 if name is not None:
                     opts["name"] = name
                 return cast(Profile, plugin.profile_database(source, **opts))
+            specialized = getattr(plugin, "profile_source", None)
+            if plugin is not None and specialized is not None and plugin.can_open(source):
+                if sample_rows is not None or tables is not None:
+                    raise SourceError("sample_rows and tables need a database URI source")
+                options = dict(_SOURCE_OPTIONS.get() or {})
+                if as_of is not None:
+                    options["as_of"] = as_of
+                options["profile_options"] = dict(
+                    name=name,
+                    max_depth=max_depth,
+                    joint=joint,
+                    reference_pairs=reference_pairs,
+                    validators=validators,
+                    time_column=time_column,
+                    sample=sample,
+                    sample_method=sample_method,
+                    sample_seed=sample_seed,
+                    sketches=sketches,
+                    univariate=univariate,
+                    multivariate=multivariate,
+                )
+                result = specialized(source, **options)
+                if not isinstance(result, Profile):
+                    raise TypeError("source profile hook must return a Profile")
+                return result
     if sample_rows is not None or tables is not None:
         raise SourceError("sample_rows and tables need a database URI source")
 
@@ -620,13 +660,17 @@ def profile(
             validators,
             multivariate,
             time_column,
+            max_depth,
         )
 
 
-def _mark_univariate(cols: list[Any], on: bool, multivariate: bool = False) -> None:
+def _mark_univariate(
+    cols: list[Any], on: bool, multivariate: bool = False, max_depth: int = 8
+) -> None:
     """Ask for the opt-in depth: W3-07's univariate fields per column, W3-08's multivariate
     entries of the table's joint analysis (read from its columns)."""
     for c in cols:
+        c.nested_depth = max_depth
         c.univariate = on
         c.multivariate = multivariate
 
@@ -760,6 +804,7 @@ def _profile(
     validators: Any = None,
     multivariate: bool = False,
     time_column: str | None = None,
+    max_depth: int = 8,
 ) -> Profile:
     # Optional source expansion supports catalog-backed multi-table profiles without
     # imposing a catalog API on file and single-table plugins.
@@ -789,6 +834,7 @@ def _profile(
                 validators,
                 multivariate,
                 time_column,
+                max_depth,
             )
             for table_name, record in metadata.items():
                 result._data["tables"][table_name]["source_sampling"] = record
@@ -808,7 +854,7 @@ def _profile(
             raise ValueError(f"time_column {time_column!r} is not a column of any table")
         check_reference_tables(reference_pairs, cols_by_t)
         for cols, _rows in cols_by_t.values():
-            _mark_univariate(cols, univariate, multivariate)
+            _mark_univariate(cols, univariate, multivariate, max_depth)
         doc = dataset_to_dict(profile_dataset_columns(cols_by_t, None, joint, sample, time_column))
         for tname, specs in (reference_pairs or {}).items():
             cols, rows = cols_by_t[tname]
@@ -845,7 +891,7 @@ def _profile(
         table, provenance = read_delta(delta, version=version, as_of=as_of)
         table_name, cols, rows = load_columns(table, name or delta.name)
         sketch_source = table
-    _mark_univariate(cols, univariate, multivariate)
+    _mark_univariate(cols, univariate, multivariate, max_depth)
     check_reference_pairs(reference_pairs, cols)
     if time_column is not None and all(c.name != time_column for c in cols):
         raise ValueError(f"time_column {time_column!r} is not a column of {table_name!r}")

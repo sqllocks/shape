@@ -281,3 +281,45 @@ def test_oracle_public_cli_bridge_routes_keep_artifacts_safe(monkeypatch, tmp_pa
         assert "private-value@example.com" not in json.dumps(shape.load(out).to_dict())
     finally:
         bridge.close()
+
+
+@pytest.mark.parametrize("depth", [0, 1])
+def test_oracle_public_profile_forwards_child_depth(monkeypatch, depth):
+    import shape
+    from shape.plugins.host import default_host
+
+    source, _ = fake_source()
+    sample = pa.table({"id": ["a"], "amount": [1], "at": [None], "items": [[{"x": 1}]]})
+    fields = pa.schema(
+        [
+            pa.field(name, column.type, metadata={b"shape.sql_type": b"fixture"})
+            for name, column in zip(sample.column_names, sample.columns, strict=True)
+        ]
+    )
+    monkeypatch.setattr(source, "_columns", lambda *args: fields)
+    monkeypatch.setattr(source, "_fetch", lambda *args: iter(sample.to_batches()))
+    host = default_host()
+    monkeypatch.setattr(
+        host, "records", lambda group: [type("Record", (), {"group": group, "name": "db"})()]
+    )
+    monkeypatch.setattr(host, "try_get", lambda group, name: source)
+    prof = shape.profile("oracle://shape@localhost/service", max_depth=depth, sample_rows=1)
+    table = prof.tables["CaseTable"]
+    column = table["columns"]["items"]
+    if depth == 0:
+        assert "children" not in column
+    else:
+        assert column["children"][0]["path"] == "$.items[]"
+        assert "children" not in column["children"][0]
+    assert table["row_count"] == 1000 and table["sampled_rows"] == 1
+    assert table["sample_method"] == "oracle_sample"
+    assert table["sampling"]["sampled_rows"] == 1
+    assert table["columns"]["id"]["declared_type"] == "fixture"
+
+
+@pytest.mark.parametrize("depth", [-1, 65, True])
+def test_oracle_child_depth_refused_before_connection(depth):
+    source, fake = fake_source()
+    with pytest.raises(ValueError, match="max_depth"):
+        source.profile_database("oracle://shape@localhost/service", max_depth=depth)
+    assert not fake.statements

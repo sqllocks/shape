@@ -118,6 +118,11 @@ def guarded_columns(*profiles: Any) -> set[str]:
     for p in profiles:
         if p is None:
             continue
+        from shape.profile.children import walk
+
+        for tname, table in getattr(p, "tables", {}).items():
+            for path, _ in walk(table["columns"]):
+                out.update((path, path.removeprefix("$."), f"{tname}.{path}"))
         manifest = to_safe_profile(p).redaction_manifest
         for table, cols in manifest.get("tables", {}).items():
             for name, info in cols.items():
@@ -130,7 +135,7 @@ def _matches(column: str | None, patterns: Iterable[str]) -> bool:
     if column is None:
         return False
     bare = column.rpartition(".")[2]
-    return any(fnmatch.fnmatchcase(n, pat) for pat in patterns for n in (column, bare))
+    return any(n == pat or fnmatch.fnmatchcase(n, pat) for pat in patterns for n in (column, bare))
 
 
 def _change_entry(rec: Mapping[str, Any], withheld: bool) -> dict[str, Any]:
