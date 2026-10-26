@@ -49,6 +49,11 @@ def classified_columns(profile: Any) -> set[str]:
     config = SafeConfig()
     names: set[str] = set()
     for tname, table in profile.tables.items():
+        from shape.profile.children import walk
+
+        for path, _ in walk(table["columns"]):
+            alias = path.removeprefix("$.")
+            names.update((path, alias, f"{tname}.{path}", f"{tname}.{alias}"))
         rows = table.get("sampled_rows", table["row_count"])
         for cname, col in table["columns"].items():
             if pii_gate_fires(col.get("pattern"), int(col.get("cardinality") or 0), rows, config):
@@ -64,6 +69,10 @@ def redact_summary(summary: dict[str, Any], classified: set[str]) -> dict[str, A
         for cname, col in t["columns"].items():
             if cname in classified or f"{tname}.{cname}" in classified:
                 col = {**col, **{f: None for f in _RAW_SUMMARY_FIELDS}, "redacted": True}
+            if "children" in col:
+                from shape.privacy.redact import _redact_child
+
+                col = {**col, "children": [_redact_child(child, 10) for child in col["children"]]}
             cols[cname] = col
         return {**t, "columns": cols}
 

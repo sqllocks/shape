@@ -5,7 +5,8 @@ delivers into ``StreamMessage`` values and call :func:`decode_messages`; the dec
 here once, so every source gives the profiler the same batches.
 
 A message body is one JSON object (UTF-8 text or bytes). Its top-level fields become columns; a
-nested object or array is kept as its JSON text. Besides the payload the batch carries
+nested object or array is kept as JSON text unless ``nested=True`` opts into Arrow
+struct/list payload fields. Besides the payload the batch carries
 ``_shape_event_time`` (timestamp, microseconds, UTC), the column the stream runtime windows on:
 
 * the payload field named by ``event_time_field`` (default ``_shape_event_time``), an ISO-8601
@@ -222,7 +223,7 @@ def decode_messages(
     with_key: bool = False,
     with_headers: bool = False,
     with_timestamp: bool = False,
-    nested: bool = True,
+    nested: bool | None = None,
     stats: DecodeStats | None = None,
     on_error: str = "skip",
     decoder: Callable[[bytes | str], dict[str, Any]] | None = None,
@@ -231,10 +232,13 @@ def decode_messages(
 
     ``with_offsets`` adds ``_shape_partition`` (string) and ``_shape_offset`` (int64), for
     row-level deduplication on offset. An optional binary ``decoder`` preserves nested
-    Arrow values; JSON keeps its existing flat text representation.
+    Arrow values; JSON keeps its existing flat text representation unless
+    ``nested=True`` requests struct/list payload fields.
     ``on_error="raise"`` turns the first undecodable
     message or rejected row into a ``StreamSourceError``.
     """
+    if nested is not None and not isinstance(nested, bool):
+        raise ValueError("nested must be a boolean")
     if event_time_unit not in _UNITS:
         raise ValueError(f"event_time_unit must be one of {sorted(_UNITS)}")
     if on_error not in ("skip", "raise"):
@@ -269,7 +273,8 @@ def decode_messages(
         when = _event_us(obj.pop(event_time_field, None), event_time_unit)
         if event_time_field != EVENT_TIME:
             obj.pop(EVENT_TIME, None)
-        rows.append(obj if decoder is not None else {k: _plain(v) for k, v in obj.items()})
+        preserve_nested = decoder is not None or nested is True
+        rows.append(obj if preserve_nested else {k: _plain(v) for k, v in obj.items()})
         times.append(when if when is not None else msg.timestamp_us)
         source.append(msg)
     if not rows:
@@ -285,7 +290,7 @@ def decode_messages(
     if with_headers:
 
         def header_array(values: list[Any]) -> pa.Array:
-            if nested:
+            if nested is not False:
                 return pa.array(values, type=pa.map_(pa.string(), pa.binary()))
             # Hex keeps arbitrary non-UTF-8 bytes lossless in JSON text.
             return pa.array(
