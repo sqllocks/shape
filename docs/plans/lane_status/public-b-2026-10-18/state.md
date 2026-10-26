@@ -146,3 +146,7 @@ Main90fb verifiedunchanged00:04; metadata00:05:33 actual19coreSUCCESS/8running/0
 ## Active CI checkpoint Oct26 00:16UTC
 
 Root exact34rollup26SUCCESS/6running+2structuralpublishskips, ALLjobsstarted;31rollup32SUCCESS/8running/2queued+2structuralpublishskips. No failures. Metadata00:15:11 verifiedmainremote90fb unchanged; mainCI40243508314 now22of27SUCCESS/5running/0queued. Ubuntu3.11/3.14/macOS3.11fullySUCCESS; Ubuntu3.13+3.12heavyactive, minversions/Windows3.11/macOS3.14coverageactive. Docs+SecurityalreadySUCCESS. Sourcefullsnotcomplete; mergefirstgreen34or31promptlywithfreshguard. Laterfullsheld, reviews/currentheadstable, no additionalOwnerquestion. Counts4/9merged44.4%,5left55.6%; fullupdateprovided00:15. Scratch6d69ad3confirmedpushedbeforethischeckpoint.
+
+## All source jobs started Oct26 00:25UTC
+
+34core22SUCCESS/5running/0queued, minversionsgreen; Ubuntu3.13/14 finalkernel,Ubuntu3.11heavy,Ubuntu3.12+macOS3.11coverage. Rollup27SUCCESS/5running+2structuralpublishskips.31core23SUCCESS/4running (minversions,Ubuntu3.11/3.13,Windows3.14). IcebergWheels40243562771 solemacIntel3.11finallyIN_PROGRESS, actualpipinstallstepverified; other9jobssuccess.31rollup37SUCCESS/5running+2structuralpublishskips, no queuedchecks. No failures, no reruns/changes. Exactheads/currentreviewsunchanged. Counts4/9merged44.4%,5left55.6%,fullupdateprovided00:25. Scratchc85d13apushed. Continuefirstfullygreenmerge/refreshremainingonce.
