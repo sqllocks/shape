@@ -576,10 +576,13 @@ def test_default_cloud_failure_inspects_rules_only_after_writer_failure(monkeypa
     import traceback
 
     events = []
+    account_key = "dummy-key"
+    received_keys = []
     fake = SimpleNamespace(__version__=deltalake.__version__)
 
     def failing_writer(*args, **kwargs):
         events.append("write")
+        received_keys.append(kwargs["storage_options"]["azure_storage_account_key"])
         raise RuntimeError("dummy-private-auth-body")
 
     class RuleTable:
@@ -600,10 +603,11 @@ def test_default_cloud_failure_inspects_rules_only_after_writer_failure(monkeypa
             "delta+abfss://acct@acct.dfs.core.windows.net/lake/Tables",
             "t",
             [batch()],
-            account_key="dummy-key",
+            account_key=account_key,
         )
     rendered = "".join(traceback.format_exception(err.type, err.value, err.tb))
     assert events == ["write", "inspect"]
+    assert received_keys == [account_key]
     assert "dummy-private-auth-body" not in rendered
     assert "dummy-key" not in rendered
 
