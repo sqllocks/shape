@@ -937,18 +937,40 @@ class _FakeBigQueryClient:
 
     def load_table_from_file(self, stream, table, *, job_config):
         import os
+        import subprocess
+        import sys
 
         import pyarrow.parquet as pq
 
         server = self.server
         data = pq.read_table(stream)
         path = str(stream.name)
+        if sys.platform == "win32":
+            from shape.scale.jobs import windows_current_user
+
+            def private(target):
+                acl = subprocess.run(
+                    ["icacls", str(target)], capture_output=True, text=True, check=True, timeout=30
+                ).stdout
+                entries = re.findall(r"(\S+):\(", acl.replace(str(target), ""))
+                return (
+                    len(entries) == 1
+                    and entries[0].rsplit("\\", 1)[-1].casefold()
+                    == windows_current_user().rsplit("\\", 1)[-1].casefold()
+                    and "(F)" in acl
+                )
+
+            is_private = private(Path(path)) and private(Path(path).parent)
+        else:
+            is_private = (
+                os.stat(path).st_mode & 0o077 == 0
+                and os.stat(os.path.dirname(path)).st_mode & 0o077 == 0
+            )
         server.loads.append(
             {
                 "rows": data.num_rows,
                 "path": path,
-                "private": os.stat(path).st_mode & 0o077 == 0
-                and os.stat(os.path.dirname(path)).st_mode & 0o077 == 0,
+                "private": is_private,
                 "format": job_config.source_format,
                 "disposition": job_config.write_disposition,
                 "decimal_target_types": getattr(job_config, "decimal_target_types", None),

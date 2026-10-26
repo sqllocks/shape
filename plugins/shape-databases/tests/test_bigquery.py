@@ -706,3 +706,59 @@ def test_public_profile_forwards_depth_through_bigquery_catalog(
     assert table["columns"]["id"]["declared_type"] == "INT64"
     assert prof.provenance["source"] == "bigquery"
     assert prof.provenance["bytes_processed"] > 0
+
+
+def test_staging_privacy_is_applied_before_parquet_and_load(monkeypatch):
+    from shape.scale import jobs
+
+    protected = []
+    restrict = jobs.restrict_to_current_user
+
+    def protect(path):
+        assert path.exists()
+        if path.is_file():
+            assert path.stat().st_size == 0
+        restrict(path)
+        protected.append(path)
+
+    monkeypatch.setattr(jobs, "restrict_to_current_user", protect)
+    server = FakeBigQuery()
+
+    def connect(**options):
+        client = server.connect(**options)
+        load = client.load_table_from_file
+
+        def checked_load(stream, table, **kwargs):
+            path = Path(stream.name)
+            assert path.parent in protected and path in protected
+            return load(stream, table, **kwargs)
+
+        client.load_table_from_file = checked_load
+        return client
+
+    assert BigQuerySink(connect=connect).write(URI, "items", [batch()], chunk_rows=2) == 5
+    assert len(protected) == 4
+    assert all(not path.exists() for path in protected)
+
+
+@pytest.mark.parametrize("blocked", ["directory", "file"])
+def test_staging_acl_failure_refuses_load_and_cleans_created_table(monkeypatch, blocked):
+    from shape.scale import jobs
+
+    protected = []
+
+    def refuse(path):
+        protected.append(path)
+        if path.is_dir() == (blocked == "directory"):
+            if path.is_file():
+                assert path.stat().st_size == 0
+            raise OSError("staging ACL unavailable")
+
+    monkeypatch.setattr(jobs, "restrict_to_current_user", refuse)
+    server = FakeBigQuery()
+    with pytest.raises(WriteError, match="staging ACL unavailable") as error:
+        BigQuerySink(connect=server.connect).write(URI, "items", [batch()])
+    assert error.value.rows_committed == 0
+    assert not server.loads
+    assert "test-project.dataset.items" not in server.tables
+    assert protected and all(not path.exists() for path in protected)

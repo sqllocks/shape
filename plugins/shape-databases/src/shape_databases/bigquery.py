@@ -432,7 +432,10 @@ class BigQuerySink(DatabaseSink):
         count = 0
         total = 0
         disposition = "WRITE_TRUNCATE" if plan.mode == "truncate" else "WRITE_APPEND"
+        from shape.scale.jobs import restrict_to_current_user
+
         with tempfile.TemporaryDirectory(prefix="shape-bigquery-") as folder:
+            restrict_to_current_user(Path(folder))
 
             def flush() -> int:
                 nonlocal disposition
@@ -476,9 +479,10 @@ class BigQuerySink(DatabaseSink):
                     arrays.append(array)
                 staged = pa.Table.from_arrays(arrays, names=staged.schema.names)
                 path = Path(folder) / "chunk.parquet"
-                # mkstemp's private file mode also holds when a permissive umask is inherited.
+                # POSIX modes and the existing Windows ACL helper both fail closed.
                 fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
                 os.close(fd)
+                restrict_to_current_user(path)
                 pq.write_table(staged, path)
                 with path.open("rb") as stream:
                     job = conn.load_table_from_file(
