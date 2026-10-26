@@ -1,8 +1,8 @@
 # Public B interim report — 2026-10-25
 
-Work continues. **4 of9 assigned issues merged (44.4%);5 remain unmerged (55.6%).** All9 implementations have independent approval. Five remaining implementations are being consolidated into one integration PR under the latest Owner speed directive. Earlier per-lane CI stages are superseded; final combined review is in progress. None is parked or awaiting an Owner decision. Supporting certificate PR40 is outside the9-issue denominator. No live-account success is claimed.
+Work continues. **4 of9 assigned issues merged (44.4%);5 remain unmerged (55.6%).** All9 implementations have independent approval. The five remaining implementations are consolidated in ready PR48 under the latest Owner speed directive. Final independent combined review is approved; required CI is running. Earlier per-lane CI stages are superseded. None is parked or awaiting an Owner decision. Supporting certificate PR40 is outside the9-issue denominator. No live-account success is claimed.
 
-Current main is `90fbff999bc95e255b3dbd90b76278441a735b41` after root merged PR29 at23:09:58UTC. Newmain [CI](https://github.com/sqllocks/shape/actions/runs/40243508314), [Docs](https://github.com/sqllocks/shape/actions/runs/40243508311), [Security](https://github.com/sqllocks/shape/actions/runs/40243508316) all SUCCESS, verified October26 at00:47:31UTC; all27corejobs passed. PriorOraclemain3b19 after LeadA39 is fullygreen: Its [Documentation](https://github.com/sqllocks/shape/actions/runs/40235435374), [Security](https://github.com/sqllocks/shape/actions/runs/40235435418) and [CI](https://github.com/sqllocks/shape/actions/runs/40235435384) all passed, with all27 core jobs green, verified22:55:23UTC. Prior mainc1ff1c8 completed all triggered workflows successfully. PR29 was refreshed when main advanced; its previous incomplete CI does not qualify for the new head.
+Current main is `314749d37aba9141a2ff68a33cfdb91e8a87cca5` after another session merged37. PR48 contains it. Our latest merge, dbt main `90fbff999bc95e255b3dbd90b76278441a735b41`, passed all triggered [CI](https://github.com/sqllocks/shape/actions/runs/40243508314), [Docs](https://github.com/sqllocks/shape/actions/runs/40243508311) and [Security](https://github.com/sqllocks/shape/actions/runs/40243508316), including all27corejobs.
 
 ## Active combined delivery PR
 
@@ -12,19 +12,19 @@ Targeted integration evidence: broker223+6cases eachkernel, cloud12red→90green
 
 ## Issue status
 
-| Issue | Status / PR | Exact pushed source head or merge SHA |
+| Issue | Status / PR | Original included source head or merge SHA |
 |---|---|---|
 | #9 W9-08 message metadata | Merged [32](https://github.com/sqllocks/shape/pull/32) | merge `35addfc4c310b85a62cbe7f315e1d50fb8e426f8` |
 | #12 W9-11 Eventhouse | Merged [30](https://github.com/sqllocks/shape/pull/30) | merge `5c6d46ff1703db9fd2307bc4ebd4fb087e9af733` |
 | #13 W9-12 semantic measures/roles | Merged [33](https://github.com/sqllocks/shape/pull/33) | merge `404fed823b271525b8802254312ded28f1c5aaa8` |
 | #11 W9-10 dbt | Merged [29](https://github.com/sqllocks/shape/pull/29); all4sourceworkflowsgreen | merge`90fbff999bc95e255b3dbd90b76278441a735b41` |
-| #10 W9-09 binary formats | Ready/reviewed [34](https://github.com/sqllocks/shape/pull/34); full CI UNHELD/currentstage | `9b3e7375694514faeefa779c11f05bb13e1a8e2b` |
-| #17 W9-16 Iceberg | Ready/reviewed [31](https://github.com/sqllocks/shape/pull/31); full CI/Wheels UNHELD/currentstage | `24a145795a0f33f95d125fa0a7123f76b959d780` |
-| #20 FRZ-01 | Ready/reviewed [42](https://github.com/sqllocks/shape/pull/42); full CI held until34+31, required main Nightly still outstanding | `53bc24958788830669a00d47e9048c76418a475d` |
-| #6 W9-05 nested profiling | Ready/reviewed [43](https://github.com/sqllocks/shape/pull/43); full CI held, depends42 | `e5d6dd3d8351854b7967f145f5c7aeb6c1c32f5e` |
-| #14 W9-13 BigQuery | Ready/reviewed [47](https://github.com/sqllocks/shape/pull/47); full CI held until prior stages | `8228f87e699bb3524bf26f4fa4fefc6d0449856e` |
+| #10 W9-09 binary formats | Included in [48](https://github.com/sqllocks/shape/pull/48); original reviewed PR [34](https://github.com/sqllocks/shape/pull/34) | `9b3e7375694514faeefa779c11f05bb13e1a8e2b` |
+| #17 W9-16 Iceberg | Included in [48](https://github.com/sqllocks/shape/pull/48); original reviewed PR [31](https://github.com/sqllocks/shape/pull/31) | `24a145795a0f33f95d125fa0a7123f76b959d780` |
+| #20 FRZ-01 | Implementation in [48](https://github.com/sqllocks/shape/pull/48), original [42](https://github.com/sqllocks/shape/pull/42); required main Nightly outstanding | `53bc24958788830669a00d47e9048c76418a475d` |
+| #6 W9-05 nested profiling | Included in [48](https://github.com/sqllocks/shape/pull/48); original reviewed PR [43](https://github.com/sqllocks/shape/pull/43) | `e5d6dd3d8351854b7967f145f5c7aeb6c1c32f5e` |
+| #14 W9-13 BigQuery | Included in [48](https://github.com/sqllocks/shape/pull/48); original reviewed PR [47](https://github.com/sqllocks/shape/pull/47) | `8228f87e699bb3524bf26f4fa4fefc6d0449856e` |
 
-All five open heads contain currentmain and are DCO-signed/pushed. Independent exact approvals: eventhouse_oct25 for29/42; metadata_oct25 for31/34/43/47. The latest refresh after29 had only31's additive changelog conflict; no product code conflict. The earlier Oracle refresh required43's targeted depth integration. Clean refreshes did not rerun local tests. Every open PR is ready, not draft.
+The final combined head contains current main and is DCO-signed/pushed. metadata_oct25 approved its complete Wanted/security/scope; formats_oct25 approved broker/FRZ preservation. All original source descriptions point to48. Clean base refreshes did not rerun local tests; actual interface conflicts received targeted red/green coverage in both kernels.
 
 ## Targeted acceptance evidence
 
@@ -82,9 +82,9 @@ The reviewed committed registry is `benchmarks/vs_refengine/comparison_contract.
 
 ## Remaining work and Owner actions
 
-29merged. Run34/31fulls inparallel andmergefirstfullygreen,current,reviewed; then42,then43,then47.34core[40243543568](https://github.com/sqllocks/shape/actions/runs/40243543568) and31core[40243562745](https://github.com/sqllocks/shape/actions/runs/40243562745)+[Wheels40243562771](https://github.com/sqllocks/shape/actions/runs/40243562771) areUNHELD; alltriggeredjobsrequired. Every main move requires fresh signed/pushed heads and independent reviews. Current later full runs are intentionally canceled/held; **none is passing evidence**. Their retained lightweight checks are now green on the exact refreshed heads (verified23:32UTC); their full CI runs remain held/canceled and do not qualify as passing evidence. Their full gates must still run successfully before merge.
+Merge48 when all seven triggered workflows succeed on its exact reviewed head and it contains freshly verified current main: [CI40253591021](https://github.com/sqllocks/shape/actions/runs/40253591021), [Wheels40253591070](https://github.com/sqllocks/shape/actions/runs/40253591070), [Docs40253591136](https://github.com/sqllocks/shape/actions/runs/40253591136), [DCO40253591052](https://github.com/sqllocks/shape/actions/runs/40253591052), [Security40253591186](https://github.com/sqllocks/shape/actions/runs/40253591186), [Container40253591239](https://github.com/sqllocks/shape/actions/runs/40253591239), [selftest40253591119](https://github.com/sqllocks/shape/actions/runs/40253591119). DCO/security/selftest have passed; remaining gates are active. No obsolete canceled run is passing evidence. Refresh only this combined branch if main moves. After merge, dispatch required main Nightly; close20 only through its subsequent acceptance PR after the qualifying green run.
 
-BigQuery's former source dependency is resolved: PR35 closed unmerged and was superseded by [PR45](https://github.com/sqllocks/shape/pull/45), mergedOctober25. Its fresh lane has none of the old journal branch's unmerged ancestry. The Owner decimal rule remains0<=scale<=precision before connecting, with the column named in the error. After43/main changes, refresh47's shared depth interface and rebind exact review.
+BigQuery's former source dependency is resolved: PR35 closed unmerged and was superseded by [PR45](https://github.com/sqllocks/shape/pull/45), mergedOctober25. Its fresh lane has none of the old journal branch's unmerged ancestry. The Owner decimal rule remains0<=scale<=precision before connecting, with the column named in the error. PR48 already includes and tests the shared depth interface across the combined sources.
 
 Pending external validation, none claimed passing:
 
@@ -101,12 +101,7 @@ No implementation is parked, and no new Owner question is needed. Lead A branche
 
 PR29 exactreviewede8bcc73 completed30successful checks+onlyconditionalDocspublishskip; all4workflowsSUCCESS: [CI40235648525](https://github.com/sqllocks/shape/actions/runs/40235648525), [Docs40235648520](https://github.com/sqllocks/shape/actions/runs/40235648520), [DCO40235648542](https://github.com/sqllocks/shape/actions/runs/40235648542), [Security40235648550](https://github.com/sqllocks/shape/actions/runs/40235648550). Allgreenobserved23:09:48→exactAPImerge23:09:58 as90fbff9; issue11closed23:09:59. Sourceacceptance10red→142offline+8actualDuckDB/dbtgreen asabove. Fiveothers refreshedsignedpushedandre-reviewed; only31additivechangelogconflict,no productconflict/localrerun. Stage34/31fullCIadvanced,othersheld.4/9delivered44.4%,5/9left55.6%.
 
-## Latest merged-main verification
+## Latest own merged-main verification
 
-Merged dbt main `90fbff999bc95e255b3dbd90b76278441a735b41` passed every triggered workflow, verified October26 at00:47:31UTC: [CI40243508314](https://github.com/sqllocks/shape/actions/runs/40243508314), [Docs40243508311](https://github.com/sqllocks/shape/actions/runs/40243508311), [Security40243508316](https://github.com/sqllocks/shape/actions/runs/40243508316). All27corejobs passed. Formats andIceberg still await two checks each; no additional issue merged yet.
+Merged dbt main `90fbff999bc95e255b3dbd90b76278441a735b41` passed every triggered workflow, verified October26 at00:47:31UTC: [CI40243508314](https://github.com/sqllocks/shape/actions/runs/40243508314), [Docs40243508311](https://github.com/sqllocks/shape/actions/runs/40243508311), [Security40243508316](https://github.com/sqllocks/shape/actions/runs/40243508316). All27corejobs passed. All remaining implementations are now consolidated in ready, reviewed PR48; its final exact-head CI remains required.
 
-## Delivery strategy updated by latest throughput instruction
-
-Owner instructed taking the steps needed to accelerate delivery. Lead B is combining the five remaining reviewed implementations in one lead integration PR, preserving every exact-head hosted check and independent Wanted/security review. This removes repeated full gates after each individual merge. Current integration branch is `lead/public-b-integration`; the lead state retains active author ownership and next actions. #20 remains separately gated on the required green main Nightly and subsequent acceptance PR.
-
-Another session merged37 into main314749d just as31 finished all7sourceworkflowsgreen. Those31results remain genuine evidence but its standalonehead lacksnewmain and is not merged. The integration includes314749d. Combined regression checks have caught and repaired broker nesting, new cloud-source depth forwarding and specialized Iceberg depth forwarding; BigQuery async credential-fragment protection is under targeted repair before final PR. Counts remain4/9 delivered44.4%,5left55.6%.
