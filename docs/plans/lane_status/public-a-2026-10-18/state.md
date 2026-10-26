@@ -1,6 +1,6 @@
 # Public A state
 
-Updated 2026-10-26 02:15 UTC. This file is the current checkpoint; lane records retain acceptance evidence.
+Updated 2026-10-26; final integration in progress. This file is the current checkpoint; lane records retain acceptance evidence.
 
 ## Goal and progress
 
@@ -276,3 +276,27 @@ Builder ownership: Nested owns batch shared type/writer/generation integration a
 Bridge progress: new five-column acceptance2red→2green; expanded67new1.3/CLI/API/negative/boundary/refusal-matrix cases; default relevant695tests green including all frozen1.0/1.1/1.2 replay. Historical root/current vectors and1.0/1.1 data retained; new1.3 resources/current alias additive. Generic CURRENT-SERVER version literals change exactly1.2→1.3 as required by the authorized minor; old nonfrozen108 CLI-parity cases now request explicit1.3 with exact assertions preserved and strict named refusals for invalid TSQL/Fabric keys. Frozen DDL/full-field assertions remain unchanged. Registry-diff1.2 uses existing published additive-field matching where c38 already returned class/class_reason; no production projection or fixture change to hide it. Python-mode/connection-guard/final audit continuing.
 
 Unblocked3-issue batch c38fed14d682cfb4a0a07fddf4ee301697ffd194 was fully green before4: red11/5controls +extra6red/1control →40integrationgreen;1040affected tests per kernel,49additional per kernel,81bytecompat cases,418default+418legacy-none corpus both kernels, static/API/conformance green. Now complete4+Bridge1.3 and rerun only necessary affected checks before ONE final PR/CI. All four open issues will close only through that final merged PR.
+
+
+## Final batch composition and review checkpoint
+
+Batch471f0e8 includes runtimef16ab28 and Bridge57540d via clean signed merge18fb173.
+All four issues remain active in ONE final PR; historicalPR41 is now closed
+superseded with issue4 still open. Formal independent Delta product review
+APPROVED18fb173. Shared type/Bridge/DDL composition226passed EACHkernel.
+FrozenGitblob audit:1.0schema53/vectors29 and1.1schema75/vectors54 unchanged;
+newarchived1.2schema99/vectors108 byte-identical actualpublishedmain314.
+Ownerbatch+Bridge1.3 decisionrows now in batchCOMPLETION_PLAN.
+
+Independent review caught TSQL/Fabric UNIQUE-string width validation missing
+(the PK path already rejects); nested owns separate public-a-unique-width
+worktree, tests-first patch preserving nullable semantics and approved28refusals.
+MySQL existing TEXTindexed behavior separately diagnosed; no extra corpus
+refusals approved or introduced. Reviewer continues type/Bridge security audit.
+
+Freshmain314 macOS3.11 CI job121346549307 failed existing cancellation regression
+(expectedcancelled, got succeeded;18568pass). Real cross-JobStore lost-update
+race confirmed; PR37/batch do not change that code. Oracle owns isolated minimal
+repair with deterministic red/green; fold into SAME final batch under Owner
+fixeverythingonePR/speed scope, no second PR/CI cycle. No rerun-to-hide failure.
+Final exact-headCI remains mandatory beforemerge.
