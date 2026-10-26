@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+      "type": "string"
+    },
+    "args": {
+      "additionalProperties": false,
+      "properties": {
+        "bad": {
+          "description": "a later ref known to be bad",
+          "type": "string",
+          "x-since": "1.2"
+        },
+        "coarse": {
+          "description": "bisect over merged windows first (profiles need sketches)",
+          "enum": [
+            "week",
+            "month"
+          ],
+          "type": "string",
+          "x-since": "1.2"
+        },
+        "column": {
+          "description": "only changes of this column count",
+          "type": "string",
+          "x-since": "1.2"
+        },
+        "contract": {
+          "description": "a contract file: a version is bad when the contract fails",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "good": {
+          "description": "a registry ref (tag or content id) known to be good",
+          "type": "string",
+          "x-since": "1.2"
+        },
+        "kind": {
+          "description": "only changes of this diff kind count",
+          "type": "string",
+          "x-since": "1.2"
+        },
+        "name": {
+          "description": "the committed name whose versions are searched",
+          "type": "string",
+          "x-since": "1.2"
+        },
+        "project": {
+          "description": "a shape.yml project file; its settings apply as for `--project FILE` (the bridge never looks for one on its own)",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "registry": {
+          "description": "the registry folder",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "source": {
+          "description": "the source of `project` whose thresholds apply (needs project)",
+          "type": "string",
+          "x-since": "1.2"
+        },
+        "verify_all": {
+          "description": "test every version instead of bisecting; report any that flips back",
+          "type": "boolean",
+          "x-since": "1.2"
+        }
+      },
+      "required": [
+        "registry",
+        "name",
+        "good",
+        "bad"
+      ],
+      "type": "object"
+    },
+    "command": {
+      "const": "bisect"
+    },
+    "id": {
+      "maxLength": 128,
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "async": {
+          "default": false,
+          "description": "for a command that can run as a job: return a job id at once and run in the background",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "include_raw_values": {
+          "default": false,
+          "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "max_inline_bytes": {
+          "default": 262144,
+          "description": "a result part larger than this is written to a file and returned as a reference",
+          "minimum": 1024,
+          "type": "integer",
+          "x-since": "1.0"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "command",
+    "args"
+  ],
+  "title": "bisect request",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

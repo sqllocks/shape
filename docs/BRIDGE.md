@@ -106,7 +106,7 @@ The full list, with a sentence for each, is `error_codes` in
 
 ## Versions and the stability promise
 
-`api_version` is `MAJOR.MINOR`; this bridge speaks **1.2** and serves **1.0 to 1.2**.
+`api_version` is `MAJOR.MINOR`; this bridge speaks **1.3** and serves **1.0 to 1.3**.
 
 - **Minor versions only add:** a command, an optional argument, an option, a result field, an error
   code, a warning code. A client written for 1.0 keeps working on 1.7, so **a client ignores result
@@ -115,15 +115,15 @@ The full list, with a sentence for each, is `error_codes` in
   result field, error code or the meaning of any of them.
 - **A major version may break.** A bridge serves one major version. A request for another is refused
   with `usage.unsupported_version`, and the message names the supported range
-  (`... this bridge serves 1.0 to 1.2`). The response always carries the bridge's own
+  (`... this bridge serves 1.0 to 1.3`). The response always carries the bridge's own
   `api_version`, so a client can read it from the refusal.
 - A request with a newer *minor* than the bridge's is served, with the warning
   `newer_minor_version`: what the newer minor added is not available.
-- A request with **no `api_version`** is served as 1.2, with the warning `api_version_assumed`.
+- A request with **no `api_version`** is served as 1.3, with the warning `api_version_assumed`.
 - Persisted files declare their own `format` and integer `version` (the job file below, the vector
   files). A file written by a newer Shape is refused with `input.unsupported_format_version`, never
   misread. The job file `shape-bridge-job` and the vector files `shape-bridge-vectors` are still
-  version 1: a job file written by 1.0 or 1.1 is read unchanged by the 1.2 bridge.
+  version 1: a job file written by 1.0 or 1.1 is read unchanged by the 1.3 bridge.
 
 **The 1.0 promise.** A request that declares `"api_version": "1.0"` is answered exactly as the 1.0
 bridge answers it:
@@ -133,7 +133,7 @@ bridge answers it:
 - no result field or warning of 1.1 or 1.2 is added to the result of a 1.0 command (`verify`'s gates have no
   `details` for a 1.0 request, for example);
 - the one field that differs is the response's own `api_version`, which is the bridge's version
-  (`"1.2"`), as it always was.
+  (`"1.3"`), as it always was.
 
 Every command and every argument records the version that added it: `since` (`"1.0"`, `"1.1"` or `"1.2"`) in
 `index.json` (`commands.NAME.since`, and `commands.NAME.args` for each argument) and `x-since` in the
@@ -147,8 +147,8 @@ optional scikit-learn (extra `advanced`): replay it with scikit-learn absent or 
 the fidelity section also runs the adversarial test and its answer differs.
 The 1.0 contract is **frozen** in [`docs/bridge/schema/1.0/`](bridge/schema/1.0/index.json) and
 [`docs/bridge/vectors/1.0/`](bridge/vectors/1.0): `tests/bridge/test_compat_1_0.py` replays every 1.0
-vector against the 1.2 bridge (each response equals the recorded one in every field except
-`api_version`) and checks that the 1.2 schemas keep every 1.0 command, argument (name, type,
+vector against the 1.3 bridge (each response equals the recorded one in every field except
+`api_version`) and checks that the 1.3 schemas keep every 1.0 command, argument (name, type,
 required-ness, enum values, default), result property, error code and warning code.
 
 ## Commands
@@ -671,6 +671,21 @@ object per gate. A `verify` served as 1.0 has no `details`.
 ```
 
 
+## What's new in 1.3
+
+Bridge 1.3 design DDL matches the CLI and Python `emit_ddl` API: strings without
+`max_length` use `NVARCHAR(MAX)` on SQL Server, `VARCHAR(MAX)` on Fabric Warehouse,
+and `TEXT` on PostgreSQL and MySQL. This includes the date dimension name columns
+and derived city/country columns. Declare `max_length` for indexed SQL Server and
+Fabric string columns; a missing width fails with the column name before a connection.
+Requests declaring 1.1 or 1.2 retain historical DDL spellings, including their 255
+string widths, after the same validation. Version 1.0 negotiation is unchanged.
+The historical examples below retain their declared versions and responses.
+The current vectors are published under [`bridge/vectors/1.3`](bridge/vectors/1.3),
+including separate 1.3 date and city examples; the complete 1.2 schema and vector
+publication is frozen under [`bridge/schema/1.2`](bridge/schema/1.2/index.json) and
+[`bridge/vectors/1.2`](bridge/vectors/1.2). The current schema files advertise 1.3.
+
 ## What's new in 1.2
 
 Bridge 1.2 adds the analysis commands of the open engine, so an editor, a notebook or an agent no
@@ -699,7 +714,7 @@ message 1.1 gave, `proposals_list` and `proposals_propose` read decision files o
 `format_schema` lists the names 1.1 listed, and no 1.2 result field or warning is added. The 1.1
 contract is **frozen** in [`docs/bridge/schema/1.1/`](bridge/schema/1.1/index.json) and
 [`docs/bridge/vectors/1.1/`](bridge/vectors/1.1); `tests/bridge/test_compat_1_1.py` replays every 1.1
-vector against the 1.2 bridge and holds the 1.2 schemas to the 1.1 ones, next to the 1.0 replay.
+vector against the 1.3 bridge and holds the 1.2 schemas to the 1.1 ones, next to the 1.0 replay.
 The job file `shape-bridge-job` stays at version 1, and a job written by the 1.1 bridge is read by
 the 1.2 bridge.
 

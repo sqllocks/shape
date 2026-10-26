@@ -1,0 +1,117 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "safe-profile",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/safe.json"
+        },
+        "command": "safe_scan",
+        "id": "safe-profile"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "safe_scan",
+        "id": "safe-profile",
+        "ok": true,
+        "result": {
+          "clean": true,
+          "findings": []
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "leaks",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/leaky.json"
+        },
+        "command": "safe_scan",
+        "id": "leaks"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "safe_scan",
+        "id": "leaks",
+        "ok": true,
+        "result": {
+          "clean": false,
+          "findings": [
+            {
+              "message": "a numeric minimum and maximum pair: a raw minimum and maximum can identify a record",
+              "pointer": "$.tables.people.columns.amount",
+              "rule": "extreme-pair"
+            },
+            {
+              "message": "a value matches the email pattern",
+              "pointer": "$.tables.people.columns.mail.example",
+              "rule": "pii-regex"
+            },
+            {
+              "message": "a value matches the email pattern",
+              "pointer": "$.tables.people.columns.mail.example",
+              "rule": "pii-regex"
+            }
+          ]
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-file",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/none.json"
+        },
+        "command": "safe_scan",
+        "id": "missing-file"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "safe_scan",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.json"
+        },
+        "id": "missing-file",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "text-and-path",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/safe.json",
+          "text": "{}"
+        },
+        "command": "safe_scan",
+        "id": "text-and-path"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "safe_scan",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "give exactly one of text and path"
+        },
+        "id": "text-and-path",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "safe_scan",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

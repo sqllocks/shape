@@ -465,6 +465,8 @@ class SqlSink:
         fabric: bool,
         options: Mapping[str, Any],
         use_go: bool,
+        *,
+        _legacy_design_types: bool = False,
     ) -> str:
         def q(name: str) -> str:
             return _quote(name, dialect)
@@ -506,6 +508,15 @@ class SqlSink:
             info = meta.get(field.name, {})
             nullable = bool(info.get("nullable", True)) and field.name not in key
             sql_type = _column_type(field, info, type_dialect, key=field.name in key)
+            if _legacy_design_types:
+                # Presentation only: canonical validation above must always run first.
+                logical = str(info.get("type") or _logical_type(field.type))
+                template = _TYPES[type_dialect].get(logical, _TYPES[type_dialect]["string"])
+                sql_type = template.format(
+                    length=info.get("max_length") or 255,
+                    precision=info.get("precision") or 18,
+                    scale=info.get("scale") if info.get("scale") is not None else 2,
+                )
             if field.name in constraints.defaults:
                 sql_type += f" DEFAULT {constraints.defaults[field.name]}"
             if info.get("identity") and dialect == "tsql" and not fabric:

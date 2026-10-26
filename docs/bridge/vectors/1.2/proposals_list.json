@@ -1,0 +1,327 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "all",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "decisions": "${DIR}/decisions.json"
+        },
+        "command": "proposals_list",
+        "id": "all"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_list",
+        "id": "all",
+        "ok": true,
+        "result": {
+          "count": 5,
+          "decisions": "${DIR}/decisions.json",
+          "proposals": [
+            {
+              "claim": {
+                "pii": "email"
+              },
+              "confidence": 1.0,
+              "decision": {
+                "actor": null,
+                "decided_at": "<any>",
+                "note": null,
+                "status": "pending"
+              },
+              "evidence": {
+                "name": {
+                  "confidence": 0.6,
+                  "hint": "email"
+                },
+                "values": {
+                  "detector": "email",
+                  "matched": 50,
+                  "sampled": 50
+                }
+              },
+              "id": "pii:customers.email",
+              "kind": "pii",
+              "proposed_at": "<any>",
+              "subject": "customers.email"
+            },
+            {
+              "claim": {
+                "child": "orders",
+                "child_columns": [
+                  "customer_id"
+                ],
+                "parent": "customers",
+                "parent_columns": [
+                  "customer_id"
+                ],
+                "type": "one_to_many"
+              },
+              "confidence": 1.0,
+              "decision": {
+                "actor": null,
+                "decided_at": "<any>",
+                "note": null,
+                "status": "pending"
+              },
+              "evidence": {
+                "cardinality": {
+                  "child_distinct": 50,
+                  "parent_distinct": 50,
+                  "parent_unique": true
+                },
+                "containment": {
+                  "child_distinct": 50,
+                  "fraction": 1.0
+                },
+                "name": {
+                  "rule": "same name as the parent key",
+                  "score": 1.0
+                },
+                "range": {
+                  "child": null,
+                  "parent": null,
+                  "within": true
+                },
+                "type": {
+                  "child": "integer",
+                  "compatible": true,
+                  "parent": "integer"
+                }
+              },
+              "id": "relationship:orders.customer_id->customers.customer_id",
+              "kind": "relationship",
+              "proposed_at": "<any>",
+              "redacted": true,
+              "subject": "orders.customer_id->customers.customer_id"
+            },
+            {
+              "claim": {
+                "semantic": "email"
+              },
+              "confidence": 0.95,
+              "decision": {
+                "actor": null,
+                "decided_at": "<any>",
+                "note": null,
+                "status": "pending"
+              },
+              "evidence": {
+                "name": {
+                  "confidence": 0.7,
+                  "hint": "email"
+                },
+                "pattern": {
+                  "profile": "email"
+                }
+              },
+              "id": "semantic:customers.email",
+              "kind": "semantic",
+              "proposed_at": "<any>",
+              "subject": "customers.email"
+            },
+            {
+              "claim": {
+                "pii": "person_name"
+              },
+              "confidence": 0.6,
+              "decision": {
+                "actor": null,
+                "decided_at": "<any>",
+                "note": null,
+                "status": "pending"
+              },
+              "evidence": {
+                "name": {
+                  "confidence": 0.6,
+                  "hint": "person_name"
+                }
+              },
+              "id": "pii:customers.full_name",
+              "kind": "pii",
+              "proposed_at": "<any>",
+              "subject": "customers.full_name"
+            },
+            {
+              "claim": {
+                "semantic": "person_name"
+              },
+              "confidence": 0.55,
+              "decision": {
+                "actor": null,
+                "decided_at": "<any>",
+                "note": null,
+                "status": "pending"
+              },
+              "evidence": {
+                "name": {
+                  "confidence": 0.55,
+                  "hint": "person_name"
+                }
+              },
+              "id": "semantic:customers.full_name",
+              "kind": "semantic",
+              "proposed_at": "<any>",
+              "subject": "customers.full_name"
+            }
+          ]
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "relationships-only",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "decisions": "${DIR}/decisions.json",
+          "kind": "relationship"
+        },
+        "command": "proposals_list",
+        "id": "relationships-only"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_list",
+        "id": "relationships-only",
+        "ok": true,
+        "result": {
+          "count": 1,
+          "decisions": "${DIR}/decisions.json",
+          "proposals": [
+            {
+              "claim": {
+                "child": "orders",
+                "child_columns": [
+                  "customer_id"
+                ],
+                "parent": "customers",
+                "parent_columns": [
+                  "customer_id"
+                ],
+                "type": "one_to_many"
+              },
+              "confidence": 1.0,
+              "decision": {
+                "actor": null,
+                "decided_at": "<any>",
+                "note": null,
+                "status": "pending"
+              },
+              "evidence": {
+                "cardinality": {
+                  "child_distinct": 50,
+                  "parent_distinct": 50,
+                  "parent_unique": true
+                },
+                "containment": {
+                  "child_distinct": 50,
+                  "fraction": 1.0
+                },
+                "name": {
+                  "rule": "same name as the parent key",
+                  "score": 1.0
+                },
+                "range": {
+                  "child": null,
+                  "parent": null,
+                  "within": true
+                },
+                "type": {
+                  "child": "integer",
+                  "compatible": true,
+                  "parent": "integer"
+                }
+              },
+              "id": "relationship:orders.customer_id->customers.customer_id",
+              "kind": "relationship",
+              "proposed_at": "<any>",
+              "redacted": true,
+              "subject": "orders.customer_id->customers.customer_id"
+            }
+          ]
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-file",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "decisions": "${DIR}/none.json"
+        },
+        "command": "proposals_list",
+        "id": "missing-file"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_list",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.json"
+        },
+        "id": "missing-file",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-status",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "decisions": "${DIR}/decisions.json",
+          "status": "done"
+        },
+        "command": "proposals_list",
+        "id": "bad-status"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_list",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'status' must be one of pending, accepted, rejected, deferred, got 'done'"
+        },
+        "id": "bad-status",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "proposals_list",
+  "format": "shape-bridge-vectors",
+  "setup": [
+    {
+      "api_version": "1.1",
+      "args": {
+        "dataset": true,
+        "output": "${DIR}/shop.shape",
+        "source": "${DIR}/shop"
+      },
+      "command": "profile",
+      "id": "setup"
+    },
+    {
+      "api_version": "1.1",
+      "args": {
+        "data": [
+          "${DIR}/shop"
+        ],
+        "decisions": "${DIR}/decisions.json",
+        "profile": "${DIR}/shop.shape"
+      },
+      "command": "proposals_propose",
+      "id": "setup"
+    }
+  ],
+  "version": 1
+}

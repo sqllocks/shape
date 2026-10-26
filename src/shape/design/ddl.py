@@ -40,6 +40,18 @@ def emit_ddl(
 ) -> str:
     """The DDL script for ``design``. ``drop`` adds a ``DROP TABLE`` before each ``CREATE``;
     ``go`` writes ``GO`` batch separators for T-SQL."""
+    return _emit_ddl(design, dialect, schema_name=schema_name, drop=drop, go=go)
+
+
+def _emit_ddl(
+    design: SchemaDesign,
+    dialect: str = "tsql",
+    *,
+    schema_name: str | None = None,
+    drop: bool = False,
+    go: bool = True,
+    _legacy_design_types: bool = False,
+) -> str:
     if dialect not in DIALECTS:
         raise DesignError(f"unknown SQL dialect {dialect!r}; choose one of {', '.join(DIALECTS)}")
     sink = default_host().get("shape.sinks", "sql")
@@ -58,7 +70,9 @@ def emit_ddl(
     for t in design.tables:
         parts.append(
             f"-- {_one_line(t.kind)}: {_one_line(t.name)}\n"
-            + _create(sink, t, qualified(t.name), base, fabric, options, use_go)
+            + _create(
+                sink, t, qualified(t.name), base, fabric, options, use_go, _legacy_design_types
+            )
         )
     foreign: list[str] = []
     for t in design.tables:
@@ -84,6 +98,7 @@ def _create(
     fabric: bool,
     options: dict[str, Any],
     use_go: bool,
+    legacy_design_types: bool,
 ) -> str:
     schema = pa.schema([pa.field(c.name, pa.string()) for c in table.columns])
     meta = {
@@ -111,6 +126,7 @@ def _create(
             fabric,
             options,
             use_go,
+            _legacy_design_types=legacy_design_types,
         )
     except ValueError as exc:
         raise DesignError(str(exc)) from exc

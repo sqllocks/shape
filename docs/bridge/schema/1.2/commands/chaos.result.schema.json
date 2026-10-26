@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "applied": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "column": {},
+          "kind": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "integer"
+          },
+          "table": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "table",
+          "rows"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "batch": {
+      "type": "integer"
+    },
+    "changes": {
+      "type": "integer"
+    },
+    "files": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "ground_truth": {
+      "type": "string"
+    },
+    "output": {
+      "type": "string"
+    },
+    "seed": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "output",
+    "ground_truth",
+    "seed",
+    "batch",
+    "files",
+    "changes",
+    "applied"
+  ],
+  "title": "chaos result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}
