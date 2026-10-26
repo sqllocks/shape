@@ -23,6 +23,7 @@ from shape.bridge.handlers.common import (
     ANY,
     BOOL,
     INT,
+    NUM,
     STR,
     STRS,
     arr,
@@ -281,7 +282,7 @@ _LAYERS = obj(
     },
     {"column": nullable(STR)},
 )
-_FRAME = obj(
+_LEGACY_FRAME = obj(
     {"date": STR, "end": STR, "versions": INT, "form": nullable(STR), "gap": BOOL},
     {
         "row_count": nullable(INT),
@@ -296,21 +297,49 @@ _FRAME = obj(
         "redacted": BOOL,
     },
 )
+_FRAME = obj(
+    {
+        "date": STR,
+        "end": STR,
+        "versions": {"type": "integer", "minimum": 1},
+        "content_ids": STRS,
+        "form": {"enum": ["raw", "safe"]},
+        "gap": BOOL,
+        "row_count": nullable(INT),
+        "null_rate": nullable(NUM),
+        "cardinality": nullable(NUM),
+        "mean": nullable(NUM),
+        "std": nullable(NUM),
+        "quantiles": nullable(
+            obj(
+                {
+                    key: nullable(NUM)
+                    for key in ("p1", "p5", "p10", "p25", "p50", "p75", "p90", "p95", "p99")
+                }
+            )
+        ),
+        "top_values": nullable(arr(obj({"share": NUM, "value": nullable(STR)}))),
+        "change_point": nullable(BOOL),
+        "changes": STRS,
+    },
+    {"redacted": BOOL},
+)
 _TIMELAPSE = obj(
     {
         "format": {"const": "shape-timelapse"},
         "version": INT,
         "name": STR,
         "column": STR,
-        "frames": or_spilled(arr(_FRAME)),
-    },
-    {
+        # Retain the published frame branch for clients validating legacy payloads.
+        # The added branch documents what the runtime has always emitted.
+        "frames": {"anyOf": [*or_spilled(arr(_LEGACY_FRAME))["anyOf"], arr(_FRAME)]},
         "table": nullable(STR),
         "window": nullable(STR),
         "since": nullable(STR),
         "until": nullable(STR),
         "source": nullable(STR),
-        "change_points": ANY,
+        "change_points": STRS,
+        "notes": STRS,
     },
 )
 
