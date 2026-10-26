@@ -204,3 +204,28 @@ def test_newer_vault_version_preserves_safe_upgrade_guidance(tmp_path, vault_pai
     assert response["error"]["code"] == "input.unsupported_format_version"
     assert "9.9.0" in response["error"]["message"]
     assert "upgrade Shape" in response["error"]["hint"]
+
+
+@pytest.mark.parametrize("command", ["vault_status", "vault_verify", "vault_rewrap"])
+def test_missing_vault_has_a_platform_independent_error(tmp_path, vault_pair, command):
+    profile, _, _ = vault_pair
+    missing = tmp_path / "missing.shapevault"
+    args = {"vault": missing}
+    if command != "vault_status":
+        args["shape"] = profile
+    if command == "vault_rewrap":
+        args.update(
+            kek="env://VAULT_OLD",
+            new_kek="env://VAULT_NEW",
+            out_shape=tmp_path / "out.shape",
+            out_vault=tmp_path / "out.shapevault",
+            dry_run=True,
+        )
+    response = call(tmp_path, command, **args)
+    assert not response["ok"]
+    assert response["error"] == {
+        "code": "input.not_found",
+        "group": "input",
+        "message": f"vault file not found: {missing}",
+        "hint": None,
+    }

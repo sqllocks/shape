@@ -18,7 +18,7 @@ def _metadata_only(handler: Handler) -> Handler:
     @wraps(handler)
     def guarded(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         from shape.compat import UnsupportedVersionError
-        from shape.vault.errors import VaultFormatError
+        from shape.vault.errors import VaultFormatError, VaultInputError
 
         try:
             return handler(args, ctx)
@@ -29,6 +29,13 @@ def _metadata_only(handler: Handler) -> Handler:
             ) from None
         except VaultFormatError:
             raise BridgeError("input.invalid_value", "invalid vault metadata") from None
+        except VaultInputError as exc:
+            # read_vault_bytes wraps the OS error; do not publish locale/OS strerror text.
+            if isinstance(exc.__context__, FileNotFoundError):
+                raise BridgeError(
+                    "input.not_found", f"vault file not found: {args['vault']}"
+                ) from None
+            raise
 
     return guarded
 

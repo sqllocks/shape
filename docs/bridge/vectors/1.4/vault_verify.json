@@ -59,10 +59,10 @@
         "api_version": "1.4",
         "command": "vault_verify",
         "error": {
-          "code": "input.invalid_value",
+          "code": "input.not_found",
           "group": "input",
           "hint": null,
-          "message": "cannot read vault ${DIR}/missing.shapevault: No such file or directory"
+          "message": "vault file not found: ${DIR}/missing.shapevault"
         },
         "id": "vault_verify-1",
         "ok": false,

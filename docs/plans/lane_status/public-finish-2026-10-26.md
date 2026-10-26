@@ -13,6 +13,7 @@ PR: [Public finish](https://github.com/sqllocks/shape/pull/53).
 | W1-09 Windows Spark Delta | Not applicable: implementation already present on the starting main | Existing scheduled Windows Spark/Delta job passed; see CI link below. `git diff --check` passed for the status correction. |
 | Combined integration | `1 failed, 845 passed, 22 warnings in 37.46s` (missing report-card format in command table) | Documentation correction: `60 passed in 0.37s`; two bridge executable examples passed using the default kernel; Ruff `All checks passed!`, format `29 files already formatted`; `check_user_facing: clean`. |
 | CI snapshot/annotation correction | `4 failed, 85 passed in 3.05s` (CLI snapshot plus vault path/write annotations) | `201 passed in 3.35s` (CLI surface, bridge annotations and generated schemas); Ruff and format passed. |
+| CI Windows vault error vectors | `3 failed, 23 deselected in 0.66s` (missing-vault errors) | `38 passed, 148 deselected in 0.78s` (vault command regressions and vectors); Ruff and format passed. |
 | Tracker cleanup | `21 missing requirements` | `38 required statuses, exact W10-01 source row and 22 existing lane links passed`; `git diff --check` passed. |
 
 ## Green CI
