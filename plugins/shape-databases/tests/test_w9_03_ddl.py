@@ -190,3 +190,60 @@ def test_offline_ddl_retains_constraint_and_nested_options(monkeypatch, feature)
         expected = '"id" TEXT'
     ddl = sink.ddl("postgresql://shape@localhost/db", "items", schema, **options)
     assert expected in ddl
+
+
+@pytest.mark.parametrize(
+    "mode,expected", [("native", '"payload" BIGINT[]'), ("json", '"payload" TEXT')]
+)
+def test_nested_type_preview_uses_recorded_arrow_schema_without_generation(
+    monkeypatch, capsys, mode, expected
+):
+    import pyarrow as pa
+
+    from shape.cli import generation
+    from shape.generation.engine import Engine
+    from shape.generation.nested import NestedStrategy
+    from shape.generation.schema import Column, GenSchema, Model, Table
+    from shape.profile.nested import arrow_type_to_spec
+
+    source = GenSchema(
+        Model("nested", "nested"),
+        {
+            "t": Table(
+                "t",
+                {
+                    "payload": Column(
+                        "payload",
+                        "nested",
+                        {
+                            "strategy": "nested",
+                            "arrow_type_spec": arrow_type_to_spec(pa.list_(pa.int64())),
+                        },
+                    )
+                },
+            )
+        },
+    )
+    monkeypatch.setattr(generation, "load_target", lambda *a: source)
+
+    def no_generation(*args, **kwargs):
+        pytest.fail("DDL preview must not generate values")
+
+    monkeypatch.setattr(Engine, "generate", no_generation)
+    monkeypatch.setattr(NestedStrategy, "generate", no_generation)
+    assert (
+        main(
+            [
+                "generate",
+                "nested",
+                "--dry-run",
+                "--json",
+                "--to",
+                "postgresql://shape@localhost/db",
+                "--sink-config",
+                "postgres.nested=" + mode,
+            ]
+        )
+        == 0
+    )
+    assert expected in json.loads(capsys.readouterr().out)["ddl"][0]["sql"]
