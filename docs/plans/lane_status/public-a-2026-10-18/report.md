@@ -2,7 +2,7 @@
 
 **3/7 merged (42.9% done), 4/7 remaining (57.1%). All four remaining issues are in one ready PR; none is parked.** This replaces the superseded October 20 credential-handoff report. Credentials work, all local implementation handoffs are pushed, and the Owner has resolved the policy decisions.
 
-The Owner requested one final integration PR and full CI at the end. [PR #49](https://github.com/sqllocks/shape/pull/49), exact head `abdcdf1f0833cc2dc2d871f655367478bbbb09bd`, contains #4/#5/#7/#8, the reviewed CI acceleration and a minimal cancellation-race repair exposed by fresh main CI. It is ready, independently reviewed and based on current main `314749d37aba9141a2ff68a33cfdb91e8a87cca5`. Full CI is pending; no merge or green result is claimed for #49.
+The Owner requested one final integration PR and full CI at the end. [PR #49](https://github.com/sqllocks/shape/pull/49), exact head `5941963d8adc7d5adc90be51800823389b3b9248`, contains #4/#5/#7/#8, the reviewed CI acceleration and a minimal cancellation-race repair exposed by fresh main CI. It is ready, independently reviewed and based on current main `314749d37aba9141a2ff68a33cfdb91e8a87cca5`. Full CI is pending; no merge or green result is claimed for #49.
 
 | Issue | Status / PR | Actual merge SHA | Targeted acceptance |
 |---|---|---|---|
@@ -26,7 +26,7 @@ Merged PR #39 exact-head green workflows: [CI](https://github.com/sqllocks/shape
 
 Merged PR #37 exact-head green workflows: [CI](https://github.com/sqllocks/shape/actions/runs/40243748742), [Documentation](https://github.com/sqllocks/shape/actions/runs/40243748741), [Security](https://github.com/sqllocks/shape/actions/runs/40243748751), [Container](https://github.com/sqllocks/shape/actions/runs/40243748808), [DCO](https://github.com/sqllocks/shape/actions/runs/40243748750), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40243748743). Fresh main macOS 3.11 subsequently exposed a pre-existing cross-store cancellation lost-update race; PR49 includes its deterministic repair rather than retrying to hide the failure.
 
-PR #49 **pending, not green evidence**: [CI](https://github.com/sqllocks/shape/actions/runs/40260449004), [Wheels](https://github.com/sqllocks/shape/actions/runs/40260449160), [Security](https://github.com/sqllocks/shape/actions/runs/40260449076), [Container](https://github.com/sqllocks/shape/actions/runs/40260449310), [Documentation](https://github.com/sqllocks/shape/actions/runs/40260448973), [DCO](https://github.com/sqllocks/shape/actions/runs/40260449020), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40260449057).
+PR #49 **pending, not green evidence**: [CI](https://github.com/sqllocks/shape/actions/runs/40262750522), [Wheels](https://github.com/sqllocks/shape/actions/runs/40262750438), [Security](https://github.com/sqllocks/shape/actions/runs/40262750425), [Container](https://github.com/sqllocks/shape/actions/runs/40262750433), [Documentation](https://github.com/sqllocks/shape/actions/runs/40262750397), [DCO](https://github.com/sqllocks/shape/actions/runs/40262750448), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40262750353).
 
 ## Owner decisions and remaining live actions
 
@@ -39,3 +39,5 @@ The historical maintenance PR46 Windows corrupted-Delta diagnostic failure remai
 No tags, releases, publishing, protected-branch pushes, repository settings or other-session branches were changed. The Premium Contract Lead questions path is absent in this public repository; recheck after the final merge batch.
 
 First batch CI exposed a missed current-server Bridge transcript version. The exact reference-page test reproduced one failure, then passed after four current-server output fields changed to 1.3; historical examples and frozen artifacts are unchanged. The updated exact head above is independently approved and requires fresh CI.
+
+The next CI pass exposed a Python 3.14 fixture-only traceback rendering issue (19,004 core cases passed, one failed). A six-line test correction passes the same dummy key through a variable, preserves every original privacy/ordering assertion and adds a credential-transfer assertion. The entire Delta feature module passes 93 tests per kernel on Python 3.12. Independent review approved the exact updated head; Python 3.14 proof remains with its new CI. Production sanitization and all gates are unchanged.

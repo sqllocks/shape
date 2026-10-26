@@ -351,3 +351,21 @@ Currentruns: CI40260449004, Wheels40260449160, Security40260449076,
 Container40260449310, Documentation40260448973, DCO40260449020,
 action-selftest40260449057. AllPENDINGinitially. SamePR49/allfourissues.
 Pollscript /tmp/public-a-poll-final.py updatedtonewSHA.
+
+
+## PR49 test-fixture correction — 5941963
+
+Exactcurrenthead5941963d8adc7d5adc90be51800823389b3b9248, parentabdc.
+MacOS3.14 corefinished19004pass+1failure: testtracebackcontaineddummykey
+fromitsinlinecallsource, becausePython3.14rendersthewholemultilinecall.
+Productionalreadyraises sanitizedValueErrorfromNone; noactualcredential
+leakwasobserved. Minimaltest-onlyfixtureassignskeybeforecall/passesvariable;
+ALL3originalordering/privacyassertionsandfulltracebackformattingunchanged.
+Addedpostcatchassertprovesfakewriterreceivedactualdummykey.93Deltafeature
+casespassEACHkernelonprepared3.12;no local3.14verificationclaimed.
+Ruff/format/wordinggreen. ReviewerOct25APPROVEDexact5941963+DCO.
+Signed/pushedcurrentbranch; samePR49/all4issues, no secondPR.
+NewfullCIrunsonthecorrectedexacthead; oldheadresultsnotmergeevidence:
+CI40262750522,Documentation40262750397,action-selftest40262750353,
+Container40262750433,Security40262750425,Wheels40262750438,DCO40262750448.
+InitiallyPENDINGexceptDCOgreen. PollscriptupdatednewSHA.
