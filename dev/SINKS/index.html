@@ -2734,6 +2734,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Databases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generated-sql-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generated SQL constraints
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2764,6 +2781,17 @@
     <span class="md-ellipsis">
       
         DuckDB (duckdb://)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#native-nested-database-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Native nested database values
       
     </span>
   </a>
@@ -2811,6 +2839,28 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delta-table-features-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delta table features (opt-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sql-type-fidelity-on-write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SQL type fidelity on write
+      
+    </span>
+  </a>
   
 </li>
       
@@ -6506,6 +6556,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Databases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generated-sql-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generated SQL constraints
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -6536,6 +6603,17 @@
     <span class="md-ellipsis">
       
         DuckDB (duckdb://)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#native-nested-database-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Native nested database values
       
     </span>
   </a>
@@ -6583,6 +6661,28 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delta-table-features-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delta table features (opt-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sql-type-fidelity-on-write" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SQL type fidelity on write
+      
+    </span>
+  </a>
   
 </li>
       
@@ -6917,6 +7017,56 @@ floating-point <code>NaN</code> or <code>±Infinity</code> as <code>NULL</code>:
 and the writer makes the value <code>NULL</code> before staging or inserting it, so a pool, Warehouse or
 database never receives one. Reading the table back gives <code>NULL</code> where <code>NaN</code> was written, and the
 dataset id of the read-back differs from the NaN-bearing input for that reason alone.</p>
+<h3 id="generated-sql-constraints">Generated SQL constraints<a class="headerlink" href="#generated-sql-constraints" title="Permanent link">&para;</a></h3>
+<p>For <code>shape generate</code>, <code>--sql-constraints keys</code> is the default: primary keys, foreign keys
+and declared unique keys are created before loading rows. <code>all</code> also derives supported
+CHECK and literal DEFAULT clauses from the generation schema and <code>--contract FILE</code>
+(JSON or YAML). <code>none</code> omits derived constraints; <code>keep</code> is its compatibility alias.
+The existing <code>disable</code> option retains the SQL Server loading behavior described below.
+These generation defaults do not change <code>emit</code>, seed or scale workflows.</p>
+<table>
+<thead>
+<tr>
+<th>Destination</th>
+<th>Constraint behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostgreSQL, MySQL, DuckDB, SQL Server and Fabric SQL database</td>
+<td>Enforced foreign keys, UNIQUE and CHECK constraints; literal DEFAULT clauses</td>
+</tr>
+<tr>
+<td>Fabric Warehouse</td>
+<td>Informational foreign keys and UNIQUE constraints (<code>NOT ENFORCED</code>); no CHECK or DEFAULT</td>
+</tr>
+<tr>
+<td>Snowflake</td>
+<td>Informational foreign keys and UNIQUE constraints; DEFAULT; no CHECK</td>
+</tr>
+<tr>
+<td>Databricks Unity Catalog</td>
+<td>Informational primary/foreign keys; CHECK through <code>ALTER TABLE</code>; no UNIQUE or DEFAULT</td>
+</tr>
+</tbody>
+</table>
+<p>Unsupported declarations produce a warning and a <code>-- NOTE:</code> in SQL scripts. Checks use
+structured comparisons, conjunctions, membership and null tests; free-form SQL, regular
+expression checks, triggers, sequences and deferred constraints are outside this feature.
+Identifiers are quoted and row values remain bound parameters. <code>--dry-run</code> shows the
+resolved DDL without opening a connection or writing data artifacts.</p>
+<p>Shape prepares every table before loading and writes parents before children. DuckDB alone
+uses parent-first inline foreign keys because it cannot add them afterward. Constraints
+remain enforced. An existing destination must match the requested declarations before an
+append or truncate; PostgreSQL/MySQL CHECK and DEFAULT verification also needs permission to
+create temporary tables.</p>
+<p>For a dataset whose referenced tables all belong to the run, PostgreSQL, MySQL and SQL
+Server coordinate <code>truncate</code> in one transaction; PostgreSQL and SQL Server also coordinate
+<code>replace</code>. A later batch failure restores the previous dataset. MySQL <code>replace</code>, DuckDB
+reruns that cannot preserve enforced references, external incoming foreign keys and
+incompatible <code>--commit-rows</code> combinations are refused before mutation, naming the
+constraint. Other writes retain their existing transaction and committed-row accounting.
+Failures name the constraint and include row details when the database supplies them.</p>
 <h2 id="confirming-a-non-local-target">Confirming a non-local target<a class="headerlink" href="#confirming-a-non-local-target" title="Permanent link">&para;</a></h2>
 <p>Writing to a database, OneLake, Event Hubs or Kafka is harmless on synthetic data and harmful on
 the wrong target, so Shape asks first. Every command that writes to a <strong>non-local</strong> target needs a
@@ -6954,8 +7104,10 @@ refusal unless it passes <code>True</code> or sets the variable. Plugin commands
   anything is written. <code>shape from-ddl</code> writes <code>"identity": true</code> for <code>IDENTITY</code>, <code>SERIAL</code>,
   <code>BIGSERIAL</code> and <code>AUTO_INCREMENT</code> columns. A schema with no <code>identity</code> produces the DDL and
   scripts it always did. Fabric Warehouse has no identity semantics: it ignores the key.</li>
-<li><strong>Constraints.</strong> <code>--sql-constraints keep|disable</code> (<code>generate</code> and <code>emit</code>; the sink option
-  <code>constraints</code>, default <code>keep</code>). <code>disable</code> runs <code>ALTER TABLE ... NOCHECK CONSTRAINT ALL</code> on every
+<li><strong>Constraints.</strong> Generation supports <code>--sql-constraints keys|all|none</code> as described above.
+  The low-level sink option <code>constraints=keep|disable</code> retains its default <code>keep</code>, and
+  <code>emit</code> retains its existing <code>keep|disable</code> behavior. <code>disable</code> runs
+  <code>ALTER TABLE ... NOCHECK CONSTRAINT ALL</code> on every
   table the run writes that already exists, loads, then <code>ALTER TABLE ... WITH CHECK CHECK
   CONSTRAINT ALL</code>. When a constraint does not hold the rows stay, the run <strong>exits 1</strong> and names
   each table and constraint (<code>dbo.order.FK_order_customer</code>) and says it was <strong>left disabled</strong>; the
@@ -6978,7 +7130,8 @@ refusal unless it passes <code>True</code> or sets the variable. Plugin commands
 <p><code>pip install 'sqllocks-shape[duckdb]'</code> (the <code>sqllocks-shape-databases[duckdb]</code> extra; DuckDB is
 never a core dependency). <code>duckdb:///PATH.duckdb</code> is relative to the working directory and
 <code>duckdb:////abs/path.duckdb</code> absolute; <code>?schema=main</code> names the DuckDB schema (created when
-missing). Arrow batches are scanned by DuckDB directly, with no per-row conversion. Tables are
+missing). In the default native mode, Arrow batches are scanned directly, without per-row
+conversion. Tables are
 created from the schema:</p>
 <table>
 <thead>
@@ -7024,15 +7177,132 @@ created from the schema:</p>
 <td>timestamp with a zone</td>
 <td><code>TIMESTAMPTZ</code></td>
 </tr>
+<tr>
+<td>list (including large/fixed-size), struct, map</td>
+<td><code>T[]</code>, <code>STRUCT("field" T, ...)</code>, <code>MAP(K, V)</code>, recursively</td>
+</tr>
 </tbody>
 </table>
-<p>The schema's primary key is a <code>PRIMARY KEY</code>. A type DuckDB cannot hold (nested values, durations)
+<p>The schema's primary key is a <code>PRIMARY KEY</code>. A type DuckDB cannot hold (for example durations)
 is refused with the column named. <code>--write-mode</code> takes <code>create</code> (default), <code>append</code>, <code>truncate</code>,
 <code>replace</code> and <code>upsert</code> (<code>INSERT OR REPLACE</code> on the primary key; without one:
 <code>upsert needs a primary key on &lt;table&gt;</code>, exit 2). One table is one transaction; <code>--commit-rows N</code>
 commits every N rows so another connection sees them. A database file locked by another process is
 exit 2 with DuckDB's message. Reading the tables back gives the same <code>shape.repro.dataset_id</code> as
 the generated tables.</p>
+<p>The matching <code>shape.sources</code> DuckDB reader from <code>sqllocks-shape-integrations</code> opens the file
+read-only: <code>duckdb:///abs/path.duckdb?table=main.NAME</code>. Its path follows that source's URI
+syntax (three slashes for an absolute path). In Python,
+<code>DuckDbSource().read(uri, batch_size=65536)</code> yields the stored Arrow types and values;
+<code>schema(uri)</code> reads the table schema. It uses UTC for timestamp instants. A missing file
+is refused without creating it; writer-only URI parameters are refused before opening.</p>
+<h3 id="native-nested-database-values">Native nested database values<a class="headerlink" href="#native-nested-database-values" title="Permanent link">&para;</a></h3>
+<p>The database writers and Delta accept <code>nested=native</code> (default) or <code>nested=json</code>. Database
+writers also accept it as a URI parameter. On the command line use
+<code>--sink-config postgres.nested=json</code>, substituting the sink name (including <code>delta</code>).
+This option does not change the <code>sql</code> script sink or SQL Server/Fabric targets.</p>
+<table>
+<thead>
+<tr>
+<th>Arrow container</th>
+<th>PostgreSQL</th>
+<th>MySQL</th>
+<th>Databricks</th>
+<th>DuckDB</th>
+<th>Snowflake</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>scalar list</td>
+<td>matching <code>T[]</code></td>
+<td><code>JSON</code></td>
+<td><code>ARRAY&lt;T&gt;</code></td>
+<td><code>T[]</code></td>
+<td><code>VARIANT</code> (<code>ARRAY</code> with <code>typed</code>)</td>
+</tr>
+<tr>
+<td>struct</td>
+<td><code>JSONB</code></td>
+<td><code>JSON</code></td>
+<td><code>STRUCT&lt;field: T, ...&gt;</code></td>
+<td><code>STRUCT(field T, ...)</code></td>
+<td><code>VARIANT</code> (<code>OBJECT</code> with <code>typed</code>)</td>
+</tr>
+<tr>
+<td>list of structs</td>
+<td><code>JSONB</code></td>
+<td><code>JSON</code></td>
+<td><code>ARRAY&lt;STRUCT&lt;...&gt;&gt;</code></td>
+<td><code>STRUCT(...)[]</code></td>
+<td><code>VARIANT</code> (<code>ARRAY</code> with <code>typed</code>)</td>
+</tr>
+<tr>
+<td>map</td>
+<td><code>JSONB</code></td>
+<td><code>JSON</code></td>
+<td><code>MAP&lt;STRING, V&gt;</code></td>
+<td><code>MAP(K,V)</code></td>
+<td><code>VARIANT</code> (<code>OBJECT</code> with <code>typed</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>PostgreSQL arrays are text-format COPY data with array quoting, not SQL expressions. Native
+Databricks values are bound JSON passed to <code>from_json</code> with the resolved recursive schema and
+<code>FAILFAST</code> parsing. Its JSON transport requires string map keys; non-string map keys and
+unsupported leaves fail before connecting, naming the column and <code>nested=json</code> alternative.
+Duplicate Databricks map keys are refused rather than collapsed; an invalid later streaming
+batch reports how many earlier rows were committed. PostgreSQL arrays of lists are refused
+before connecting; <code>nested=json</code> stores their JSON text instead.</p>
+<p>Snowflake keeps <code>VARIANT</code> by default; <code>nested=typed</code> selects unstructured <code>ARRAY</code>/<code>OBJECT</code>.
+Native/typed Parquet COPY explicitly uses the vectorized scanner and logical types so null
+array entries retain their positions. Empty structs and non-string map keys cannot use this
+Parquet object transport; errors name the column and suggest adding fields or preencoding a
+JSON string. A manually preencoded Arrow string writes as <code>VARCHAR</code>; it does not restore a
+native VARIANT/OBJECT automatically. Unsupported Parquet leaves and invalid nested decimal
+precision/scale are also refused before connecting. Duplicate object map keys are refused.
+Nested binary requires manual base64 encoding into Arrow strings before writing: a lossless
+Parquet-to-VARIANT binary read-back mapping has not been verified. This applies to typed
+and legacy modes too; top-level binary columns keep their scalar mapping.
+Live connector validation remains an Owner action.</p>
+<p>The explicit <code>json</code> mode keeps the earlier text/VARIANT paths: PostgreSQL <code>TEXT</code>, MySQL
+<code>LONGTEXT</code>, Databricks <code>STRING</code>, Snowflake's existing VARIANT staging; DuckDB uses <code>VARCHAR</code>
+JSON text. Delta's explicit <code>json</code> mode stores nested columns as UTF-8 JSON text too. Native
+Delta maps retain key/value entries. Native Delta timestamps at every nesting depth read
+back in UTC with microsecond precision, matching its scalar and list behavior; submicrosecond
+precision is not retained. For example, timestamp nanoseconds <code>1767323045123456789</code> read back
+as timestamp microseconds <code>1767323045123456</code>, including inside map values. Compare native
+Delta values after this explicit UTC/microsecond normalization. Delta uses the existing
+table protocol defaults. Unsupported nested Delta leaves name the
+column and the <code>nested=json</code> alternative before storage is accessed.
+Native writes preserve SQL NULL versus empty containers. PostgreSQL/MySQL JSON values and
+Databricks JSON parameters encode decimals as exact text, temporal values as ISO text and binary values as base64; map
+entries use key/value pairs where the target permits duplicates, and Databricks maps use JSON
+objects. Non-finite numbers are refused by the native JSON transport.
+Nanosecond Arrow time fields cannot cross the PostgreSQL/MySQL Python JSON or array
+transport exactly; these shapes are refused before connecting. Preencode exact time values
+as Arrow strings before writing. The JSON fallback also uses Python time values and does
+not recover their discarded nanoseconds. Databricks nested timestamp values with nonzero
+submicroseconds are refused before binding; use JSON text storage to keep their digits.
+PostgreSQL native timestamp arrays likewise require at most microsecond precision;
+nanosecond Arrow timestamp array schemas are refused with the JSON text alternative.</p>
+<p>PostgreSQL scalar arrays, Databricks containers, DuckDB and Delta have native Arrow read-back
+types. Databricks child types come from <code>full_data_type</code> catalogs, without child profiling.
+JSON-backed
+columns may read as JSON text; restoring their Arrow types requires the original Arrow schema
+from the caller. Automatic child-schema recovery is not promised. Compare parsed values with
+that schema after normalizing map/JSON key order, decimal scale and temporal instants. Corrupt
+or schema-mismatched JSON must be refused, rather than coerced. Parse the source JSON exactly
+once: a quoted JSON string is not an object or array, duplicate object fields are ambiguous,
+and JSON-looking string children remain strings. Native DuckDB lists read back
+as variable lists; nested time and zoned timestamps use the documented scalar microsecond
+normalization, with UTC for instant comparisons. Exact duplicate struct field names must be
+renamed; they cannot be represented unambiguously by the JSON fallback either.</p>
+<p><code>shape_databases.nested_readback.restore_json_column(raw_values, original_field)</code> performs
+that strict schema-guided JSON restoration. It preserves exact decimal values and nanosecond
+timestamps/times where the original type can hold them, and refuses precision loss. This
+helper applies to JSON-backed physical columns; native Databricks catalog child types and
+PostgreSQL array element types must be read directly rather than reconstructed from JSON.</p>
 <h2 id="secrets">Secrets<a class="headerlink" href="#secrets" title="Permanent link">&para;</a></h2>
 <p>A secret is never a command-line value (it would be in the process list and the shell history).
 <code>--sink-config SINK.KEY=VALUE</code> takes options such as <code>abfss.account_name=acct</code>; a secret-looking key
@@ -7137,6 +7407,278 @@ MERGE, format 3, branches/tags, evolution and maintenance are unsupported.</p>
 String UUIDs read back in canonical hyphenated form. Invalid UUID values refuse the
 column without quoting its data. Decimal scale must be between zero and precision,
 as required by Iceberg; unsupported scales are rejected before catalog writes.</p>
+<h2 id="delta-table-features-opt-in">Delta table features (opt-in)<a class="headerlink" href="#delta-table-features-opt-in" title="Permanent link">&para;</a></h2>
+<p>The default Delta write still uses reader <strong>1</strong> / writer <strong>2</strong>, no table features,
+and no configuration. Zone-less timestamps are rewritten to UTC, preserving their
+wall-clock value. Existing golden files and benchmark fixtures are unchanged.
+<code>DeltaSink.write</code> and <code>open_table</code> accept these options. Opt-ins require the
+verified <code>deltalake&gt;=1.6.6</code> release and their public APIs; refusals name both the
+installed and required versions before writing. The published <code>deltalake&gt;=0.17</code>
+range remains available for default writes:</p>
+<p>The Delta sink's read-only <code>feature_plan(options)</code> method returns the minimum
+protocol and feature lists without importing the native writer or opening storage.
+The command-line dry run uses this method through the installed sink plugin.</p>
+<p>Custom <code>table_properties</code> keys outside the <code>delta.</code> namespace are allowed, except
+Shape's reserved fingerprint property. Engine properties are restricted to these
+verified protocol-neutral keys: <code>delta.appendOnly</code>, <code>delta.checkpointInterval</code>,
+<code>delta.checkpoint.writeStatsAsJson</code>, <code>delta.checkpoint.writeStatsAsStruct</code>,
+<code>delta.deletedFileRetentionDuration</code>, <code>delta.logRetentionDuration</code>,
+<code>delta.setTransactionRetentionDuration</code>, <code>delta.dataSkippingNumIndexedCols</code>,
+<code>delta.dataSkippingStatsColumns</code>, <code>delta.enableExpiredLogCleanup</code>,
+<code>delta.targetFileSize</code>, <code>delta.randomizeFilePrefixes</code>, <code>delta.randomPrefixLength</code>,
+and <code>delta.isolationLevel</code>. The native writer validates their values before a
+requested property reaches the destination. Other engine properties are refused
+before storage opens: use the supported feature options below. This keeps the
+offline protocol plan accurate and prevents properties from enabling unsupported
+change data feed, row tracking, type widening, v2 checkpoints or Iceberg features.</p>
+<p>Declare <code>generated_columns</code> when creating a new table. Appends retain and enforce
+its existing expressions. Adding or changing generated expressions on an existing
+table is table maintenance and is refused before its version or rows change;
+create a new table with the requested generated columns instead.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Value and effect</th>
+<th>Required protocol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>table_properties</code></td>
+<td>String-to-string object passed as <code>configuration</code> on creation; changed properties are committed after a successful append. Custom properties compose with <code>shape.fingerprint</code>. Feature/protocol and fingerprint properties are reserved for their dedicated options.</td>
+<td>1 / 2 for ordinary properties</td>
+</tr>
+<tr>
+<td><code>constraints</code></td>
+<td><code>not_null</code> is a list of column names; <code>check</code> maps names to the structured expressions below. Raw SQL checks are refused. <code>true</code> derives not-null checks from nonnullable Arrow fields and <code>columns</code> metadata. Checks are added after the first data commit.</td>
+<td>reader 1 / writer 3; <code>checkConstraints</code></td>
+</tr>
+<tr>
+<td><code>checks</code></td>
+<td>A list of <code>{name, expression}</code> objects produced by the shared generation-schema and contract derivation. Uses the same structured-expression validation as <code>constraints.check</code>.</td>
+<td>reader 1 / writer 3; <code>checkConstraints</code></td>
+</tr>
+<tr>
+<td><code>column_mapping</code></td>
+<td><code>"name"</code> creates a mapped table with stable physical names and positive ids in each field's metadata. Conversion of an existing unmapped table and renaming are table maintenance by another engine.</td>
+<td>reader 2 / writer 5; <code>columnMapping</code></td>
+</tr>
+<tr>
+<td><code>deletion_vectors</code></td>
+<td><code>true</code> enables <code>delta.enableDeletionVectors</code> and its reader/writer feature. This opt-in adds no deletion-vector actions, deletes, merges or upserts. Another engine may later update the table.</td>
+<td>reader 3 / writer 7; <code>deletionVectors</code></td>
+</tr>
+<tr>
+<td><code>generated_columns</code></td>
+<td><code>{"day": "CAST(ts AS DATE)"}</code> writes <code>delta.generationExpression</code>. The batch must supply the column with exactly the expression's result, including null semantics; disagreement is refused naming the column.</td>
+<td>reader 1 / writer 4; <code>generatedColumns</code></td>
+</tr>
+<tr>
+<td><code>timestamp_ntz</code></td>
+<td><code>true</code> retains zone-less timestamps; zoned timestamps keep their zone-aware instant. False retains the default UTC rewrite.</td>
+<td>reader 3 / writer 7; <code>timestampNtz</code></td>
+</tr>
+</tbody>
+</table>
+<p>Native <code>map&lt;timestamp_ntz&gt;</code> with <code>column_mapping=name</code> is refused before storage access: no verified deltalake release supports this combination (verified feature minimum 1.6.6). Use <code>timestamp_ntz=false</code> for native UTC values or <code>nested=json</code>. Unmapped native timestamp maps are supported; <code>delta.appendOnly=true</code> is applied to the empty initialized table before user rows are written.</p>
+<p>Protocols compose by taking the highest reader/writer version; writer 7 advertises
+feature lists. Delta-rs may add supporting features to the stored protocol. The
+installed version's public APIs are checked before writing. The implementation is
+verified with <strong>deltalake 1.6.6</strong>; this is a tested version, not a new dependency
+floor. A missing API produces an error naming the option, installed version and
+required capability, with 1.6.6 as the verified release. The <code>[delta]</code> extra's
+<code>deltalake&gt;=0.17</code> floor is unchanged. No additional core dependency is introduced.</p>
+<p>Checks and generated expressions are validated before touching the destination;
+a rejected append keeps its previous table version and properties. Adding checks
+also validates existing rows. Opt-in validation materializes pending batches and
+uses a temporary local Delta table; adding checks to an existing table also reads
+its current rows. Choose appropriate micro-batch thresholds for large inputs.
+Existing constraints and generated expressions continue to apply on an append
+even when their options are omitted. Errors name rules/columns and omit native
+error bodies, which can contain row values or sign-in information.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">shape.builtins.sinks.delta</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaSink</span>
+
+<span class="n">DeltaSink</span><span class="p">()</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+    <span class="s2">"lake"</span><span class="p">,</span> <span class="s2">"events"</span><span class="p">,</span> <span class="n">batches</span><span class="p">,</span>
+    <span class="n">generated_columns</span><span class="o">=</span><span class="p">{</span><span class="s2">"day"</span><span class="p">:</span> <span class="s2">"CAST(ts AS DATE)"</span><span class="p">},</span>
+    <span class="n">partition_by</span><span class="o">=</span><span class="p">[</span><span class="s2">"day"</span><span class="p">],</span>
+    <span class="n">constraints</span><span class="o">=</span><span class="p">{</span><span class="s2">"not_null"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"ts"</span><span class="p">]},</span>
+    <span class="n">table_properties</span><span class="o">=</span><span class="p">{</span><span class="s2">"owner"</span><span class="p">:</span> <span class="s2">"analytics"</span><span class="p">},</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Checks use the same constrained expression vocabulary as SQL sink derivation.
+An operand is <code>{"column": "amount"}</code> or <code>{"literal": 0}</code>. Comparisons have
+<code>op</code> (<code>=</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code> or <code>&gt;=</code>), <code>left</code> and <code>right</code>; <code>and</code> has an <code>args</code> list;
+<code>in</code> has <code>left</code> and scalar <code>values</code>; <code>is_null</code> has <code>left</code>. Literal values are
+strings, booleans, null or finite numbers. Unknown columns, extra members, compound
+literals, trees deeper than 32 levels and trees over 1,024 nodes are refused.
+Column identifiers and literals are quoted separately before native validation.</p>
+<p>For example, an amount bound is structured data:</p>
+<div class="highlight"><pre><span></span><code><span class="n">positive</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"op"</span><span class="p">:</span> <span class="s2">"&gt;="</span><span class="p">,</span> <span class="s2">"left"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"column"</span><span class="p">:</span> <span class="s2">"amount"</span><span class="p">},</span> <span class="s2">"right"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"literal"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}}</span>
+<span class="n">DeltaSink</span><span class="p">()</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"lake"</span><span class="p">,</span> <span class="s2">"orders"</span><span class="p">,</span> <span class="n">batches</span><span class="p">,</span> <span class="n">constraints</span><span class="o">=</span><span class="p">{</span><span class="s2">"check"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"positive"</span><span class="p">:</span> <span class="n">positive</span><span class="p">}})</span>
+</code></pre></div>
+<p>The existing <code>sql_options</code> derivation can supply schema business rules and a
+contract's numeric bounds or accepted values without accepting SQL text:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">shape.generation.output</span><span class="w"> </span><span class="kn">import</span> <span class="n">sql_options</span>
+
+<span class="n">derived</span> <span class="o">=</span> <span class="n">sql_options</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="s2">"events"</span><span class="p">,</span> <span class="n">constraints</span><span class="o">=</span><span class="s2">"all"</span><span class="p">,</span> <span class="n">contract</span><span class="o">=</span><span class="n">contract</span><span class="p">)</span>
+<span class="n">DeltaSink</span><span class="p">()</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+    <span class="s2">"lake"</span><span class="p">,</span> <span class="s2">"events"</span><span class="p">,</span> <span class="n">batches</span><span class="p">,</span>
+    <span class="n">checks</span><span class="o">=</span><span class="n">derived</span><span class="p">[</span><span class="s2">"checks"</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="n">derived</span><span class="p">[</span><span class="s2">"columns"</span><span class="p">],</span> <span class="n">constraints</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Use existing <code>--sink-config</code> options without new command-line flags:</p>
+<div class="highlight"><pre><span></span><code>shape<span class="w"> </span>generate<span class="w"> </span>retail<span class="w"> </span>--format<span class="w"> </span>delta<span class="w"> </span>-o<span class="w"> </span>lake<span class="w"> </span>--dry-run<span class="w"> </span>--json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sink-config<span class="w"> </span>delta.column_mapping<span class="o">=</span>name<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sink-config<span class="w"> </span>delta.deletion_vectors<span class="o">=</span><span class="nb">true</span>
+shape<span class="w"> </span>generate<span class="w"> </span>retail<span class="w"> </span>--format<span class="w"> </span>delta<span class="w"> </span>-o<span class="w"> </span>lake<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sink-config<span class="w"> </span><span class="s1">'delta.table_properties={"owner":"analytics"}'</span>
+shape<span class="w"> </span>generate<span class="w"> </span>retail<span class="w"> </span>--format<span class="w"> </span>delta<span class="w"> </span>-o<span class="w"> </span>lake<span class="w"> </span>--sql-constraints<span class="w"> </span>all<span class="w"> </span>--contract<span class="w"> </span>contract.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--sink-config<span class="w"> </span>delta.constraints<span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
+<p>The CLI accepts <code>delta.constraints=true</code>, <code>delta.constraints=false</code> or a JSON
+object containing <code>not_null</code> and structured <code>check</code> entries. These feature values
+compose with the separate <code>--sql-constraints</code> policy. False adds no automatic
+named not-null checks; schema and contract checks selected by <code>all</code> still apply.
+Dry-run uses the same per-table derived options as the write and reports their
+protocol union for schema, fitted-profile and Delta URI destinations.</p>
+<p><code>--dry-run</code> reports <code>delta_protocol</code> (minimum reader/writer versions and the feature
+union), resolves no sign-in, and creates no table. <code>shape doctor --delta-table
+lake/events --json</code> reports the actual reader/writer versions and both stored
+feature lists, while retaining its PyArrow-reader compatibility warning. For
+correct native readback of mapped or advertised-DV tables with deltalake 1.6.6,
+use its public DataFusion reader:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">deltalake</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeltaTable</span><span class="p">,</span> <span class="n">QueryBuilder</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
+
+<span class="n">table</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="p">(</span><span class="s2">"lake/events"</span><span class="p">)</span>
+<span class="n">rows</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">QueryBuilder</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"events"</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">"SELECT * FROM events"</span><span class="p">)</span><span class="o">.</span><span class="n">read_all</span><span class="p">())</span>
+</code></pre></div>
+<p>The native PyArrow scanner can return nulls for mapped columns or refuse the DV
+feature; Shape's existing W2-03 read fallback handles those cases through DuckDB.</p>
+<h2 id="sql-type-fidelity-on-write">SQL type fidelity on write<a class="headerlink" href="#sql-type-fidelity-on-write" title="Permanent link">&para;</a></h2>
+<p>Requirement: SHAPE-SINK-001.</p>
+<p>Arrow types resolve directly to SQL DDL; integer widths and decimal precision are not
+inferred from values. The script and live PostgreSQL/MySQL maps are shared.</p>
+<table>
+<thead>
+<tr>
+<th>Arrow</th>
+<th>PostgreSQL</th>
+<th>MySQL</th>
+<th>T-SQL</th>
+<th>Fabric Warehouse</th>
+<th>Snowflake</th>
+<th>Databricks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>int8 / int16 / int32 / int64</td>
+<td>SMALLINT / SMALLINT / INTEGER / BIGINT</td>
+<td>TINYINT / SMALLINT / INT / BIGINT</td>
+<td>SMALLINT / SMALLINT / INT / BIGINT</td>
+<td>SMALLINT / SMALLINT / INT / BIGINT</td>
+<td>NUMBER(3,0) / NUMBER(5,0) / NUMBER(10,0) / NUMBER(19,0)</td>
+<td>TINYINT / SMALLINT / INT / BIGINT</td>
+</tr>
+<tr>
+<td>uint8 / uint16 / uint32</td>
+<td>next signed width</td>
+<td>next signed width</td>
+<td>TINYINT / INT / BIGINT</td>
+<td>SMALLINT / INT / BIGINT</td>
+<td>NUMBER(5,0) / NUMBER(10,0) / NUMBER(19,0)</td>
+<td>SMALLINT / INT / BIGINT</td>
+</tr>
+<tr>
+<td>uint64</td>
+<td>NUMERIC(20,0)</td>
+<td>DECIMAL(20,0)</td>
+<td>DECIMAL(20,0)</td>
+<td>DECIMAL(20,0)</td>
+<td>DECIMAL(20,0)</td>
+<td>DECIMAL(20,0)</td>
+</tr>
+<tr>
+<td>float32</td>
+<td>REAL</td>
+<td>FLOAT</td>
+<td>REAL</td>
+<td>REAL</td>
+<td>FLOAT(24)</td>
+<td>FLOAT</td>
+</tr>
+<tr>
+<td>zoned timestamp</td>
+<td>TIMESTAMPTZ(p)</td>
+<td>TIMESTAMP(p)</td>
+<td>DATETIMEOFFSET(p)</td>
+<td>DATETIME2(6)</td>
+<td>TIMESTAMP_TZ(p)</td>
+<td>TIMESTAMP</td>
+</tr>
+<tr>
+<td>zone-less timestamp</td>
+<td>TIMESTAMP(p)</td>
+<td>DATETIME(p)</td>
+<td>DATETIME2(p)</td>
+<td>DATETIME2(p)</td>
+<td>TIMESTAMP_NTZ(p)</td>
+<td>TIMESTAMP_NTZ</td>
+</tr>
+<tr>
+<td>time32 / time64</td>
+<td>TIME(p)</td>
+<td>TIME(p)</td>
+<td>TIME(p)</td>
+<td>TIME(p)</td>
+<td>TIME(p)</td>
+<td>TIME(6)</td>
+</tr>
+<tr>
+<td>uuid metadata</td>
+<td>UUID</td>
+<td>CHAR(36)</td>
+<td>UNIQUEIDENTIFIER</td>
+<td>VARCHAR(36)</td>
+<td>VARCHAR(36)</td>
+<td>VARCHAR(36)</td>
+</tr>
+</tbody>
+</table>
+<p>Unsigned values use the next signed width; uint64 needs 20 decimal digits. T-SQL int8
+uses SMALLINT because TINYINT is unsigned. Timestamp/time units s, ms, us and ns mean
+0, 3, 6 and 9 fractional digits, capped at the dialect's limit (7 for T-SQL, 6 for
+PostgreSQL, MySQL and Fabric Warehouse). Snowflake supports 9; Databricks timestamps
+store microseconds. A zoned timestamp keeps its instant to the microsecond. Writes
+normalize to UTC, with +00:00 in offset-capable types; MySQL sets its write session to
+UTC, and Warehouse stores UTC in DATETIME2(6). Read-back comparisons normalize to
+UTC-aware values. The original zone name is not preserved. Zone-less values stay zone-less.</p>
+<p>Decimals always use the Arrow precision and scale, otherwise <code>columns.precision</code> and
+<code>columns.scale</code>; incomplete or invalid dimensions are refused with the column name.
+PostgreSQL accepts Arrow decimal256 precision and negative/excess scales; negative
+or greater-than-precision scales require PostgreSQL 15 or later. The other dialects
+refuse those scales rather than changing the value.
+UUID is selected by <code>columns.type="uuid"</code> or Arrow field metadata <code>type=uuid</code>.
+String lengths come from <code>columns.max_length</code> (generation-schema declared widths are
+forwarded there). Unspecified strings are unbounded: TEXT for PostgreSQL/MySQL,
+NVARCHAR(MAX) for T-SQL, VARCHAR(MAX) in script Warehouse DDL, VARCHAR for Snowflake,
+and STRING for Databricks. The live Warehouse writer also uses VARCHAR(MAX) (the service stores up to 16 MB);
+T-SQL and Warehouse string key columns require explicit <code>max_length</code>; an undeclared
+width is refused before any connection, naming the column. Shape never guesses a key width. Synapse retains its separate columnstore-compatible
+8000-character limit. The previous VARCHAR(255) default
+and first-batch string sizing are removed; a short first batch cannot truncate a later one.</p>
+<p>T-SQL declared strings beyond 4000 characters and Warehouse declared strings beyond
+8000 characters use their unbounded <code>MAX</code> types. Such widths on key columns are
+refused before connecting because <code>MAX</code> columns cannot be indexed. Declared widths
+are preserved without clamping; backend limits on actual index values still apply.</p>
+<p><code>shape generate schema.json --to postgresql://user@host/db --dry-run</code> prints the
+resolved CREATE TABLE statements without generating rows, signing in, connecting or
+writing. <code>--json</code> adds a <code>ddl</code> list to the generation plan, each with <code>target</code>, <code>table</code>
+and <code>sql</code>. SQL database sink adapters expose the optional offline
+<code>ddl(uri, table, arrow_schema, **options)</code> hook; values and credentials never enter DDL.</p>
 <h2 id="complete-local-run">Complete local run<a class="headerlink" href="#complete-local-run" title="Permanent link">&para;</a></h2>
 <p>Run these commands in order after preparing the fixtures above.</p>
 <p><a id="local-example-4"></a></p>
@@ -7167,6 +7709,7 @@ bound array DML. Use <code>oracle://user@host:1521/service?schema=S</code>, or <
 defaults to 50000. Empty strings are refused; <code>empty_string=null</code> permits conversion only
 for nullable non-key columns. Oracle DDL commits implicitly, including replace and truncate.
 See the plugin README's Oracle section for types, wallets, transaction limits and the source.</p>
+<p>UUID fields read from a source use Arrow field metadata <code>shape.type=uuid</code>; writers also accept the earlier <code>type=uuid</code> metadata key.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Sinks&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FSINKS%2F">Report a problem with this page</a></p>
 
 

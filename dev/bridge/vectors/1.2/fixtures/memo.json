@@ -1,0 +1,9 @@
+{
+  "format": "shape-verify-config",
+  "version": 1,
+  "classifications": {
+    "people.name": "CONFIDENTIAL",
+    "people.email": "SECRET"
+  },
+  "memorization": {}
+}

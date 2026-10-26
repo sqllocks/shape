@@ -1,0 +1,40 @@
+{
+  "format": "shape-design",
+  "version": 1,
+  "name": "tiny",
+  "entities": [
+    {
+      "name": "City",
+      "attributes": [
+        {
+          "name": "city_id",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "city",
+          "type": "string"
+        },
+        {
+          "name": "country",
+          "type": "string"
+        }
+      ],
+      "keys": [
+        [
+          "city_id"
+        ]
+      ],
+      "dependencies": [
+        {
+          "determinant": [
+            "city"
+          ],
+          "dependent": [
+            "country"
+          ]
+        }
+      ]
+    }
+  ]
+}

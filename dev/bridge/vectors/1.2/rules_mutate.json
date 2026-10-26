@@ -1,0 +1,319 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "customers",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "contract": "${DIR}/contract_customers.json",
+          "data": "${DIR}/mutate_data",
+          "min_score": 0.5,
+          "seed": 3
+        },
+        "command": "rules_mutate",
+        "id": "customers"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "rules_mutate",
+        "id": "customers",
+        "ok": true,
+        "result": {
+          "baseline_failed_rules": [],
+          "diff": false,
+          "format": "shape-mutation-report",
+          "min_score": {
+            "met": true,
+            "required": 0.5
+          },
+          "mutants": [
+            {
+              "cells_changed": 6,
+              "column": null,
+              "id": "duplicates.customers",
+              "killed": true,
+              "killed_by": [
+                "customers.customer_id.unique"
+              ],
+              "kind": "duplicates",
+              "rate": 0.05,
+              "seed": 3,
+              "status": "killed",
+              "table": "customers"
+            },
+            {
+              "cells_changed": 6,
+              "column": "amount",
+              "id": "negative_amounts.customers.amount",
+              "killed": true,
+              "killed_by": [
+                "customers.amount.min"
+              ],
+              "kind": "negative_amounts",
+              "rate": 0.05,
+              "seed": 3,
+              "status": "killed",
+              "table": "customers"
+            },
+            {
+              "cells_changed": 6,
+              "column": "tier",
+              "id": "case_whitespace.customers.tier",
+              "killed": true,
+              "killed_by": [
+                "customers.tier.allowed_values"
+              ],
+              "kind": "case_whitespace",
+              "rate": 0.05,
+              "seed": 3,
+              "status": "killed",
+              "table": "customers"
+            },
+            {
+              "cells_changed": 6,
+              "column": "full_name",
+              "id": "pii_fill.customers.full_name",
+              "killed": false,
+              "killed_by": [],
+              "kind": "pii_fill",
+              "rate": 0.05,
+              "seed": 3,
+              "status": "survived",
+              "table": "customers"
+            },
+            {
+              "cells_changed": 6,
+              "column": "email",
+              "id": "pii_fill.customers.email",
+              "killed": false,
+              "killed_by": [],
+              "kind": "pii_fill",
+              "rate": 0.05,
+              "seed": 3,
+              "status": "survived",
+              "table": "customers"
+            },
+            {
+              "cells_changed": 6,
+              "column": "tier",
+              "id": "pii_fill.customers.tier",
+              "killed": true,
+              "killed_by": [
+                "customers.tier.allowed_values"
+              ],
+              "kind": "pii_fill",
+              "rate": 0.05,
+              "seed": 3,
+              "status": "killed",
+              "table": "customers"
+            },
+            {
+              "cells_changed": 120,
+              "column": "amount",
+              "id": "type_change.customers.amount",
+              "killed": true,
+              "killed_by": [
+                "customers.amount.min"
+              ],
+              "kind": "type_change",
+              "rate": 0.05,
+              "seed": 3,
+              "status": "killed",
+              "table": "customers"
+            },
+            {
+              "cells_changed": 6,
+              "column": "full_name",
+              "id": "null_creep.customers.full_name",
+              "killed": false,
+              "killed_by": [],
+              "kind": "null_creep",
+              "rate": 0.05,
+              "seed": 3,
+              "status": "survived",
+              "table": "customers"
+            },
+            {
+              "cells_changed": 6,
+              "column": "email",
+              "id": "null_creep.customers.email",
+              "killed": true,
+              "killed_by": [
+                "customers.email.nullable"
+              ],
+              "kind": "null_creep",
+              "rate": 0.05,
+              "seed": 3,
+              "status": "killed",
+              "table": "customers"
+            },
+            {
+              "cells_changed": 6,
+              "column": "amount",
+              "id": "null_creep.customers.amount",
+              "killed": false,
+              "killed_by": [],
+              "kind": "null_creep",
+              "rate": 0.05,
+              "seed": 3,
+              "status": "survived",
+              "table": "customers"
+            },
+            {
+              "cells_changed": 6,
+              "column": "tier",
+              "id": "null_creep.customers.tier",
+              "killed": false,
+              "killed_by": [],
+              "kind": "null_creep",
+              "rate": 0.05,
+              "seed": 3,
+              "status": "survived",
+              "table": "customers"
+            }
+          ],
+          "rate": 0.05,
+          "rules": {
+            "customers.amount.min": {
+              "killed": [
+                "negative_amounts.customers.amount",
+                "type_change.customers.amount"
+              ]
+            },
+            "customers.customer_id.dtype": {
+              "killed": []
+            },
+            "customers.customer_id.unique": {
+              "killed": [
+                "duplicates.customers"
+              ]
+            },
+            "customers.email.nullable": {
+              "killed": [
+                "null_creep.customers.email"
+              ]
+            },
+            "customers.row_count.min": {
+              "killed": []
+            },
+            "customers.tier.allowed_values": {
+              "killed": [
+                "case_whitespace.customers.tier",
+                "pii_fill.customers.tier"
+              ]
+            }
+          },
+          "rules_killed_none": [
+            "customers.row_count.min",
+            "customers.customer_id.dtype"
+          ],
+          "score": {
+            "by_kind": {
+              "case_whitespace": {
+                "applicable": 1,
+                "killed": 1,
+                "score": 1.0
+              },
+              "duplicates": {
+                "applicable": 1,
+                "killed": 1,
+                "score": 1.0
+              },
+              "negative_amounts": {
+                "applicable": 1,
+                "killed": 1,
+                "score": 1.0
+              },
+              "null_creep": {
+                "applicable": 4,
+                "killed": 1,
+                "score": 0.25
+              },
+              "pii_fill": {
+                "applicable": 3,
+                "killed": 1,
+                "score": 0.333333
+              },
+              "type_change": {
+                "applicable": 1,
+                "killed": 1,
+                "score": 1.0
+              }
+            },
+            "by_table": {
+              "customers": {
+                "applicable": 11,
+                "killed": 6,
+                "score": 0.545455
+              }
+            },
+            "overall": {
+              "applicable": 11,
+              "killed": 6,
+              "score": 0.545455
+            }
+          },
+          "seed": 3,
+          "version": 1
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-contract",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "contract": "${DIR}/none.json",
+          "data": "${DIR}/mutate_data"
+        },
+        "command": "rules_mutate",
+        "id": "missing-contract"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "rules_mutate",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "contract not found: ${DIR}/none.json"
+        },
+        "id": "missing-contract",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "rate-out-of-range",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "contract": "c",
+          "data": "d",
+          "rate": 2
+        },
+        "command": "rules_mutate",
+        "id": "rate-out-of-range"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "rules_mutate",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'rate' must be at most 1, got 2"
+        },
+        "id": "rate-out-of-range",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "rules_mutate",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

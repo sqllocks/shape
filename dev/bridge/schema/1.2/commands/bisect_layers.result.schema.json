@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "bad_date": {
+      "type": "string"
+    },
+    "column": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "disappears": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "first_layer": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "format": {
+      "const": "shape-bisect-layers"
+    },
+    "found": {
+      "type": "boolean"
+    },
+    "good_date": {
+      "type": "string"
+    },
+    "layers": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "changes": {
+            "items": {
+              "additionalProperties": true,
+              "properties": {
+                "after": {},
+                "before": {},
+                "column": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "redacted": {
+                  "type": "boolean"
+                },
+                "score": {},
+                "severity": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "column",
+                "kind"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "source": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "origin",
+              "persists",
+              "disappears",
+              "unchanged"
+            ]
+          }
+        },
+        "required": [
+          "source",
+          "status",
+          "changed",
+          "changes",
+          "columns"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "persists": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "project": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "good_date",
+    "bad_date",
+    "project",
+    "found",
+    "first_layer",
+    "persists",
+    "disappears",
+    "layers",
+    "warnings"
+  ],
+  "title": "bisect_layers result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

@@ -75,6 +75,6 @@
     }
   ],
   "title": "report_card_read result",
-  "x-api-version": "1.2",
+  "x-api-version": "1.3",
   "x-since": "1.2"
 }

@@ -3155,6 +3155,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#whats-new-in-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's new in 1.3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#whats-new-in-12" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7253,6 +7264,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#whats-new-in-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's new in 1.3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#whats-new-in-12" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7775,7 +7797,7 @@ is <code>warning_codes</code> in <a href="../bridge/schema/index.json"><code>doc
 <code>input.unknown_source</code> and <code>input.unknown_format</code>; 1.2 adds <code>input.contract_conflict</code> and
 <code>policy.unverified_input</code>.</p>
 <h2 id="versions-and-the-stability-promise">Versions and the stability promise<a class="headerlink" href="#versions-and-the-stability-promise" title="Permanent link">&para;</a></h2>
-<p><code>api_version</code> is <code>MAJOR.MINOR</code>; this bridge speaks <strong>1.2</strong> and serves <strong>1.0 to 1.2</strong>.</p>
+<p><code>api_version</code> is <code>MAJOR.MINOR</code>; this bridge speaks <strong>1.3</strong> and serves <strong>1.0 to 1.3</strong>.</p>
 <ul>
 <li><strong>Minor versions only add:</strong> a command, an optional argument, an option, a result field, an error
   code, a warning code. A client written for 1.0 keeps working on 1.7, so <strong>a client ignores result
@@ -7784,15 +7806,15 @@ is <code>warning_codes</code> in <a href="../bridge/schema/index.json"><code>doc
   result field, error code or the meaning of any of them.</li>
 <li><strong>A major version may break.</strong> A bridge serves one major version. A request for another is refused
   with <code>usage.unsupported_version</code>, and the message names the supported range
-  (<code>... this bridge serves 1.0 to 1.2</code>). The response always carries the bridge's own
+  (<code>... this bridge serves 1.0 to 1.3</code>). The response always carries the bridge's own
   <code>api_version</code>, so a client can read it from the refusal.</li>
 <li>A request with a newer <em>minor</em> than the bridge's is served, with the warning
   <code>newer_minor_version</code>: what the newer minor added is not available.</li>
-<li>A request with <strong>no <code>api_version</code></strong> is served as 1.2, with the warning <code>api_version_assumed</code>.</li>
+<li>A request with <strong>no <code>api_version</code></strong> is served as 1.3, with the warning <code>api_version_assumed</code>.</li>
 <li>Persisted files declare their own <code>format</code> and integer <code>version</code> (the job file below, the vector
   files). A file written by a newer Shape is refused with <code>input.unsupported_format_version</code>, never
   misread. The job file <code>shape-bridge-job</code> and the vector files <code>shape-bridge-vectors</code> are still
-  version 1: a job file written by 1.0 or 1.1 is read unchanged by the 1.2 bridge.</li>
+  version 1: a job file written by 1.0 or 1.1 is read unchanged by the 1.3 bridge.</li>
 </ul>
 <p><strong>The 1.0 promise.</strong> A request that declares <code>"api_version": "1.0"</code> is answered exactly as the 1.0
 bridge answers it:</p>
@@ -7802,7 +7824,7 @@ bridge answers it:</p>
 <li>no result field or warning of 1.1 or 1.2 is added to the result of a 1.0 command (<code>verify</code>'s gates have no
   <code>details</code> for a 1.0 request, for example);</li>
 <li>the one field that differs is the response's own <code>api_version</code>, which is the bridge's version
-  (<code>"1.2"</code>), as it always was.</li>
+  (<code>"1.3"</code>), as it always was.</li>
 </ul>
 <p>Every command and every argument records the version that added it: <code>since</code> (<code>"1.0"</code>, <code>"1.1"</code> or <code>"1.2"</code>) in
 <code>index.json</code> (<code>commands.NAME.since</code>, and <code>commands.NAME.args</code> for each argument) and <code>x-since</code> in the
@@ -7815,8 +7837,8 @@ optional scikit-learn (extra <code>advanced</code>): replay it with scikit-learn
 the fidelity section also runs the adversarial test and its answer differs.
 The 1.0 contract is <strong>frozen</strong> in <a href="../bridge/schema/1.0/index.json"><code>docs/bridge/schema/1.0/</code></a> and
 <a href="https://github.com/sqllocks/shape/tree/main/docs/bridge/vectors/1.0"><code>docs/bridge/vectors/1.0/</code></a>: <code>tests/bridge/test_compat_1_0.py</code> replays every 1.0
-vector against the 1.2 bridge (each response equals the recorded one in every field except
-<code>api_version</code>) and checks that the 1.2 schemas keep every 1.0 command, argument (name, type,
+vector against the 1.3 bridge (each response equals the recorded one in every field except
+<code>api_version</code>) and checks that the 1.3 schemas keep every 1.0 command, argument (name, type,
 required-ness, enum values, default), result property, error code and warning code.</p>
 <h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">&para;</a></h2>
 <p>Names and argument names are those of the original 17-command bridge, so existing clients keep
@@ -8360,6 +8382,19 @@ object per gate. A <code>verify</code> served as 1.0 has no <code>details</code>
 <div class="highlight"><pre><span></span><code>```json response
 {"api_version": "1.2", "command": "verify", "error": {"code": "input.invalid_value", "group": "input", "hint": null, "message": "the verify configuration asks for the memorization or utility gate, which compare with the source data: give --source"}, "id": "needs-the-source", "ok": false, "warnings": []}
 </code></pre></div></p>
+<h2 id="whats-new-in-13">What's new in 1.3<a class="headerlink" href="#whats-new-in-13" title="Permanent link">&para;</a></h2>
+<p>Bridge 1.3 design DDL matches the CLI and Python <code>emit_ddl</code> API: strings without
+<code>max_length</code> use <code>NVARCHAR(MAX)</code> on SQL Server, <code>VARCHAR(MAX)</code> on Fabric Warehouse,
+and <code>TEXT</code> on PostgreSQL and MySQL. This includes the date dimension name columns
+and derived city/country columns. Declare <code>max_length</code> for indexed SQL Server and
+Fabric string columns; a missing width fails with the column name before a connection.
+Requests declaring 1.1 or 1.2 retain historical DDL spellings, including their 255
+string widths, after the same validation. Version 1.0 negotiation is unchanged.
+The historical examples below retain their declared versions and responses.
+The current vectors are published under <a href="https://github.com/sqllocks/shape/tree/main/docs/bridge/vectors/1.3"><code>bridge/vectors/1.3</code></a>,
+including separate 1.3 date and city examples; the complete 1.2 schema and vector
+publication is frozen under <a href="../bridge/schema/1.2/index.json"><code>bridge/schema/1.2</code></a> and
+<a href="https://github.com/sqllocks/shape/tree/main/docs/bridge/vectors/1.2"><code>bridge/vectors/1.2</code></a>. The current schema files advertise 1.3.</p>
 <h2 id="whats-new-in-12">What's new in 1.2<a class="headerlink" href="#whats-new-in-12" title="Permanent link">&para;</a></h2>
 <p>Bridge 1.2 adds the analysis commands of the open engine, so an editor, a notebook or an agent no
 longer scrapes terminal text, and drift with severity between two share-safe versions in a registry.
@@ -8387,7 +8422,7 @@ message 1.1 gave, <code>proposals_list</code> and <code>proposals_propose</code>
 <code>format_schema</code> lists the names 1.1 listed, and no 1.2 result field or warning is added. The 1.1
 contract is <strong>frozen</strong> in <a href="../bridge/schema/1.1/index.json"><code>docs/bridge/schema/1.1/</code></a> and
 <a href="https://github.com/sqllocks/shape/tree/main/docs/bridge/vectors/1.1"><code>docs/bridge/vectors/1.1/</code></a>; <code>tests/bridge/test_compat_1_1.py</code> replays every 1.1
-vector against the 1.2 bridge and holds the 1.2 schemas to the 1.1 ones, next to the 1.0 replay.
+vector against the 1.3 bridge and holds the 1.2 schemas to the 1.1 ones, next to the 1.0 replay.
 The job file <code>shape-bridge-job</code> stays at version 1, and a job written by the 1.1 bridge is read by
 the 1.2 bridge.</p>
 <p>Each new command below has its request, result, an example request and response (taken from the
@@ -9053,7 +9088,7 @@ mutually exclusive. Sink partition options can be a list of transform expression
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
-<div class="expected highlight"><pre><span></span><code>{"api_version": "1.2", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
+<div class="expected highlight"><pre><span></span><code>{"api_version": "1.3", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
 </code></pre></div>
 </details>
 <p><a id="local-example-112"></a></p>
@@ -9068,9 +9103,9 @@ mutually exclusive. Sink partition options can be a list of transform expression
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
-<div class="expected highlight"><pre><span></span><code>{"api_version": "1.2", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
-{"api_version": "1.2", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
-{"api_version": "1.2", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
+<div class="expected highlight"><pre><span></span><code>{"api_version": "1.3", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
+{"api_version": "1.3", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
+{"api_version": "1.3", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
 </code></pre></div>
 </details>
 <p>Oracle sources (<code>oracle://</code> and <code>tcps://</code>, from <code>sqllocks-shape-databases[oracle]</code>) support

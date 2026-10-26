@@ -1,0 +1,100 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "a-csv",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "name": "orders",
+          "source": "${DIR}/a.csv"
+        },
+        "command": "design_from_data",
+        "id": "a-csv"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "design_from_data",
+        "id": "a-csv",
+        "ok": true,
+        "result": {
+          "entities": [
+            {
+              "attributes": [
+                {
+                  "name": "id",
+                  "nullable": false,
+                  "type": "integer"
+                },
+                {
+                  "max_length": 18,
+                  "name": "email",
+                  "nullable": false,
+                  "type": "string"
+                },
+                {
+                  "max_length": 4,
+                  "name": "status",
+                  "nullable": false,
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "nullable": false,
+                  "type": "integer"
+                }
+              ],
+              "dependencies": [],
+              "history": {
+                "attributes": {},
+                "default": 1
+              },
+              "keys": [
+                [
+                  "id"
+                ],
+                [
+                  "email"
+                ]
+              ],
+              "name": "orders"
+            }
+          ],
+          "facts": [],
+          "format": "shape-design",
+          "hierarchies": [],
+          "name": "orders",
+          "version": 1
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-file",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "source": "${DIR}/none.csv"
+        },
+        "command": "design_from_data",
+        "id": "missing-file"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "design_from_data",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.csv"
+        },
+        "id": "missing-file",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "design_from_data",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

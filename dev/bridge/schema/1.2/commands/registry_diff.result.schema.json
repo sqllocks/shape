@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "change_count": {
+      "type": "integer"
+    },
+    "changes": {
+      "anyOf": [
+        {
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "baseline": {},
+              "column": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "current": {},
+              "kind": {
+                "type": "string"
+              },
+              "redacted": {
+                "type": "boolean"
+              },
+              "score": {},
+              "severity": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              }
+            },
+            "required": [
+              "column",
+              "kind",
+              "severity"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "properties": {
+            "bytes": {
+              "type": "integer"
+            },
+            "content_id": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "spilled": {
+              "const": true
+            }
+          },
+          "required": [
+            "spilled",
+            "content_id",
+            "path",
+            "bytes"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "drifted": {
+      "type": "boolean"
+    },
+    "form": {
+      "anyOf": [
+        {
+          "enum": [
+            "raw",
+            "safe"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "from": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "not_measured": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "column": {
+            "type": "string"
+          },
+          "metric": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "table": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "column",
+          "metric",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "same": {
+      "type": "boolean"
+    },
+    "to": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "from",
+    "to",
+    "same",
+    "form",
+    "drifted",
+    "change_count",
+    "changes",
+    "not_measured"
+  ],
+  "title": "registry_diff result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

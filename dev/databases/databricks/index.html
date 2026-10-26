@@ -6452,7 +6452,8 @@ come from Unity Catalog <code>information_schema.table_constraints</code>, <code
 <code>referential_constraints</code>. Key relationships carry <code>evidence: "declared"</code>.</p>
 <p>TINYINT, SMALLINT, INT and BIGINT retain int8, int16, int32 and int64 widths.
 DECIMAL(p,s) uses decimal128(p,s). TIMESTAMP uses UTC; TIMESTAMP_NTZ has no timezone.
-ARRAY, STRUCT and MAP cross this source boundary as JSON text. Catalog row counts,
+ARRAY, STRUCT and MAP retain recursive native Arrow types from <code>full_data_type</code> catalog
+declarations. This parses declared child types and does not profile child fields. Catalog row counts,
 <code>sampled_rows</code> and <code>sampling</code> distinguish the population and sampled distributions;
 zero requested sample rows reads the catalog only.</p>
 <p>Offline fake catalogs and Arrow result sets cover these reads. Live account validation

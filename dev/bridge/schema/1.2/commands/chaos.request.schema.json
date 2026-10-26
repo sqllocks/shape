@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+      "type": "string"
+    },
+    "args": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_real_input": {
+          "description": "corrupt `input` tables that are not marked as Shape-generated: adds the warning real_input_corrupted and records input_provenance: unverified in the log",
+          "type": "boolean",
+          "x-since": "1.2"
+        },
+        "batch": {
+          "description": "the batch number (default 0)",
+          "minimum": 0,
+          "type": "integer",
+          "x-since": "1.2"
+        },
+        "corrupt": {
+          "description": "the corruptions, each as `shape chaos --corrupt` takes it: `KIND[=RATE][@TABLE[.COLUMN]][:OPT=V,...]`",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "x-since": "1.2"
+        },
+        "domain": {
+          "description": "an installed domain or a generation schema file: it names the keys and foreign keys, and without `input` the tables are generated from it",
+          "type": "string",
+          "x-name-or-path": true,
+          "x-since": "1.2"
+        },
+        "format": {
+          "description": "the file format (default csv)",
+          "enum": [
+            "csv",
+            "parquet",
+            "jsonl"
+          ],
+          "type": "string",
+          "x-since": "1.2"
+        },
+        "ground_truth": {
+          "description": "the ground-truth log file (default: output_dir/_chaos_ground_truth.jsonl)",
+          "type": "string",
+          "x-path": "write",
+          "x-since": "1.2"
+        },
+        "input": {
+          "description": "a folder of the tables to corrupt, one file per table (marked as Shape-generated, unless allow_real_input)",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "mode": {
+          "description": "the schema mode of a domain",
+          "enum": [
+            "3nf",
+            "star"
+          ],
+          "type": "string",
+          "x-since": "1.2"
+        },
+        "output_dir": {
+          "description": "the folder the corrupted files go to",
+          "type": "string",
+          "x-path": "write",
+          "x-since": "1.2"
+        },
+        "scale": {
+          "description": "the scale preset, when generating",
+          "type": "string",
+          "x-since": "1.2"
+        },
+        "seed": {
+          "description": "the seed (default: the schema's, else 42)",
+          "type": "integer",
+          "x-since": "1.2"
+        },
+        "start_date": {
+          "description": "the date of batch 0 (needs a batch date, which the bridge does not take: give `batch`)",
+          "type": "string",
+          "x-since": "1.2"
+        }
+      },
+      "required": [
+        "output_dir",
+        "corrupt"
+      ],
+      "type": "object"
+    },
+    "command": {
+      "const": "chaos"
+    },
+    "id": {
+      "maxLength": 128,
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "async": {
+          "default": false,
+          "description": "for a command that can run as a job: return a job id at once and run in the background",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "include_raw_values": {
+          "default": false,
+          "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "max_inline_bytes": {
+          "default": 262144,
+          "description": "a result part larger than this is written to a file and returned as a reference",
+          "minimum": 1024,
+          "type": "integer",
+          "x-since": "1.0"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "command",
+    "args"
+  ],
+  "title": "chaos request",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

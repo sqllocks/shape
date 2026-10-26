@@ -4245,6 +4245,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#generated-sql-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generated SQL constraints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cloud-and-fabric-options" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6789,6 +6800,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#generated-sql-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generated SQL constraints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cloud-and-fabric-options" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7465,6 +7487,17 @@ Catalog population counts and declared keys accompany sampled statistics. Snowfl
 provenance records the actual warehouse. Credentials use source options and references,
 never URI passwords or tokens. See the <a href="../databases/snowflake/">Snowflake</a> and
 <a href="../databases/databricks/">Databricks</a> source guides for authentication, types and limits.</p>
+<h2 id="generated-sql-constraints">Generated SQL constraints<a class="headerlink" href="#generated-sql-constraints" title="Permanent link">&para;</a></h2>
+<p><code>shape generate --sql-constraints keys|all|none</code> controls derived database and SQL-script
+declarations. Omitted means <code>keys</code>: primary keys, foreign keys and declared unique keys.
+<code>all</code> adds supported structured CHECK and literal DEFAULT clauses. <code>none</code> omits derived
+constraints, and <code>keep</code> is its compatibility alias. The existing SQL Server <code>disable</code>
+loading option remains available; <code>emit</code>, seed and scale retain their existing behavior.</p>
+<p><code>--contract FILE</code> reads a JSON or YAML contract before opening destinations. With <code>all</code>,
+its bounds, accepted values and literal defaults join supported generation-schema checks.
+Raw SQL expressions and regex checks are not accepted as database CHECK expressions.
+<code>--dry-run</code> shows the resolved DDL without connecting. Unsupported declarations produce
+warnings and SQL-script notes. See <a href="../SINKS/#generated-sql-constraints">destination capabilities and safe reruns</a>.</p>
 <h2 id="cloud-and-fabric-options">Cloud and Fabric options<a class="headerlink" href="#cloud-and-fabric-options" title="Permanent link">&para;</a></h2>
 <p>Three options reach cloud destinations and sources. Their help text, as <code>shape --help</code> prints it:</p>
 <table>

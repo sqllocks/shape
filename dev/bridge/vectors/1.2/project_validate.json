@@ -1,0 +1,136 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "good-file",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/shape.yml"
+        },
+        "command": "project_validate",
+        "id": "good-file"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "project_validate",
+        "id": "good-file",
+        "ok": true,
+        "result": {
+          "problems": [],
+          "valid": true
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "problems",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "text": "format: shape-project\nversion: 1\nsources:\n  validate: {path: ''}\n"
+        },
+        "command": "project_validate",
+        "id": "problems"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "project_validate",
+        "id": "problems",
+        "ok": true,
+        "result": {
+          "problems": [
+            {
+              "line": null,
+              "message": "source name 'validate' is a `shape profile` subcommand",
+              "path": "sources.validate"
+            },
+            {
+              "line": null,
+              "message": "must not be empty",
+              "path": "sources.validate.path"
+            }
+          ],
+          "valid": false
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "newer-version",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "text": "format: shape-project\nversion: 2\nname: vectors\nsources:\n  orders:\n    path: a.csv\n    contract: contract.json\n    ignore: [status]\n    columns:\n      amount: {owner: finance@example.com}\ngates:\n  range_constraint: {mode: observe}\n"
+        },
+        "command": "project_validate",
+        "id": "newer-version"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "project_validate",
+        "error": {
+          "code": "input.unsupported_format_version",
+          "group": "input",
+          "hint": "upgrade Shape to read it",
+          "message": "shape.yml: version 2 is newer than this Shape understands (it reads up to version 1): upgrade Shape, or lower the file's version if it uses nothing newer"
+        },
+        "id": "newer-version",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-file",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/none.yml"
+        },
+        "command": "project_validate",
+        "id": "missing-file"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "project_validate",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.yml"
+        },
+        "id": "missing-file",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "text-and-path",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/shape.yml",
+          "text": "format: shape-project\nversion: 1\nname: vectors\nsources:\n  orders:\n    path: a.csv\n    contract: contract.json\n    ignore: [status]\n    columns:\n      amount: {owner: finance@example.com}\ngates:\n  range_constraint: {mode: observe}\n"
+        },
+        "command": "project_validate",
+        "id": "text-and-path"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "project_validate",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "give exactly one of text and path"
+        },
+        "id": "text-and-path",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "project_validate",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

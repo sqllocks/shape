@@ -1,0 +1,8 @@
+{
+  "format": "shape-suite",
+  "version": 1,
+  "scenarios": [
+    "clean_baseline",
+    "nulls_injected"
+  ]
+}

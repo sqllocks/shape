@@ -11448,8 +11448,8 @@ Exit codes:
 <h2 id="shape-generate"><code>shape generate</code><a class="headerlink" href="#shape-generate" title="Permanent link">&para;</a></h2>
 <p>Stability: <strong>stable</strong>.</p>
 <div class="highlight"><pre><span></span><code>usage: shape generate [-h] [--mode {3nf,star}] [--scale PRESET] [--seed SEED]
-                      [--identifiers {reserved,realistic}] [--format FORMAT] [-o DIR] [--dry-run]
-                      [--json] [--chunk-rows N]
+                      [--identifiers {reserved,realistic}] [--format FORMAT] [-o DIR]
+                      [--contract FILE] [--dry-run] [--json] [--chunk-rows N]
                       [--sql-dialect {tsql,tsql-fabric-warehouse,postgres,mysql}]
                       [--schema-name NAME] [--batch-size N] [--sql-ddl | --no-sql-ddl]
                       [--sql-drop | --no-sql-drop] [--sql-go | --no-sql-go] [--chaos-log FILE]
@@ -11458,9 +11458,9 @@ Exit codes:
                       [--table-format TABLE=FORMAT] [--to URI] [--roll-rows N] [--roll-seconds S]
                       [--commit-rows N]
                       [--write-mode {overwrite,append,fail,create,truncate,replace,upsert}]
-                      [--sql-constraints {keep,disable}] [--manifest] [--yes] [--from X.shape]
-                      [--decisions DECISIONS.json] [--mixed-copula] [--vault VAULT] [--kek REF]
-                      [--verify PUBKEY] [--rows N|TABLE=N]
+                      [--sql-constraints {keep,disable,keys,all,none}] [--manifest] [--yes]
+                      [--from X.shape] [--decisions DECISIONS.json] [--mixed-copula]
+                      [--vault VAULT] [--kek REF] [--verify PUBKEY] [--rows N|TABLE=N]
                       [--scale-mode {local_single,local_mp,fabric_spark}] [--sink NAME]
                       [--sink-config SINK.KEY=VALUE] [--chunk-size N] [--max-workers N]
                       [--processes N] [--fabric-workspace GUID] [--fabric-lakehouse GUID]
@@ -11496,6 +11496,7 @@ options:
                         plugins list`)
   -o DIR, --output DIR, --out DIR
                         the output directory (needed to write)
+  --contract FILE       JSON or YAML contract for write keys, checks and defaults
   --dry-run             plan the run; generate nothing
   --json                print the result or the plan as JSON
   --chunk-rows N        rows per chunk (output does not depend on it)
@@ -11570,10 +11571,11 @@ targets (--to):
                         databases: create (the default; never touches an existing table), append,
                         truncate or replace; mssql:// also upsert: merge on the primary key, so a
                         rerun leaves the same rows)
-  --sql-constraints {keep,disable}
-                        mssql:// targets: keep (the default) or disable the foreign key and check
-                        constraints of tables that already exist while loading, then validate them
-                        (exit 1 and the constraints named when one does not hold)
+  --sql-constraints {keep,disable,keys,all,none}
+                        databases and SQL: keys (default) writes primary, foreign and unique keys;
+                        all also writes checks and literal defaults; none writes only primary
+                        keys. keep is the legacy alias for none. mssql:// disable temporarily
+                        disables existing foreign key and check constraints, then validates them
   --manifest            files: write a _SUCCESS file in each folder after its files
   --yes                 confirm writing to a non-local target (not a path, file://, console,
                         localhost); SHAPE_CONFIRM_REMOTE=1 does the same for scripts and notebooks
@@ -11640,7 +11642,8 @@ Exit codes:
 <h2 id="shape-composite"><code>shape composite</code><a class="headerlink" href="#shape-composite" title="Permanent link">&para;</a></h2>
 <p>Stability: <strong>experimental</strong>.</p>
 <div class="highlight"><pre><span></span><code>usage: shape composite [-h] [--scale PRESET] [--seed SEED] [--identifiers {reserved,realistic}]
-                       [--format FORMAT] [-o DIR] [--dry-run] [--json] [--chunk-rows N]
+                       [--format FORMAT] [-o DIR] [--contract FILE] [--dry-run] [--json]
+                       [--chunk-rows N]
                        [--sql-dialect {tsql,tsql-fabric-warehouse,postgres,mysql}]
                        [--schema-name NAME] [--batch-size N] [--sql-ddl | --no-sql-ddl]
                        [--sql-drop | --no-sql-drop] [--sql-go | --no-sql-go] [--chaos-log FILE]
@@ -11649,7 +11652,7 @@ Exit codes:
                        [--batch-date YYYY-MM-DD] [--table-format TABLE=FORMAT] [--to URI]
                        [--roll-rows N] [--roll-seconds S] [--commit-rows N]
                        [--write-mode {overwrite,append,fail,create,truncate,replace,upsert}]
-                       [--sql-constraints {keep,disable}] [--manifest] [--yes]
+                       [--sql-constraints {keep,disable,keys,all,none}] [--manifest] [--yes]
                        PRESET|DOMAIN+DOMAIN
 
 (experimental) Generate a composite: the domains of a preset (see `shape presets --composites`) or
@@ -11675,6 +11678,7 @@ options:
                         plugins list`)
   -o DIR, --output DIR, --out DIR
                         the output directory (needed to write)
+  --contract FILE       JSON or YAML contract for write keys, checks and defaults
   --dry-run             plan the run; generate nothing
   --json                print the result or the plan as JSON
   --chunk-rows N        rows per chunk (output does not depend on it)
@@ -11729,10 +11733,11 @@ targets (--to):
                         databases: create (the default; never touches an existing table), append,
                         truncate or replace; mssql:// also upsert: merge on the primary key, so a
                         rerun leaves the same rows)
-  --sql-constraints {keep,disable}
-                        mssql:// targets: keep (the default) or disable the foreign key and check
-                        constraints of tables that already exist while loading, then validate them
-                        (exit 1 and the constraints named when one does not hold)
+  --sql-constraints {keep,disable,keys,all,none}
+                        databases and SQL: keys (default) writes primary, foreign and unique keys;
+                        all also writes checks and literal defaults; none writes only primary
+                        keys. keep is the legacy alias for none. mssql:// disable temporarily
+                        disables existing foreign key and check constraints, then validates them
   --manifest            files: write a _SUCCESS file in each folder after its files
   --yes                 confirm writing to a non-local target (not a path, file://, console,
                         localhost); SHAPE_CONFIRM_REMOTE=1 does the same for scripts and notebooks
@@ -11855,16 +11860,17 @@ Exit codes:
                   [--format {parquet,csv,tsv,jsonl,ipc}] [--roll-rows N] [--roll-seconds S]
                   [--commit-rows N]
                   [--write-mode {overwrite,append,fail,create,truncate,replace,upsert}]
-                  [--sql-constraints {keep,disable}] [--sink-config SINK.KEY=VALUE] [--manifest]
-                  [--yes] [--checkpoint FILE] [--checkpoint-every N] [--checkpoint-seconds S]
-                  [--dead-letter URI] [--max-dead-letter N] [--fresh] [--batch-events N]
-                  [--queue-batches N] [--retries N] [--dry-run] [--progress | --no-progress]
-                  [--json] [--live-target DOMAIN|SCHEMA.json|PATH] [--live-target-seed N]
-                  [--live-target-scale PRESET] [--live-alerts FILE] [--live-report FILE]
-                  [--live-profile FILE] [--live-min-score N] [--live-min-table-score N]
-                  [--live-min-column-score N] [--live-drop POINTS] [--live-min-events N]
-                  [--live-min-progress F] [--live-interval N] [--live-interval-seconds S]
-                  [--live-sample N] [--live-key-cap N] [--no-live-profile] [--live-fail]
+                  [--sql-constraints {keep,disable,keys,all,none}] [--sink-config SINK.KEY=VALUE]
+                  [--manifest] [--yes] [--checkpoint FILE] [--checkpoint-every N]
+                  [--checkpoint-seconds S] [--dead-letter URI] [--max-dead-letter N] [--fresh]
+                  [--batch-events N] [--queue-batches N] [--retries N] [--dry-run]
+                  [--progress | --no-progress] [--json] [--live-target DOMAIN|SCHEMA.json|PATH]
+                  [--live-target-seed N] [--live-target-scale PRESET] [--live-alerts FILE]
+                  [--live-report FILE] [--live-profile FILE] [--live-min-score N]
+                  [--live-min-table-score N] [--live-min-column-score N] [--live-drop POINTS]
+                  [--live-min-events N] [--live-min-progress F] [--live-interval N]
+                  [--live-interval-seconds S] [--live-sample N] [--live-key-cap N]
+                  [--no-live-profile] [--live-fail]
                   DOMAIN|SCHEMA.json
 
 (experimental) Emit the rows of a domain (or of a generation schema file) as JSON-lines events: as
@@ -12026,10 +12032,11 @@ targets (--to):
                         databases: create (the default; never touches an existing table), append,
                         truncate or replace; mssql:// also upsert: merge on the primary key, so a
                         rerun leaves the same rows)
-  --sql-constraints {keep,disable}
-                        mssql:// targets: keep (the default) or disable the foreign key and check
-                        constraints of tables that already exist while loading, then validate them
-                        (exit 1 and the constraints named when one does not hold)
+  --sql-constraints {keep,disable,keys,all,none}
+                        databases and SQL: keys (default) writes primary, foreign and unique keys;
+                        all also writes checks and literal defaults; none writes only primary
+                        keys. keep is the legacy alias for none. mssql:// disable temporarily
+                        disables existing foreign key and check constraints, then validates them
   --sink-config SINK.KEY=VALUE
                         an option of one sink, e.g. abfss.account_name=acct; a secret must be a
                         reference (env://NAME, file://PATH, kv://VAULT/NAME)
@@ -12118,11 +12125,12 @@ Exit codes:
                     [--format {parquet,csv,tsv,jsonl,ipc}] [--roll-rows N] [--roll-seconds S]
                     [--commit-rows N]
                     [--write-mode {overwrite,append,fail,create,truncate,replace,upsert}]
-                    [--sql-constraints {keep,disable}] [--sink-config SINK.KEY=VALUE] [--manifest]
-                    [--yes] [--checkpoint FILE] [--checkpoint-every N] [--checkpoint-seconds S]
-                    [--dead-letter URI] [--max-dead-letter N] [--fresh] [--batch-events N]
-                    [--queue-batches N] [--retries N] [--dry-run] [--progress | --no-progress]
-                    [--json] [--live-target DOMAIN|SCHEMA.json|PATH] [--live-target-seed N]
+                    [--sql-constraints {keep,disable,keys,all,none}]
+                    [--sink-config SINK.KEY=VALUE] [--manifest] [--yes] [--checkpoint FILE]
+                    [--checkpoint-every N] [--checkpoint-seconds S] [--dead-letter URI]
+                    [--max-dead-letter N] [--fresh] [--batch-events N] [--queue-batches N]
+                    [--retries N] [--dry-run] [--progress | --no-progress] [--json]
+                    [--live-target DOMAIN|SCHEMA.json|PATH] [--live-target-seed N]
                     [--live-target-scale PRESET] [--live-alerts FILE] [--live-report FILE]
                     [--live-profile FILE] [--live-min-score N] [--live-min-table-score N]
                     [--live-min-column-score N] [--live-drop POINTS] [--live-min-events N]
@@ -12292,10 +12300,11 @@ targets (--to):
                         databases: create (the default; never touches an existing table), append,
                         truncate or replace; mssql:// also upsert: merge on the primary key, so a
                         rerun leaves the same rows)
-  --sql-constraints {keep,disable}
-                        mssql:// targets: keep (the default) or disable the foreign key and check
-                        constraints of tables that already exist while loading, then validate them
-                        (exit 1 and the constraints named when one does not hold)
+  --sql-constraints {keep,disable,keys,all,none}
+                        databases and SQL: keys (default) writes primary, foreign and unique keys;
+                        all also writes checks and literal defaults; none writes only primary
+                        keys. keep is the legacy alias for none. mssql:// disable temporarily
+                        disables existing foreign key and check constraints, then validates them
   --sink-config SINK.KEY=VALUE
                         an option of one sink, e.g. abfss.account_name=acct; a secret must be a
                         reference (env://NAME, file://PATH, kv://VAULT/NAME)

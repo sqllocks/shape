@@ -3014,6 +3014,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Semantic model metadata and role reads">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#opt-in-delta-table-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opt-in Delta table features
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -6434,6 +6451,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Semantic model metadata and role reads">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#opt-in-delta-table-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opt-in Delta table features
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -6813,7 +6847,7 @@ pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
-<div class="expected highlight"><pre><span></span><code>======================================= test session starts ========================================
+<div class="expected highlight"><pre><span></span><code>======================================= test session starts =================================
 platform linux -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0
 rootdir: &lt;checkout&gt;
 configfile: pyproject.toml
@@ -6822,7 +6856,7 @@ collected 1 item
 
 plugins/shape-fabric/tests/test_live_git_sync.py .                                           [100%]
 
-================================== 1 passed in 143.59s (0:02:23) ===================================
+================================== 1 passed in 143.59s (0:02:23) ============================
 </code></pre></div>
 </details>
 <p>Evidence: <a href="../evidence/transcripts/docs-transcripts-38320894194-6eb065e8f734-ubuntu-latest-git-sync-live.json">run 38320894194, ubuntu-latest, <code>6eb065e8f734</code></a>.</p>
@@ -6859,6 +6893,32 @@ metadata. <code>export-model --from-profile MODEL.shape</code> preserves model-o
 expressions under <code>skipped</code>. Model-profile diffs report <code>measure_change</code> and <code>role_change</code>,
 excluded from numeric drift gates. The TOM connection is read-only and sempy requires its
 specified model permissions; Shape does not deploy roles to a live model.</p>
+<h3 id="opt-in-delta-table-features">Opt-in Delta table features<a class="headerlink" href="#opt-in-delta-table-features" title="Permanent link">&para;</a></h3>
+<p>Shape's default Delta output remains reader 1 / writer 2, zone-less timestamps
+rewritten to UTC, suitable for the existing Fabric readers. <code>column_mapping="name"</code>
+raises the protocol to reader 2 / writer 5 and adds physical-name/id schema
+metadata. <code>deletion_vectors=true</code> enables reader 3 / writer 7 and
+<code>delta.enableDeletionVectors=true</code>; Shape itself writes no deletion-vector actions.
+<code>timestamp_ntz=true</code> preserves zone-less timestamps with reader 3 / writer 7 and
+<code>timestampNtz</code>. <code>constraints</code> require writer 3 (<code>checkConstraints</code>) and
+<code>generated_columns</code> writer 4 (<code>generatedColumns</code>); a generated date can be used by
+<code>partition_by</code>. Ordinary <code>table_properties</code> do not change the protocol.</p>
+<p>These features are opt-in and compose at the highest protocol version. Spark
+runtimes that support the declared protocol/features can read them and maintain
+those tables. SQL analytics endpoint support depends on the Fabric endpoint's
+current supported Delta features; do not assume a reader that accepts the default
+protocol can accept mapped, DV-enabled or timestampNtz tables. Inspect the actual
+protocol with <code>shape doctor --delta-table PATH --json</code>; plan the minimum feature
+union with <code>shape generate ... --format delta --dry-run --json --sink-config ...</code>.
+Use the default write when a SQL endpoint or older Spark reader's support has not
+been confirmed. Shape does not alter the endpoint or disable its protocol checks.</p>
+<p>The writer's opt-in features require verified deltalake 1.6.6 or newer and their
+public APIs. Unsupported versions or APIs are refused naming the installed and
+required versions; the optional extra's
+existing dependency floor is unchanged. Native DataFusion <code>QueryBuilder</code> reads
+mapped and advertised-DV tables correctly on that version; its PyArrow scanner
+requires Shape's existing DuckDB fallback for those features. See <code>docs/SINKS.md</code>
+for options, partitioned generated-column examples and pre-write validation costs.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Fabric+platform+inventory&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FFABRIC_PLATFORM%2F">Report a problem with this page</a></p>
 
 

@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "additionalProperties": true,
+      "properties": {
+        "alarms_outside_incidents": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "compare": {
+          "additionalProperties": true,
+          "properties": {
+            "disagreements": {
+              "type": "integer"
+            },
+            "entries": {
+              "items": {},
+              "type": "array"
+            }
+          },
+          "required": [
+            "disagreements",
+            "entries"
+          ],
+          "type": "object"
+        },
+        "entries": {
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "not_measured"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "status"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "format": {
+          "const": "shape-backtest-report"
+        },
+        "incidents": {
+          "items": {},
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "rules": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "since": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "summary": {
+          "additionalProperties": true,
+          "properties": {
+            "entries": {
+              "type": "integer"
+            },
+            "fail": {
+              "type": "integer"
+            },
+            "not_measured": {
+              "type": "integer"
+            },
+            "pass": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "entries",
+            "pass",
+            "fail",
+            "not_measured"
+          ],
+          "type": "object"
+        },
+        "until": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "type": "integer"
+        },
+        "window": {
+          "enum": [
+            "day",
+            "week",
+            "month"
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "version",
+        "name",
+        "window",
+        "summary",
+        "entries",
+        "rules"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "bytes": {
+          "type": "integer"
+        },
+        "content_id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "spilled": {
+          "const": true
+        }
+      },
+      "required": [
+        "spilled",
+        "content_id",
+        "path",
+        "bytes"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "rules_backtest result",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

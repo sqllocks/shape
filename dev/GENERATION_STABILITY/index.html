@@ -7089,7 +7089,9 @@ table with a struct or list column has no CSV or TSV form).</p>
 <ul>
 <li><code>hashes.json</code> (<code>format: "shape-golden-bytes"</code>, integer <code>version</code>, currently 1) holds the
   <code>seed</code>, the <code>rows</code>, the <code>shape_version</code> that wrote it and the digest of each file
-  (<code>&lt;spec&gt;/&lt;table&gt;.&lt;csv|tsv|jsonl|&lt;dialect&gt;.sql&gt;</code>).</li>
+  (<code>&lt;spec&gt;/&lt;table&gt;.&lt;csv|tsv|jsonl|&lt;dialect&gt;.sql&gt;</code>). Its optional <code>refusals</code> map records
+  the exact column-named diagnostic for SQL cases that declare decimals without dimensions;
+  their original inputs are retained. A v1 corpus without this field remains readable.</li>
 <li><code>lines.json</code> (<code>format: "shape-golden-bytes-lines"</code>) holds a short digest of every line, so a
   difference is reported as the first line that differs, with the line written now.</li>
 </ul>
@@ -7158,8 +7160,8 @@ python<span class="w"> </span>scripts/golden_bytes.py<span class="w"> </span>--u
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
-<div class="expected highlight"><pre><span></span><code>418 files match the golden byte corpus
-wrote 418 file digests to tests/generation/golden_bytes/hashes.json
+<div class="expected highlight"><pre><span></span><code>390 files and 28 named refusals match the golden byte corpus
+wrote 390 file digests to tests/generation/golden_bytes/hashes.json
 </code></pre></div>
 </details>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Generation+stability&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FGENERATION_STABILITY%2F">Report a problem with this page</a></p>
