@@ -244,6 +244,7 @@ class SnowflakeSink(DatabaseSink):
     def connect_params(self, plan: Plan) -> dict[str, Any]:
         t = plan.target
         params: dict[str, Any] = {"account": t.host, "user": t.user, "autocommit": False}
+        params["session_parameters"] = {"TIMEZONE": "UTC"}
         if t.database:
             params["database"] = t.database
         for key in ("schema", "warehouse", "role"):
@@ -288,7 +289,7 @@ class SnowflakeSink(DatabaseSink):
     @staticmethod
     def copy_sql(qualified: str, stage: str, *, nested: bool = False) -> str:
         # identifiers only, each checked and quoted
-        options = " USE_LOGICAL_TYPE = TRUE USE_VECTORIZED_SCANNER = TRUE" if nested else ""
+        options = " USE_LOGICAL_TYPE = TRUE" + (" USE_VECTORIZED_SCANNER = TRUE" if nested else "")
         return (
             f"COPY INTO {qualified} FROM {stage} FILE_FORMAT = (TYPE = PARQUET{options}) "
             "MATCH_BY_COLUMN_NAME = CASE_SENSITIVE PURGE = TRUE"

@@ -133,13 +133,6 @@ def positive_int(value: Any, name: str, *, optional: bool = False) -> int | None
     return value
 
 
-def _observed_length(column: pa.ChunkedArray | pa.Array) -> int:
-    if not (pat.is_string(column.type) or pat.is_large_string(column.type)):
-        return -1
-    longest = pc.max(pc.utf8_length(column)).as_py()
-    return int(longest or 0)
-
-
 def column_definitions(
     schema: pa.Schema,
     first: pa.RecordBatch | None,
@@ -148,30 +141,24 @@ def column_definitions(
     dialect: str,
     nested: str = "native",
 ) -> list[tuple[str, str, bool]]:
-    """``(name, sql type, nullable)`` per column: core's type map, with string columns wide
-    enough for the first batch (a later, longer value fails the write rather than truncating)."""
+    """``(name, sql type, nullable)`` per column: core's type map.
+    ``first`` is retained for API compatibility but never determines a column width."""
     out: list[tuple[str, str, bool]] = []
-    for index, field in enumerate(schema):
+    for field in schema:
         info: dict[str, Any] = dict(meta.get(field.name, {}))
         sql_type: str | None = None
         if is_nested(field.type):
             validate_json_shape(field.type, field.name)
             if nested == "native":
                 sql_type = native_type(field, dialect)
-        if (
-            sql_type is None
-            and core_sql._logical_type(field.type) == "string"
-            and not info.get("max_length")
-        ):
-            seen = _observed_length(first.column(index)) if first is not None else 0
-            if not (pat.is_string(field.type) or pat.is_large_string(field.type)):
-                seen = -1
-            if seen < 0 or seen > MAX_VARCHAR:
-                sql_type = _TEXT[dialect]  # nested, dictionary or very long text
-            else:
-                info["max_length"] = max(255, seen)
         if sql_type is None:
-            sql_type = core_sql._column_type(field, info, dialect)
+            sql_type = core_sql._column_type(field, info, dialect, key=field.name in key)
+            if (
+                core_sql._logical_type(field.type) == "string"
+                and not (pat.is_string(field.type) or pat.is_large_string(field.type))
+                and not info.get("max_length")
+            ):
+                sql_type = _TEXT[dialect]
         nullable = bool(info.get("nullable", True)) and field.name not in key
         out.append((field.name, sql_type, nullable))
     return out
@@ -252,7 +239,11 @@ def _converter(
     so they become NULL (as in the script dialect)."""
     kind = field.type
     if pat.is_timestamp(kind) and kind.tz is not None:
-        return lambda v: None if v is None else _utc_naive(v)
+        return lambda v: (
+            None
+            if v is None
+            else (v.astimezone(dt.UTC) if dialect == "postgres" else _utc_naive(v))
+        )
     if is_nested(kind):
         if nested == "native":
             if dialect == "postgres" and native_type(field, dialect).endswith("[]"):
@@ -309,4 +300,8 @@ def normalize(
                     f"a whole number in the int64 range ({exc})"
                 ) from None
         arrays.append(column)
-    return pa.RecordBatch.from_arrays(arrays, names=batch.schema.names)
+    schema = pa.schema(
+        [field.with_type(column.type) for field, column in zip(batch.schema, arrays, strict=True)],
+        metadata=batch.schema.metadata,
+    )
+    return pa.RecordBatch.from_arrays(arrays, schema=schema)

@@ -42,7 +42,7 @@ import logging
 import re
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import ExitStack, contextmanager
-from typing import Any
+from typing import Any, cast
 from urllib.parse import parse_qsl, unquote, urlsplit
 
 import pyarrow as pa  # type: ignore[import-untyped]
@@ -153,6 +153,21 @@ class SqlDatabaseSink:
 
     prepare_constraints = _prepare_constraints
 
+    def ddl(self, uri: str, table: str, schema: pa.Schema, **options: Any) -> str:
+        """CREATE TABLE without sign-in or a connection."""
+        from urllib.parse import parse_qs, urlsplit
+
+        query = parse_qs(urlsplit(uri).query)
+        table = _prefixed_table(table, dict(options))
+        return _tsql.create_table_sql(
+            str(options.get("schema_name") or query.get("schema", ["dbo"])[0]),
+            table,
+            schema,
+            warehouse=False,
+            columns=options.get("columns"),
+            primary_key=options.get("primary_key") or (),
+        )
+
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
         table = _prefixed_table(table, opts)
@@ -195,6 +210,21 @@ class WarehouseSink:
     schemes = ("warehouse",)
 
     prepare_constraints = _prepare_constraints
+
+    def ddl(self, uri: str, table: str, schema: pa.Schema, **options: Any) -> str:
+        """CREATE TABLE without sign-in or a connection."""
+        from urllib.parse import parse_qs, urlsplit
+
+        query = parse_qs(urlsplit(uri).query)
+        table = _prefixed_table(table, dict(options))
+        return _tsql.create_table_sql(
+            str(options.get("schema_name") or query.get("schema", ["dbo"])[0]),
+            table,
+            schema,
+            warehouse=True,
+            columns=options.get("columns"),
+            primary_key=options.get("primary_key") or (),
+        )
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
@@ -250,6 +280,25 @@ class SynapseSink:
 
     def __init__(self, *, connect: Callable[..., Any] | None = None) -> None:
         self._connect = connect
+
+    def ddl(self, uri: str, table: str, schema: pa.Schema, **options: Any) -> str:
+        """The pool's DDL, including checked distribution/index options, without sign-in."""
+        from urllib.parse import parse_qs
+
+        from .synapse import table_options
+
+        query = parse_qs(urlsplit(uri).query)
+        table = _prefixed_table(table, dict(options))
+        return _tsql.create_table_sql(
+            str(options.get("schema_name") or query.get("schema", ["dbo"])[0]),
+            table,
+            schema,
+            warehouse=True,
+            synapse=True,
+            columns=options.get("columns"),
+            primary_key=options.get("primary_key") or (),
+            options=table_options(options.get("distribution"), options.get("index"), schema),
+        )
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         opts = dict(options)
@@ -314,7 +363,9 @@ class SynapseSink:
             if commit_rows is None:
                 rows = writer.write_table(table, batches, **keys)
             else:
-                rows = self._write_in_loads(writer, table, batches, keys, commit_rows)
+                rows = self._write_in_loads(
+                    cast(SynapseWriter, writer), table, batches, keys, commit_rows
+                )
             log.debug("wrote %d rows of table %r to %s", rows, table, writer.destination)
             return rows
 
@@ -510,6 +561,21 @@ class SqlServerSink:
 
     name = "sqlserver"
     schemes = ("mssql", "sqlserver")
+
+    def ddl(self, uri: str, table: str, schema: pa.Schema, **options: Any) -> str:
+        """CREATE TABLE without sign-in or a connection."""
+        from urllib.parse import parse_qs, urlsplit
+
+        query = parse_qs(urlsplit(uri).query)
+        table = _prefixed_table(table, dict(options))
+        return _tsql.create_table_sql(
+            str(options.get("schema_name") or query.get("schema", ["dbo"])[0]),
+            table,
+            schema,
+            warehouse=False,
+            columns=options.get("columns"),
+            primary_key=options.get("primary_key") or (),
+        )
 
     def __init__(self, *, connect: Callable[..., Any] | None = None) -> None:
         self._connect = connect

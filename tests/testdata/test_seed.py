@@ -381,8 +381,10 @@ def test_the_sql_server_check_goes_through_its_connection_helper(monkeypatch):
 # ---- the SQL script target --------------------------------------------------------------------
 
 
-def test_a_script_target_writes_one_numbered_script_per_table_in_foreign_key_order(tmp_path):
-    result = seed_target("retail", f"sql://{tmp_path / 'out'}", scale="tiny")
+def test_a_script_target_writes_one_numbered_script_per_table_in_foreign_key_order(
+    tmp_path, retail_schema
+):
+    result = seed_target(retail_schema, f"sql://{tmp_path / 'out'}", scale="tiny")
     files = sorted(p.name for p in (tmp_path / "out").iterdir())
     assert files == [Path(f).name for f in result.files]
     assert files[0] == "01_customer.sql" and files[-1] == "09_return.sql"
@@ -405,14 +407,14 @@ def test_script_target_refuses_existing_scripts_in_create_mode_and_writes_nothin
     assert (out / "07_order.sql").read_text() == "-- mine\n"
 
 
-def test_a_truncate_rerun_with_the_same_seed_gives_byte_identical_scripts(tmp_path):
+def test_a_truncate_rerun_with_the_same_seed_gives_byte_identical_scripts(tmp_path, retail_schema):
     out = tmp_path / "out"
-    seed_target("retail", f"sql://{out}", scale="tiny", seed=3, mode="truncate")
+    seed_target(retail_schema, f"sql://{out}", scale="tiny", seed=3, mode="truncate")
     first = {p.name: p.read_bytes() for p in out.iterdir()}
     assert b"DROP TABLE" in first["07_order.sql"]  # a rerun replaces the table
-    seed_target("retail", f"sql://{out}", scale="tiny", seed=3, mode="truncate")
+    seed_target(retail_schema, f"sql://{out}", scale="tiny", seed=3, mode="truncate")
     assert {p.name: p.read_bytes() for p in out.iterdir()} == first
-    seed_target("retail", f"sql://{out}", scale="tiny", seed=4, mode="truncate")
+    seed_target(retail_schema, f"sql://{out}", scale="tiny", seed=4, mode="truncate")
     assert {p.name: p.read_bytes() for p in out.iterdir()} != first
 
 
@@ -422,10 +424,10 @@ def test_append_scripts_carry_rows_without_a_table_definition(tmp_path):
     assert "INSERT INTO" in text and "CREATE TABLE" not in text and "DROP TABLE" not in text
 
 
-def test_the_scripts_load_in_order_into_a_real_database(tmp_path):
+def test_the_scripts_load_in_order_into_a_real_database(tmp_path, retail_schema):
     """The postgres-dialect scripts run in file order against SQLite with foreign keys on the
     data: every child row finds its parent."""
-    result = seed_target("retail", f"sql://{tmp_path}?dialect=postgres", scale="tiny")
+    result = seed_target(retail_schema, f"sql://{tmp_path}?dialect=postgres", scale="tiny")
     db = sqlite3.connect(":memory:")
     for script in sorted(glob.glob(str(tmp_path / "*.sql"))):
         db.executescript(Path(script).read_text())
@@ -438,17 +440,17 @@ def test_the_scripts_load_in_order_into_a_real_database(tmp_path):
     assert orphans == 0
 
 
-def test_script_target_dialects_and_bad_targets(tmp_path):
-    seed_target("retail", f"sql://{tmp_path / 'p'}?dialect=postgres", scale="tiny")
+def test_script_target_dialects_and_bad_targets(tmp_path, retail_schema):
+    seed_target(retail_schema, f"sql://{tmp_path / 'p'}?dialect=postgres", scale="tiny")
     assert 'CREATE TABLE "order"' in (tmp_path / "p" / "07_order.sql").read_text()
-    seed_target("retail", f"sql://{tmp_path / 'm'}?dialect=mysql", scale="tiny")
+    seed_target(retail_schema, f"sql://{tmp_path / 'm'}?dialect=mysql", scale="tiny")
     assert "CREATE TABLE `order`" in (tmp_path / "m" / "07_order.sql").read_text()
     with pytest.raises(ShapeError, match="unknown dialect 'oracle'"):
-        seed_target("retail", f"sql://{tmp_path / 'x'}?dialect=oracle", scale="tiny")
+        seed_target(retail_schema, f"sql://{tmp_path / 'x'}?dialect=oracle", scale="tiny")
     with pytest.raises(ShapeError, match="unknown parameter 'mode'"):
-        seed_target("retail", f"sql://{tmp_path / 'x'}?mode=1", scale="tiny")
+        seed_target(retail_schema, f"sql://{tmp_path / 'x'}?mode=1", scale="tiny")
     with pytest.raises(ShapeError, match="give the directory"):
-        seed_target("retail", "sql://", scale="tiny")
+        seed_target(retail_schema, "sql://", scale="tiny")
     assert not (tmp_path / "x").exists()
 
 
@@ -506,3 +508,8 @@ def test_the_sql_server_append_check_reads_the_keys_through_its_connection_helpe
     assert "1 more" not in str(err.value)  # 500 is not a generated key
     assert statements == ["SELECT [promotion_id] FROM [dbo].[promotion]", "closed"]
     assert sink.written == []
+
+
+def test_original_retail_script_refuses_missing_decimal_dimensions(tmp_path):
+    with pytest.raises(ShapeError, match="column 'lat'.*precision.*None"):
+        seed_target("retail", f"sql://{tmp_path / 'out'}", scale="tiny")

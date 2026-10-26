@@ -111,7 +111,7 @@ CREATE TABLE through the SQL sink's table emitter (the same quoting and type spe
 
 | Contract rule | DDL |
 |---|---|
-| `dtype` | column type: `integer` BIGINT, `float`, `string` VARCHAR (widened to the longest allowed value), `boolean`, `date`, `datetime` timestamp |
+| `dtype` | column type: `integer` BIGINT, `float`, `string` unbounded unless the emitter declares a width for allowed values, `boolean`, `date`, `datetime` timestamp |
 | `nullable: false` | `NOT NULL` (others `NULL`) |
 | `unique: true` | `CONSTRAINT UQ_<table>_<column> UNIQUE (col)`; Fabric Warehouse: `UNIQUE NONCLUSTERED (col) NOT ENFORCED` |
 | `min`, `max` (numbers) | `CHECK (col BETWEEN min AND max)`, or `>= min` / `<= max` for one bound |
@@ -223,10 +223,10 @@ Not expressible: `dtype` (a GX type name depends on the backend: pandas, Spark o
 ```sql
 CREATE TABLE [orders] (
     [order_id]                     BIGINT               NOT NULL,
-    [customer_email]               NVARCHAR(255)        NOT NULL,
+    [customer_email]               NVARCHAR(MAX)        NOT NULL,
     [status]                       NVARCHAR(255)        NOT NULL,
     [amount]                       FLOAT                NOT NULL,
-    [discount_code]                NVARCHAR(255)        NULL,
+    [discount_code]                NVARCHAR(MAX)        NULL,
     [is_gift]                      BIT                  NULL,
     [placed_at]                    DATETIME2            NOT NULL,
     CONSTRAINT [UQ_orders_order_id] UNIQUE ([order_id]),

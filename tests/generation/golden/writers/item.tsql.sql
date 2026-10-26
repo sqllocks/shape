@@ -15,7 +15,7 @@ CREATE TABLE [dbo].[item] (
     [ratio]                        FLOAT                NULL,
     [active]                       BIT                  NOT NULL,
     [born]                         DATE                 NULL,
-    [seen]                         DATETIME2            NULL,
+    [seen]                         DATETIME2(6)         NULL,
     CONSTRAINT [PK_item] PRIMARY KEY ([id])
 );
 GO

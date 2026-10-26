@@ -100,9 +100,20 @@ def _create(
         }
         for c in table.columns
     }
-    text: str = sink._ddl(
-        table.name, qualified, schema, meta, list(table.primary_key), base, fabric, options, use_go
-    )
+    try:
+        text: str = sink._ddl(
+            table.name,
+            qualified,
+            schema,
+            meta,
+            list(table.primary_key),
+            base,
+            fabric,
+            options,
+            use_go,
+        )
+    except ValueError as exc:
+        raise DesignError(str(exc)) from exc
     return text
 
 

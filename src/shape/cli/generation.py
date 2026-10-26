@@ -630,14 +630,19 @@ def _generate_schema(
     if a.dry_run:
         plan = engine.dry_run()
         run.set(rows=plan.total_rows, tables=len(plan.order))
+        ddl = _target_ddl(a, engine.schema)
         constraints = _constraint_preview(a, schema, list(plan.order))
         if a.json:
             payload = {**plan.to_dict(), **_delta_protocol(a, schema, list(plan.order))}
             if constraints:
                 payload["constraint_ddl"] = constraints
+            if ddl:
+                payload["ddl"] = ddl
             _dump(payload)
         else:
             print(plan.render())
+            for statement in ddl:
+                print(statement["sql"])
             _print_delta_protocol(a, schema, list(plan.order))
             if constraints:
                 print("\nConstraint DDL (preview):")
@@ -710,6 +715,7 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     if a.dry_run:
         plan = engine.dry_run()
         run.set(rows=plan.total_rows, tables=len(plan.order))
+        ddl = _target_ddl(a, engine.schema)
         constraints = _constraint_preview(a, schema, list(plan.order))
         if a.json:
             payload = {
@@ -719,9 +725,13 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
             }
             if constraints:
                 payload["constraint_ddl"] = constraints
+            if ddl:
+                payload["ddl"] = ddl
             _dump(payload)
         else:
             print(plan.render())
+            for statement in ddl:
+                print(statement["sql"])
             _print_delta_protocol(a, schema, list(plan.order))
             if constraints:
                 print("\nConstraint DDL (preview):")
@@ -1098,3 +1108,71 @@ def run(a: argparse.Namespace) -> int:
 
 
 __all__ = ["COMMANDS", "add_arguments", "load_target", "run"]
+
+
+def _target_ddl(a: argparse.Namespace, schema: GenSchema) -> list[dict[str, str]]:
+    """Resolve declared output column types without executing any generator or signing in."""
+    if not getattr(a, "to", None):
+        return []
+    import pyarrow as pa  # type: ignore[import-untyped]
+
+    from shape.cli.to import target_options
+    from shape.io.targets import scheme_of, sink_for_target, sink_names_by_scheme
+    from shape.plugins.schemes import redact
+
+    opts = target_options(
+        a, "parquet" if a.format == "summary" else a.format, list(a.to), offline=True
+    )
+    result = []
+    registered = sink_names_by_scheme()
+    for uri in a.to:
+        if (scheme_of(uri) or "") not in registered:
+            continue
+        name, sink = sink_for_target(uri)
+        ddl = getattr(sink, "ddl", None)
+        if not callable(ddl):
+            continue
+        for table in schema.tables.values():
+            fields = []
+            for col in table.columns.values():
+                typ = col.generator.get("output_type") or col.type
+                types = {
+                    "integer": pa.int64(),
+                    "int64": pa.int64(),
+                    "float": pa.float64(),
+                    "float64": pa.float64(),
+                    "boolean": pa.bool_(),
+                    "bool": pa.bool_(),
+                    "string": pa.string(),
+                    "uuid": pa.string(),
+                    "binary": pa.binary(),
+                    "date": pa.date32(),
+                    "timestamp": pa.timestamp("us"),
+                    "time": pa.time64("us"),
+                }
+                if not col.generator.get("output_type") and col.strategy == "choice":
+                    arrow = pa.array(col.generator.get("values", [])).type
+                elif not col.generator.get("output_type") and col.strategy == "constant":
+                    arrow = pa.scalar(col.generator.get("value")).type
+                elif not col.generator.get("output_type") and col.strategy == "temporal":
+                    arrow = pa.timestamp(str(col.generator.get("unit", "us")))
+                elif typ == "decimal":
+                    if col.precision is None or col.scale is None:
+                        raise ValueError(
+                            f"column {table.name}.{col.name}: decimal needs precision and scale"
+                        )
+                    arrow = pa.decimal128(col.precision, col.scale)
+                else:
+                    arrow = types.get(str(typ), pa.string())
+                fields.append(pa.field(col.name, arrow))
+            options = opts.for_sink(name, schema, table.name)
+            if opts.write_mode:
+                options["write_mode"] = opts.write_mode
+            result.append(
+                {
+                    "target": redact(uri),
+                    "table": table.name,
+                    "sql": ddl(uri, table.name, pa.schema(fields), **options),
+                }
+            )
+    return result
