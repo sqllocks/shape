@@ -375,6 +375,7 @@ dev = [
   "filelock==3.20.3",
   "setuptools>=68",
   "pytest>=9.0.3",
+  "pytest-xdist==3.8.0",
   "pytest-cov>=6",
   "coverage>=7.10",
   "hypothesis>=6.115",
