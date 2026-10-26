@@ -697,7 +697,7 @@ dbt build --project-dir my_dbt_project --profiles-dir my_dbt_project
 
 ```bash {.runnable-reference}
 set -o pipefail
-pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO" -e "$SHAPE_DOCS_REPO/plugins/shape-dbt"
+pip install --quiet --no-deps --no-build-isolation -e . -e plugins/shape-dbt
 python -m pytest -q -m "not dbt" plugins/shape-dbt/tests | sed -E 's/( in [0-9]+(\.[0-9]+)?s) \([0-9]+:[0-9]{2}:[0-9]{2}\)$/\1/' # no dbt needed
 python -c 'import dbt; print("dbt-duckdb is installed")'                               # the dbt job in CI installs it; core never does
 python -m pytest -q -m dbt plugins/shape-dbt/tests | sed -E 's/( in [0-9]+(\.[0-9]+)?s) \([0-9]+:[0-9]{2}:[0-9]{2}\)$/\1/' # dbt build against DuckDB

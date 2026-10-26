@@ -183,7 +183,7 @@ Run these commands in order after preparing the fixtures above.
 <!-- example: 0 -->
 
 ```bash {.runnable-reference}
-pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO"
+pip install --quiet --no-deps --no-build-isolation -e .
 shape init my-feed --source orders
 cd my-feed && shape project validate
 ```
