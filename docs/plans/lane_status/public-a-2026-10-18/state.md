@@ -6,7 +6,7 @@ Updated 2026-10-25 23:23 UTC. This file is the current checkpoint; lane records 
 
 Continue until all seven assigned issues are merged or legitimately parked. Do not end a turn merely to wait or ask. Original prompt: `/workspace/attachments/9302a188-787d-4428-9403-3510325ce6a1/4-NEW-WINDOW-shape-public-A.md`. Read it and this state after any restart.
 
-**2/7 merged (28.6% done), 5/7 unmerged (71.4%). Four active (57.1%); one parked (14.3%).** W9-01/#2 mergedPR45 andOracleW9-15/#16 mergedPR39. Currentmain90fbff999bc95e255b3dbd90b76278441a735b41 (LeadBdbt), freshCIpending; priorOraclemain3b19all30triggeredchecksgreen andrepairmainc1ffall40green. Remaining37/38/44 refreshedONCEtoDBTmain90, signed/pushed/independentlyAPPROVED. No codeconflicts/localtestreruns; priorOracleintegration195targetedperkernel+2docspages+staticgreen. 37exact-headCIactive;38/44CIdependency-pauseduntiltheirupstreammerges. Delta07 awaitsactual44main. Frozen#4parkunchanged. No directmainpushes. FirstrepairWindowsfailureunknownriskpreservedbelow.
+**2/7 merged (28.6% done), 5/7 unmerged (71.4%). Four active (57.1%); one parked (14.3%).** W9-01/#2 mergedPR45 andOracleW9-15/#16 mergedPR39. Currentmain90fbff999bc95e255b3dbd90b76278441a735b41 (LeadBdbt), freshCIall30triggeredchecksgreen; priorOraclemain3b19all30triggeredchecksgreen andrepairmainc1ffall40green. Remaining37/38/44 refreshedONCEtoDBTmain90, signed/pushed/independentlyAPPROVED. No codeconflicts/localtestreruns; priorOracleintegration195targetedperkernel+2docspages+staticgreen. 37exact-headCIactive;38/44CIdependency-pauseduntiltheirupstreammerges. Delta07 awaitsactual44main. Frozen#4parkunchanged. No directmainpushes. FirstrepairWindowsfailureunknownriskpreservedbelow.
 
 Give meaningful commentary at least every60seconds while working, quantified totals about every5minutes and immediately on merge/blocker changes. CI counts are a separate metric from issues merged.
 
@@ -213,3 +213,10 @@ Whitespaceverification:37PR-scopegitdiffcheck0.38/44exit2solelyexistingextraEOFb
 Observedhostedjob-startdelay50–53minutesinpriorcloudmatrix; current37wasqueuedwhile38/44consumedrunners. Allremainingactiveissuesformactualdependencychain:37→38→44→07; no independenteligiblelaneisbeingserialized. Current38/44headsMUSTmergefreshactualmainafterupstreamPRsland, sotheircurrentfullsuitescannotserveaseventualexact-head/current-base mergeevidence. Afterverifyingexact38cac/f10headsandunmergeddependencies,canceledonlytheirunfinishedownworkflows. KeepPRsready/reviewed, statusCI-PAUSEDnotgreen; no park/skip/assertion/workflow/gatechange. Preserve37andmain90runs,andallotherownership. IndependentreviewerassessedthisiswithinOwnerthroughputauthorizationandpreservesordering,parallelworkandallgates; no permissionflow.
 
 Afteractual37mainmerge, refresh38and44ONCE/pushsignedasrequired. RunalltriggeredCIon38nexteligiblehead; pause44newheadCIagainuntilactual38mainmerge. After38main, refresh44/runalltriggeredCIasusual. Anynewindependenteligiblelanerunsparallel. Nevermergedeferred/canceledheadwithoutallrequiredexact-headgreenchecks. No rawCIarchives/receiptsadded. Nextactionmonitor37/main, promptlydiagnosefailuresandmerge37whenreviewed/current/allgreen.
+
+## DBT merged main verified green — 2026-10-26
+
+Actualcurrentmain90fbff999bc95e255b3dbd90b76278441a735b41: all30triggeredchecksgreen, alltriggeredworkflowsoverallgreen, bothkernelmodesincluded. RootdidnoteditormergeLeadBbranch; thisiscurrentbasehealthverification.37stillneedsremainingexactheadjobs;38/44remainCIdependency-paused(notgreen). Greenbaseworkflows:
+- Security https://github.com/sqllocks/shape/actions/runs/40243508316
+- Documentation https://github.com/sqllocks/shape/actions/runs/40243508311
+- CI https://github.com/sqllocks/shape/actions/runs/40243508314
