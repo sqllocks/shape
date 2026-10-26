@@ -2067,6 +2067,11 @@ Converting a full capture to the safe form now gives a different content ID when
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
 
+- W9-16: optional native Apache Iceberg source and sink with local SQLite/file or
+  named catalogs, native nested types, width restoration, partition transforms,
+  snapshot micro-batches/fingerprints, time travel and namespace profiling. CLI
+  URI targets and additive bridge API 1.2 target arguments are supported.
+
 ### W9-10
 
 - Read dbt semantic models and list singular tests in import metadata.

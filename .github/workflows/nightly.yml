@@ -738,3 +738,20 @@ jobs:
             bench-out/baseline_freeze.txt
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
+
+  iceberg-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait iceberg-rest
+      - run: uv run --locked --no-sync python -m pytest -q -m emulator tests/builtins/test_iceberg_emulator.py
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v

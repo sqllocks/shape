@@ -553,6 +553,30 @@ def profile(
                 if name is not None:
                     opts["name"] = name
                 return cast(Profile, plugin.profile_database(source, **opts))
+            specialized = getattr(plugin, "profile_source", None)
+            if plugin is not None and specialized is not None and plugin.can_open(source):
+                if sample_rows is not None or tables is not None:
+                    raise SourceError("sample_rows and tables need a database URI source")
+                options = dict(_SOURCE_OPTIONS.get() or {})
+                if as_of is not None:
+                    options["as_of"] = as_of
+                options["profile_options"] = dict(
+                    name=name,
+                    joint=joint,
+                    reference_pairs=reference_pairs,
+                    validators=validators,
+                    time_column=time_column,
+                    sample=sample,
+                    sample_method=sample_method,
+                    sample_seed=sample_seed,
+                    sketches=sketches,
+                    univariate=univariate,
+                    multivariate=multivariate,
+                )
+                result = specialized(source, **options)
+                if not isinstance(result, Profile):
+                    raise TypeError("source profile hook must return a Profile")
+                return result
     if sample_rows is not None or tables is not None:
         raise SourceError("sample_rows and tables need a database URI source")
 

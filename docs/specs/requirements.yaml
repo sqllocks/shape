@@ -736,6 +736,37 @@ requirements:
   owner: integrations
 
 
+- id: SHAPE-ICEBERG-001
+  title: Optional Iceberg catalogs
+  text: Iceberg sources and sinks load their optional dependency only when used and accept local SQL or named catalogs with credential references.
+  verify: [conformance, offline-iceberg]
+  tests: [tests/builtins/test_iceberg.py, tests/security/test_iceberg_credentials.py]
+  owner: plugins
+- id: SHAPE-ICEBERG-002
+  title: Atomic Iceberg snapshots
+  text: Iceberg writes validate native transforms and schemas before data writes, reject evolution, and commit one snapshot per batch with optional fingerprints.
+  verify: [conformance, offline-iceberg]
+  tests: [tests/builtins/test_iceberg.py]
+  owner: plugins
+- id: SHAPE-ICEBERG-003
+  title: Native Iceberg type fidelity
+  text: Iceberg retains native nested types and source integer widths; unsupported precision and implicit nanosecond loss are refused by column name.
+  verify: [conformance, offline-iceberg]
+  tests: [tests/builtins/test_iceberg.py]
+  owner: plugins
+- id: SHAPE-ICEBERG-004
+  title: Iceberg snapshot provenance
+  text: Iceberg profiles record catalog, identifier and snapshot provenance, accept snapshot time travel and namespaces, and take row counts from snapshot summaries.
+  verify: [conformance, offline-iceberg]
+  tests: [tests/builtins/test_iceberg.py]
+  owner: plugins
+- id: SHAPE-ICEBERG-005
+  title: Iceberg command integration
+  text: Generation, profiling and bridge commands accept Iceberg URIs without persisting credentials and preserve dataset identity across offline round trips.
+  verify: [conformance, offline-iceberg, secret-scan]
+  tests: [tests/builtins/test_iceberg.py, tests/bridge/test_iceberg.py, tests/security/test_iceberg_credentials.py]
+  owner: plugins
+
 - id: SHAPE-DBS-001
   title: Bounded PostgreSQL and MySQL catalog profiling
   level: L1
