@@ -2206,7 +2206,6 @@ original checkpoints; the merged PR and its checks govern final acceptance.
 | 155 | W8-04 | done | [Portable math and cross-CPU acceptance](lane_status/W8-04b.md); `tests/generation/test_w8_04b_cross_cpu.py` and `test_w8_04_byte_identity.py`. |
 | 156 | W8-05 | done | Bridge 1.4 vault management; targeted red/green and final CI in [public finish evidence](lane_status/public-finish-2026-10-26.md). |
 | 157 | W8-06 | done (reserved identifiers stay the default) | Integrated in INT-20 (2026-10-05, §2.3); issue #766. |
-
 | 158 | W9-01 | done | [PR45](https://github.com/sqllocks/shape/pull/45), merge `43d3f9ae`; [lane acceptance](lane_status/W9-01.md). |
 | 159 | W9-02 | done | [PR37](https://github.com/sqllocks/shape/pull/37), merge `314749d3`; [lane acceptance](lane_status/W9-02.md). |
 | 160 | W9-03 | done | [PR49](https://github.com/sqllocks/shape/pull/49), merge `77a1c2a5`; [lane acceptance](lane_status/W9-03.md). |
