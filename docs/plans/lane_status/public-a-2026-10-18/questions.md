@@ -46,9 +46,9 @@ Recommendation: resolve #5 and merge it first, then finish targeted local accept
 
 These questions are resolved; all three lanes resumed.
 
-## NEW pending — #4 frozen bridge1.1 DDL contract (2026-10-20)
+## RESOLVED — #4 frozen Bridge DDL contract (Owner 2026-10-26)
 
-Status: PARKED, separate from all three resolved Owner decisions. Issue evidence/question: https://github.com/sqllocks/shape/issues/4#issuecomment-6302585629. Preserved code63ab15c is independently code-approved, with87follow-up tests green; frozen gate remains red.
+Status: RESOLVED by the Owner on 2026-10-26 through version-specific rendering. #4 is unparked and included in the final integration batch. The original question below is historical. Issue evidence/question: https://github.com/sqllocks/shape/issues/4#issuecomment-6302585629. Preserved code63ab15c is independently code-approved, with87follow-up tests green; frozen gate remains red.
 
 `tests/bridge/test_compat_1_1.py` explicitly replays frozen1.1 responses with every field equal except api_version. Required canonical string mapping changes only five historical result.ddl declarations in docs/bridge/vectors/1.1/design.json: star.month_name and day_of_week_name NVARCHAR(255)→NVARCHAR(MAX); postgres-3nf.city.city, city_city.city and city_city.country VARCHAR(255)→TEXT. All other response fields are unchanged. Frozen vectors/fixtures remain untouched. Current nonfrozen vectors carry the actual corrected DDL. No existing version-aware DDL compatibility path exists.
 
@@ -58,3 +58,11 @@ Options:
 - Keep #4 parked until the contract policy is resolved.
 
 Other six issues continue. No gate, assertion, tolerance, frozen artifact or Owner-approved refusal count changed to hide this conflict.
+
+## Owner ruling — Bridge 1.3, 2026-10-26
+
+Do not amend frozen Bridge outputs. Requests for 1.1 and 1.2 retain their historical DDL, including dim_date.month_name/day_of_week_name NVARCHAR(255), and dw.city.city/city_city.city/city_city.country VARCHAR(255). Frozen fields, exact assertions, fixtures and baselines remain unchanged.
+
+CLI and Python API use corrected unbounded types; new Bridge minor1.3 does too. Add1.3 under existing versioning and negotiation rules. Preserve undeclared-width indexed-string named preconnection refusal on every version. New1.3/CLI/API tests cover all five columns, negative and boundary cases. Stable-API changes are additive only. Add docs/BRIDGE.md1.3 explanation and Unreleased changelog entry.
+
+The Owner confirmed this resolves the last policy blocker and directed inclusion of #4 with #5/#7/#8 in the ONE final integration PR. No unresolved Owner policy questions remain. Full exact-head CI and independent review remain required.
