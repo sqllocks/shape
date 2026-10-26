@@ -91,6 +91,7 @@ class PEnum:
     full: str
     values: list[str]
     line: int
+    numbers: list[int] = field(default_factory=list)
 
 
 @dataclass
@@ -249,6 +250,7 @@ class _Parser:
         full = f"{scope}.{name.text}" if scope else name.text
         self.expect("{")
         values: list[str] = []
+        numbers: list[int] = []
         seen_numbers: set[int] = set()
         while not self.accept("}"):
             t = self.next()
@@ -269,13 +271,14 @@ class _Parser:
                 )
             seen_numbers.add(int(num.text, 0))
             values.append(t.text)
+            numbers.append(int(num.text, 0))
             if self.accept("["):
                 while not self.accept("]"):
                     self.next()
             self.expect(";")
         if not values:
             raise self.fail(f"enum {name.text!r} has no values", name, full)
-        return PEnum(name.text, full, values, start.line)
+        return PEnum(name.text, full, values, start.line, numbers)
 
     def message(self, parent: PMessage | None, scope: str, start: _Tok) -> PMessage:
         name = self.ident("a message name")

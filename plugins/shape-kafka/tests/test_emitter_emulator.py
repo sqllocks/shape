@@ -180,6 +180,34 @@ def test_a_missing_client_option_is_refused_before_anything_is_sent():
         KafkaEmitter().emit(f"kafka://{SERVERS}/t", [], nope=1)
 
 
+@pytest.mark.parametrize("fmt", ["avro", "protobuf"])
+def test_plain_binary_nested_read_write(tmp_path, fmt):
+    import pyarrow as pa
+    from shape_kafka import KafkaStreamSource
+
+    from shape.streaming.emit.formats import with_event_fields
+
+    text = (
+        '{"type":"record","name":"E","fields":[{"name":"child","type":'
+        '{"type":"record","name":"C","fields":[{"name":"id","type":"long"}]}}]}'
+        if fmt == "avro"
+        else 'syntax = "proto3"; message E { C child = 1; } message C { int64 id = 1; }'
+    )
+    path = tmp_path / ("events.avsc" if fmt == "avro" else "events.proto")
+    path.write_text(text)
+    topic = make_topic()
+    uri = f"kafka://{SERVERS}/{topic}"
+    row = {"child": {"id": 7}}
+    batch = with_event_fields(pa.RecordBatch.from_pylist([row]), "orders", 0)
+    writer = KafkaEmitter()
+    try:
+        assert writer.emit(uri, [batch], event_format=fmt, schema_file=str(path), message="E") == 1
+    finally:
+        writer.close()
+    out = list(KafkaStreamSource().read(uri, format=fmt, schema_file=str(path), message="E"))
+    assert [r["child"] for _, b in out for r in b.to_pylist()] == [row["child"]]
+
+
 def test_keyed_metadata_round_trip_emulator():
     topic = make_topic()
     batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 3)

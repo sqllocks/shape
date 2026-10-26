@@ -6,6 +6,10 @@ Status: available.
 
 ## Unreleased
 
+- Kafka and Event Hubs read and write plain Avro and Protobuf with local schemas,
+  preserve nested Arrow fields, and count malformed or incompatible rows. Kafka
+  Avro reads resolve writer schema ids with a per-read cache; Event Hubs supports
+  Azure Schema Registry Avro through its optional schema-registry extra.
 - Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
 - Keep the locked development toolchain audit clear with compatible `filelock` 3.20.3 and patched `setuptools` 84.1.0.
 - Keep the fingerprint readback test compatible with DuckDB 2.

@@ -26,9 +26,9 @@ from __future__ import annotations
 
 import json
 import math
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
@@ -63,6 +63,7 @@ class StreamMessage:
     offset: int
     value: bytes | str | None
     timestamp_us: int | None = None
+    content_type: str | None = None
     key: bytes | None = None
     headers: Mapping[str, bytes | None] | None = None
     properties: Mapping[str, bytes | None] | None = None
@@ -96,6 +97,14 @@ def _event_us(value: Any, unit: str) -> int | None:
             return None
         us = int(value * _UNITS[unit])
         return us if _MIN_US <= us <= _MAX_US else None  # a timestamp column holds int64
+    if isinstance(value, date):
+        when = (
+            value if isinstance(value, datetime) else datetime.combine(value, datetime.min.time())
+        )
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=UTC)
+        delta = when - _EPOCH
+        return (delta.days * 86_400 + delta.seconds) * 1_000_000 + delta.microseconds
     if isinstance(value, str):
         try:
             when = datetime.fromisoformat(value)
@@ -130,6 +139,32 @@ def _fits(value: Any, typ: pa.DataType) -> bool:
     converts more than that: a boolean becomes ``1``, ``1.5`` becomes ``1`` in an integer column."""
     if value is None:
         return True
+    if pa.types.is_struct(typ):
+        return isinstance(value, dict) and all(
+            (f.nullable or value.get(f.name) is not None) and _fits(value.get(f.name), f.type)
+            for f in typ
+        )
+    if pa.types.is_list(typ) or pa.types.is_large_list(typ):
+        return isinstance(value, list) and all(
+            (typ.value_field.nullable or v is not None) and _fits(v, typ.value_type) for v in value
+        )
+    if pa.types.is_map(typ):
+        entries: Sequence[Any]
+        if isinstance(value, dict):
+            entries = list(value.items())
+        elif isinstance(value, list | tuple):
+            entries = value
+        else:
+            return False
+        return all(
+            isinstance(entry, list | tuple)
+            and len(entry) == 2
+            and entry[0] is not None
+            and _fits(entry[0], typ.key_type)
+            and (typ.item_field.nullable or entry[1] is not None)
+            and _fits(entry[1], typ.item_type)
+            for entry in entries
+        )
     if isinstance(value, bool):
         return not (
             pa.types.is_integer(typ) or pa.types.is_floating(typ) or pa.types.is_decimal(typ)
@@ -142,6 +177,8 @@ def _fits(value: Any, typ: pa.DataType) -> bool:
 def _plain_numbers(values: list[Any], typ: pa.DataType) -> bool:
     """Whether Arrow's own inference shows that no value of a numeric column needs ``_fits`` (it
     saw only integers, or integers and floats for a float column): the fast path."""
+    if pa.types.is_struct(typ) or pa.types.is_list(typ) or pa.types.is_map(typ):
+        return False
     if not (pa.types.is_integer(typ) or pa.types.is_floating(typ) or pa.types.is_decimal(typ)):
         return True
     try:
@@ -188,11 +225,14 @@ def decode_messages(
     nested: bool = True,
     stats: DecodeStats | None = None,
     on_error: str = "skip",
+    decoder: Callable[[bytes | str], dict[str, Any]] | None = None,
 ) -> pa.RecordBatch | None:
     """Decode messages into one record batch, or ``None`` when no message gave a row.
 
     ``with_offsets`` adds ``_shape_partition`` (string) and ``_shape_offset`` (int64), for
-    row-level deduplication on offset. ``on_error="raise"`` turns the first undecodable
+    row-level deduplication on offset. An optional binary ``decoder`` preserves nested
+    Arrow values; JSON keeps its existing flat text representation.
+    ``on_error="raise"`` turns the first undecodable
     message or rejected row into a ``StreamSourceError``.
     """
     if event_time_unit not in _UNITS:
@@ -209,7 +249,14 @@ def decode_messages(
         try:
             if body is None:
                 raise ValueError("empty message")
-            obj = json.loads(body)
+            message_decoder = getattr(decoder, "decode_message", None)
+            obj = (
+                message_decoder(msg)
+                if message_decoder is not None
+                else decoder(body)
+                if decoder is not None
+                else json.loads(body)
+            )
             if not isinstance(obj, dict):
                 raise ValueError("the message is not a JSON object")
         except (ValueError, UnicodeDecodeError, RecursionError) as exc:
@@ -222,7 +269,7 @@ def decode_messages(
         when = _event_us(obj.pop(event_time_field, None), event_time_unit)
         if event_time_field != EVENT_TIME:
             obj.pop(EVENT_TIME, None)
-        rows.append({k: _plain(v) for k, v in obj.items()})
+        rows.append(obj if decoder is not None else {k: _plain(v) for k, v in obj.items()})
         times.append(when if when is not None else msg.timestamp_us)
         source.append(msg)
     if not rows:
@@ -273,8 +320,21 @@ def decode_messages(
             for n in names
             if n not in metadata_columns and (n not in (PARTITION, OFFSET) or not with_offsets)
         ]
-        columns = {n: _inferred([r.get(n) for r in rows]) for n in names}
+        hint = getattr(getattr(decoder, "__self__", decoder), "schema", None)
+        columns = {}
         bad: set[int] = set()
+        for n in names:
+            values = [r.get(n) for r in rows]
+            if hint is not None and n in hint.names:
+                arr, failed = _typed(values, hint.field(n).type)
+                if failed:
+                    raise StreamSourceError(
+                        "binary messages have incompatible writer schemas; "
+                        "read separate batches or provide a reader schema"
+                    )
+                columns[n] = arr
+            else:
+                columns[n] = _inferred(values)
     else:
         columns = {}
         bad = set()
@@ -288,6 +348,8 @@ def decode_messages(
             arr, failed = _typed([r.get(f.name) for r in rows], f.type)
             columns[f.name] = arr
             bad.update(failed)
+            if decoder is not None and not f.nullable:
+                bad.update(i for i, row in enumerate(rows) if row.get(f.name) is None)
     columns.update(metadata_columns)
     columns[EVENT_TIME] = pa.array(times, type=EVENT_TIME_TYPE)
     if with_offsets:

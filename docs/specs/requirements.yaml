@@ -767,6 +767,14 @@ requirements:
   tests: [tests/builtins/test_iceberg.py, tests/bridge/test_iceberg.py, tests/security/test_iceberg_credentials.py]
   owner: plugins
 
+- id: SHAPE-STREAM-009
+  title: Binary broker formats
+  level: L1
+  milestone: M9
+  priority: MUST
+  text: Local Avro and Protobuf events have no registry prefix, retain nested types, and reject incompatible reader rows without coercion. Registry Avro readers resolve and cache each writer schema id.
+  verify: [conformance, tests/streaming/test_binary_formats.py]
+  owner: streaming
 - id: SHAPE-DBS-001
   title: Bounded PostgreSQL and MySQL catalog profiling
   level: L1
