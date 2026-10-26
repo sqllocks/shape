@@ -1,5 +1,7 @@
 # Public B combined delivery
 
+PR: https://github.com/sqllocks/shape/pull/48
+
 This integration contains the previously reviewed implementations for issues #10, #17, #20, #6 and #14. Each issue retains its complete Wanted list and original tests-first evidence in its existing lane record. The integration changes no required CI check, comparison threshold, tolerance, assertion, recording or live-account requirement.
 
 ## Decision log
@@ -27,7 +29,8 @@ The latest merged main includes Snowflake and Databricks sources. Combined plugi
 - New cloud-source interface: 12 targeted failures in each kernel before forwarding validated depth; all 90 cloud-source tests pass in each kernel after the minimal fix. Unknown options and invalid depths still fail before connecting.
 - BigQuery shared profiling: all 92 tests pass in each kernel, including default depth 8 and explicit 0/1/64 with preserved sampling, declared types and provenance. No product failure was claimed for the corrected test spy.
 - Iceberg specialized depth forwarding: 4 failed and 2 default-depth cases passed in each kernel before the one-line fix; all 136 targeted cases passed in each kernel after the fix, zero deselections and four existing artifact warnings per run. Table and namespace snapshot IDs and summary row counts remain intact.
-- BigQuery async job persistence: 9 failed and 4 controls passed in each kernel before the shared fragment scrub; all 39 new and existing Iceberg credential cases passed in each kernel afterward. Rejected encoded, JSON, whitespace and multiline credential fragments never reach saved requests or open a connection. Allowed query options and existing URI redaction remain covered.
+- BigQuery async job persistence: 9 failed and 4 controls passed in each kernel before the shared fragment scrub; all 40 new and existing Iceberg credential cases passed in each kernel afterward; the combined security selection including 30 existing query/adversarial controls passed 70 cases in each kernel. Rejected encoded, JSON, whitespace and multiline credential fragments never reach saved requests or open a connection. Allowed query options and existing URI redaction remain covered.
+- Embedded BigQuery URI performance: a repeated-scheme input reproduced the three-second subprocess timeout in each kernel before repair; whole-token matching with a fragment callback passes the bounded control and preserves unchanged text.
 - Database plugin conformance: 9 passed. Ruff and format checks pass; mypy reports no issues in 711 source files; public-wording check is clean.
 
 Every test ran through the subreaper with locked uv. Independent integration review checks every original Wanted list, security and scope; it does not rerun the full suite. Every triggered hosted check on the final exact head must pass before merge. Pending real-account and emulator actions remain as recorded in each original lane; no live success is claimed.

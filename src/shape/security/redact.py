@@ -52,13 +52,19 @@ _ICEBERG_TAIL = re.compile(r"(?i)\b(iceberg(?:\+file)?://[^\s\"'<>?#]*)([?#])[^\
 # BigQuery permits query options but refuses every fragment. Apply the same whole-value
 # protection before queued requests are saved, including malformed whitespace in the tail.
 _BIGQUERY_URI = re.compile(r"(?i)^\s*bigquery://")
-_BIGQUERY_FRAGMENT = re.compile(r"(?i)\b(bigquery://[^\s\"'<>#]*)(#)[^\s\"'<>]*")
+# Match the whole token once; requiring a trailing '#' would retry repeated schemes.
+_BIGQUERY_TOKEN = re.compile(r"(?i)\bbigquery://[^\s\"'<>]*")
 
 
 def _query_mask(match: re.Match[str]) -> str:
     if _QUERY_SECRET.search(unquote(match[2])):
         return f"{match[1]}{match[2]}={MASK}"
     return match[0]
+
+
+def _bigquery_fragment_mask(match: re.Match[str]) -> str:
+    prefix, fragment, _ = match[0].partition("#")
+    return prefix + "#" + MASK if fragment else match[0]
 
 
 def redact_text(text: str) -> str:
@@ -75,7 +81,7 @@ def redact_text(text: str) -> str:
     if _BIGQUERY_URI.match(text):
         text = re.sub(r"#[\s\S]*", "#" + MASK, text, count=1)
     else:
-        text = _BIGQUERY_FRAGMENT.sub(rf"\1\2{MASK}", text)
+        text = _BIGQUERY_TOKEN.sub(_bigquery_fragment_mask, text)
     text = _QUERY_PAIR.sub(_query_mask, text)
     return _PAIR.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}", text)
 

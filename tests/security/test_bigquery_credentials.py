@@ -90,3 +90,20 @@ def test_bigquery_fragment_scrub_preserves_query_and_other_uri_behavior(text, ex
     from shape.security.redact import redact_text
 
     assert redact_text(text) == expected
+
+
+def test_embedded_bigquery_repeated_schemes_are_bounded():
+    import subprocess
+    import sys
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from shape.security.redact import redact_text; "
+            "text = 'Rejected ' + 'bigquery://' * 20000; "
+            "assert redact_text(text) == text",
+        ],
+        check=True,
+        timeout=3,
+    )
