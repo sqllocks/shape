@@ -257,7 +257,7 @@ shape plugins list
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    187 plugin(s)
+    191 plugin(s)
       shape.behaviors:entity_lifecycle        unloaded [sqllocks-shape-behavior]
       shape.behaviors:equipment_maintenance   unloaded [sqllocks-shape-behavior]
       shape.behaviors:event_sequence          unloaded [sqllocks-shape-behavior]

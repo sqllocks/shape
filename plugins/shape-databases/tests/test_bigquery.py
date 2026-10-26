@@ -637,3 +637,72 @@ def test_catalog_matching_or_unspecified_metadata_preserves_mapping(declared, me
     field = BigQuerySource(connect=server.connect).schema(URI + "&table=typed").field("value")
     assert field.type == expected
     assert field.nullable
+
+
+@pytest.mark.parametrize(
+    "options,expected_depth",
+    [
+        pytest.param({}, 8, id="default"),
+        pytest.param({"max_depth": 0}, 0, id="zero"),
+        pytest.param({"max_depth": 1}, 1, id="one"),
+        pytest.param({"max_depth": 64}, 64, id="upper-bound"),
+    ],
+)
+def test_public_profile_forwards_depth_through_bigquery_catalog(
+    monkeypatch, options, expected_depth
+):
+    from types import SimpleNamespace
+
+    import shape
+    import shape.api  # Initialize the lazy public wrapper before observing the sample profiler.
+    import shape.profile.reference as reference
+    from shape.plugins.host import default_host
+
+    server = FakeBigQuery()
+    BigQuerySink(connect=server.connect).write(URI, "items", [batch(0, 10)])
+    source = BigQuerySource(connect=server.connect)
+    host = default_host()
+    records, try_get = host.records, host.try_get
+    monkeypatch.setattr(
+        host,
+        "records",
+        lambda group: (
+            [SimpleNamespace(group=group, name="bigquery")]
+            if group == "shape.sources"
+            else records(group)
+        ),
+    )
+    monkeypatch.setattr(
+        host,
+        "try_get",
+        lambda group, name: (
+            source if (group, name) == ("shape.sources", "bigquery") else try_get(group, name)
+        ),
+    )
+    catalog_depths, sample_depths = [], []
+    catalog_profile, sample_profile = source.profile_database, reference.profile
+
+    def record_catalog(uri, **kwargs):
+        catalog_depths.append(kwargs["max_depth"])
+        return catalog_profile(uri, **kwargs)
+
+    def record_sample(sampled, **kwargs):
+        if isinstance(sampled, pa.Table):
+            sample_depths.append(kwargs["max_depth"])
+            assert sampled.num_rows == 3
+        return sample_profile(sampled, **kwargs)
+
+    monkeypatch.setattr(source, "profile_database", record_catalog)
+    monkeypatch.setattr(reference, "profile", record_sample)
+    prof = shape.profile(URI, tables=["items"], sample_rows=3, **options)
+    assert catalog_depths == sample_depths == [expected_depth]
+    assert server.storage_reads == [3]
+    table = prof.tables["items"]
+    assert table["row_count"] == 10
+    assert table["sampled_rows"] == 3
+    assert table["sample_method"] == "tablesample_system"
+    assert table["sampling"]["population_rows"] == 10
+    assert table["sampling"]["sampled_rows"] == table["sampling"]["requested"] == 3
+    assert table["columns"]["id"]["declared_type"] == "INT64"
+    assert prof.provenance["source"] == "bigquery"
+    assert prof.provenance["bytes_processed"] > 0

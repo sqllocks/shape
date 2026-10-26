@@ -577,6 +577,7 @@ def profile(
                     options["as_of"] = as_of
                 options["profile_options"] = dict(
                     name=name,
+                    max_depth=max_depth,
                     joint=joint,
                     reference_pairs=reference_pairs,
                     validators=validators,

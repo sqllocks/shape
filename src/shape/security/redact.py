@@ -49,6 +49,10 @@ _QUERY_SECRET = re.compile(
 # keys, before rejected requests reach job persistence. Whole URI values may contain whitespace.
 _ICEBERG_URI = re.compile(r"(?i)^\s*iceberg(?:\+file)?://")
 _ICEBERG_TAIL = re.compile(r"(?i)\b(iceberg(?:\+file)?://[^\s\"'<>?#]*)([?#])[^\s\"'<>]*")
+# BigQuery permits query options but refuses every fragment. Apply the same whole-value
+# protection before queued requests are saved, including malformed whitespace in the tail.
+_BIGQUERY_URI = re.compile(r"(?i)^\s*bigquery://")
+_BIGQUERY_FRAGMENT = re.compile(r"(?i)\b(bigquery://[^\s\"'<>#]*)(#)[^\s\"'<>]*")
 
 
 def _query_mask(match: re.Match[str]) -> str:
@@ -68,6 +72,10 @@ def redact_text(text: str) -> str:
         text = re.sub(r"([?#])[\s\S]*", rf"\1{MASK}", text, count=1)
     else:
         text = _ICEBERG_TAIL.sub(rf"\1\2{MASK}", text)
+    if _BIGQUERY_URI.match(text):
+        text = re.sub(r"#[\s\S]*", "#" + MASK, text, count=1)
+    else:
+        text = _BIGQUERY_FRAGMENT.sub(rf"\1\2{MASK}", text)
     text = _QUERY_PAIR.sub(_query_mask, text)
     return _PAIR.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}", text)
 

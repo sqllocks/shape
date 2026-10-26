@@ -643,3 +643,39 @@ def test_frozen_v1_schema_metadata_remains_readable():
         'DAAIAAcACAAAAAAAAAEIAAAAAAAAAA=="}'
     )
     assert decode_schema(frozen).equals(pa.schema([("small", pa.int8())]))
+
+
+@pytest.mark.parametrize("depth", [0, 1, None], ids=["opaque", "one-level", "default"])
+@pytest.mark.parametrize("namespace", [False, True], ids=["table", "namespace"])
+def test_wanted_4_nested_profile_depth(tmp_path, depth, namespace):
+    """Public Iceberg table and namespace profiling retain the requested child depth."""
+    import shape
+
+    target = uri(tmp_path)
+    table = pa.table(
+        {
+            "items": pa.array(
+                [[{"price": 3}], [{"price": 5}]], pa.list_(pa.struct([("price", pa.int64())]))
+            )
+        }
+    )
+    write(target, table)
+    snapshot = IcebergSource()._table(target, {}).current_snapshot().snapshot_id
+    options = {} if depth is None else {"max_depth": depth}
+    prof = shape.profile(target.rsplit("/", 1)[0] if namespace else target, joint=False, **options)
+    column = prof.tables["items"]["columns"]["items"]
+    assert prof.tables["items"]["row_count"] == 2
+    evidence = prof.provenance["tables"]["items"] if namespace else prof.provenance
+    assert evidence["snapshot_id"] == snapshot
+    assert evidence["total_records"] == 2
+    if depth == 0:
+        assert "children" not in column
+    else:
+        element = column["children"][0]
+        assert element["path"] == "$.items[]"
+        if depth == 1:
+            assert "children" not in element
+        else:
+            price = element["children"][0]
+            assert price["path"] == "$.items[].price"
+            assert price["mean"] == 4

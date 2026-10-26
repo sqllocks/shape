@@ -335,7 +335,7 @@ shape plugins doctor
       shape.detectors:presidio   unloaded [sqllocks-shape-integrations]
       shape.detectors:us_ssn     unloaded [sqllocks-shape]
     shape: error: no plugin 'shape.detectors:iban' (see `shape plugins list`)
-    plugin API 1.0: 187 plugin(s)
+    plugin API 1.0: 191 plugin(s)
       ok    shape.behaviors:entity_lifecycle [sqllocks-shape-behavior]
       ok    shape.behaviors:equipment_maintenance [sqllocks-shape-behavior]
       ok    shape.behaviors:event_sequence [sqllocks-shape-behavior]
