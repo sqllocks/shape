@@ -537,6 +537,7 @@ def test_table_inspection_errors_never_echo_credentials(tmp_path, monkeypatch):
     assert not (tmp_path / "t" / "_delta_log").exists()
 
 
+@pytest.mark.parametrize("subdir", ["plain", "spaces # and %"])
 @pytest.mark.parametrize(
     "options,feature",
     [
@@ -544,16 +545,20 @@ def test_table_inspection_errors_never_echo_credentials(tmp_path, monkeypatch):
         ({"timestamp_ntz": True}, "timestamp_ntz"),
     ],
 )
-def test_feature_commit_errors_never_echo_credentials(tmp_path, monkeypatch, options, feature):
+def test_feature_commit_errors_never_echo_credentials(
+    tmp_path, monkeypatch, options, feature, subdir
+):
     import traceback
 
+    tmp_path = tmp_path / subdir
     original = deltalake.table.TableAlterer.add_feature
-    destination = str(tmp_path / "t")
+    destination = (tmp_path / "t").resolve().as_uri()
+    injected_uris = []
 
     def fail_at_destination(self, table_feature, allow_protocol_versions_increase=False, **kwargs):
-        from urllib.parse import urlsplit
-
-        if urlsplit(self.table.table_uri).path.rstrip("/") == destination:
+        table_uri = self.table.table_uri.rstrip("/")
+        if table_uri == destination:
+            injected_uris.append(table_uri)
             raise RuntimeError("dummy-private-auth-body")
         return original(
             self,
@@ -565,6 +570,7 @@ def test_feature_commit_errors_never_echo_credentials(tmp_path, monkeypatch, opt
     monkeypatch.setattr(deltalake.table.TableAlterer, "add_feature", fail_at_destination)
     with pytest.raises(ValueError, match=feature) as err:
         write(tmp_path, **options)
+    assert injected_uris == [destination]
     rendered = "".join(traceback.format_exception(err.type, err.value, err.tb))
     assert (
         "dummy-private-auth-body" not in str(err.value)
