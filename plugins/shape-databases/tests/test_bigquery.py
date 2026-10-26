@@ -716,11 +716,12 @@ def test_staging_privacy_is_applied_before_parquet_and_load(monkeypatch):
     protected = []
     restrict = jobs.restrict_to_current_user
 
-    def protect(path):
+    def protect(path, *, remove_bootstrap=False):
+        assert remove_bootstrap is True
         assert path.exists()
         if path.is_file():
             assert path.stat().st_size == 0
-        restrict(path)
+        restrict(path, remove_bootstrap=remove_bootstrap)
         protected.append(path)
 
     monkeypatch.setattr(jobs, "restrict_to_current_user", protect)
@@ -749,7 +750,8 @@ def test_staging_acl_failure_refuses_load_and_cleans_created_table(monkeypatch, 
 
     protected = []
 
-    def refuse(path):
+    def refuse(path, *, remove_bootstrap=False):
+        assert remove_bootstrap is True
         protected.append(path)
         if path.is_dir() == (blocked == "directory"):
             if path.is_file():
@@ -769,36 +771,41 @@ def test_staging_acl_failure_refuses_load_and_cleans_created_table(monkeypatch, 
 @pytest.mark.parametrize("fail_target", [None, "directory", "file"])
 @pytest.mark.parametrize("principal", ["current-user", "*S-1-5-18"])
 def test_windows_staging_removes_explicit_python_acl_grants(monkeypatch, fail_target, principal):
+    import subprocess
     from types import SimpleNamespace
-
-    import shape_databases.bigquery as bigquery
 
     from shape.scale import jobs
 
     python_grants = {"*S-1-5-18", "*S-1-5-32-544", "*S-1-3-4"}
     grants, commands, paths = {}, [], []
 
-    def inherited_only_helper(path):
-        paths.append(path)
-        grants.setdefault(path, set(python_grants)).add(principal)
-
-    def remove_explicit(command, **kwargs):
+    def update_acl(command, **kwargs):
         path = Path(command[1])
         paths.append(path)
         assert command[:1] == ["icacls"]
-        assert command[2] == "/remove:g" and set(command[3:]) == python_grants
-        assert kwargs["check"] and kwargs["capture_output"] and kwargs["timeout"] == 30
-        if (fail_target == "directory" and path.is_dir()) or (
-            fail_target == "file" and path.is_file()
-        ):
-            raise OSError("explicit staging ACL unavailable")
-        commands.append(command)
-        grants.setdefault(path, set(python_grants)).difference_update(python_grants)
-        return SimpleNamespace(returncode=0)
+        assert kwargs["capture_output"] and kwargs["timeout"] == 30
+        if command[2] == "/remove:g":
+            assert set(command[3:]) == python_grants and kwargs["check"]
+            if (fail_target == "directory" and path.is_dir()) or (
+                fail_target == "file" and path.is_file()
+            ):
+                raise OSError("explicit staging ACL unavailable")
+            commands.append(command)
+            grants.setdefault(path, set(python_grants)).difference_update(python_grants)
+        else:
+            assert command[2:4] == ["/inheritance:r", "/grant:r"]
+            assert command[4] == principal + (":(OI)(CI)F" if path.is_dir() else ":F")
+            assert kwargs["check"] is False
+            grants.setdefault(path, set(python_grants)).add(principal)
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
 
-    monkeypatch.setattr(jobs, "restrict_to_current_user", inherited_only_helper)
-    monkeypatch.setattr(bigquery, "sys", SimpleNamespace(platform="win32"), raising=False)
-    monkeypatch.setattr(bigquery, "subprocess", SimpleNamespace(run=remove_explicit), raising=False)
+    monkeypatch.setattr(jobs, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setattr(jobs, "windows_current_user", lambda: principal)
+    monkeypatch.setattr(
+        jobs,
+        "subprocess",
+        SimpleNamespace(run=update_acl, SubprocessError=subprocess.SubprocessError),
+    )
     server = FakeBigQuery()
 
     def connect(**options):
