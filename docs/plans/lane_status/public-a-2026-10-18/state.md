@@ -2,6 +2,16 @@
 
 Updated 2026-10-26; final integration in progress. This file is the current checkpoint; lane records retain acceptance evidence.
 
+## Latest checkpoint — docs isolation fix pushed
+
+PR49 exact current head is `1a715e5f96fbaa67a023f6036196589572248450`, independently approved and pushed to origin. Base remains6827598. Prior601 finished41/42required checks green; only docs-test failed with native child SIGBUS. All8 core platforms, both database-plugin jobs and Wheels passed. These old-head results are not final merge evidence.
+
+Five docs editable installation commands wrote to the shared source while parallel pages imported its native library. Commands now install into existing page-private project copies, and VIRTUAL_ENV matches each private interpreter. Five effectful regressions: old commands5red, fixed5green perkernel; no production/assertion/gate changes. Real CONTRIBUTING passed in initial parallel run (6passed including regressions); INSTALL initially failed because this shell lacked cached Rust PATH, then passed249.39s with the correct toolchain. That setup failure is not a product regression. Exact SIGBUS causality was not independently proven, but shared-write hazard is reproduced and removed. Reviewer approved exact1a715.
+
+Both guarded scripts now target1a715. New exact-head CI required. LeadB PR50 remains open with Windows3.14 running its core suite at08:00UTC; do not edit/merge B work. Push proceeded rather than wait indefinitely. If B merges first, refresh actual main once under the Owner rule.
+
+Read-only Nightly40272534667 databases-e2e job121408250397 confirms missing python-oracledb, not a demonstrated Oracle product regression: workflow starts only postgres/mysql and invokes all emulator tests without Oracle extras/service/env. Fix belongs to nightly.yml owner (B/Owner); do not edit prohibited nightly.yml. Existing actual Oracle Free23 local3passed remains valid; no live-account claim. Record configuration follow-up in final report.
+
 ## Goal and progress
 
 Continue until all seven assigned issues are merged or legitimately parked. Do not end a turn merely to wait or ask. Original prompt: `/workspace/attachments/9302a188-787d-4428-9403-3510325ce6a1/4-NEW-WINDOW-shape-public-A.md`. Read it and this state after any restart.
