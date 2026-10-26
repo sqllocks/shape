@@ -8,7 +8,7 @@ Unattended run. Never end to wait or ask. After restart/compaction read this fil
 
 Owner explicitly demanded whatever steps are needed to accelerate delivery. Lead B consolidated ALL FIVE remaining reviewed implementations into ONE READY PR, eliminating repeated full CI after each separate merge. This REPLACES all old per-lane merge stages/holds. Do not refresh/restart/merge the old five source PRs independently. Their descriptions now point to48; preserve them as review history.
 
-**PR https://github.com/sqllocks/shape/pull/48** (ready/non-draft, artifact attached successfully). Final signed/pushed/clean local=remote=PR head **46dc14ecea1ff946bc00f7fc69e31eb11c62af15**. Branch `lead/public-b-integration`, worktree `/workspace/shape-public-b-integration`. Full independent Wanted/security/scope APPROVED metadata_oct25 exact46dc14e; second34/42 preservation review APPROVED formats_oct25 exact46dc14e. Every old lane product/acceptance remains included. No pending code/review/Owner decision. Hosted native Windows passed on prior289; every fresh46dc final-head gate remains required. Old289 failed only plugin trust boundary and is superseded; code repair and exact review are complete. Root solely handles merges.
+**PR https://github.com/sqllocks/shape/pull/48** (ready/non-draft, artifact attached successfully). Final signed/pushed/clean local=remote=PR head **46dc14ecea1ff946bc00f7fc69e31eb11c62af15**. Branch `lead/public-b-integration`, worktree `/workspace/shape-public-b-integration`. Full independent Wanted/security/scope APPROVED metadata_oct25 exact46dc14e; second34/42 preservation review APPROVED formats_oct25 exact46dc14e. Every old lane product/acceptance remains included. No pending code/review/Owner decision. Hosted native Windows databasejob121372437276 SUCCESS on FINAL46dc; allremainingfinalcoregates stillrequired. Old289 failed only plugin trust boundary and is superseded; code repair and exact review are complete. Root solely handles merges.
 
 Contains current main **314749d37aba9141a2ff68a33cfdb91e8a87cca5**, otherSession PR37 Snowflake/Databricks. Main moved just as31 finished all7old-source workflows green; old31head24a lacks314749d and was NOT merged. That base-change cost prompted consolidation. Current main314749d CI40252269760 finishedFAILURE:26SUCCESS/1knownmacOS3.11cancellationrace, Docs/SecuritySUCCESS. This is otherSession37, notourmerge; our90fbmainfullygreen. The actualraceisfixed/reviewedin289; do notrerunobsoleteunfixedmainaspassingproof. Our preceding merged dbt main90fb is fully green.
 
@@ -19,12 +19,12 @@ All seven workflows on finalb86 REQUIRED before merge:
 | Workflow | Run | Latest known stage |
 |---|---|---|
 | CI |40260761739|Fresh full27-job matrix pending/running|
-| Wheels |40260761912|Fresh workflow pending/running|
-| Documentation |40260761862|Fresh workflow pending/running|
+| Wheels |40260761912|SUCCESS|
+| Documentation |40260761862|SUCCESS|
 | DCO |40260761801|SUCCESS|
-| Security |40260761738|Fresh workflow pending/running|
-| Container |40260761735|Fresh workflow pending/running|
-| action-selftest |40260761911|Fresh workflow pending/running|
+| Security |40260761738|SUCCESS|
+| Container |40260761735|SUCCESS|
+| action-selftest |40260761911|SUCCESS|
 
 Historical failures: b86Windows1failed929passed, helper-onlybad1 SAMEprivateassert1failed932passed. Confirmed CPython3.11.10+ mkdir0700 explicitSY/BA/OW grants survive inherited-onlyACLhelper. FIXED in289: onfresh-empty BQstagingonly remove exact documented SIDs then final existingrestrict (SYSTEMcurrentidentityregranted), beforeanycontent; originalstrictACL/POSIX/allprivatepredicate preserved, boundedactualACL/principaldiagnostics. Threeordering/failclosed+6bootstrap controlsREDbothkernels→101BQGREENeachkernel. NativeWindows databasejob121364875439 SUCCESS on289 inCI40258183976: strictBQprivacy blockerCLEARED. This is hostedWindowsproof, nevera localWindowsclaim.
 
@@ -84,3 +84,5 @@ FRZ COMBINED289 acceptance COMPLETE: four actualVALUE workloadsPASS separately�
 Architecture repair completed:289nativeWindowsDBpassedbutmacOS3.14ordinarysuiteFAILEDonly tests/plugins/test_trust_reach.py (2directBQsubprocesshits;18928otherpassed). Rootacknowledged targetedarchitecturecheck shouldhave runbeforepush. FIX46dc moves ONLYbootstrapremoval intoEXISTINGcore restrict_to_current_user(*,remove_bootstrap=False), BQTrueonfreshdir/file; defaultothercallers/Wincommandsequence/SYSTEMregrant unchanged, no genericrunner/ASTevasion/allowlist/policychange. ExistingTrustguardREDbothkernels→101BQ+41scale+28trust=170GREENeachkernel. RootfinalRuff/format2148,mypy711,publicclean. AlloriginalWanted/securityreview rebound46dc. ALWAYSincludeunchangedtests/plugins/test_trust_reach.py in targetedverificationwhenplugin capabilitieschange.
 
 FRZfourvaluePASS+twoNOTCOMPARABLEcombined289proofretained: numerical/profile/generation/broker/benchmark code byte-identical46dc; onlytrustedACLhelperboundary moved. No repeatedbenchmark/newrerecord/timingclaim. FutureNightly MAIN onpost48merge stillstrictclosuregate; prepareacceptancePR CIinparallel asabove. Current46dcfullCIjuststarted~02:47UTC; no failureobserved.
+
+Final46dc ancillary gates COMPLETE: ALL5lightworkflowssuccess (DCO40260761801,Security40260761738,Container40260761735,selftest40260761911,Docs40260761862) +Wheels40260761912all10SUCCESS. CoreCI40260761739 has17of27SUCCESS/10running, nofailure. NativeWindowsdatabase121372437276SUCCESS on46dc, strictprivacyretained. Formatsnowalso polls failure-level LIVEannotationsonrunningchecks every~5min (earlyerrorsbeforelongjobends), currentlyzero; no archives. Corefullsuite issolepremergegateleft. No code/reviewpending, finalSHAunchanged.
