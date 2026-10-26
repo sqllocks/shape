@@ -33,6 +33,7 @@ no configuration format of its own.
 
 | Flag | Meaning |
 |---|---|
+| `--format auto/csv/parquet/jsonl` | input format for REAL, SYNTHETIC and HOLDOUT; default `auto` reads each supported file by extension; a fixed format selects only that format in folders |
 | `--config VERIFY.json` | the verify configuration (`classifications`, `memorization`, `utility`, `privacy`; other keys belong to `shape verify` and are ignored) |
 | `--tiers 1,2` | the fidelity tiers to run (default `1,2`; `""` runs none; tier 3 is experimental and is not part of the card) |
 | `--holdout HOLDOUT` | real rows that were not given to the generator: turns on the membership-inference test |
@@ -55,8 +56,9 @@ card = report_card("real/", "synthetic/", config="verify.json", tiers=(1, 2),
 card.to_dict(); card.to_markdown(); card.to_html()
 ```
 
-The inputs may also be mappings of table name to `pyarrow.Table`. `require=("utility",)` is the one
-keyword beyond the arguments above. The renderers are also `shape.quality.reportcard.render_markdown`
+The inputs may also be mappings of table name to `pyarrow.Table`. The optional keyword
+`data_format="auto"` matches `--format`; it leaves Arrow inputs unchanged.
+`require=("utility",)` selects required sections. The renderers are also `shape.quality.reportcard.render_markdown`
 and `render_html`, which take a card read with `shape.quality.load_report_card(path)`.
 
 ## The sections

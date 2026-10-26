@@ -50,7 +50,7 @@ from .memorization import (
     nearest_distances,
 )
 from .utility import UtilityGate
-from .verify import load_tables
+from .verify import FORMATS, load_tables
 from .verifyconfig import VerifyConfig, load_verify_config
 
 FORMAT = "shape-report-card"
@@ -147,9 +147,9 @@ def _has_sklearn() -> bool:
     return True
 
 
-def _tables(source: Any, label: str) -> dict[str, pa.Table]:
+def _tables(source: Any, label: str, data_format: str = "auto") -> dict[str, pa.Table]:
     if isinstance(source, (str, os.PathLike)):
-        tables = load_tables(Path(source))
+        tables = load_tables(Path(source), fmt=data_format)
         if not tables:
             raise ReportCardError(f"no data files found in the {label} data: {source}")
         return tables
@@ -608,6 +608,7 @@ def report_card(
     manifest: Any = None,
     *,
     require: Sequence[str] = (),
+    data_format: str = "auto",
 ) -> ReportCard:
     """The report card of ``synthetic`` against ``real``.
 
@@ -615,7 +616,9 @@ def report_card(
     table, read as ``shape fidelity`` reads them), one Arrow table, or a mapping of table name to
     Arrow table. ``config`` is a verify configuration (a path, a mapping, a ``VerifyConfig``);
     ``tiers`` are the fidelity tiers to run (1 and/or 2); ``holdout`` is real rows that were not
-    given to the generator, for the membership-inference test; ``manifest`` is the run manifest of
+    given to the generator, for the membership-inference test; ``data_format`` selects csv,
+    parquet or jsonl for all input paths (default auto detects each file, and Arrow inputs are
+    unchanged); ``manifest`` is the run manifest of
     the generation (a path). ``require`` names sections that must have run: a required section (or
     one of its tests) that was not run fails the card, and a missing scikit-learn then raises
     :class:`ReportCardError` for ``utility``.
@@ -624,13 +627,17 @@ def report_card(
     table in common, and ``FileNotFoundError`` for a path that does not exist."""
     from shape import __version__
 
+    if data_format not in ("auto", *FORMATS):
+        raise ReportCardError(
+            f"unknown data format {data_format!r}; use auto, csv, parquet or jsonl"
+        )
     tier_set = _tier_numbers(tiers)
     required = _sections_named(require)
     cfg = _config(config)
     rules = dict(cfg.rules)
-    real_t = _tables(real, "real")
-    synth_loaded = _tables(synthetic, "synthetic")
-    hold_loaded = _tables(holdout, "holdout") if holdout is not None else None
+    real_t = _tables(real, "real", data_format)
+    synth_loaded = _tables(synthetic, "synthetic", data_format)
+    hold_loaded = _tables(holdout, "holdout", data_format) if holdout is not None else None
     synth_t = _matched(real_t, synth_loaded)
     hold_t = _matched(real_t, hold_loaded) if hold_loaded is not None else None
     common = [n for n in real_t if n in synth_t]
