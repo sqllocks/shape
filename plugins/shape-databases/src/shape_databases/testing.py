@@ -1079,3 +1079,202 @@ class FakeDatabricksConnection:
 
     def close(self) -> None:
         self.server.events.append(("close",))
+
+
+class FakeBigQuery:
+    """Offline BigQuery SDK double: counts actual staged Parquet and Arrow reads.
+
+    The fake never reads credentials and records only non-secret query configuration.
+    """
+
+    def __init__(
+        self, *, output_delta=0, fail_load=None, failure="load failed", estimated_bytes=64
+    ):
+        self.tables = {}
+        self.declared = {}
+        self.keys = {}
+        self.foreign_keys = {}
+        self.catalog_schemas = {}
+        self.get_table_calls = []
+        self.loads = []
+        self.queries = []
+        self.storage_reads = []
+        self.connections = 0
+        self.output_delta = output_delta
+        self.fail_load = fail_load
+        self.failure = failure
+        self.estimated_bytes = estimated_bytes
+
+    def connect(self, **params):
+        self.connections += 1
+        return _FakeBigQueryClient(self)
+
+
+class _FakeBigQueryResult(list):
+    def __init__(self, server, rows=(), table=None):
+        super().__init__(rows)
+        self.server = server
+        self.table = table
+
+    def to_arrow_iterable(self, *, bqstorage_client, max_queue_size, max_stream_count):
+        assert bqstorage_client is self.server
+        assert max_queue_size == max_stream_count == 1
+        self.server.storage_reads.append(self.table.num_rows)
+        yield from self.table.to_batches(max_chunksize=2)
+
+
+class _FakeBigQueryJob:
+    def __init__(self, rows=None, *, output_rows=None, total_bytes_processed=0, failure=None):
+        self.rows = rows
+        self.output_rows = output_rows
+        self.total_bytes_processed = total_bytes_processed
+        self.failure = failure
+
+    def result(self):
+        if self.failure:
+            raise RuntimeError(self.failure)
+        return self.rows
+
+
+class _FakeBigQueryClient:
+    def __init__(self, server):
+        self.server = server
+
+    def query_config(self, **options):
+        from types import SimpleNamespace
+
+        return SimpleNamespace(**options)
+
+    def load_config(self, **options):
+        from types import SimpleNamespace
+
+        return SimpleNamespace(source_format="PARQUET", **options)
+
+    def get_table(self, table):
+        from types import SimpleNamespace
+
+        self.server.get_table_calls.append(table)
+        if table not in self.server.tables:
+
+            class NotFound(Exception):
+                pass
+
+            raise NotFound(table)
+        return SimpleNamespace(
+            num_rows=self.server.tables[table].num_rows,
+            schema=self.server.catalog_schemas.get(table, ()),
+        )
+
+    def delete_table(self, table, not_found_ok=False):
+        self.server.tables.pop(table, None)
+        self.server.declared.pop(table, None)
+        self.server.keys.pop(table, None)
+
+    def query(self, sql, *, job_config):
+        from .bigquery import arrow_field
+
+        server = self.server
+        server.queries.append((sql, job_config))
+        if job_config.dry_run:
+            return _FakeBigQueryJob(total_bytes_processed=server.estimated_bytes)
+        rows = []
+        table_name = job_config.parameters.get("table")
+        if sql.startswith("CREATE TABLE"):
+            table_id = re.search(r"CREATE TABLE `([^`]+)`", sql)[1]
+            columns = re.findall(
+                r"`([^`]+)` (INT64|FLOAT64|BOOL|BYTES|DATE|TIME|TIMESTAMP|DATETIME|"
+                r"STRING(?:\(\d+\))?|(?:BIG)?NUMERIC\(\d+,\d+\))( NOT NULL)?",
+                sql,
+            )
+            fields = [arrow_field(n, t, not null) for n, t, null in columns]
+            server.tables[table_id] = pa.Table.from_batches([], schema=pa.schema(fields))
+            server.declared[table_id] = columns
+            key_match = re.search(r"PRIMARY KEY \(([^)]+)\)", sql)
+            server.keys[table_id] = re.findall(r"`([^`]+)`", key_match[1]) if key_match else []
+        elif "INFORMATION_SCHEMA.TABLES`" in sql:
+            rows = [(t.split(".")[-1],) for t in sorted(server.tables)]
+        elif "INFORMATION_SCHEMA.COLUMNS`" in sql:
+            table_id = next((t for t in server.tables if t.split(".")[-1] == table_name), None)
+            rows = [
+                (n, t, "NO" if nullable else "YES")
+                for n, t, nullable in server.declared.get(table_id, [])
+            ]
+        elif "CONSTRAINT_COLUMN_USAGE" in sql:
+            rows = server.foreign_keys.get(table_name, [])
+        elif "TABLE_CONSTRAINTS" in sql:
+            table_id = next((t for t in server.tables if t.split(".")[-1] == table_name), None)
+            rows = [(k,) for k in server.keys.get(table_id, [])]
+        else:
+            match = re.search(r" FROM `([^`]+)`", sql)
+            table_data = server.tables[match[1]]
+            if limit := re.search(r" LIMIT (\d+)", sql):
+                table_data = table_data.slice(0, int(limit[1]))
+            return _FakeBigQueryJob(
+                _FakeBigQueryResult(server, table=table_data),
+                total_bytes_processed=server.estimated_bytes,
+            )
+        return _FakeBigQueryJob(
+            _FakeBigQueryResult(server, rows), total_bytes_processed=server.estimated_bytes
+        )
+
+    def load_table_from_file(self, stream, table, *, job_config):
+        import os
+        import subprocess
+        import sys
+
+        import pyarrow.parquet as pq
+
+        server = self.server
+        data = pq.read_table(stream)
+        path = str(stream.name)
+        privacy_diagnostics = []
+        if sys.platform == "win32":
+            from shape.scale.jobs import windows_current_user
+
+            def private(target):
+                acl = subprocess.run(
+                    ["icacls", str(target)], capture_output=True, text=True, check=True, timeout=30
+                ).stdout
+                entries = re.findall(r"(\S+):\(", acl.replace(str(target), ""))
+                privacy_diagnostics.append(
+                    {"principal": windows_current_user()[:256], "acl": acl[:2048]}
+                )
+                return (
+                    len(entries) == 1
+                    and entries[0].rsplit("\\", 1)[-1].casefold()
+                    == windows_current_user().rsplit("\\", 1)[-1].casefold()
+                    and "(F)" in acl
+                )
+
+            file_private = private(Path(path))
+            directory_private = private(Path(path).parent)
+            is_private = file_private and directory_private
+        else:
+            is_private = (
+                os.stat(path).st_mode & 0o077 == 0
+                and os.stat(os.path.dirname(path)).st_mode & 0o077 == 0
+            )
+        server.loads.append(
+            {
+                "rows": data.num_rows,
+                "path": path,
+                "private": is_private,
+                "privacy_diagnostics": privacy_diagnostics,
+                "format": job_config.source_format,
+                "disposition": job_config.write_disposition,
+                "decimal_target_types": getattr(job_config, "decimal_target_types", None),
+            }
+        )
+        if len(server.loads) == server.fail_load:
+            return _FakeBigQueryJob(failure=server.failure)
+        if job_config.write_disposition == "WRITE_TRUNCATE" or not server.tables[table].num_rows:
+            server.tables[table] = data
+        else:
+            server.tables[table] = pa.concat_tables([server.tables[table], data])
+        return _FakeBigQueryJob(output_rows=data.num_rows + server.output_delta)
+
+    def read_client(self):
+        return self.server
+
+    def close(self):
+        pass

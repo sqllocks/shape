@@ -107,6 +107,11 @@ def _resolve(key: str, value: Any, offline: bool = False) -> Any:
     """A credential reference as the secret it names; a literal secret is refused. ``offline``
     (``--dry-run``) does not look a ``kv://`` reference up (that is a connection): its form is
     checked and a placeholder stands in."""
+    if key == "credentials":
+        if credrefs.scheme_of(value) not in ("env", "file"):
+            raise ValueError("credentials must be an env:// or file:// reference")
+        credrefs.check_form(value)
+        return value
     if credrefs.is_reference(value):
         if offline and credrefs.scheme_of(value) == "kv":
             credrefs.check_form(value)
@@ -127,7 +132,14 @@ def sink_config(items: list[str] | None, *, offline: bool = False) -> dict[str, 
 
     parsed = parse_sink_config(list(items or []))
     return {
-        sink: {key: _resolve(key, value, offline) for key, value in options.items()}
+        sink: {
+            key: (
+                value
+                if sink == "iceberg" and key in ("token", "credential")
+                else _resolve(key, value, offline)
+            )
+            for key, value in options.items()
+        }
         for sink, options in parsed.items()
     }
 
@@ -219,6 +231,7 @@ def target_options(
                     "mysql",
                     "snowflake",
                     "databricks",
+                    "bigquery",
                     "sqlserver",
                     "warehouse",
                     "synapse",

@@ -130,7 +130,7 @@ jobs:
       - run: uv venv .venv
       # the first-party plugins the test job installs (tests/demo_cmd needs shape-fabric, the dry-run
       # tests a kafka:// sink)
-      - run: uv pip install --python .venv/bin/python -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka -c ci/constraints-min.txt
+      - run: uv pip install --python .venv/bin/python -e '.[dev,streaming,advanced,docs,iceberg]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka -c ci/constraints-min.txt
       - run: uv run --no-project --python .venv/bin/python python -c "import numpy, pyarrow; print(numpy.__version__, pyarrow.__version__)"
       - run: uv run --no-project --python .venv/bin/python python -m pytest -q -p pytest_annotate -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/docs
         env: {SHAPE_KERNEL: rust}

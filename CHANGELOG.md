@@ -49,6 +49,17 @@ Status: available.
   with their column and the JSON alternative named. Nested temporal values use the same
   documented microsecond normalization as scalar values.
 
+
+- Kafka and Event Hubs read and write plain Avro and Protobuf with local schemas,
+  preserve nested Arrow fields, and count malformed or incompatible rows. Kafka
+  Avro reads resolve writer schema ids with a per-read cache; Event Hubs supports
+  Azure Schema Registry Avro through its optional schema-registry extra.
+- Compare frozen release results with explicit recorded-error noncomparability, approved
+  reference category-name aliases and authenticated capture-date replay; recorded values
+  and all numeric comparison thresholds remain unchanged.
+- Add experimental BigQuery Parquet load and Storage Read sources, reference-only credentials, bounded catalog sampling and a dry-run query cost guard.
+
+
 - Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.
 
 - Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
@@ -2121,6 +2132,15 @@ Converting a full capture to the safe form now gives a different content ID when
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
 
+
+- W9-16: optional native Apache Iceberg source and sink with local SQLite/file or
+  named catalogs, native nested types, width restoration, partition transforms,
+  snapshot micro-batches/fingerprints, time travel and namespace profiling. CLI
+  URI targets and additive bridge API 1.2 target arguments are supported.
+- W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+  catalog row counts and whole-database profiles through the KQL endpoint.
+  Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
+
 ### W9-10
 
 - Read dbt semantic models and list singular tests in import metadata.
@@ -2148,3 +2168,12 @@ Converting a full capture to the safe form now gives a different content ID when
   controls and event-time message timestamps; replay keys remain available.
 - Stream sources expose message metadata on request and drift ignores it by
   default. The CLI exposes both write and read metadata options.
+
+### W9-05: nested child profiling
+
+- Profile struct fields, list elements and map keys/values under their owning column,
+  with child paths, presence rates, length statistics and configurable depth.
+- Preserve bounded child sketches through stream checkpoints; compare and check
+  child paths, and include them in safe capture, JSON summaries and explanations.
+- Keep fixed-size binary and fixed-binary-backed extension children opaque, preserve existing parent
+  length-drift names, and generate safe nested captures using public length defaults.

@@ -77,12 +77,14 @@ def test_names_and_schemes():
 def test_the_installed_distribution_conforms():
     lines = kit.check_installed("sqllocks-shape-databases")
     assert [ln.split(":")[0] + ":" + ln.split(":")[1] for ln in lines] == [
+        "shape.sinks:bigquery",
         "shape.sinks:databricks",
         "shape.sinks:duckdb",
         "shape.sinks:mysql",
         "shape.sinks:oracle",
         "shape.sinks:postgres",
         "shape.sinks:snowflake",
+        "shape.sources:bigquery",
         "shape.sources:databricks",
         "shape.sources:mysql",
         "shape.sources:oracle",

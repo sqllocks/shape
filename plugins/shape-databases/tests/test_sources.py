@@ -663,3 +663,41 @@ def test_sample_and_provenance_hooks_are_used(source):
     assert calls == [("accounts", 7, 20, ["id"])]
     assert prof.tables["accounts"]["sample_method"] == "adapter_sample"
     assert prof.provenance["warehouse"] == "compute"
+
+
+@pytest.mark.parametrize("depth", [0, 1])
+def test_public_database_profile_preserves_child_depth(source, monkeypatch, depth):
+    import shape
+    from shape.plugins.host import default_host
+
+    src, uri, _ = source
+    sampled = pa.table({"id": [1, 2], "email": ["a", "b"], "items": [[{"x": 1}], []]})
+    monkeypatch.setattr(src, "_sample", lambda *args: (sampled, "fixture"))
+    monkeypatch.setattr(src, "_provenance", lambda *args: {"source": "fixture"})
+    host = default_host()
+    monkeypatch.setattr(
+        host, "records", lambda group: [type("Record", (), {"group": group, "name": "db"})()]
+    )
+    monkeypatch.setattr(host, "try_get", lambda group, name: src)
+    prof = shape.profile(uri, sample_rows=2, tables=["accounts"], max_depth=depth)
+    table = prof.tables["accounts"]
+    column = table["columns"]["items"]
+    if depth == 0:
+        assert "children" not in column
+    else:
+        assert column["children"][0]["path"] == "$.items[]"
+        assert "children" not in column["children"][0]
+    assert table["row_count"] == 20
+    assert table["sampled_rows"] == 2
+    assert table["sampling"]["requested"] == 2
+    assert table["sample_method"] == "fixture"
+    assert table["columns"]["id"]["declared_type"] == "bigint"
+    assert prof.provenance == {"source": "fixture"}
+
+
+@pytest.mark.parametrize("depth", [-1, 65, True])
+def test_database_depth_refused_before_connection(source, depth):
+    src, uri, server = source
+    with pytest.raises(ValueError, match="max_depth"):
+        src.profile_database(uri, max_depth=depth)
+    assert not server.events

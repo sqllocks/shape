@@ -52,6 +52,13 @@ def cmd_generate(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     check_scale(schema, scale)
     fmt = args.get("format", "summary")
     out_dir = args.get("output_dir")
+    target = args.get("to")
+    if target and (out_dir or fmt != "summary"):
+        raise BridgeError("usage.invalid_argument", "to cannot combine with output_dir or format")
+    if target:
+        from shape.io.targets import confirm_remote_targets
+
+        confirm_remote_targets([target], confirm=bool(args.get("confirm_remote")))
     if fmt != "summary" and not out_dir:
         raise BridgeError(
             "usage.missing_argument",
@@ -86,6 +93,20 @@ def cmd_generate(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         response["output_format"] = fmt
         response["output_dir"] = str(out_dir)
         response["files"] = [str(p) for p in paths]
+    if target:
+        from shape.io.targets import sink_for_target
+        from shape.plugins.schemes import redact
+
+        _, sink = sink_for_target(target)
+        options = dict(args.get("sink_options") or {})
+        preflight = getattr(sink, "preflight", None)
+        if preflight is not None:
+            preflight(target, {name: options for name in result.generation_order})
+        with writing():
+            for name in result.generation_order:
+                table = result.tables[name]
+                sink.write(target, name, table.to_batches(), schema=table.schema, **options)
+        response["target"] = redact(target)
     return response
 
 
@@ -141,6 +162,15 @@ COMMANDS = [
             "mode": _MODE,
             "profile": _PROFILE,
             "identifiers": _IDENTIFIERS,
+            "to": Arg(
+                "string", "a sink URI; Iceberg table targets take one generated table", since="1.2"
+            ),
+            "sink_options": Arg(
+                "object", "sink options; secrets must be credential references", since="1.2"
+            ),
+            "confirm_remote": Arg(
+                "boolean", "confirm writing to a non-local URI target", since="1.2"
+            ),
         },
         obj(
             {
@@ -157,6 +187,7 @@ COMMANDS = [
                 "output_format": STR,
                 "output_dir": STR,
                 "files": STRS,
+                "target": STR,
             },
         ),
         cmd_generate,

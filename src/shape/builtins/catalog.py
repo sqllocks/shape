@@ -9,6 +9,8 @@ from __future__ import annotations
 
 # (entry-point group, name, "module:Class")
 BUILTINS: tuple[tuple[str, str, str], ...] = (
+    ("shape.sinks", "iceberg", "shape.builtins.sinks:IcebergSink"),
+    ("shape.sources", "iceberg", "shape.builtins.sources:IcebergSource"),
     ("shape.sources", "csv", "shape.builtins.sources:CsvSource"),
     ("shape.sources", "parquet", "shape.builtins.sources:ParquetSource"),
     ("shape.sources", "jsonl", "shape.builtins.sources:JsonlSource"),

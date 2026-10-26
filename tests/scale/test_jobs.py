@@ -541,3 +541,64 @@ def test_fabric_failed_without_reason_is_an_explicit_diagnostic(store):
     status = Jobs(store, transport=fake).status("spark-t1", TOKEN)
     assert "Fabric returned Failed without a failure reason" in status["error"]
     assert RUN in status["error"]
+
+
+def test_durable_progress_update_cannot_overwrite_concurrent_cancel(tmp_path, monkeypatch):
+    import shape.demo.filelock as filelock
+
+    writer = JobStore(tmp_path)
+    other = JobStore(tmp_path)
+    writer.put(JobRecord("local-race", "local", status="running"))
+    read = threading.Event()
+    release = threading.Event()
+    cancel_observed = threading.Event()
+    failures = []
+    original_get = writer.get
+    original_try_lock = filelock._try_lock
+
+    def paused_get(job_id):
+        record = original_get(job_id)
+        read.set()
+        assert release.wait(5)
+        return record
+
+    def observe_contention(fd):
+        try:
+            original_try_lock(fd)
+        except OSError:
+            cancel_observed.set()
+            raise
+
+    def progress():
+        try:
+            writer.update("local-race", progress={"rows_done": 1})
+        except BaseException as exc:
+            failures.append(exc)
+
+    def cancel():
+        try:
+            other.update("local-race", status="cancelled")
+        except BaseException as exc:
+            failures.append(exc)
+        finally:
+            cancel_observed.set()
+
+    monkeypatch.setattr(writer, "get", paused_get)
+    monkeypatch.setattr(filelock, "_try_lock", observe_contention)
+    progress_thread = threading.Thread(target=progress)
+    cancel_thread = threading.Thread(target=cancel)
+    progress_thread.start()
+    try:
+        assert read.wait(5)
+        cancel_thread.start()
+        # Either the cancellation commits first (the old lost-update race), or it
+        # encounters the progress transaction's OS lock. Both release this barrier.
+        assert cancel_observed.wait(5)
+    finally:
+        release.set()
+        progress_thread.join(5)
+        if cancel_thread.ident is not None:
+            cancel_thread.join(5)
+    assert not progress_thread.is_alive() and not cancel_thread.is_alive()
+    assert not failures
+    assert JobStore(tmp_path).get("local-race").status == "cancelled"

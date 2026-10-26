@@ -1372,6 +1372,13 @@ There is no second implementation: a command calls what the matching command lin
 ## Security
 
 `profile` opens a database connection when its `source` is a database URI.
+BigQuery (`bigquery://PROJECT/DATASET?location=US`, optionally `&table=T`) opens HTTPS
+connections to the BigQuery query/load service and the Storage Read API. Its optional
+`[bigquery]` clients use ADC or private credential references; URI keys and tokens are
+refused. Every query is dry-run checked against `max_bytes_billed` (default 1 GiB).
+Dataset profiling supports `tables` and `sample_rows`, records actual sampled rows and
+bytes processed, and saves with safe capture. Storage Read and account charges still
+require account policy; no live account verification is claimed.
 PostgreSQL (`postgresql://`, also `postgres://`), MySQL (`mysql://`), Snowflake
 (`snowflake://`) and Databricks (`databricks://`) profile a schema
 or a URI-selected table. Optional `tables` is an array of table names; `sample_rows` is
@@ -1443,6 +1450,18 @@ print(drift["drifted"], [(n["column"], n["metric"]) for n in drift["not_measured
 ```
 
 (`call` is the helper above, with `"api_version": "1.2"` in the request.)
+
+Iceberg (API 1.2): `generate` accepts `to` (a sink URI), `sink_options` (an option
+object) and `confirm_remote` (boolean). `to` cannot combine with a file `format` or
+`output_dir`. An exact Iceberg table URI accepts one generated table; credential
+options are references, never secret literals. Local `iceberg+file://` writes need
+no confirmation; named `iceberg://` targets require confirmation. `profile.source`
+accepts both URI forms and namespace URIs, and `as_of` selects an earlier snapshot.
+Artifacts preserve Iceberg provenance. Existing API 1.1 requests remain unchanged.
+
+`profile.source_options` (API 1.2) accepts Iceberg catalog options and integer
+`snapshot_id`; credential values remain references. `as_of` and `snapshot_id` are
+mutually exclusive. Sink partition options can be a list of transform expressions.
 
 
 ## Complete local run

@@ -1,0 +1,26 @@
+{
+  "provenance": {
+    "source_commit": "e41a67eab08beed36804bf3a84db83fb7f2595f6",
+    "record_store_commit": "909a941cd294cd25031a8dcaa221e6b49e949674",
+    "run_id": 38332677511,
+    "job_id": 115085741837,
+    "step": "Record every release workload, equivalence before timing",
+    "window_start": "2026-10-13T01:47:38Z",
+    "window_end": "2026-10-13T02:17:06Z",
+    "session_start": "2026-10-13T01:47:50Z",
+    "machine_local_start": "2026-10-13 01:47:50",
+    "timezone": "UTC",
+    "runner": "ubuntu-latest",
+    "timezone_override": false
+  },
+  "workloads": {
+    "edge/x_time_only.csv": {
+      "record_sha256": "5abff56309718c807f460d931e36f97884f2d532ff565c4e616fcfe8213f6fa8",
+      "input_sha256": "6aebbd5b39f54f1ca12d8380076f8b5707f485de24ae88d0f39eb7a056860094"
+    },
+    "edge/x_time_ampm.csv": {
+      "record_sha256": "b233ad680bd0292f625c80eebd4bf29759ee69bb197396eafe2306dce778a48a",
+      "input_sha256": "c1c846e830ae9dfa224e443b5b4b1e1356287d334536b208ac61475d8557e313"
+    }
+  }
+}

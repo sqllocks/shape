@@ -45,6 +45,13 @@ from pathlib import Path
 from typing import Any
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+from comparison_contract import (  # noqa: E402
+    recorded_not_comparable_reason,
+    reported_not_comparable,
+)
+from recorded_store import RecordingError  # noqa: E402
+
 RUN_PY = HERE / "run.py"
 GENERATE_SHARDS = 3
 
@@ -214,13 +221,32 @@ def merge(
     need = required_ids(run, sorted(domains))
     missing: list[str] = []
     failed: list[str] = []
+    not_comparable: list[dict[str, str]] = []
     passed = 0
     for impl in IMPLS:
         recs = (merged or {}).get(impl, {}).get("workloads", {})
         for wid in sorted(need[impl]):
             rec = recs.get(wid)
+            try:
+                recorded_refusal = recorded_not_comparable_reason(wid)
+            except RecordingError:
+                failed.append(f"{impl} {wid} (untrustworthy recorded refusal)")
+                continue
             if rec is None:
                 missing.append(f"{impl} {wid}")
+            elif (rec.get("verifier") or {}).get("status") == "not_comparable":
+                try:
+                    reason = reported_not_comparable(wid, rec)
+                except RecordingError:
+                    reason = None
+                if reason is None:
+                    failed.append(f"{impl} {wid} (invalid not_comparable report)")
+                else:
+                    not_comparable.append(
+                        {"implementation": impl, "workload": wid, "reason": reason}
+                    )
+            elif recorded_refusal is not None:
+                failed.append(f"{impl} {wid} (recorded refusal must not count as a pass)")
             elif not verifier_passed(rec) or rec.get("median_s") is None:
                 status = (rec.get("verifier") or {}).get("status")
                 failed.append(f"{impl} {wid} (verifier {status})")
@@ -239,6 +265,7 @@ def merge(
         "reasons": reasons,
         "required": sum(len(v) for v in need.values()),
         "passed": passed,
+        "not_comparable": not_comparable,
         "missing": missing,
         "failed": failed,
         "baseline_domains": sorted(domains),
@@ -271,6 +298,7 @@ def history_record(
         "shape_commit": verdict["shape_commit"],
         "required": verdict["required"],
         "passed": verdict["passed"],
+        "not_comparable": verdict.get("not_comparable", []),
         "reasons": verdict["reasons"],
     }
 
@@ -372,6 +400,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {reason}")
         for line in verdict["missing"] + verdict["failed"]:
             print(f"    {line}")
+        for item in verdict["not_comparable"]:
+            print(
+                f"    NOT COMPARABLE {item['implementation']} {item['workload']}: {item['reason']}"
+            )
         return 0 if verdict["green"] else 1
     run_now = streak(read_history(a.history))
     days = ", ".join(f"{r['date']} ({(r['shape_commit'] or '?')[:7]})" for r in run_now)

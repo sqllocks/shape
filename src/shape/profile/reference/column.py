@@ -814,9 +814,11 @@ def _profile_column(
 
 
 def _profile_nested_column(c: _Col, row_count: int) -> _Work:
-    """A list, struct, map or union column, recorded whole: Arrow type, row and null counts and
-    the lengths of lists and maps (``shape.profile.nested``). Nothing inside the values is
-    profiled, so the column has no value statistics, categories or key candidates."""
+    """Keep the opaque parent record and, within the depth limit, profile its children.
+
+    Child rows exclude null parent slots; list/map entries retain their own nulls.
+    Unions keep their existing opaque behavior.
+    """
     typ = c.arr.type
     null_count = c.arr.null_count
     null_rate = null_count / row_count if row_count else 0.0
@@ -844,6 +846,19 @@ def _profile_nested_column(c: _Col, row_count: int) -> _Work:
         arrow_type_spec=nested.arrow_type_to_spec(typ),
         nested=nested.nested_stats(c.arr, row_count),
     )
+    if c.nested_depth:
+        from shape.profile.children import field_path, lengths, reference_children
+
+        path = c.nested_path or field_path("$", c.name)
+        prof.children = reference_children(c.arr, path, c.nested_depth)
+        values = lengths(c.arr)
+        if values is not None:
+            from .profile import _column_dict
+            from .readers import _arrow_cols
+
+            length_col = _arrow_cols(pa.table({"length": values}))[0]
+            prof.length = _column_dict(_profile_column(length_col, len(values)).prof)
+            prof.length["row_count"] = len(values)
     return _Work(c, prof)
 
 

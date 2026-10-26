@@ -493,3 +493,54 @@ def test_cloud_bridge_artifact_uses_safe_capture(
         assert sensitive not in json.dumps(result)
     finally:
         bridge.close()
+
+
+@pytest.mark.parametrize("dialect", ["snowflake", "databricks"])
+@pytest.mark.parametrize("depth", [None, 0, 1])
+def test_public_cloud_profile_preserves_nested_depth(dialect, depth, monkeypatch):
+    import shape
+    from shape.plugins.host import default_host
+
+    source, _, uri, _, _ = cloud_fixture(dialect)
+    sample = pa.table({"id": [1, 2], "items": [[{"x": 1}], []]})
+    monkeypatch.setattr(source, "_sample", lambda *args: (sample, "fixture"))
+    host = default_host()
+    monkeypatch.setattr(
+        host, "records", lambda group: [type("Record", (), {"group": group, "name": "db"})()]
+    )
+    monkeypatch.setattr(host, "try_get", lambda group, name: source)
+    options = {} if depth is None else {"max_depth": depth}
+    profile = shape.profile(uri, sample_rows=2, tables=["items"], **options)
+    table = profile.tables["items"]
+    column = table["columns"]["items"]
+    if depth == 0:
+        assert "children" not in column
+    else:
+        child = column["children"][0]
+        assert child["path"] == "$.items[]"
+        assert ("children" in child) is (depth is None)
+    assert table["row_count"] == 10000 and table["sampled_rows"] == 2
+    assert table["sampling"]["requested"] == 2
+    assert table["sample_method"] == "fixture"
+    assert table["columns"]["id"]["is_primary_key"]
+    assert table["columns"]["id"]["declared_type"] == (
+        "NUMBER" if dialect == "snowflake" else "INT"
+    )
+    assert profile.provenance == ({"warehouse": "WH"} if dialect == "snowflake" else None)
+
+
+@pytest.mark.parametrize("dialect", ["snowflake", "databricks"])
+@pytest.mark.parametrize("depth", [-1, 65, True])
+def test_cloud_nested_depth_rejected_before_connection(dialect, depth):
+    source, server, uri, _, _ = cloud_fixture(dialect)
+    with pytest.raises(ValueError, match="max_depth"):
+        source.profile_database(uri, max_depth=depth)
+    assert not server.events
+
+
+@pytest.mark.parametrize("dialect", ["snowflake", "databricks"])
+def test_cloud_nested_depth_keeps_unknown_options_closed(dialect):
+    source, server, uri, _, _ = cloud_fixture(dialect)
+    with pytest.raises(ShapeError, match="unknown source option"):
+        source.profile_database(uri, max_depth=1, unknown_option=True)
+    assert not server.events

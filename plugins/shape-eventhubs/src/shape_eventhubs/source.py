@@ -27,6 +27,11 @@ Options of :meth:`EventHubsStreamSource.read`:
                    event without one in its body is its AMQP creation time when present,
                    otherwise its enqueued time.
 
+``format`` selects JSON, Avro or Protobuf; ``schema_file`` and Protobuf ``message``
+load local schemas. Avro also reads Azure registry content types using
+``schema_registry_url``. A reader ``schema`` pins types; unpinned binary reads
+follow their writer schemas.
+
 ``azure-eventhub`` is imported when a read starts, never at plugin load. The client delivers
 events on a worker thread; they reach the reader through a bounded queue, so a slow profiler
 slows the receiving down instead of growing memory.
@@ -132,18 +137,18 @@ def _enqueued_us(when: datetime | None) -> int | None:
 def _body(event: Any) -> str | bytes | None:
     """The event's body as text or, when it is not UTF-8 text, as bytes: ``decode_messages``
     counts an undecodable body instead of the receive failing on it."""
-    if hasattr(event, "body_as_str"):
-        try:
-            return str(event.body_as_str())
-        except TypeError:  # azure-eventhub: "Message data is not compatible with string type"
-            pass
     body = event.body
     if body is None or isinstance(body, str | bytes):
         return body
     try:
-        return b"".join(body)  # a data body is a sequence of byte sections
+        return b"".join(body)  # preserve binary even when all its bytes happen to be UTF-8
     except TypeError:
-        return None  # not bytes at all: an empty message to the decoder
+        if hasattr(event, "body_as_str"):
+            try:
+                return str(event.body_as_str())
+            except (TypeError, UnicodeError):
+                pass
+        return None
 
 
 def _properties(event: Any) -> dict[str, bytes | None]:
@@ -229,6 +234,21 @@ class EventHubsStreamSource:
             )
             if k in opts
         }
+        from shape.streaming.binary import source_decoder
+
+        registry_url = opts.pop("schema_registry_url", None)
+        if registry_url:
+            from .registry import azure_codec
+
+            if opts.pop("format", "json") != "avro":
+                raise StreamSourceError("Azure Schema Registry requires format=avro")
+            decode["decoder"] = azure_codec(
+                registry_url,
+                credential=connect.get("credential"),
+                encoder=opts.pop("registry_encoder", None),
+            )
+        else:
+            decode["decoder"] = source_decoder(opts)
         if opts:
             raise StreamSourceError(f"unknown eventhubs source options: {sorted(opts)}")
         if start_at not in ("earliest", "latest"):
@@ -354,11 +374,12 @@ class EventHubsStreamSource:
                             pid,
                             int(e.sequence_number),
                             _body(e),
-                            _message_timestamp(e),
-                            _message_key(e),
-                            _properties(e),
-                            _properties(e),
-                            _partition_key(e),
+                            timestamp_us=_message_timestamp(e),
+                            content_type=getattr(e, "content_type", None),
+                            key=_message_key(e),
+                            headers=_properties(e),
+                            properties=_properties(e),
+                            partition_key=_partition_key(e),
                         )
                         for e in events
                     ],
@@ -420,14 +441,18 @@ class EventHubsStreamSource:
                     continue
                 last = time.monotonic()
                 received += len(messages)
-                positions[pid] = max(positions[pid], messages[-1].offset + 1)
-                batch = decode_messages(messages, schema=schema, stats=self.stats, **decode)
-                if batch is None:
-                    continue
-                if schema is None:
-                    schema = freeze(batch)
-                    batch = conform(batch, schema)
-                yield StreamOffset(partition_offsets(positions)), batch
+                from shape.streaming.binary import schema_groups
+
+                for part in schema_groups(messages, decode.get("decoder"), schema):
+                    positions[pid] = max(positions[pid], part[-1].offset + 1)
+                    batch = decode_messages(part, schema=schema, stats=self.stats, **decode)
+                    if batch is None:
+                        continue
+                    if schema is None and decode.get("decoder") is None:
+                        schema = freeze(batch)
+                        batch = conform(batch, schema)
+                    yield StreamOffset(partition_offsets(positions)), batch
+
         finally:
             stop.set()
             try:

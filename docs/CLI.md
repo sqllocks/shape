@@ -579,6 +579,27 @@ tests bad, `--bad` tests good, or a version cannot be tested, for example a shar
 none does, 2 unusable input). `timelapse` follows one column across the versions (`-o OUT.html` is
 one offline page). See `docs/HISTORY.md`.
 
+### Iceberg targets and profiles
+
+With `[iceberg]` installed, write one generated table to an exact table URI:
+
+```sh
+shape generate items.json --to iceberg+file:///warehouse/ns/items
+shape generate items.json --to iceberg+file:///warehouse/ns/items --write-mode append --commit-rows 10000
+shape profile iceberg+file:///warehouse/ns/items -o items.shape
+shape profile iceberg+file:///warehouse/ns -o namespace.shape
+```
+
+Named catalog writes use `--to iceberg://catalog/ns/items --yes`. Catalog options
+use `--sink-config iceberg.catalog_type=rest` and `iceberg.uri=https://catalog.example`;
+secrets use references such as `iceberg.token=env://ICEBERG_TOKEN`. URI secrets are
+refused. Local `iceberg+file` writes need no remote confirmation. Python source
+options provide `snapshot_id` and `as_of`; `shape profile --as-of` selects a timestamp.
+See `docs/SINKS.md` for native types, partition transforms and snapshot micro-batches.
+
+Partition transforms are repeatable quoted arguments, for example
+`--partition-by 'bucket(16, id)' --partition-by 'truncate(4, label)'`.
+
 
 ## Complete local run
 
@@ -795,6 +816,19 @@ shape doctor
     Result: OK
     ```
 
+## Binary broker formats
+
+`shape emit` and `shape stream` accept `--event-format avro` or
+`--event-format protobuf` for Kafka and Event Hubs. For plain binary writes, set
+`--sink-config kafka.schema_file=events.avsc` (Avro), or
+`--sink-config kafka.schema_file=events.proto --sink-config kafka.message=package.Message`
+(Protobuf). Replace `kafka` with `eventhubs` for Event Hubs. These modes add no
+registry prefix. Both require a flat envelope. The source APIs use `format="avro"`
+or `format="protobuf"` with the same `schema_file` and `message` options;
+`schema=pyarrow.schema(...)` pins the reader schema and counts rejected rows.
+See [the binary format guide](EMIT.md#local-binary-schemas-and-nested-events) for
+nested types, registry schema evolution and Azure Schema Registry options.
+
 ### PostgreSQL and MySQL profiling
 
 Install the database plugin and its driver extra. `shape profile` accepts
@@ -846,3 +880,16 @@ CLI: `shape emit ... --key customer_id --header trace=@trace_id --partition 0
 --timestamp event_time` (Kafka); use `--partition-key customer_id` for Event
 Hubs. `shape stream-profile URI --with-key --with-headers --with-timestamp`
 reads metadata. The existing `--option nested=false` selects JSON-text maps.
+
+### BigQuery profiling and generation
+
+The experimental database plugin extra `sqllocks-shape-databases[bigquery]` adds
+`bigquery://PROJECT/DATASET?location=US` to `shape profile` and `shape generate --to`.
+Add `&table=T` to read one table. Dataset profiling accepts `--tables T,U` and
+`--sample-rows N` (default 1000; 0 catalog only), and saves the W9-01 sampling metadata.
+Configure ADC or `GOOGLE_APPLICATION_CREDENTIALS`; `--source-config credentials=env://NAME`
+and `--sink-config bigquery.credentials=env://NAME` select references to service-account JSON.
+The URI option `max_bytes_billed=1073741824` selects the query limit; the default is 1 GiB.
+Every query is dry-run checked. Row counts come from table metadata and distributions
+from bounded system samples. `--table-prefix` also applies to BigQuery generation.
+Account execution requires owner validation; the offline acceptance uses fake SDK responses.

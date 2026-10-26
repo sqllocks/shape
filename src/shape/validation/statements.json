@@ -7,6 +7,7 @@
  "SH2-006": "Exact mode MUST report exact distinct counts.",
  "SH2-007": "A Shape MUST NOT retain original source rows.",
  "SH2-032": "Profiling the same input in exact mode MUST produce the same document every time.",
+ "SH2-033": "Nested profiling MUST retain child statistics and paths under their owning column, carry mode-appropriate error evidence, and suppress child values in safe captures independently of repeated element counts.",
  "SH2-008": "A writer MUST write `.shape` format version 2.",
  "SH2-009": "A writer MUST NOT write `.shape` format version 1.",
  "SH2-010": "A reader MUST verify the content hash of every component before using it.",

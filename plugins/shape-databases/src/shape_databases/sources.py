@@ -138,12 +138,16 @@ class DatabaseSource:
             "connection",
             "batch_size",
             "sample_rows",
+            "max_depth",
             "tables",
             "name",
         }
         unknown = set(options) - allowed
         if unknown:
             raise ShapeError("unknown source option: " + ", ".join(sorted(unknown)))
+        from shape.profile.children import validate_depth
+
+        validate_depth(options.get("max_depth", 8))
         batch_size = _integer(options.get("batch_size", 65536), "batch_size", 1)
         _integer(options.get("sample_rows", 1000), "sample_rows", 0)
         target = parse_uri(
@@ -410,6 +414,7 @@ class DatabaseSource:
     def profile_database(self, uri: str, **options: Any) -> Any:
         from shape.profile.reference import Profile, profile
 
+        depth = options.get("max_depth", 8)
         plan = self._plan(uri, options, False)
         n = options.get("sample_rows", 1000)
         data_tables: dict[str, Any] = {}
@@ -431,7 +436,7 @@ class DatabaseSource:
                     sampled, method = self._sample(
                         cur, plan, schema, table, fields, n, catalog[table], pk
                     )
-                    item = profile(sampled, name=table, joint=False).tables[table]
+                    item = profile(sampled, name=table, joint=False, max_depth=depth).tables[table]
                     item["row_count"] = catalog[table]
                     item["primary_key"] = pk
                     item["sampled_rows"] = sampled.num_rows

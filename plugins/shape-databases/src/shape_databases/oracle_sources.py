@@ -113,6 +113,7 @@ class OracleSource(DatabaseSource):
             "batch_size",
             "batch_rows",
             "sample_rows",
+            "max_depth",
             "tables",
             "name",
             "exact_counts",
@@ -120,6 +121,9 @@ class OracleSource(DatabaseSource):
         unknown = set(options) - allowed
         if unknown:
             raise ShapeError("unknown Oracle source option: " + ", ".join(sorted(unknown)))
+        from shape.profile.children import validate_depth
+
+        validate_depth(options.get("max_depth", 8))
         batch_size = _sql.positive_int(
             options.get("batch_rows", options.get("batch_size", 65536)), "batch_size"
         )
@@ -470,7 +474,9 @@ class OracleSource(DatabaseSource):
                     else:
                         sample = pa.Table.from_batches([], schema=fields)
                         method = "catalog_only"
-                    item = profile(sample, name=table, joint=False).tables[table]
+                    item = profile(
+                        sample, name=table, joint=False, max_depth=options.get("max_depth", 8)
+                    ).tables[table]
                     item.update(
                         row_count=int(count),
                         row_count_source=count_source,

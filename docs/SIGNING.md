@@ -222,10 +222,10 @@ shape inspect data.shape --verify release.pub  # also check, diff, query, plan
 
     ```text {.expected}
     {"encrypted": true, "key_id": "d03e8cd9841b3fe6", "private_key": "release.key", "public_key": "release.pub"}
-    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: data.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:436: UserWarning: data.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"shape_content_id": "9865171cc49d7241aa6d994f131a40e7992a79fe1ebb537dbdd52b7dedab1d9a", "signed_by": "d03e8cd9841b3fe6", "written": "data.shape"}
-    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: data.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:436: UserWarning: data.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"shape_content_id": "47e391816f192210bfa00f6f99d7c615c56814645610ce7f24841e9ec8f286ea", "signed_by": "d03e8cd9841b3fe6", "written": "data.shape"}
     {"key_id": "d03e8cd9841b3fe6", "signed": "data.shape"}

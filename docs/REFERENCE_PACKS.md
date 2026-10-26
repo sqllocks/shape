@@ -309,7 +309,7 @@ shape profile orders.csv -o orders.shape \
       alpha2=AF  alpha3=AFG  numeric=004  name=Afghanistan
       alpha2=AG  alpha3=ATG  numeric=028  name=Antigua & Barbuda
       alpha2=AI  alpha3=AIA  numeric=660  name=Anguilla
-    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"shape_content_id": "074a5609a612b6daef9bde0067ddb5aadd0026c9802ae6c33fa0661cccdbf6cb", "written": "orders.shape"}
     ```
@@ -346,7 +346,7 @@ shape profile orders.csv -o orders.shape --validate iban=iban --validate country
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"shape_content_id": "2de35ceba8a7ba7e641853441ebe290d23fae5ef57bea5ea75e28497d6caf21a", "written": "orders.shape"}
     ```

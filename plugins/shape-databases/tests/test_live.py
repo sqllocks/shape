@@ -98,6 +98,53 @@ def test_databricks_round_trip():
     _round_trip(DatabricksSink(), uri, {})
 
 
+def test_bigquery_round_trip():
+    """O-14 account fixture; ADC is resolved by Google's SDK, never printed."""
+    from shape_databases.bigquery import BigQuerySink, BigQuerySource
+
+    (uri,) = need("SHAPE_TEST_BIGQUERY_URI")
+    name = f"shape_live_{uuid.uuid4().hex[:8]}"
+    sink = BigQuerySink()
+    source = BigQuerySource()
+    # A generated integer/string fixture keeps the round-trip Arrow schema exact.
+    from shape import generate
+    from shape.generation.schema import GenSchema
+
+    schema = GenSchema.from_dict(
+        {
+            "schema_version": 1,
+            "model": {"name": "bigquery_live", "seed": 7},
+            "tables": {
+                name: {
+                    "name": name,
+                    "columns": {
+                        "id": {
+                            "name": "id",
+                            "type": "integer",
+                            "generator": {"strategy": "sequence"},
+                        }
+                    },
+                }
+            },
+            "generation": {"scale": "small", "scales": {"small": {name: 12}}},
+        }
+    )
+    written = generate(schema).tables[name]
+    try:
+        sink.write(uri, name, written.to_batches())
+        separator = "&" if "?" in uri else "?"
+        got = pa.Table.from_batches(source.read(uri + separator + "table=" + name))
+        assert dataset_id({name: got}) == dataset_id({name: written})
+        assert source.profile_database(uri, tables=[name]).tables[name]["row_count"] == 12
+    finally:
+        plan = sink.plan(uri, name, {})
+        conn = sink.default_connect(**sink.connect_params(plan))
+        try:
+            conn.delete_table(sink.table_id(plan), not_found_ok=True)
+        finally:
+            conn.close()
+
+
 def _source_round_trip(source, sink, uri, options):
     table = f"shape_source_{uuid.uuid4().hex[:8]}"
     table_uri = uri + ("&" if "?" in uri else "?") + "table=" + table
