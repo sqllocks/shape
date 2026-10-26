@@ -24,6 +24,7 @@ import threading
 import time
 import uuid
 from collections.abc import Callable
+from contextlib import nullcontext
 from dataclasses import asdict, dataclass, field, fields
 from datetime import UTC, datetime
 from pathlib import Path
@@ -267,13 +268,22 @@ class JobStore:
             return record
 
     def update(self, job_id: str, **changes: Any) -> JobRecord:
+        from shape.demo.filelock import locked
+
         with self._lock:
-            record = self.get(job_id)
-            for key, value in changes.items():
-                if not hasattr(record, key):
-                    raise AttributeError(f"a job has no field {key!r}")
-                setattr(record, key, value)
-            return self.put(record)
+            # The instance lock cannot serialize a second store or process. The
+            # sidecar lock survives atomic record replacement and protects the
+            # complete read-modify-write, so progress cannot erase cancellation.
+            if self._root is not None:
+                self.get(job_id)  # require an existing private store before locking
+            transaction = locked(self._path(job_id)) if self._root is not None else nullcontext()
+            with transaction:
+                record = self.get(job_id)
+                for key, value in changes.items():
+                    if not hasattr(record, key):
+                        raise AttributeError(f"a job has no field {key!r}")
+                    setattr(record, key, value)
+                return self.put(record)
 
     def list(self) -> list[JobRecord]:
         with self._lock:
