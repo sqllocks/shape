@@ -6,6 +6,9 @@ Status: available.
 
 ## Unreleased
 
+- Iceberg catalog endpoints use `catalog_uri` without colliding with the destination URI.
+  REST emulator startup builds the pinned official storage releases from source.
+
 - Kafka and Event Hubs read and write plain Avro and Protobuf with local schemas,
   preserve nested Arrow fields, and count malformed or incompatible rows. Kafka
   Avro reads resolve writer schema ids with a per-read cache; Event Hubs supports

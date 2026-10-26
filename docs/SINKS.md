@@ -321,9 +321,9 @@ Install `pip install 'sqllocks-shape[iceberg]'`. The optional extra uses
 `iceberg+file:///warehouse/ns/items` creates a local SQLite catalog at
 `/warehouse/catalog.db` on first write. `iceberg://catalog/ns/items` uses a named
 catalog from `~/.pyiceberg.yaml`, or options `catalog_type` (`rest`, `sql`, `glue`,
-`hive`), `uri` and `warehouse`. Glue and Hive option acceptance is untested against
+`hive`), `catalog_uri` (the catalog endpoint) and `warehouse`. Glue and Hive option acceptance is untested against
 services. `credential` and `token` are references (`env://NAME`, private `file://PATH`
-or `kv://VAULT/NAME`); credentials and query parameters are refused in URIs.
+or `kv://VAULT/NAME`); credentials, query parameters and fragments are refused in URIs.
 
 `IcebergSink.write(uri, table, batches, **options)` writes the table named by the
 URI. A table URI accepts one generated table per target. Default mode is
