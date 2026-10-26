@@ -54,7 +54,7 @@ A request:
 
 | field | meaning |
 |---|---|
-| `api_version` | `"MAJOR.MINOR"`. Optional (assumed current, 1.1, with a warning) but you should send it. A request that declares `"1.0"` is answered as the 1.0 bridge answers it (below). |
+| `api_version` | `"MAJOR.MINOR"`. Optional (assumed current, 1.4, with a warning) but you should send it. A request that declares `"1.0"` is answered as the 1.0 bridge answers it (below). |
 | `id` | Any string or integer of at most 128 characters. Echoed in the response; use it to match answers. |
 | `command` | One of the commands below. |
 | `args` | The command's arguments (an object; `null` means none). Unknown names are refused. A `null` value is the same as leaving the argument out. |
@@ -106,7 +106,7 @@ The full list, with a sentence for each, is `error_codes` in
 
 ## Versions and the stability promise
 
-`api_version` is `MAJOR.MINOR`; this bridge speaks **1.3** and serves **1.0 to 1.3**.
+`api_version` is `MAJOR.MINOR`; this bridge speaks **1.4** and serves **1.0 to 1.4**.
 
 - **Minor versions only add:** a command, an optional argument, an option, a result field, an error
   code, a warning code. A client written for 1.0 keeps working on 1.7, so **a client ignores result
@@ -115,11 +115,11 @@ The full list, with a sentence for each, is `error_codes` in
   result field, error code or the meaning of any of them.
 - **A major version may break.** A bridge serves one major version. A request for another is refused
   with `usage.unsupported_version`, and the message names the supported range
-  (`... this bridge serves 1.0 to 1.3`). The response always carries the bridge's own
+  (`... this bridge serves 1.0 to 1.4`). The response always carries the bridge's own
   `api_version`, so a client can read it from the refusal.
 - A request with a newer *minor* than the bridge's is served, with the warning
   `newer_minor_version`: what the newer minor added is not available.
-- A request with **no `api_version`** is served as 1.3, with the warning `api_version_assumed`.
+- A request with **no `api_version`** is served as 1.4, with the warning `api_version_assumed`.
 - Persisted files declare their own `format` and integer `version` (the job file below, the vector
   files). A file written by a newer Shape is refused with `input.unsupported_format_version`, never
   misread. The job file `shape-bridge-job` and the vector files `shape-bridge-vectors` are still
@@ -185,7 +185,7 @@ working; Shape's own commands are added.
 | `contract_validate` | validate a contract of the format `shape check` reads (1.1) | `path` or `text` |
 | `safe_scan` | scan a share-safe profile for leaks (1.1) | `path` or `text` |
 | `proposals_contract` | write the accepted rule proposals as a contract (1.2) | `decisions`\*, `output`\*, `merge` |
-| `report_card` | one report card for a synthetic dataset: fidelity, utility, privacy (1.2, job-capable) | `real`\*, `synthetic`\*, `config`, `tiers`, `holdout`, `manifest`, `require`, `output` |
+| `report_card` | one report card for a synthetic dataset: fidelity, utility, privacy (1.2, job-capable) | `real`\*, `synthetic`\*, `config`, `tiers`, `holdout`, `manifest`, `require`, `output`, `format` (1.4) |
 | `report_card_read` | a stored report card, checked (1.2) | `path`\* |
 | `rules_mutate` | mutation-test a contract against planted faults (1.2, job-capable, cancellable) | `data`\*, `contract`\*, `plan`, `seed`, `rate`, `min_score` |
 | `rules_backtest` | replay a contract over a registry's history (1.2, job-capable) | `registry`\*, `name`\*, `contract`\*, `since`, `until`, `window`, `incidents`, `compare` |
@@ -991,9 +991,34 @@ standard deviation and top values, read from the stored profiles; frames where `
 change are change points. `table` picks the table of a dataset profile; `since` and `until` limit
 the versions (dates, inclusive).
 
-Result: `column`, `table`, `window`, `change_points` and `frames`, which is **spillable**
-(*Large results*). A frame from a share-safe version has `form: "safe"` and only what the safe form
-holds.
+Frames are ordered by effective date, then commit timestamp, then registry log position
+for ties. The effective date is `business_date` when valid, otherwise the UTC commit date.
+The inclusive date filter runs before window grouping. Without `window` there is exactly
+one frame per selected registry entry, including entries on the same date. With `window`
+there is exactly one frame per occupied calendar day, ISO week (Monday to Sunday), or
+calendar month; empty periods produce no frames. A frame's `date` and `end` are the first
+and last selected version dates, rather than the calendar period boundaries. `versions`
+is the number of registry entries in that frame; `content_ids` follows their history order.
+Multi-entry windows require raw profiles with sketch state and sum their row counts.
+
+Result: `format: "shape-timelapse"`, integer `version: 1`, `name`, `column`, `table`, `window`,
+`since`, `until`, `source`, `change_points`, `notes` and `frames`, which is **spillable**
+(*Large results*). `change_points` lists the dates of marked frames in frame order.
+Every frame has `date`, `end`, `versions`, `content_ids`, `form` (`raw` or `safe`), `gap`,
+`row_count`, `null_rate`, `cardinality`, `mean`, `std`, `quantiles`, `top_values`,
+`change_point` and `changes`. Statistics unavailable in the stored profile are `null`.
+`quantiles` is `null` or an object with `p1`, `p5`, `p10`, `p25`, `p50`, `p75`, `p90`,
+`p95` and `p99` (each a number or `null`). `top_values` is `null` or up to five objects
+with `value` (string, or `null` when redacted) and numeric `share`.
+`changes` contains sorted, distinct change-kind strings, rather than change objects.
+
+A missing column is a gap frame: its statistics are `null`, `changes` is empty and
+`change_point` is `false`. Non-gap frames compare against the previous non-gap frame;
+the first has `change_point: false`. A frame from a share-safe version has `form: "safe"`
+and only what the safe form holds. A comparison involving a share-safe frame has
+`change_point: null` and no changes. When the bridge withholds top values it adds
+`redacted: true` to the frame. The published result schema describes these same fields in its emitted-frame branch;
+the earlier frame branch remains accepted for compatibility.
 
 Errors: `input.not_found`, `input.invalid_value` (a name, column or table that is not there, a date
 that is not a date, `since` after `until`), `usage.invalid_argument` (`window`).
@@ -1367,6 +1392,7 @@ There is no second implementation: a command calls what the matching command lin
 | `registry_diff` | `shape registry ROOT diff` (`shape.registry.drift`: `diff_safe`; `shape.diff` for two raw versions) |
 | `suite_list`, `suite_run` | `shape pack list --library`, `shape suite run` (`shape.scenario.library`: `list_scenarios`, `list_suites`, `load_suite`, `run_scenario`) |
 | `chaos` | `shape chaos` (`shape.chaos`: `corrupt_tables`, `verify_chaos_input`, `write_ground_truth`) |
+| `chaos_kinds` (1.4) | `shape chaos --list-kinds` (`shape.chaos.catalogue`) |
 | `safe_scan` | `shape profile validate --safe` (`shape.privacy.safe_validator.SafeProfileValidator`) |
 
 ## Security
@@ -1482,7 +1508,7 @@ echo '{"api_version": "1.0", "id": "r1", "command": "dry_run", "args": {"domain"
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    {"api_version": "1.3", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
+    {"api_version": "1.4", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
     ```
 
 <a id="local-example-112"></a>
@@ -1502,9 +1528,9 @@ EOF
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    {"api_version": "1.3", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
-    {"api_version": "1.3", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
-    {"api_version": "1.3", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
+    {"api_version": "1.4", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
+    {"api_version": "1.4", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
+    {"api_version": "1.4", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
     ```
 
 Oracle sources (`oracle://` and `tcps://`, from `sqllocks-shape-databases[oracle]`) support
@@ -1512,3 +1538,54 @@ Oracle sources (`oracle://` and `tcps://`, from `sqllocks-shape-databases[oracle
 by default. Oracle connection credentials and wallet passwords are never artifact metadata.
 The catalog count and LAST_ANALYZED describe the population; sampled distributions describe
 only the bounded sample. See the database plugin README for exact counts and type mapping.
+
+
+## Targeted chaos catalogue (1.4)
+
+`chaos_kinds` takes no arguments and returns `surface: "targeted_corruptions"`,
+`syntax` and `kinds`. Each kind records its name, column requirement (`required`,
+`optional` or `forbidden`), automatic targeting, default rate, rate bounds, rate
+semantics and all accepted options with their defaults. It reads no data and writes
+no files. `shape chaos --list-kinds --json` returns the same fields in its standard CLI
+result envelope; omit `--json`
+for text. The catalogue covers every kind accepted by `chaos.corrupt` / `--corrupt`.
+The separate scheduled category mutators and row anomaly API retain their controls
+as described in [Chaos](CHAOS.md).
+
+Rates range from 0 to 1 and default to 0.02. Targeted row selection uses Python
+`round(current_table_rows * rate)` (ties to even), capped at eligible rows for each
+column. Duplicates append that many copies. `null_creep` adds `step` per batch after
+`from`, capped at 1. `type_change` ignores the rate and converts the entire column,
+even at rate 0. `from` and `to` are inclusive batch bounds for every kind.
+
+## Vault management (API 1.4)
+
+`vault_status` takes `vault` and returns the header, column names, policies and
+ciphertext sizes without opening the vault. `vault_verify` takes `vault`, `shape`,
+optional `kek` and optional `verify` (a profile signature public key file). A failed
+verification is a successful response with `result.ok: false` and metadata checks.
+
+`vault_rewrap` takes `vault`, `shape`, `kek`, `new_kek`, `out_vault`, `out_shape`,
+optional `dry_run`, `key` (signing key file) and `passphrase_env`. It calls the existing
+`shape vault rekey` operation: both the data key and wrapping key rotate, the input
+files stay intact, and existing output paths are refused. The profile components
+stay byte-identical; its manifest references the new vault, so an existing signature
+is dropped unless `key` signs the new profile. Notices explain this in the result.
+A dry run checks the pair and keys and returns planned writes without writing.
+The output vault must be ignored by Git, as for the command line.
+
+`vault_policy` takes a `policy` JSON file and returns its validated policy metadata.
+Optional `column` (`TABLE.COLUMN`) and `classification` resolve its effective
+policy using the existing explicit-column, classification, then default precedence.
+It does not change an encrypted vault's retention policy or decrypt its payload.
+
+Keys are references (`env://NAME`, `file://PATH`, a key file path or a registered
+credential reference), never literals. Standard input belongs to the bridge and
+cannot supply signing keys, verification keys or passphrases. None of these commands
+returns key material, ciphertext or decrypted data, even with `include_raw_values`.
+Earlier minor requests do not recognize these commands. The 1.3 schemas are frozen
+in `docs/bridge/schema/1.3/`; the existing 1.3 vectors remain unchanged.
+
+Bridge 1.4 `report_card` accepts optional `format` (`auto`, `csv`, `parquet`,
+`jsonl`), matching the command line `--format` and Python `data_format`. The default
+`auto` preserves extension-based discovery.

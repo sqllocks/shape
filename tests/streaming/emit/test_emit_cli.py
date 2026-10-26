@@ -316,7 +316,12 @@ def test_kill_9_with_a_stale_checkpoint_sends_duplicates_that_dedupe_removes(
     proc = _spawn(live)
     _wait_for_events(out, 9000, proc)
     _hard_kill(proc)
-    delivered = len(_lines(out))
+    # A hard kill can interrupt a JSONL record; exercise that crash boundary every time.
+    with out.open("ab") as stream:
+        stream.write(b'{"unfinished":')
+    crashed = out.read_bytes()
+    assert not crashed.endswith(b"\n")
+    delivered = crashed.count(b"\n")  # resume discards the unfinished record
     assert 9000 <= delivered < 21750
     assert json.loads(Path(f"{out}.checkpoint").read_text())["offset"] == 3000  # stale
     rc = subprocess.run([*SHAPE, *args], capture_output=True)

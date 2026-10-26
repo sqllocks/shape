@@ -2,7 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": true,
   "properties": {
-    "change_points": {},
+    "change_points": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "column": {
       "type": "string"
     },
@@ -162,11 +167,284 @@
             "bytes"
           ],
           "type": "object"
+        },
+        {
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "cardinality": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "change_point": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "changes": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "content_ids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "date": {
+                "type": "string"
+              },
+              "end": {
+                "type": "string"
+              },
+              "form": {
+                "enum": [
+                  "raw",
+                  "safe"
+                ]
+              },
+              "gap": {
+                "type": "boolean"
+              },
+              "mean": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "null_rate": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "quantiles": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "properties": {
+                      "p1": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "p10": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "p25": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "p5": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "p50": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "p75": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "p90": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "p95": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "p99": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "p1",
+                      "p5",
+                      "p10",
+                      "p25",
+                      "p50",
+                      "p75",
+                      "p90",
+                      "p95",
+                      "p99"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "redacted": {
+                "type": "boolean"
+              },
+              "row_count": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "std": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "top_values": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "additionalProperties": true,
+                      "properties": {
+                        "share": {
+                          "type": "number"
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "share",
+                        "value"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "versions": {
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "date",
+              "end",
+              "versions",
+              "content_ids",
+              "form",
+              "gap",
+              "row_count",
+              "null_rate",
+              "cardinality",
+              "mean",
+              "std",
+              "quantiles",
+              "top_values",
+              "change_point",
+              "changes"
+            ],
+            "type": "object"
+          },
+          "type": "array"
         }
       ]
     },
     "name": {
       "type": "string"
+    },
+    "notes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
     },
     "since": {
       "anyOf": [
@@ -227,10 +505,17 @@
     "version",
     "name",
     "column",
-    "frames"
+    "frames",
+    "table",
+    "window",
+    "since",
+    "until",
+    "source",
+    "change_points",
+    "notes"
   ],
   "title": "timelapse result",
   "type": "object",
-  "x-api-version": "1.3",
+  "x-api-version": "1.4",
   "x-since": "1.2"
 }

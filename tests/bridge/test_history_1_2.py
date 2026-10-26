@@ -341,7 +341,11 @@ def test_since_until_window_and_table(api12, feed, capsys):
     one = api12.ok("timelapse", since="2026-03-04", until="2026-03-04", **base)
     assert len(one["frames"]) == 1  # the boundary: both ends inclusive
     weekly = api12.ok("timelapse", window="week", **base)
-    assert weekly["window"] == "week" and len(weekly["frames"]) <= 2
+    assert weekly["window"] == "week" and len(weekly["frames"]) == 2
+    assert [(f["date"], f["end"], f["versions"]) for f in weekly["frames"]] == [
+        ("2026-03-01", "2026-03-01", 1),
+        ("2026-03-02", "2026-03-08", 7),
+    ]
     code, cli = cli_json(
         capsys, "timelapse", base["registry"], "orders", "--column", "note", "--window", "week"
     )
@@ -413,3 +417,25 @@ def test_effects_and_annotations():
     }
     assert {k for k, a in COMMANDS["bisect_layers"].args.items() if a.path} == {"project"}
     assert {k for k, a in COMMANDS["timelapse"].args.items() if a.path} == {"registry"}
+
+
+def test_timelapse_schema_describes_emitted_frames_and_change_kinds(api12, feed):
+    from jsonschema_lite import validate
+
+    from shape.bridge.registry import COMMANDS
+
+    schema = COMMANDS["timelapse"].result
+    result = api12.ok("timelapse", registry=str(feed["reg"]), name="orders", column="note")
+    assert any(f["changes"] for f in result["frames"])
+    assert validate(result, schema) == []
+    frame_schema = schema["properties"]["frames"]["anyOf"][2]["items"]
+    assert set(result["frames"][0]) <= set(frame_schema["properties"])
+    assert "notes" in schema["properties"]
+    for frame in result["frames"]:
+        assert validate(frame, frame_schema) == []
+    for field in frame_schema["required"]:
+        incomplete = {k: v for k, v in result["frames"][0].items() if k != field}
+        assert validate(incomplete, frame_schema)
+    for changed in ({"changes": [{}]}, {"content_ids": [42]}, {"versions": "1"}):
+        frame = {**result["frames"][0], **changed}
+        assert validate(frame, frame_schema)

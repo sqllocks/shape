@@ -1,0 +1,76 @@
+{
+  "api_version": "1.4",
+  "cases": [
+    {
+      "name": "metadata",
+      "request": {
+        "api_version": "1.4",
+        "args": {
+          "shape": "${DIR}/vault-profile.shape",
+          "vault": "${DIR}/example.shapevault"
+        },
+        "command": "vault_verify",
+        "id": "vault_verify-0"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "vault_verify",
+        "id": "vault_verify-0",
+        "ok": true,
+        "result": {
+          "checks": [
+            {
+              "check": "sha256",
+              "detail": "the vault bytes match the profile's hash",
+              "ok": true
+            },
+            {
+              "check": "vault_id",
+              "detail": "vault_id matches the profile's reference",
+              "ok": true
+            },
+            {
+              "check": "profile_content_id",
+              "detail": "the vault belongs to this profile",
+              "ok": true
+            }
+          ],
+          "columns": [
+            "t.status"
+          ],
+          "ok": true,
+          "vault_id": "4b13d6a232c5f72cf7d0e6d0b72063f1"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-input",
+      "request": {
+        "api_version": "1.4",
+        "args": {
+          "shape": "${DIR}/vault-profile.shape",
+          "vault": "${DIR}/missing.shapevault"
+        },
+        "command": "vault_verify",
+        "id": "vault_verify-1"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "vault_verify",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "vault file not found: ${DIR}/missing.shapevault"
+        },
+        "id": "vault_verify-1",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "vault_verify",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

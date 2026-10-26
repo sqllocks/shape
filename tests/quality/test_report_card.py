@@ -899,3 +899,48 @@ def test_no_value_of_the_data_is_in_any_output_format(tmp_path, capsys):
     blob = "\n".join(outputs)
     leaked = sorted(v for v in known if v in blob)
     assert leaked == []
+
+
+@pytest.mark.parametrize("data_format", ["csv", "parquet", "jsonl"])
+def test_data_format_selects_one_representation_for_every_input(tmp_path, data_format):
+    """Mixed-format folders need a selector, including the membership holdout."""
+    import pyarrow.csv as pc
+
+    folders = []
+    for name in ("real", "synthetic", "holdout"):
+        folder = tmp_path / name
+        folder.mkdir()
+        table = pa.table({"amount": list(range(20))})
+        pc.write_csv(table, folder / "data.csv")
+        pq.write_table(table, folder / "data.parquet")
+        (folder / "data.jsonl").write_text(
+            "".join(json.dumps(row) + "\n" for row in table.to_pylist()), encoding="utf-8"
+        )
+        folders.append(folder)
+    with pytest.warns(UserWarning, match="skipped"):
+        card = report_card(
+            folders[0], folders[1], holdout=folders[2], tiers=(), data_format=data_format
+        ).to_dict()
+    assert card["inputs"]["real"]["tables"]["data"] == 20
+    assert card["inputs"]["holdout"] is not None
+
+
+def test_data_format_default_preserves_the_card(real, independent):
+    assert (
+        report_card(real, independent, tiers=()).to_dict()
+        == report_card(real, independent, tiers=(), data_format="auto").to_dict()
+    )
+
+
+@pytest.mark.parametrize("data_format", ["xml", "", None])
+def test_data_format_rejects_unknown_formats(real, independent, data_format):
+    with pytest.raises(ReportCardError, match="format"):
+        report_card(real, independent, tiers=(), data_format=data_format)
+
+
+def test_cli_format_selects_input_format(folders, capsys):
+    rc, out, err = run(
+        capsys, folders["real"], folders["good"], "--format", "parquet", "--tiers", "", "--json"
+    )
+    assert rc in (0, 1), err
+    assert json.loads(out)["payload"]["format"] == "shape-report-card"

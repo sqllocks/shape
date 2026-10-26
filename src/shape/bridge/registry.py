@@ -24,6 +24,7 @@ def _build() -> dict[str, Command]:
         scale,
         stored,
         suites,
+        vault,
         workflow11,
     )
 
@@ -45,6 +46,7 @@ def _build() -> dict[str, Command]:
         registrydiff,
         chaos,
         suites,
+        vault,
     ):
         for command in module.COMMANDS:
             if command.name in table:

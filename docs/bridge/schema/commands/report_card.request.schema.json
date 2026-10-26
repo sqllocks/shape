@@ -15,6 +15,17 @@
           "x-path": "read",
           "x-since": "1.2"
         },
+        "format": {
+          "description": "input data format for real, synthetic and holdout (default auto)",
+          "enum": [
+            "auto",
+            "csv",
+            "parquet",
+            "jsonl"
+          ],
+          "type": "string",
+          "x-since": "1.4"
+        },
         "holdout": {
           "description": "real rows that were not given to the generator, as a data file or a folder with one file per table: turns on the membership-inference test",
           "type": "string",
@@ -116,6 +127,6 @@
   ],
   "title": "report_card request",
   "type": "object",
-  "x-api-version": "1.3",
+  "x-api-version": "1.4",
   "x-since": "1.2"
 }
