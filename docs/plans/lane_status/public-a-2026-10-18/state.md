@@ -6,7 +6,7 @@ Updated 2026-10-26; final integration in progress. This file is the current chec
 
 Continue until all seven assigned issues are merged or legitimately parked. Do not end a turn merely to wait or ask. Original prompt: `/workspace/attachments/9302a188-787d-4428-9403-3510325ce6a1/4-NEW-WINDOW-shape-public-A.md`. Read it and this state after any restart.
 
-**3/7 merged (42.9% done), 4/7 remaining (57.1%). All four remaining issues are in ONE READY integration PR #49; zero parked.** #2/PR45, #16/PR39 and #3/PR37 are merged. Current main is682759841dcffd56dff62f74dc90ac18286cc600. Final PR https://github.com/sqllocks/shape/pull/49 closes #4/#5/#7/#8 together, exact head57da2566365c440b36b65d33f028c187443ef176 on lead/public-a-integration-2026-10-26 in /workspace/public-a-W9-06. Root owns the clean/released batch. All builders and independent reviewers have finished; every required scope is approved at this head. Current exact-head CI is running; poll /tmp/public-a-poll-final.py. Do not make additional changes without an actual failure or base move. Once every triggered check is green/current, merge promptly through the merge-commit API with exact SHA guard and DCO message. Historical PR38/41/44 are closed superseded; their issues stay open until49 merges. All Owner decisions are resolved, including Bridge1.3; frozen artifacts remain unchanged. Latest CI corrections cover current-server documentation version fields, a Python3.14 fixture literal in traceback source and portable file-URI failure injection on Windows. All original assertions remain intact. An additive five-module CI acceptance step now runs before the unchanged full core suite on every existing platform. Their precise evidence and current run IDs are in the final sections below. Main advanced while the previous head was at41/42green, forcing this ONE current-base refresh. Jobs conflict uses main security/locking implementation byte for byte plus our regression; four newly introduced 1.2 archive schemas now reflect the latest main publication. Refreshed targeted tests355passed EACHkernel, APIs0break, conformance33/33,191plugins/108requirements. Reviewers APPROVED exact57da; new CI is running. Raw full PR whitespace check includes preserved historical CRLF/EOF bytes; do not claim it is clean or alter frozen bytes.
+**3/7 merged (42.9% done), 4/7 remaining (57.1%). All four remaining issues are in ONE READY integration PR #49; zero parked.** #2/PR45, #16/PR39 and #3/PR37 are merged. Current main is682759841dcffd56dff62f74dc90ac18286cc600. Final PR https://github.com/sqllocks/shape/pull/49 closes #4/#5/#7/#8 together, exact head601158e575cbffd3d1aa773b59b5507b0e0af8f4 on lead/public-a-integration-2026-10-26 in /workspace/public-a-W9-06. Root owns the clean/released batch. All builders and independent reviewers have finished; every required scope is approved at this head. Current exact-head CI is running; poll /tmp/public-a-poll-final.py. Do not make additional changes without an actual failure or base move. Once every triggered check is green/current, merge promptly through the merge-commit API with exact SHA guard and DCO message. Historical PR38/41/44 are closed superseded; their issues stay open until49 merges. All Owner decisions are resolved, including Bridge1.3; frozen artifacts remain unchanged. Latest CI corrections cover current-server documentation version fields, a Python3.14 fixture literal in traceback source and portable file-URI failure injection on Windows. All original assertions remain intact. An additive five-module CI acceptance step now runs before the unchanged full core suite on every existing platform. Their precise evidence and current run IDs are in the final sections below. Main advanced while the previous head was at41/42green, forcing this ONE current-base refresh. Jobs conflict uses main security/locking implementation byte for byte plus our regression; four newly introduced 1.2 archive schemas now reflect the latest main publication. Refreshed targeted tests355passed EACHkernel, APIs0break, conformance33/33,191plugins/108requirements. Reviewers APPROVED exact57da; new CI is running. Raw full PR whitespace check includes preserved historical CRLF/EOF bytes; do not claim it is clean or alter frozen bytes. The new-base database-plugin job found a BigQuery URI billing-cap alias regression caused by our copied nested options. Minimal validated plan.options merge fixes it; six additive tests give4red/2controls then331green per kernel. Reviewer approved exact601. Original assertions and all gates stay intact; current exact-head CI is restarting.
 
 Give meaningful commentary at least every60seconds while working, quantified totals about every5minutes and immediately on merge/blocker changes. CI counts are a separate metric from issues merged.
 
@@ -439,3 +439,30 @@ to57da. Guardedmergescriptchecks42+success/all7workflowsoverallgreen/
 currentmainancestry+baseSHA,thenPRmergeAPImergecommitexactSHAguard+DCO.
 DO NOT invoke untilallgreen. Continueupdates/poll,nomorecodechanges
 withoutactualfailureoranotherbasemove. Finalreportafterall7closed.
+
+
+## BigQuery billing guard integration fixed — 601158e
+
+57CIWindowsdatabase-pluginsfailed1/1257pass: URImax_bytes_billed64
+didnotrefuseestimate65. PairedLinuxjobauto-canceled;neitherisgreen.
+Cause:A_base.plan copiesoptionsfornestedvalidation; BBigQueryplan mutated
+itsoldlocaloptsafterbaseplanning. Minimalfixfresh-mergesvalidatedURIcap
+intoactualplan.options,preservingcaller isolation/explicitprecedence/nested
+metadata. OtheradapteroverrideauditfoundNOsecondaliasdependency.
+
+Signed/pushed601158e575cbffd3d1aa773b59b5507b0e0af8f4 parent57, SAMEPR49.
+New6regressions4red/2controls then331BigQuery/jobs/base/nestedcasesgreen
+EACHkernel(10.16/10.45s). Cap63/64boundaryallowed,65refusedwithonlydry
+queryrecords/zeroloads/tables; originalassertionsunchanged. Ruff/format/
+mypy/wordinggreen. ReviewerOct25APPROVEDexact601security/scope/DCO.
+No paidquery/liveaccount/localfullsuite. No Bbranch/issueedited;W9-13
+receivesintegrationevidenceonOURbranch. PRdescriptionupdatedwithguardfix,
+all4closingreferencesretained. RootbatchFF601/pushedclean.
+
+CURRENTexactheadruns: CI40274846869,Wheels40274846890,Security40274846877,
+Container40274846871,Documentation40274846901,DCO40274846889,
+action-selftest40274846865. InitiallypendingexceptDCOgreen. Both
+/tmp/public-a-poll-final.py and /tmp/public-a-merge-final.py updated601.
+RequireallnewexactheadjobsincludingBOTHdatabase-pluginjobs/8platform
+corejobs/kernels/7workflowsoverallgreen,currentmain682ancestor,then
+guardedAPImergecommitwithDCO. Allpolicyquestionsresolved; no park.
