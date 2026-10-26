@@ -6,7 +6,7 @@ PR: [Public finish](https://github.com/sqllocks/shape/pull/53).
 
 | Item | Red | Green |
 |---|---|---|
-| W8-05 vault bridge | `3 failed, 5 passed` (new commands absent) | `706 passed, 21 warnings in 11.21s` (affected bridge schemas, vectors, protocols and frozen 1.0–1.3 replay); final command tests `9 passed`; Ruff and format passed. |
+| W8-05 vault bridge | `3 failed, 5 passed` (new commands absent) | `706 passed, 21 warnings in 11.21s` (affected bridge schemas, vectors, protocols and frozen 1.0–1.3 replay); final command tests `9 passed`; review regression `14 failed, 9 passed in 0.88s` then `35 passed, 145 deselected in 0.89s`; integrated vault tests `23 passed in 0.78s`; Ruff and format passed. |
 | Chaos-kind catalogue | `3 failed, 4 passed in 1.59s` | `87 passed in 2.77s` (catalogue, bridge chaos, ground truth and audit); Ruff and format passed. |
 | Timelapse contract | `1 failed in 2.12s` (`$.frames matches none of anyOf`) | `48 passed, 1 warning in 14.25s` (history, timelapse and frozen schema compatibility); stricter frame schema regression `1 passed in 0.80s`; Ruff and format passed. |
 | CR-0117 report-card format | Python API: `7 failed` (unexpected `data_format`); bridge/CLI: `5 failed, 1 passed` | `99 passed in 17.31s` (report card, bridge format and earlier bridge behavior); Ruff and format passed. |
