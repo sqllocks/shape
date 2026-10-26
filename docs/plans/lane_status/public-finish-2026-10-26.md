@@ -14,6 +14,7 @@ PR: [Public finish](https://github.com/sqllocks/shape/pull/53).
 | Combined integration | `1 failed, 845 passed, 22 warnings in 37.46s` (missing report-card format in command table) | Documentation correction: `60 passed in 0.37s`; two bridge executable examples passed using the default kernel; Ruff `All checks passed!`, format `29 files already formatted`; `check_user_facing: clean`. |
 | CI snapshot/annotation correction | `4 failed, 85 passed in 3.05s` (CLI snapshot plus vault path/write annotations) | `201 passed in 3.35s` (CLI surface, bridge annotations and generated schemas); Ruff and format passed. |
 | CI Windows vault error vectors | `3 failed, 23 deselected in 0.66s` (missing-vault errors) | `38 passed, 148 deselected in 0.78s` (vault command regressions and vectors); Ruff and format passed. |
+| CI crash-resume accounting | `1 failed in 3.45s` with a forced torn JSONL tail | `22 passed in 51.01s` (complete emit CLI test file); Ruff and format passed. Exact duplicate counts and byte-identical deduplication remain asserted. |
 | Tracker cleanup | `21 missing requirements` | `38 required statuses, exact W10-01 source row and 22 existing lane links passed`; `git diff --check` passed. |
 
 ## Green CI
