@@ -60,6 +60,8 @@ def catalog(
     uri: str, options: dict[str, Any], *, writing: bool = False
 ) -> tuple[Any, tuple[str, ...]]:
     name, identifier, warehouse = parse(uri, writing=writing)
+    if "catalog_uri" in options and "uri" in options:
+        raise ValueError("pass catalog_uri or legacy uri, not both")
     config: dict[str, Any] = {}
     if warehouse is not None:
         if writing:
@@ -76,9 +78,11 @@ def catalog(
             if kind not in ("rest", "sql", "glue", "hive"):
                 raise ValueError("catalog_type must be rest, sql, glue or hive")
             config["type"] = kind
+        endpoint = options.get("catalog_uri", options.get("uri"))
         for key in ("uri", "warehouse"):
-            if options.get(key) is not None:
-                value = str(options[key])
+            supplied = endpoint if key == "uri" else options.get(key)
+            if supplied is not None:
+                value = str(supplied)
                 parsed = urlparse(value)
                 if parsed.username or parsed.password or parsed.query or parsed.fragment:
                     raise ValueError(

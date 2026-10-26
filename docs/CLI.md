@@ -577,7 +577,7 @@ shape profile iceberg+file:///warehouse/ns -o namespace.shape
 ```
 
 Named catalog writes use `--to iceberg://catalog/ns/items --yes`. Catalog options
-use `--sink-config iceberg.catalog_type=rest` and `iceberg.uri=https://catalog.example`;
+use `--sink-config iceberg.catalog_type=rest` and `iceberg.catalog_uri=https://catalog.example`;
 secrets use references such as `iceberg.token=env://ICEBERG_TOKEN`. URI secrets are
 refused. Local `iceberg+file` writes need no remote confirmation. Python source
 options provide `snapshot_id` and `as_of`; `shape profile --as-of` selects a timestamp.
