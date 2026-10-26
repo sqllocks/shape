@@ -2,6 +2,14 @@
 
 Updated 2026-10-26; final integration in progress. This file is the current checkpoint; lane records retain acceptance evidence.
 
+## CURRENT head — refreshed after B50, one final batch
+
+PR49 head1e3349dd461b401fe3ee1df93e98e7c9252d574b is signed/PUSHED. Parents26234a4 (approved fiveDBTpath correction, realpage1passed292.42s) and actualmain953ccec74e9a9a86e5b37723126ae3d1832432d5 (B50merged). OnlyCHANGELOGconflicted; retainedbothUnreleasedentries. No codeconflicts; Ownercleanrefresh rule meansno repeatlocaltests. B50 introducesNOBridgefrozen/schema/vectorchanges, so207archivesremaincorrect. Reviewercheckingexactcomposition. Both /tmp/public-a-poll-final.py and /tmp/public-a-merge-final.py nowtarget1e3349d. Requireall42checks+7workflowsoverallgreen/currentmain/review before guardedPRmerge. Same3/7done4/7left,zeroparked.
+
+Initialpushfailed transientauth, environmentcurrentrevision234 reportsGH_TOKENready. Paired gitlsremote+ghrepoAPIexit0, immediate pushretryexit0. No credentialprinted/configchange. No persistentcredentialhardstop.
+
+New runs (initiallyPENDING): CI40292839349,Wheels40292839579,Documentation40292839344,Security40292839726,Container40292839555,DCO40292839320,actionselftest40292839470. DCOgreen. No previousheadresultcountsasmergeevidence. Neverendjusttowait. Continueuserupdates and diagnoseactualfailures; onceallgreenmergepromptly. MainB50refreshalreadydone; don'trepeatunlessanotheractualbasemove.
+
 ## Latest checkpoint — DBT transcript correction ready
 
 Local integration head26234a4cc0c8d9ea28dd00a1052f761f4f42a727 (signed/pushed on isolated docs progress branch; integration push pending review/current-main check). Parent1a715 CI docs-test failed ONLY five recorded DBT warning prefixes: actual private<work> vs historical shared<checkout>.170otherdocs tests passed, includingCONTRIBUTING and all other affected install pages. Fix changes precisely five expected path tokens, preserving commands/assertions/normalization/warnings/counts. Actual DBT reference page passed292.42s including private native build and plugin tests. Original failure: https://github.com/sqllocks/shape/actions/runs/40289326030/job/121460404509 . No rerun-to-hide or new test relaxation.

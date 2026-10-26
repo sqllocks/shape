@@ -2,7 +2,7 @@
 
 **3/7 merged (42.9% done), 4/7 remaining (57.1%). All four remaining issues are in one ready PR; none is parked.** This replaces the superseded October 20 credential-handoff report. Credentials work, all local implementation handoffs are pushed, and the Owner has resolved the policy decisions.
 
-The Owner requested one final integration PR and full CI at the end. [PR #49](https://github.com/sqllocks/shape/pull/49), exact head `1a715e5f96fbaa67a023f6036196589572248450`, contains #4/#5/#7/#8, the reviewed CI acceleration and a minimal cancellation-race repair exposed by fresh main CI. It is ready, independently reviewed and based on current main `682759841dcffd56dff62f74dc90ac18286cc600`. Full CI is pending; no merge or green result is claimed for #49.
+The Owner requested one final integration PR and full CI at the end. [PR #49](https://github.com/sqllocks/shape/pull/49), exact head `1e3349dd461b401fe3ee1df93e98e7c9252d574b`, contains #4/#5/#7/#8, the reviewed CI acceleration and a minimal cancellation-race repair exposed by fresh main CI. It is ready, independently reviewed and based on current main `953ccec74e9a9a86e5b37723126ae3d1832432d5`. Full CI is pending; no merge or green result is claimed for #49.
 
 | Issue | Status / PR | Actual merge SHA | Targeted acceptance |
 |---|---|---|---|
@@ -26,7 +26,7 @@ Merged PR #39 exact-head green workflows: [CI](https://github.com/sqllocks/shape
 
 Merged PR #37 exact-head green workflows: [CI](https://github.com/sqllocks/shape/actions/runs/40243748742), [Documentation](https://github.com/sqllocks/shape/actions/runs/40243748741), [Security](https://github.com/sqllocks/shape/actions/runs/40243748751), [Container](https://github.com/sqllocks/shape/actions/runs/40243748808), [DCO](https://github.com/sqllocks/shape/actions/runs/40243748750), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40243748743). Fresh main macOS 3.11 subsequently exposed a pre-existing cross-store cancellation lost-update race; PR49 includes its deterministic repair rather than retrying to hide the failure.
 
-PR #49 **pending, not green evidence**: [CI](https://github.com/sqllocks/shape/actions/runs/40289326030), [Wheels](https://github.com/sqllocks/shape/actions/runs/40289325960), [Security](https://github.com/sqllocks/shape/actions/runs/40289326061), [Container](https://github.com/sqllocks/shape/actions/runs/40289325998), [Documentation](https://github.com/sqllocks/shape/actions/runs/40289325961), [DCO](https://github.com/sqllocks/shape/actions/runs/40289326051), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40289326008).
+PR #49 **pending, not green evidence**: [CI](https://github.com/sqllocks/shape/actions/runs/40292839349), [Wheels](https://github.com/sqllocks/shape/actions/runs/40292839579), [Security](https://github.com/sqllocks/shape/actions/runs/40292839726), [Container](https://github.com/sqllocks/shape/actions/runs/40292839555), [Documentation](https://github.com/sqllocks/shape/actions/runs/40292839344), [DCO](https://github.com/sqllocks/shape/actions/runs/40292839320), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40292839470).
 
 ## Owner decisions and remaining live actions
 
@@ -55,3 +55,5 @@ The prior head completed41/42 required checks successfully, including all eight 
 Nightly [database emulator job](https://github.com/sqllocks/shape/actions/runs/40272534667/job/121408250397) failed because python-oracledb was absent. The existing Nightly database job starts only PostgreSQL/MySQL but selects all database emulator tests, including Oracle. The Nightly owner needs to provision Oracle's driver, service and test environment. Lead A is explicitly prohibited from editing nightly.yml; that file was not changed. Existing three local Oracle Free23 passes are emulator evidence, not a claim that this Nightly job or a live account passed.
 
 The docs isolation run passed170 documentation tests but exposed five stale DBT warning-path prefixes in its recorded transcript. Those five prefixes now reflect the private checkout; all assertions, warning text and comparison rules are unchanged. The real DBT page then passed in292.42s. Signed correction26234a4 is awaiting integration push and fresh final CI; the superseded unfinished1a715 runs were canceled to release capacity.
+
+Lead B PR50 merged as953ccec; the final batch now includes that actual main in signed1e3349d. Only a changelog conflict needed resolution; both entries were retained. Code merged cleanly, so no redundant local test rerun. New exact-head CI above is required. The transient first push authentication error cleared on immediate recheck/retry; the refreshed integration head is pushed.
