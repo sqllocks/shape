@@ -10,7 +10,7 @@ Owner explicitly demanded whatever steps are needed to accelerate delivery. Lead
 
 **PR https://github.com/sqllocks/shape/pull/48** (ready/non-draft, artifact attached successfully). Final signed/pushed/clean local=remote=PR head **289fde54c2530b5420dd493255d11d87ea0ea860**. Branch `lead/public-b-integration`, worktree `/workspace/shape-public-b-integration`. Full independent Wanted/security/scope APPROVED metadata_oct25 exact289fde5; second34/42 preservation review APPROVED formats_oct25 exact289fde5. Every old lane product/acceptance remains included. No pending code/review/Owner decision. Hosted native Windows passed; every remaining final-head gate is still required; oldbad1 failed and is superseded. Root solely handles merges.
 
-Contains current main **314749d37aba9141a2ff68a33cfdb91e8a87cca5**, otherSession PR37 Snowflake/Databricks. Main moved just as31 finished all7old-source workflows green; old31head24a lacks314749d and was NOT merged. That base-change cost prompted consolidation. Current main is watched by metadata; no failure observed. Our preceding merged dbt main90fb is fully green.
+Contains current main **314749d37aba9141a2ff68a33cfdb91e8a87cca5**, otherSession PR37 Snowflake/Databricks. Main moved just as31 finished all7old-source workflows green; old31head24a lacks314749d and was NOT merged. That base-change cost prompted consolidation. Current main314749d CI40252269760 finishedFAILURE:26SUCCESS/1knownmacOS3.11cancellationrace, Docs/SecuritySUCCESS. This is otherSession37, notourmerge; our90fbmainfullygreen. The actualraceisfixed/reviewedin289; do notrerunobsoleteunfixedmainaspassingproof. Our preceding merged dbt main90fb is fully green.
 
 ## Current exact-head gates
 
