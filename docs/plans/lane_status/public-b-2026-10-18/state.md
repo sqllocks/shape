@@ -8,7 +8,7 @@ Unattended run. Never end to wait or ask. After restart/compaction read this fil
 
 Owner explicitly demanded whatever steps are needed to accelerate delivery. Lead B consolidated ALL FIVE remaining reviewed implementations into ONE READY PR, eliminating repeated full CI after each separate merge. This REPLACES all old per-lane merge stages/holds. Do not refresh/restart/merge the old five source PRs independently. Their descriptions now point to48; preserve them as review history.
 
-**PR https://github.com/sqllocks/shape/pull/48** (ready/non-draft, artifact attached successfully). Final signed/pushed/clean local=remote=PR head **289fde54c2530b5420dd493255d11d87ea0ea860**. Branch `lead/public-b-integration`, worktree `/workspace/shape-public-b-integration`. Full independent Wanted/security/scope APPROVED metadata_oct25 exact289fde5; second34/42 preservation review APPROVED formats_oct25 exact289fde5. Every old lane product/acceptance remains included. No pending code/review/Owner decision. Native Windows and every other final-head gate remain required; oldbad1 failed and is superseded. Root solely handles merges.
+**PR https://github.com/sqllocks/shape/pull/48** (ready/non-draft, artifact attached successfully). Final signed/pushed/clean local=remote=PR head **289fde54c2530b5420dd493255d11d87ea0ea860**. Branch `lead/public-b-integration`, worktree `/workspace/shape-public-b-integration`. Full independent Wanted/security/scope APPROVED metadata_oct25 exact289fde5; second34/42 preservation review APPROVED formats_oct25 exact289fde5. Every old lane product/acceptance remains included. No pending code/review/Owner decision. Hosted native Windows passed; every remaining final-head gate is still required; oldbad1 failed and is superseded. Root solely handles merges.
 
 Contains current main **314749d37aba9141a2ff68a33cfdb91e8a87cca5**, otherSession PR37 Snowflake/Databricks. Main moved just as31 finished all7old-source workflows green; old31head24a lacks314749d and was NOT merged. That base-change cost prompted consolidation. Current main is watched by metadata; no failure observed. Our preceding merged dbt main90fb is fully green.
 
@@ -19,14 +19,14 @@ All seven workflows on finalb86 REQUIRED before merge:
 | Workflow | Run | Latest known stage |
 |---|---|---|
 | CI |40258183976|Fresh full27-job matrix pending/running|
-| Wheels |40258183984|Fresh all10build/smoke jobs required|
+| Wheels |40258183984|SUCCESS all10jobs|
 | Documentation |40258183966|Running|
 | DCO |40258184029|SUCCESS|
-| Security |40258183964|Running|
-| Container |40258183957|Running|
-| action-selftest |40258183947|Running|
+| Security |40258183964|SUCCESS|
+| Container |40258183957|SUCCESS|
+| action-selftest |40258183947|SUCCESS|
 
-Historical failures: b86Windows1failed929passed, helper-onlybad1 SAMEprivateassert1failed932passed. Confirmed CPython3.11.10+ mkdir0700 explicitSY/BA/OW grants survive inherited-onlyACLhelper. FIXED in289: onfresh-empty BQstagingonly remove exact documented SIDs then final existingrestrict (SYSTEMcurrentidentityregranted), beforeanycontent; originalstrictACL/POSIX/allprivatepredicate preserved, boundedactualACL/principaldiagnostics. Threeordering/failclosed+6bootstrap controlsREDbothkernels→101BQGREENeachkernel. NativeWindowsvalidationstillpending; neverclaimlocalWindowsPASS.
+Historical failures: b86Windows1failed929passed, helper-onlybad1 SAMEprivateassert1failed932passed. Confirmed CPython3.11.10+ mkdir0700 explicitSY/BA/OW grants survive inherited-onlyACLhelper. FIXED in289: onfresh-empty BQstagingonly remove exact documented SIDs then final existingrestrict (SYSTEMcurrentidentityregranted), beforeanycontent; originalstrictACL/POSIX/allprivatepredicate preserved, boundedactualACL/principaldiagnostics. Threeordering/failclosed+6bootstrap controlsREDbothkernels→101BQGREENeachkernel. NativeWindows databasejob121364875439 SUCCESS on289 inCI40258183976: strictBQprivacy blockerCLEARED. This is hostedWindowsproof, nevera localWindowsclaim.
 
 Inheritedmain314749d macOS3.11 cancellationrace1failed18568passed was unrelated to48: jobs.py/tests identicalearliermain90fb. FIXED in289 usingexistingOSsidecarlock forcomplete durableupdate read/mutate/write, memoryunchanged, ACLhelperunchanged. Deterministicnewcontrol1REDeachkernel→41GREENeachkernelinclunchangedoriginalassertion, no sleep/timeouts loosened. Metadatafullreview+formats34/42subset APPROVEDsignedremote289, nooutstandingblockers. RootfinalRuff/format2148,mypy711,publicclean;40coresecuritypassedagainbothkernelsaftercombinedrepairs. Fresh currentmain314749d ancestryverifiedbeforepush. Pending/canceled checks never pass. Root canceled ONLY obsolete initialf302 integration CI/Wheels/Docs/Security/Container, plus obsolete individual34 core40243543568 after exact-head verification, freeing runners. No current final289 run canceled. Root requested cancellationONLYobsoletefailedbad1CI40256165922 after verifying its head, freeingworkflowconcurrency. Do not archive polling logs, gate JSON, heartbeats or receipt indexes. Update current state only at meaningful milestones.
 
@@ -78,3 +78,5 @@ Use `/workspace/public-b-validation/test-env.sh`, uv0.8.17locked; no pip into pr
 User wants progress updates without asking: meaningful updates aboutminute, fullcountsabout5min. User-facing time **America/New_York**, internal machine timestamps explicitlyUTC. Keep report INTERIM until all9merged/parked or genuinehardstop; then finalreport+same chatsummary. Never end towait/ask.
 
 Failure log access: CLI log download hits sidecar403 on Azureblob, not GHauth; do not bypass proxy/routing or print signedURLs onstderr. Installed standard GitHub connector `github_fetch_workflow_job_logs` with configured Primarysqllocks link_id link_6abacc0c2f408191aff9ab5aec95acde works and supplied actual traceback. Use connector for future joblogs, filter only failure text; no rawlog archives. GitHub API/credentials remain working.
+
+Active FRZintegration acceptance: formats author uses existing authenticated baseline5seed outputs/read-onlyhistoryenv, regenerates ONLY2candidate domains in temporary output and verifiesunchangedclausesa–f plus2timefixtures and2separateNOTCOMPARABLE refusals on289. No rerecord/envsync/timing/fullsuite. This runs whileCI finishes, resultpending; no sourcechurn. CI289 currently31successfulchecks/no failure, Docs+core stillactive; allWheels+otherlights green.
