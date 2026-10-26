@@ -49,6 +49,8 @@ Status: available.
   with their column and the JSON alternative named. Nested temporal values use the same
   documented microsecond normalization as scalar values.
 
+- Iceberg catalog endpoints use `catalog_uri` without colliding with the destination URI.
+  REST emulator startup builds the pinned official storage releases from source.
 
 - Kafka and Event Hubs read and write plain Avro and Protobuf with local schemas,
   preserve nested Arrow fields, and count malformed or incompatible rows. Kafka

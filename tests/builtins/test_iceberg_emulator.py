@@ -18,6 +18,7 @@ pytestmark = pytest.mark.emulator
 def test_rest_catalog_minio_roundtrip(monkeypatch):
     name = "shape_" + uuid.uuid4().hex
     monkeypatch.setenv("PYICEBERG_CATALOG__EMULATOR__S3__ENDPOINT", "http://localhost:9000")
+    monkeypatch.setenv("PYICEBERG_CATALOG__EMULATOR__S3__REGION", "us-east-1")
     monkeypatch.setenv(
         "AWS_ACCESS_KEY_ID", os.environ.get("SHAPE_ICEBERG_ACCESS_KEY", "shape_emulator")
     )
@@ -26,13 +27,12 @@ def test_rest_catalog_minio_roundtrip(monkeypatch):
     )
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
     uri = f"iceberg://emulator/{name}/items"
-    options = {
-        "catalog_type": "rest",
-        "uri": os.environ.get("SHAPE_ICEBERG_REST_URI", "http://localhost:8181"),
-    }
+    rest_uri = os.environ.get("SHAPE_ICEBERG_REST_URI", "http://localhost:8181")
+    monkeypatch.setenv("PYICEBERG_CATALOG__EMULATOR__URI", "http://127.0.0.1:1")
+    options = {"catalog_type": "rest", "catalog_uri": rest_uri}
     for attempt in range(30):
         try:
-            with urlopen(options["uri"].rstrip("/") + "/v1/config", timeout=2) as response:
+            with urlopen(rest_uri.rstrip("/") + "/v1/config", timeout=2) as response:
                 if response.status == 200:
                     break
         except (URLError, TimeoutError, OSError):

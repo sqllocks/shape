@@ -759,7 +759,7 @@ requirements:
   title: Optional Iceberg catalogs
   text: Iceberg sources and sinks load their optional dependency only when used and accept local SQL or named catalogs with credential references.
   verify: [conformance, offline-iceberg]
-  tests: [tests/builtins/test_iceberg.py, tests/security/test_iceberg_credentials.py]
+  tests: [tests/builtins/test_iceberg.py, tests/builtins/test_iceberg_catalog_options.py, tests/security/test_iceberg_credentials.py]
   owner: plugins
 - id: SHAPE-ICEBERG-002
   title: Atomic Iceberg snapshots
