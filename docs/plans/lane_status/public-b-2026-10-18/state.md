@@ -1,3 +1,9 @@
+# Windows diagnostic outcome — 2026-10-26T08:00UTC
+
+Windows diagnostic run40288193171/job121456772158 completed: all60 CLI attempts returned2, no output profiles or stdout; all30 files remained active at snapshot29, corrupt file23bytes active, membership and corrupt digests stable. Four direct Arrow reads (two threaded, two serial) all raised ArrowInvalid. Terminal complete marker present. Python3.14.9, Arrow25.0.1, deltalake1.6.6. Scratch remaining matrix canceled intentionally; never merge evidence. No raw logs archived.
+
+Initial source48f Windows exit0 failure remains unexplained; no fix claimed or product patch justified. Author recommends merge only if original exact-head retry and all other gates pass, with independent approval and fresh main ancestry. Source CI40276205316 attempt2/job121455832637 still ordinary coverage at08:00UTC. Main682 unchanged. 8/9 merged (88.9%),1/9 remains (11.1%). Next: verify retry completion, independent assessment, then gated PR50 merge and issue20 closure; no further speculative reruns.
+
 # Active Windows diagnosis and retry — 2026-10-26
 
 No product patch justified yet. Existing corrupt-scan6CLI regression passes Linux; separateinstrumentation confirms30activefiles/corruptactive/pristine30000rows;6threaded+6serialreadsraiseArrowInvalid, no samples/CLIexitcodeswallowfound. RootrequestedONLYfailedWindowsjobrerun withdebuglogging; sourceCI40276205316attempt2active onUNCHANGEDapproved48f33d7. Initialfailure ispreserved, neverclaimedpassed. Need actualWindowsobservations ANDalloriginalPRgatesgreen beforemerge; don'tguessproductpatch.
