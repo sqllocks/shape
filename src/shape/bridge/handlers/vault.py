@@ -2,22 +2,51 @@
 
 from __future__ import annotations
 
+from functools import wraps
 from typing import Any
 
 from shape.bridge.context import Context
 from shape.bridge.errors import writing
 from shape.bridge.handlers.common import BOOL, INT, STR, STRS, arr, mapping, nullable, obj
 from shape.bridge.protocol import BridgeError
-from shape.bridge.spec import Arg, Command
+from shape.bridge.spec import Arg, Command, Handler
 
 
+def _metadata_only(handler: Handler) -> Handler:
+    """Untrusted vault headers cannot turn parser messages into data-return channels."""
+
+    @wraps(handler)
+    def guarded(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
+        from shape.compat import UnsupportedVersionError
+        from shape.vault.errors import VaultFormatError
+
+        try:
+            return handler(args, ctx)
+        except UnsupportedVersionError as exc:
+            # The compatibility reader validates release numbers before constructing this.
+            raise BridgeError(
+                "input.unsupported_format_version", str(exc), "upgrade Shape to read it"
+            ) from None
+        except VaultFormatError:
+            raise BridgeError("input.invalid_value", "invalid vault metadata") from None
+
+    return guarded
+
+
+@_metadata_only
 def cmd_status(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
+    from shape.compat import parse_release
     from shape.vault.format import inspect_vault
     from shape.vault.ops import read_vault_bytes
 
-    return {"ok": True, **inspect_vault(read_vault_bytes(args["vault"]))}
+    info = inspect_vault(read_vault_bytes(args["vault"]))
+    for field in ("shape_version", "min_shape_version"):
+        if info[field] is not None and parse_release(info[field]) is None:
+            raise BridgeError("input.invalid_value", "invalid vault release metadata")
+    return {"ok": True, **info}
 
 
+@_metadata_only
 def cmd_verify(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     from shape.vault.kek import resolve_kek
     from shape.vault.ops import verify_vault
@@ -37,6 +66,7 @@ def cmd_verify(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     )
 
 
+@_metadata_only
 def cmd_rewrap(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     from shape.vault.kek import resolve_kek
     from shape.vault.ops import ensure_git_ignored, rekey
@@ -68,6 +98,7 @@ def cmd_rewrap(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     return {"ok": True, **result}
 
 
+@_metadata_only
 def cmd_policy(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     from shape.vault.errors import VaultInputError
     from shape.vault.policy import load_policy
