@@ -736,6 +736,15 @@ requirements:
   owner: integrations
 
 
+- id: SHAPE-SINK-002
+  title: Opt-in Delta writer features
+  level: L1
+  milestone: M1
+  priority: MUST
+  text: Delta write features are opt-in, declare their protocol and feature requirements, reject unsupported installed writers before mutation, and preserve the default reader 1 / writer 2 output. Constraint violations name the rule and leave the previous version unchanged.
+  verify: [unit, conformance, compatibility]
+  owner: sinks
+
 - id: SHAPE-SINK-003
   title: Native nested database values
   level: L1

@@ -13,6 +13,17 @@ Status: available.
   reruns; unsafe combinations fail before mutation with a named constraint. DuckDB uses
   parent-first inline foreign keys. Warehouse constraint limitations are reported explicitly.
 
+### W9-07: opt-in Delta table features
+
+- Delta `table_properties`, not-null/check `constraints`, `column_mapping="name"`,
+  `deletion_vectors=true`, `generated_columns` and `timestamp_ntz=true` use supported
+  delta-rs APIs, with capability refusals naming the installed and verified version.
+- Dry-run reports the feature protocol union; doctor reports actual protocol and
+  reader/writer feature lists. Failed validation names the rule or generated column
+  and keeps an existing table's version. Default output and pinned fixtures stay
+  unchanged. Renaming, deletion-vector actions and upsert are outside this package.
+
+
 - PostgreSQL sources retain native array element types, and Databricks sources parse declared
   recursive catalog types. Source URIs refuse writer-only nested options before connecting.
 

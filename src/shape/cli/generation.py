@@ -287,6 +287,45 @@ def _dump(obj: Any) -> None:
 # ---- generate -----------------------------------------------------------------------------
 
 
+def _delta_feature_options(a: argparse.Namespace) -> dict[str, Any]:
+    from shape.cli.to import sink_config
+    from shape.plugins.host import default_host
+
+    extra = sink_config(getattr(a, "sink_config", None), offline=bool(getattr(a, "dry_run", False)))
+    given = extra.get("delta", {})
+    if not given:
+        return {}
+    sink = default_host().get("shape.sinks", "delta")
+    supported = getattr(sink, "feature_options", ())
+    return {k: v for k, v in given.items() if k in supported}
+
+
+def _delta_protocol(a: argparse.Namespace) -> dict[str, Any]:
+    if getattr(a, "format", None) != "delta" and not any(
+        str(t).startswith(("delta+abfss://", "delta+abfs://"))
+        for t in (getattr(a, "to", None) or [])
+    ):
+        return {}
+    options = _delta_feature_options(a)
+    if not options:
+        return {}
+    from shape.plugins.host import default_host
+
+    sink = default_host().get("shape.sinks", "delta")
+    return {"delta_protocol": sink.feature_plan(options)}
+
+
+def _print_delta_protocol(a: argparse.Namespace) -> None:
+    doc = _delta_protocol(a)
+    if doc:
+        p = doc["delta_protocol"]
+        print(
+            f"Delta protocol: reader {p['min_reader_version']} / writer {p['min_writer_version']}; "
+            f"reader features: {', '.join(p['reader_features']) or 'none'}; "
+            f"writer features: {', '.join(p['writer_features']) or 'none'}"
+        )
+
+
 def _sink_options(a: argparse.Namespace) -> dict[str, Any]:
     """The writer options the command line sets (only those given)."""
     fmt = a.format
@@ -316,6 +355,7 @@ def _sink_options(a: argparse.Namespace) -> dict[str, Any]:
             if value is not None:
                 options[key] = value
     elif fmt == "delta":
+        options.update(_delta_feature_options(a))
         options["mode"] = a.delta_mode
         if getattr(a, "table_prefix", ""):
             options["table_prefix"] = a.table_prefix
@@ -572,12 +612,13 @@ def _generate_schema(
         run.set(rows=plan.total_rows, tables=len(plan.order))
         constraints = _constraint_preview(a, schema, list(plan.order))
         if a.json:
-            payload = plan.to_dict()
+            payload = {**plan.to_dict(), **_delta_protocol(a)}
             if constraints:
                 payload["constraint_ddl"] = constraints
             _dump(payload)
         else:
             print(plan.render())
+            _print_delta_protocol(a)
             if constraints:
                 print("\nConstraint DDL (preview):")
                 print("\n".join(constraints))
@@ -650,9 +691,10 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
         plan = engine.dry_run()
         run.set(rows=plan.total_rows, tables=len(plan.order))
         if a.json:
-            _dump({**plan.to_dict(), **_mark_vault(plan, mode)})
+            _dump({**plan.to_dict(), **_mark_vault(plan, mode), **_delta_protocol(a)})
         else:
             print(plan.render())
+            _print_delta_protocol(a)
             if vault_run is not None:
                 print(f"vault columns: {', '.join(mode['vaulted_columns'])}")
         return 0 if plan.ok else 1

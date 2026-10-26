@@ -162,7 +162,7 @@ pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    ======================================= test session starts ========================================
+    ======================================= test session starts =================================
     platform linux -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0
     rootdir: <checkout>
     configfile: pyproject.toml
@@ -171,7 +171,7 @@ pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py
     
     plugins/shape-fabric/tests/test_live_git_sync.py .                                           [100%]
     
-    ================================== 1 passed in 143.59s (0:02:23) ===================================
+    ================================== 1 passed in 143.59s (0:02:23) ============================
     ```
 
 Evidence: [run 38320894194, ubuntu-latest, `6eb065e8f734`](evidence/transcripts/docs-transcripts-38320894194-6eb065e8f734-ubuntu-latest-git-sync-live.json).
@@ -216,3 +216,33 @@ metadata. `export-model --from-profile MODEL.shape` preserves model-owned measur
 expressions under `skipped`. Model-profile diffs report `measure_change` and `role_change`,
 excluded from numeric drift gates. The TOM connection is read-only and sempy requires its
 specified model permissions; Shape does not deploy roles to a live model.
+
+### Opt-in Delta table features
+
+Shape's default Delta output remains reader 1 / writer 2, zone-less timestamps
+rewritten to UTC, suitable for the existing Fabric readers. `column_mapping="name"`
+raises the protocol to reader 2 / writer 5 and adds physical-name/id schema
+metadata. `deletion_vectors=true` enables reader 3 / writer 7 and
+`delta.enableDeletionVectors=true`; Shape itself writes no deletion-vector actions.
+`timestamp_ntz=true` preserves zone-less timestamps with reader 3 / writer 7 and
+`timestampNtz`. `constraints` require writer 3 (`checkConstraints`) and
+`generated_columns` writer 4 (`generatedColumns`); a generated date can be used by
+`partition_by`. Ordinary `table_properties` do not change the protocol.
+
+These features are opt-in and compose at the highest protocol version. Spark
+runtimes that support the declared protocol/features can read them and maintain
+those tables. SQL analytics endpoint support depends on the Fabric endpoint's
+current supported Delta features; do not assume a reader that accepts the default
+protocol can accept mapped, DV-enabled or timestampNtz tables. Inspect the actual
+protocol with `shape doctor --delta-table PATH --json`; plan the minimum feature
+union with `shape generate ... --format delta --dry-run --json --sink-config ...`.
+Use the default write when a SQL endpoint or older Spark reader's support has not
+been confirmed. Shape does not alter the endpoint or disable its protocol checks.
+
+The writer's opt-in features require verified deltalake 1.6.6 or newer and their
+public APIs. Unsupported versions or APIs are refused naming the installed and
+required versions; the optional extra's
+existing dependency floor is unchanged. Native DataFusion `QueryBuilder` reads
+mapped and advertised-DV tables correctly on that version; its PyArrow scanner
+requires Shape's existing DuckDB fallback for those features. See `docs/SINKS.md`
+for options, partitioned generated-column examples and pre-write validation costs.
