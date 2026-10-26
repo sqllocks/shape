@@ -1,6 +1,6 @@
 # Public B interim report — 2026-10-25
 
-Work continues. **4 of9 assigned issues merged (44.4%);5 remain unmerged (55.6%).** All9 implementations have independent approval. Five ready implementation PRs remain; none is parked or awaiting an Owner implementation decision. Supporting certificate PR40 is outside the9-issue denominator. No live-account success is claimed.
+Work continues. **4 of9 assigned issues merged (44.4%);5 remain unmerged (55.6%).** All9 implementations have independent approval. Five remaining implementations are being consolidated into one integration PR under the latest Owner speed directive. Earlier per-lane CI stages are superseded; final combined review is in progress. None is parked or awaiting an Owner decision. Supporting certificate PR40 is outside the9-issue denominator. No live-account success is claimed.
 
 Current main is `90fbff999bc95e255b3dbd90b76278441a735b41` after root merged PR29 at23:09:58UTC. Newmain [CI](https://github.com/sqllocks/shape/actions/runs/40243508314), [Docs](https://github.com/sqllocks/shape/actions/runs/40243508311), [Security](https://github.com/sqllocks/shape/actions/runs/40243508316) all SUCCESS, verified October26 at00:47:31UTC; all27corejobs passed. PriorOraclemain3b19 after LeadA39 is fullygreen: Its [Documentation](https://github.com/sqllocks/shape/actions/runs/40235435374), [Security](https://github.com/sqllocks/shape/actions/runs/40235435418) and [CI](https://github.com/sqllocks/shape/actions/runs/40235435384) all passed, with all27 core jobs green, verified22:55:23UTC. Prior mainc1ff1c8 completed all triggered workflows successfully. PR29 was refreshed when main advanced; its previous incomplete CI does not qualify for the new head.
 
@@ -98,3 +98,9 @@ PR29 exactreviewede8bcc73 completed30successful checks+onlyconditionalDocspublis
 ## Latest merged-main verification
 
 Merged dbt main `90fbff999bc95e255b3dbd90b76278441a735b41` passed every triggered workflow, verified October26 at00:47:31UTC: [CI40243508314](https://github.com/sqllocks/shape/actions/runs/40243508314), [Docs40243508311](https://github.com/sqllocks/shape/actions/runs/40243508311), [Security40243508316](https://github.com/sqllocks/shape/actions/runs/40243508316). All27corejobs passed. Formats andIceberg still await two checks each; no additional issue merged yet.
+
+## Delivery strategy updated by latest throughput instruction
+
+Owner instructed taking the steps needed to accelerate delivery. Lead B is combining the five remaining reviewed implementations in one lead integration PR, preserving every exact-head hosted check and independent Wanted/security review. This removes repeated full gates after each individual merge. Current integration branch is `lead/public-b-integration`; the lead state retains active author ownership and next actions. #20 remains separately gated on the required green main Nightly and subsequent acceptance PR.
+
+Another session merged37 into main314749d just as31 finished all7sourceworkflowsgreen. Those31results remain genuine evidence but its standalonehead lacksnewmain and is not merged. The integration includes314749d. Combined regression checks have caught and repaired broker nesting, new cloud-source depth forwarding and specialized Iceberg depth forwarding; BigQuery async credential-fragment protection is under targeted repair before final PR. Counts remain4/9 delivered44.4%,5left55.6%.
