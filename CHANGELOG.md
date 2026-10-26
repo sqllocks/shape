@@ -6,6 +6,8 @@ Status: available.
 
 ## Unreleased
 
+- Preserve cancellation across concurrent persisted job-store progress updates.
+
 - Bridge API 1.3 design DDL uses unbounded SQL strings consistently with the CLI and Python API. Bridge 1.1 and 1.2 retain historical DDL after canonical validation; indexed SQL Server strings still require an explicit `max_length`.
 
 - Speed CI core tests on macOS and Windows with two workers and reuse native build dependencies; test coverage and acceptance gates remain enforced.
