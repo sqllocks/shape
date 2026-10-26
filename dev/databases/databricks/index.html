@@ -5945,6 +5945,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#profile-a-table-or-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile a table or schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#related" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6358,6 +6369,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#profile-a-table-or-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile a table or schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#related" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6402,7 +6424,7 @@ you select a destructive mode. A write error can report committed rows, so a ret
 idempotency decision.</p>
 <p>Evidence: <code>plugins/shape-databases/src/shape_databases/databricks.py</code> and shared adapter helpers.
 The integrations source definitions are in <code>plugins/shape-integrations/src/shape_integrations/</code>.
-Snowflake and Databricks are write targets; Shape does not profile from them yet.</p>
+Databricks also profiles SQL warehouse tables and Unity Catalog schemas.</p>
 <h2 id="write-receipt">Write receipt<a class="headerlink" href="#write-receipt" title="Permanent link">&para;</a></h2>
 <p>Owner-run on 2026-10-11 in a clean Windows 11 VM, Python 3.12.10, using Shape 0.9.1 installed from PyPI. The target was Databricks Free Edition’s serverless SQL warehouse. The personal access token was in <code>DATABRICKS_TOKEN</code>, outside the URI; keep it in your environment when running the command.</p>
 <p>Fill in the workspace, warehouse, catalog and schema identifiers below. Target identifiers are substituted in both the command and output.</p>
@@ -6417,6 +6439,24 @@ Wrote 21,750 rows in 9 tables to databricks://&lt;WORKSPACE_HOST&gt;/sql/1.0/war
 <p>The receipt records one test-account run. Authentication, permissions and server limits
 remain properties of your deployment.
 Do not publish credentials in a profile, project file or issue.</p>
+<h2 id="profile-a-table-or-schema">Profile a table or schema<a class="headerlink" href="#profile-a-table-or-schema" title="Permanent link">&para;</a></h2>
+<p>Use <code>databricks://HOST/sql/1.0/warehouses/ID?catalog=C&amp;schema=S&amp;table=T</code> with
+<code>shape profile</code> or the bridge profile handler. Omit <code>table</code> to profile a whole schema.
+This source supports SQL warehouses. Authentication uses the sink's token or OAuth
+machine-to-machine options; credentials are refused in URIs before connecting.</p>
+<p>The connector's <code>fetchall_arrow</code> supplies Arrow results. Bounded distributions use
+<code>TABLESAMPLE (... PERCENT)</code> and a limit. Catalog population counts come from <code>DESCRIBE
+TABLE EXTENDED</code> statistics. Missing row statistics fail with an instruction to ask the
+table owner to collect them; Shape does not modify statistics. Primary and foreign keys
+come from Unity Catalog <code>information_schema.table_constraints</code>, <code>key_column_usage</code> and
+<code>referential_constraints</code>. Key relationships carry <code>evidence: "declared"</code>.</p>
+<p>TINYINT, SMALLINT, INT and BIGINT retain int8, int16, int32 and int64 widths.
+DECIMAL(p,s) uses decimal128(p,s). TIMESTAMP uses UTC; TIMESTAMP_NTZ has no timezone.
+ARRAY, STRUCT and MAP cross this source boundary as JSON text. Catalog row counts,
+<code>sampled_rows</code> and <code>sampling</code> distinguish the population and sampled distributions;
+zero requested sample rows reads the catalog only.</p>
+<p>Offline fake catalogs and Arrow result sets cover these reads. Live account validation
+is pending Owner settings.</p>
 <h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
 <p><a href="../">Databases</a> · <a href="../../WHAT_LEAVES/">What leaves my machine</a> ·
 <a href="../../KNOWN_LIMITATIONS/">Known limitations</a></p>

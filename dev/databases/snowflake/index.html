@@ -5906,6 +5906,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#profile-a-table-or-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile a table or schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#write-receipt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6347,6 +6358,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#profile-a-table-or-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile a table or schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#write-receipt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6402,7 +6424,28 @@ you select a destructive mode. A write error can report committed rows, so a ret
 idempotency decision.</p>
 <p>Evidence: <code>plugins/shape-databases/src/shape_databases/snowflake.py</code> and shared adapter helpers.
 The integrations source definitions are in <code>plugins/shape-integrations/src/shape_integrations/</code>.
-Snowflake and Databricks are write targets; Shape does not profile from them yet.</p>
+Snowflake also profiles tables and schema catalogs through the source described below.</p>
+<h2 id="profile-a-table-or-schema">Profile a table or schema<a class="headerlink" href="#profile-a-table-or-schema" title="Permanent link">&para;</a></h2>
+<p>The source URI is <code>snowflake://USER@ACCOUNT/DATABASE/SCHEMA?table=T&amp;warehouse=WH&amp;role=R</code>.
+Omit <code>table</code> to profile every table in the schema. <code>shape profile</code> and the bridge profile
+handler accept this URI. The optional <code>sample_rows</code> control bounds distributions; catalog
+row counts describe the population and <code>sampled_rows</code> describes the sample. <code>sampling</code>
+records the requested bound. Zero requested rows reads the catalog only.</p>
+<p>Reads use the connector's <code>fetch_arrow_batches</code>; sampling uses <code>TABLESAMPLE</code> with a limit.
+Declared primary and foreign keys come from <code>SHOW PRIMARY KEYS</code> and <code>SHOW IMPORTED KEYS</code>.
+Relationships record <code>evidence: "declared"</code>: Snowflake keys are informational. Provenance
+records the actual <code>CURRENT_WAREHOUSE()</code>, including a session default warehouse.</p>
+<p><code>NUMBER(p,0)</code> uses int8 for p ≤ 2, int16 for p ≤ 4, int32 for p ≤ 9 and int64
+for p ≤ 18; larger values use decimal128(p,0), including decimal128(38,0).
+Scaled NUMBER uses decimal128(p,s). FLOAT uses float64. TIMESTAMP_NTZ has no timezone;
+TIMESTAMP_TZ and TIMESTAMP_LTZ use UTC timestamps. DATE, TIME, BOOLEAN and BINARY retain
+their Arrow equivalents. VARIANT, ARRAY and OBJECT are JSON text at the source boundary.</p>
+<p>Authentication follows the sink rules above: password or key pair through source options
+or the supported environment/reference settings. A URI password or credential query key,
+invalid identifier or invalid sampling bound fails before connecting. Driver errors are
+scrubbed. The optional connector loads only when a connection opens.</p>
+<p>Offline fake catalogs and Arrow results cover this behavior. Live profiling remains an
+Owner action requiring an account; the write receipt below does not validate reads.</p>
 <h2 id="write-receipt">Write receipt<a class="headerlink" href="#write-receipt" title="Permanent link">&para;</a></h2>
 <p>Owner-run on 2026-10-11 in a clean Windows 11 VM, Python 3.12.10, using Shape 0.9.1 installed from PyPI and snowflake-connector-python 4.8.0. The Owner reports approximately 6:50 PM Eastern; the VM clock was incorrect. The captured run used key-pair sign-in and replace mode.</p>
 <p>Fill in the target identifiers below. The key is referenced by its local file URI, as used in the receipt. This PowerShell example sets the recorded <code>SHAPE_CONFIRM_REMOTE=1</code> environment value. Target identifiers are substituted in both the command and output.</p>

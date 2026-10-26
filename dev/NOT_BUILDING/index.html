@@ -6272,10 +6272,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#snowflake-and-databricks-profiling" class="md-nav__link">
+  <a href="#databricks-cluster-profiling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Snowflake and Databricks profiling
+        Databricks cluster profiling
       
     </span>
   </a>
@@ -6323,9 +6323,9 @@ Shape has no process boundary around them.
 is data minimisation, not anonymisation.
 <strong>Instead.</strong> Review capture policy and access controls before sharing an artifact.
 <strong>Recorded in.</strong> <a href="../PRIVACY_MODEL/">Privacy model</a>.</p>
-<h2 id="snowflake-and-databricks-profiling">Snowflake and Databricks profiling<a class="headerlink" href="#snowflake-and-databricks-profiling" title="Permanent link">&para;</a></h2>
-<p><strong>Why.</strong> The shipped database adapters for these targets write tables; they do not read profiles.
-<strong>Instead.</strong> Profile a supported local extract where your handling policy permits it.
+<h2 id="databricks-cluster-profiling">Databricks cluster profiling<a class="headerlink" href="#databricks-cluster-profiling" title="Permanent link">&para;</a></h2>
+<p><strong>Why.</strong> The Databricks source connects to SQL warehouses through the SQL connector.
+<strong>Instead.</strong> Use a SQL warehouse and Unity Catalog, or profile an approved local extract.
 <strong>Recorded in.</strong> <a href="../databases/">Database adapters</a>.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Scope+and+limits&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FNOT_BUILDING%2F">Report a problem with this page</a></p>
 

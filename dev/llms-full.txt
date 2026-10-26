@@ -5615,8 +5615,13 @@ PostgreSQL (
 postgresql://
 , also
 postgres://
-) and MySQL (
+), MySQL (
 mysql://
+), Snowflake
+(
+snowflake://
+) and Databricks (
+databricks://
 ) profile a schema
 or a URI-selected table. Optional
 tables
@@ -5633,7 +5638,9 @@ own, except for a database
 profile
 or Fabric
 fabric_spark
-run you ask for. A credential is read from the request
+run you ask for.
+Snowflake and Databricks SQL warehouse URIs use the databases plugin's catalog
+and bounded-sample source, including declared keys and sampling metadata. A credential is read from the request
 or the environment when a command needs it and is never written to a job file, a result or a
 log. Job files and spilled results are created with mode
 0600
@@ -6372,6 +6379,7 @@ Early access 0.9.3.
 Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 Unreleased
 ¶
+Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.
 Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
 Keep the locked development toolchain audit clear with compatible
 filelock
@@ -13116,6 +13124,11 @@ The kql scale sink percent-encodes its database name (#295); Spark job and
 COPY INTO
 checks
   take whole values, and backticks in Spark column names are doubled (#300).
+W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+  catalog row counts and whole-database profiles through the KQL endpoint.
+  Emitter metadata is excluded from profiles;
+dedupe=true
+collapses retries.
 W9-10
 ¶
 Read dbt semantic models and list singular tests in import metadata.
@@ -13147,11 +13160,6 @@ and
 sample_rows
 . Catalog-only capture uses sample size zero.
 Database profiles and bridge database artifacts use existing safe capture rules.
-W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
-  catalog row counts and whole-database profiles through the KQL endpoint.
-  Emitter metadata is excluded from profiles;
-dedupe=true
-collapses retries.
 W9-08: broker message metadata
 ¶
 Kafka and Event Hubs support column/composite keys, user headers, partition
@@ -15877,6 +15885,29 @@ plants seeded duplicates and writes the true
   clusters. See
 RESOLVE.md
 . Bad options or an unreadable file exit 2.
+Cloud database profiling
+¶
+With the databases plugin installed,
+shape profile
+accepts
+snowflake://USER@ACCOUNT/DATABASE/SCHEMA?warehouse=WH&table=T
+and
+databricks://HOST/sql/1.0/warehouses/ID?catalog=C&schema=S&table=T
+.
+Omit
+table
+to profile a schema;
+--tables A,B
+selects tables and
+--sample-rows N
+bounds distributions (default 1000; zero reads catalogs only).
+Catalog population counts and declared keys accompany sampled statistics. Snowflake
+provenance records the actual warehouse. Credentials use source options and references,
+never URI passwords or tokens. See the
+Snowflake
+and
+Databricks
+source guides for authentication, types and limits.
 Cloud and Fabric options
 ¶
 Three options reach cloud destinations and sources. Their help text, as
@@ -20760,7 +20791,7 @@ shape
 plugins
 list
 Output (exit 0)
-185 plugin(s)
+187 plugin(s)
   shape.behaviors:entity_lifecycle        unloaded [sqllocks-shape-behavior]
   shape.behaviors:equipment_maintenance   unloaded [sqllocks-shape-behavior]
   shape.behaviors:event_sequence          unloaded [sqllocks-shape-behavior]
@@ -20888,6 +20919,7 @@ Output (exit 0)
   shape.sinks:x12-837p                    unloaded [sqllocks-shape-healthcare-standards]
   shape.sources:abfss                     unloaded [sqllocks-shape]
   shape.sources:csv                       unloaded [sqllocks-shape]
+  shape.sources:databricks                unloaded [sqllocks-shape-databases]
   shape.sources:delta                     unloaded [sqllocks-shape]
   shape.sources:duckdb                    unloaded [sqllocks-shape-integrations]
   shape.sources:eventhouse                unloaded [sqllocks-shape-fabric]
@@ -20903,6 +20935,7 @@ Output (exit 0)
   shape.sources:postgres                  unloaded [sqllocks-shape-databases]
   shape.sources:postgresql                unloaded [sqllocks-shape-databases]
   shape.sources:semantic-model            unloaded [sqllocks-shape-fabric]
+  shape.sources:snowflake                 unloaded [sqllocks-shape-databases]
   shape.sources:x12                       unloaded [sqllocks-shape-healthcare-standards]
   shape.sources:xml                       unloaded [sqllocks-shape]
   shape.strategies:address                unloaded [sqllocks-shape]
@@ -50571,12 +50604,12 @@ Review capture policy and access controls before sharing an artifact.
 Recorded in.
 Privacy model
 .
-Snowflake and Databricks profiling
+Databricks cluster profiling
 ¶
 Why.
-The shipped database adapters for these targets write tables; they do not read profiles.
+The Databricks source connects to SQL warehouses through the SQL connector.
 Instead.
-Profile a supported local extract where your handling policy permits it.
+Use a SQL warehouse and Unity Catalog, or profile an approved local extract.
 Recorded in.
 Database adapters
 .
@@ -72370,7 +72403,7 @@ and shared adapter helpers.
 The integrations source definitions are in
 plugins/shape-integrations/src/shape_integrations/
 .
-Snowflake and Databricks are write targets; Shape does not profile from them yet.
+Databricks also profiles SQL warehouse tables and Unity Catalog schemas.
 Write receipt
 ¶
 Owner-run on 2026-10-11 in a clean Windows 11 VM, Python 3.12.10, using Shape 0.9.1 installed from PyPI. The target was Databricks Free Edition’s serverless SQL warehouse. The personal access token was in
@@ -72406,6 +72439,45 @@ in the SQL Editor.
 The receipt records one test-account run. Authentication, permissions and server limits
 remain properties of your deployment.
 Do not publish credentials in a profile, project file or issue.
+Profile a table or schema
+¶
+Use
+databricks://HOST/sql/1.0/warehouses/ID?catalog=C&schema=S&table=T
+with
+shape profile
+or the bridge profile handler. Omit
+table
+to profile a whole schema.
+This source supports SQL warehouses. Authentication uses the sink's token or OAuth
+machine-to-machine options; credentials are refused in URIs before connecting.
+The connector's
+fetchall_arrow
+supplies Arrow results. Bounded distributions use
+TABLESAMPLE (... PERCENT)
+and a limit. Catalog population counts come from
+DESCRIBE
+TABLE EXTENDED
+statistics. Missing row statistics fail with an instruction to ask the
+table owner to collect them; Shape does not modify statistics. Primary and foreign keys
+come from Unity Catalog
+information_schema.table_constraints
+,
+key_column_usage
+and
+referential_constraints
+. Key relationships carry
+evidence: "declared"
+.
+TINYINT, SMALLINT, INT and BIGINT retain int8, int16, int32 and int64 widths.
+DECIMAL(p,s) uses decimal128(p,s). TIMESTAMP uses UTC; TIMESTAMP_NTZ has no timezone.
+ARRAY, STRUCT and MAP cross this source boundary as JSON text. Catalog row counts,
+sampled_rows
+and
+sampling
+distinguish the population and sampled distributions;
+zero requested sample rows reads the catalog only.
+Offline fake catalogs and Arrow result sets cover these reads. Live account validation
+is pending Owner settings.
 Related
 ¶
 Databases
@@ -72487,7 +72559,9 @@ semantic-model
 . DuckDB reads come from
 shape-integrations
 . Snowflake and Databricks
-are write targets; export their data to Parquet or CSV before profiling.
+provide table and schema profiling sources in
+shape-databases
+.
 Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
 DuckDB
 : a local file, covered by the sixth starter tutorial.
@@ -72496,9 +72570,9 @@ PostgreSQL
 MySQL
 : bound batched INSERT writes; profile a CSV or Parquet export.
 Snowflake
-: staged Parquet and COPY INTO writes.
+: staged Parquet and COPY INTO writes; Arrow and catalog profiling.
 Databricks
-: bound INSERT writes to SQL warehouses.
+: bound INSERT writes and Arrow/catalog profiling in SQL warehouses.
 Cloud and server command transcripts need owner execution with an appropriate test account.
 The pages document code behavior without claiming platform validation.
 Related
@@ -72769,7 +72843,53 @@ and shared adapter helpers.
 The integrations source definitions are in
 plugins/shape-integrations/src/shape_integrations/
 .
-Snowflake and Databricks are write targets; Shape does not profile from them yet.
+Snowflake also profiles tables and schema catalogs through the source described below.
+Profile a table or schema
+¶
+The source URI is
+snowflake://USER@ACCOUNT/DATABASE/SCHEMA?table=T&warehouse=WH&role=R
+.
+Omit
+table
+to profile every table in the schema.
+shape profile
+and the bridge profile
+handler accept this URI. The optional
+sample_rows
+control bounds distributions; catalog
+row counts describe the population and
+sampled_rows
+describes the sample.
+sampling
+records the requested bound. Zero requested rows reads the catalog only.
+Reads use the connector's
+fetch_arrow_batches
+; sampling uses
+TABLESAMPLE
+with a limit.
+Declared primary and foreign keys come from
+SHOW PRIMARY KEYS
+and
+SHOW IMPORTED KEYS
+.
+Relationships record
+evidence: "declared"
+: Snowflake keys are informational. Provenance
+records the actual
+CURRENT_WAREHOUSE()
+, including a session default warehouse.
+NUMBER(p,0)
+uses int8 for p ≤ 2, int16 for p ≤ 4, int32 for p ≤ 9 and int64
+for p ≤ 18; larger values use decimal128(p,0), including decimal128(38,0).
+Scaled NUMBER uses decimal128(p,s). FLOAT uses float64. TIMESTAMP_NTZ has no timezone;
+TIMESTAMP_TZ and TIMESTAMP_LTZ use UTC timestamps. DATE, TIME, BOOLEAN and BINARY retain
+their Arrow equivalents. VARIANT, ARRAY and OBJECT are JSON text at the source boundary.
+Authentication follows the sink rules above: password or key pair through source options
+or the supported environment/reference settings. A URI password or credential query key,
+invalid identifier or invalid sampling bound fails before connecting. Driver errors are
+scrubbed. The optional connector loads only when a connection opens.
+Offline fake catalogs and Arrow results cover this behavior. Live profiling remains an
+Owner action requiring an account; the write receipt below does not validate reads.
 Write receipt
 ¶
 Owner-run on 2026-10-11 in a clean Windows 11 VM, Python 3.12.10, using Shape 0.9.1 installed from PyPI and snowflake-connector-python 4.8.0. The Owner reports approximately 6:50 PM Eastern; the VM clock was incorrect. The captured run used key-pair sign-in and replace mode.
@@ -76257,7 +76377,7 @@ Output (exit 0)
   shape.detectors:presidio   unloaded [sqllocks-shape-integrations]
   shape.detectors:us_ssn     unloaded [sqllocks-shape]
 shape: error: no plugin 'shape.detectors:iban' (see `shape plugins list`)
-plugin API 1.0: 185 plugin(s)
+plugin API 1.0: 187 plugin(s)
   ok    shape.behaviors:entity_lifecycle [sqllocks-shape-behavior]
   ok    shape.behaviors:equipment_maintenance [sqllocks-shape-behavior]
   ok    shape.behaviors:event_sequence [sqllocks-shape-behavior]
@@ -76385,6 +76505,7 @@ plugin API 1.0: 185 plugin(s)
   ok    shape.sinks:x12-837p [sqllocks-shape-healthcare-standards]
   ok    shape.sources:abfss [sqllocks-shape]
   ok    shape.sources:csv [sqllocks-shape]
+  ok    shape.sources:databricks [sqllocks-shape-databases]
   ok    shape.sources:delta [sqllocks-shape]
   ok    shape.sources:duckdb [sqllocks-shape-integrations]
   ok    shape.sources:eventhouse [sqllocks-shape-fabric]
@@ -76400,6 +76521,7 @@ plugin API 1.0: 185 plugin(s)
   ok    shape.sources:postgres [sqllocks-shape-databases]
   ok    shape.sources:postgresql [sqllocks-shape-databases]
   ok    shape.sources:semantic-model [sqllocks-shape-fabric]
+  ok    shape.sources:snowflake [sqllocks-shape-databases]
   ok    shape.sources:x12 [sqllocks-shape-healthcare-standards]
   ok    shape.sources:xml [sqllocks-shape]
   ok    shape.strategies:address [sqllocks-shape]

@@ -4234,6 +4234,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cloud-database-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cloud database profiling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cloud-and-fabric-options" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6722,6 +6733,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cloud-database-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cloud database profiling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cloud-and-fabric-options" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7343,6 +7365,16 @@ the policy.</p>
   clusters. See <a href="../RESOLVE/">RESOLVE.md</a>. Bad options or an unreadable file exit 2.</p>
 </li>
 </ul>
+<h2 id="cloud-database-profiling">Cloud database profiling<a class="headerlink" href="#cloud-database-profiling" title="Permanent link">&para;</a></h2>
+<p>With the databases plugin installed, <code>shape profile</code> accepts
+<code>snowflake://USER@ACCOUNT/DATABASE/SCHEMA?warehouse=WH&amp;table=T</code> and
+<code>databricks://HOST/sql/1.0/warehouses/ID?catalog=C&amp;schema=S&amp;table=T</code>.
+Omit <code>table</code> to profile a schema; <code>--tables A,B</code> selects tables and
+<code>--sample-rows N</code> bounds distributions (default 1000; zero reads catalogs only).
+Catalog population counts and declared keys accompany sampled statistics. Snowflake
+provenance records the actual warehouse. Credentials use source options and references,
+never URI passwords or tokens. See the <a href="../databases/snowflake/">Snowflake</a> and
+<a href="../databases/databricks/">Databricks</a> source guides for authentication, types and limits.</p>
 <h2 id="cloud-and-fabric-options">Cloud and Fabric options<a class="headerlink" href="#cloud-and-fabric-options" title="Permanent link">&para;</a></h2>
 <p>Three options reach cloud destinations and sources. Their help text, as <code>shape --help</code> prints it:</p>
 <table>
