@@ -68,6 +68,12 @@ for `--anomaly-fraction`.
 
 ## Targeted corruptions and the ground-truth log (`shape chaos`)
 
+`shape chaos --list-kinds` lists every targeted kind, its options, defaults and rate
+semantics without input data or an output directory. Add `--json` for the catalogue
+object also returned by bridge 1.4 `chaos_kinds`. Scheduled category mutators and the
+row anomaly API below have their own controls.
+
+
 The categories below are randomised: a scheduler decides what fires and each mutator picks its
 own rows. To corrupt a table in a known way and score a quality check against the answer, use named
 corruptions, each with a rate, and the **ground-truth log** they write.

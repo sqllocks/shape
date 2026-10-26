@@ -42,7 +42,13 @@ def add_arguments(sub: Any) -> None:
         metavar="DIR",
         help="the tables to corrupt, flat files or <table>/ingest_date=YYYY-MM-DD/<file>",
     )
-    ch.add_argument("-o", "--output", required=True, metavar="DIR", help="where the files go")
+    destination = ch.add_mutually_exclusive_group(required=True)
+    destination.add_argument("-o", "--output", metavar="DIR", help="where the files go")
+    destination.add_argument(
+        "--list-kinds",
+        action="store_true",
+        help="list targeted corruption kinds without reading or writing data",
+    )
     ch.add_argument(
         "--corrupt",
         action="append",
@@ -190,6 +196,19 @@ def cmd_chaos(a: argparse.Namespace) -> int:
 
 def run(a: argparse.Namespace) -> int:
     """Dispatch parsed chaos arguments and return the command exit code."""
+    if a.list_kinds:
+        from shape.chaos.catalogue import catalogue
+
+        result = catalogue()
+        if a.json:
+            print(json.dumps(result, indent=2, sort_keys=True))
+        else:
+            for entry in result["kinds"]:
+                print(f"{entry['kind']}: {entry['targeting']}")
+                print(f"  Rate (default {entry['default_rate']}): {entry['rate_semantics']}")
+                for name, description in entry["options"].items():
+                    print(f"  {name}: {description}")
+        return 0
     return cmd_chaos(a)
 
 

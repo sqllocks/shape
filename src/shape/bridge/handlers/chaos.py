@@ -21,7 +21,7 @@ from typing import Any
 
 from shape.bridge.context import Context
 from shape.bridge.errors import writing
-from shape.bridge.handlers.common import ANY, INT, STR, STRS, arr, obj
+from shape.bridge.handlers.common import ANY, INT, NUM, STR, STRS, arr, mapping, obj
 from shape.bridge.jobs import JobCancelled
 from shape.bridge.protocol import BridgeError
 from shape.bridge.spec import Arg, Command
@@ -168,7 +168,40 @@ def cmd_chaos(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     }
 
 
+def cmd_chaos_kinds(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
+    from shape.chaos.catalogue import catalogue
+
+    return catalogue()
+
+
 COMMANDS = [
+    Command(
+        "chaos_kinds",
+        "List every targeted corruption kind, its options and rate semantics; reads no data.",
+        {},
+        obj(
+            {
+                "surface": STR,
+                "syntax": STR,
+                "kinds": arr(
+                    obj(
+                        {
+                            "kind": STR,
+                            "column": STR,
+                            "targeting": STR,
+                            "default_rate": NUM,
+                            "rate_min": NUM,
+                            "rate_max": NUM,
+                            "rate_semantics": STR,
+                            "options": mapping(STR),
+                        }
+                    )
+                ),
+            }
+        ),
+        cmd_chaos_kinds,
+        since="1.4",
+    ),
     Command(
         "chaos",
         "Corrupt tables on purpose and write the ground-truth log (job-capable, cancellable "
@@ -232,5 +265,5 @@ COMMANDS = [
         prepare=prepare_chaos,
         since="1.2",
         effects=("reads_files", "writes_files", "cancels"),
-    )
+    ),
 ]
