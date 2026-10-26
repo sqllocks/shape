@@ -154,3 +154,43 @@ def test_unexpected_date_field_fails_closed(inputs, location):
     target["unexpected_date"] = "2030-01-01"
     with pytest.raises(replay.RecordingError):
         replay.capture_day(dataset, inputs, doc)
+
+
+@pytest.mark.parametrize("dataset", ["edge/x_time_only.csv", "edge/x_time_ampm.csv"])
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("2030-05-06", dt.datetime(2030, 5, 6)),
+        ("2030-05-06 14:23:45", dt.datetime(2030, 5, 6, 14, 23, 45)),
+        ("05/06/2030", dt.datetime(2030, 5, 6)),
+        ("May 6, 2030 2:23 PM", dt.datetime(2030, 5, 6, 14, 23)),
+        ("2024-02-29", dt.datetime(2024, 2, 29)),
+    ],
+)
+def test_replay_preserves_data_derived_dates(inputs, dataset, text, expected):
+    replay = replay_module()
+    from shape.profile.reference import dtparse
+
+    before = dtparse.coerce_column([text])
+    assert before == [expected]
+    with replay.profile_date_context(dataset, inputs):
+        assert dtparse.parse_mixed(text) == expected
+        assert dtparse.coerce_column([text]) == before
+
+
+@pytest.mark.parametrize("dataset", ["edge/x_time_only.csv", "edge/x_time_ampm.csv"])
+@pytest.mark.parametrize("text", ["14:23:45", "2:23:45 PM"])
+def test_replay_changes_only_clock_derived_default_date(monkeypatch, inputs, dataset, text):
+    replay = replay_module()
+    from shape.profile.reference import dtparse
+
+    original = dtparse._midnight
+    host = dt.datetime(2032, 7, 19)
+    monkeypatch.setattr(dtparse, "_midnight", lambda today: original(today or host))
+    assert dtparse.coerce_column([text]) == [dt.datetime(2032, 7, 19, 14, 23, 45)]
+    with replay.profile_date_context(dataset, inputs):
+        expected = dt.datetime(2026, 10, 13, 14, 23, 45)
+        assert dtparse.parse_mixed(text) == expected
+        assert dtparse.coerce_column([text]) == [expected]
+        assert dtparse.coerce_column([text], today=host) == [dt.datetime(2032, 7, 19, 14, 23, 45)]
+    assert dtparse.coerce_column([text]) == [dt.datetime(2032, 7, 19, 14, 23, 45)]
