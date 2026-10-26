@@ -219,10 +219,11 @@ def create_table_sql(
     if unknown:
         raise ShapeError(f"primary key column {unknown[0]!r} is not a column of {table!r}")
     lines = []
+    indexed = set(key) | (constraint_ddl.unique_columns if constraint_ddl else frozenset())
     for field in schema:
         meta = columns.get(field.name, {})
         sql_type = column_type(
-            field, meta, warehouse=warehouse, key=field.name in key, synapse=synapse
+            field, meta, warehouse=warehouse, key=field.name in indexed, synapse=synapse
         )
         nullable = bool(meta.get("nullable", True)) and field.name not in key
         identity = None if warehouse else identity_parts(meta)  # a Warehouse has no identity

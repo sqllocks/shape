@@ -504,10 +504,11 @@ class SqlSink:
             lines.append(f"-- {_comment(', '.join(q(c) for c in key))} is the logical primary key.")
         lines.append(f"CREATE TABLE {qualified} (")
         defs = []
+        indexed = set(key) | constraints.unique_columns
         for field in schema:
             info = meta.get(field.name, {})
             nullable = bool(info.get("nullable", True)) and field.name not in key
-            sql_type = _column_type(field, info, type_dialect, key=field.name in key)
+            sql_type = _column_type(field, info, type_dialect, key=field.name in indexed)
             if _legacy_design_types:
                 # Presentation only: canonical validation above must always run first.
                 logical = str(info.get("type") or _logical_type(field.type))
