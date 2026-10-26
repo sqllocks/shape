@@ -1,61 +1,39 @@
-# Public A handoff report — 2026-10-20
+# Public A report — 2026-10-26, final integration CI in progress
 
-Stopped at the prompt's credential hard stop at 20:33 UTC. GitHub returned HTTP 401 “Bad credentials”; repeated git pushes failed to read Username. No authentication or configuration changes were attempted. All agents stopped and local work is preserved.
+**3/7 merged (42.9% done), 4/7 remaining (57.1%). All four remaining issues are in one ready PR; none is parked.** This replaces the superseded October 20 credential-handoff report. Credentials work, all local implementation handoffs are pushed, and the Owner has resolved the policy decisions.
 
-**0 of 7 assigned issues merged: 0% done, 100% still unmerged.** Four implementation PRs are ready and independently reviewed (57.1%); three issues are parked (42.9%). No merge SHA or green merged-head CI evidence exists for any assigned issue.
+The Owner requested one final integration PR and full CI at the end. [PR #49](https://github.com/sqllocks/shape/pull/49), exact head `23c90c0f6fff5f6ed3d418b9a2986677ecde83f3`, contains #4/#5/#7/#8, the reviewed CI acceleration and a minimal cancellation-race repair exposed by fresh main CI. It is ready, independently reviewed and based on current main `314749d37aba9141a2ff68a33cfdb91e8a87cca5`. Full CI is pending; no merge or green result is claimed for #49.
 
-## Issue status
-
-| Issue | Status and preserved head | PR | Targeted evidence |
+| Issue | Status / PR | Actual merge SHA | Targeted acceptance |
 |---|---|---|---|
-| #2 W9-01 PostgreSQL/MySQL profiling | Ready, reviewed; `f16c2c68226402a5ee0f9f3b65dbf953dfff2f92` | [#35](https://github.com/sqllocks/shape/pull/35) | Acceptance red against base, then green; 727 database/source/privacy/unchanged SQL Server cases in each kernel. Changed documentation examples pass. |
-| #3 W9-02 Snowflake/Databricks profiling | Ready, reviewed; `e8f9e5b0d2b4cbbe106a59eea60bfe2fe43f8651` | [#37](https://github.com/sqllocks/shape/pull/37) | Eight sensitive-artifact failures red→green; 1,278 cloud/bridge cases default kernel, 76 cloud cases Python kernel. Actual plugin listings updated. |
-| #4 W9-03 type fidelity | Parked; `9869529e9a6bc4c03fd34feb6c72b718646d4fc7` | None | 233 focused cases pass. Corpus audit preserves zero INSERT/value differences; four additional string-key refusals need Owner authorization. |
-| #5 W9-04 constraints | Parked and incomplete; last pushed `e01c079f9d1a0a92340784e70a97b7c135878cfc`; six dirty files preserved | None | Compiler and writer tests-first checkpoints pass; actual PG16/MySQL8.4 enforcement, string-mode, retained-row and reference safeguards pass. Latest affected-module run: **439 passed, 8 failed**; not merge-ready. |
-| #7 W9-06 nested types | Ready, reviewed; `440540c591499eca0827dccef9d31080dd6e6cef` | [#38](https://github.com/sqllocks/shape/pull/38) | 257 acceptance/module cases plus 380 affected cases pass; 176 targeted Python cases pass. Real local DuckDB/Delta roundtrips and exact Delta timestamp boundaries pass. Final strict mypy covers all 15 changed plugin source modules. |
-| #8 W9-07 Delta features | Parked solely on #5; reviewed feature checkpoint `9bd824e8befd343c6bfd0a1a7342f8a26c945c57` | None | Actual #5/#7 branches stacked. Both unfiltered kernel selections: **122 passed**. Independent integration: 17 passed. Supported native/JSON roundtrips remain; unsupported combinations receive specific pre-storage refusals under existing Wanted rules. |
-| #16 W9-15 Oracle | Ready, reviewed; `ad3d2647d4e1aaf790d007e9dc0abb9fdfc84a32` | [#39](https://github.com/sqllocks/shape/pull/39) | 117 targeted integration cases; 46 sink cases after final fixes; 96 Python acceptance cases. All 3 actual Oracle Free23 emulator cases pass, including decimal(38,10), BLOB/timestamp9 and dataset identity. |
+| #2 W9-01 PostgreSQL/MySQL profiling | MERGED [#45](https://github.com/sqllocks/shape/pull/45) | `43d3f9aebeb8860489bc46f475203ba2faa8212e` | Tests-first acceptance; 727 affected cases per kernel. |
+| #3 W9-02 Snowflake/Databricks profiling | MERGED [#37](https://github.com/sqllocks/shape/pull/37) | `314749d37aba9141a2ff68a33cfdb91e8a87cca5` | Tests-first sensitive-artifact acceptance; 195 integration cases per kernel and two documentation pages. |
+| #16 W9-15 Oracle | MERGED [#39](https://github.com/sqllocks/shape/pull/39) | `3b19d05b940816a74a0ce1ec177365138ce0ed32` | 117 targeted cases, 96 Python cases, 46 sink cases and three actual Oracle Free23 emulator cases. |
+| #4 W9-03 type fidelity | READY in [#49](https://github.com/sqllocks/shape/pull/49) | Pending | 213 focused cases per kernel; final type/writer/DDL selection 516 per kernel. Bridge five-column acceptance 2 red → green; expanded Bridge selection 695 green. Dictionary preview 5 red/1 control → 100 affected cases per kernel. UNIQUE validation 8 red/6 controls → 223 per kernel. |
+| #5 W9-04 constraints | READY in [#49](https://github.com/sqllocks/shape/pull/49) | Pending | Tests-first compiler/writer acceptance, real local PG/MySQL enforcement recorded in lane; final shared integration 1040 affected cases per kernel before type composition, then focused affected selections. DuckDB inline parent-first exception implemented under Owner ruling. |
+| #7 W9-06 native nested types | READY in [#49](https://github.com/sqllocks/shape/pull/49) | Pending | Tests-first sink/module and native/JSON roundtrips; native preview 3 red/JSON control → 326 final focused cases per kernel in combined runtime. |
+| #8 W9-07 Delta features | READY in [#49](https://github.com/sqllocks/shape/pull/49) | Pending | Amended Wanted coverage; integration 11 red/5 controls plus six extra red/one control → 40 green; both-kernel affected and byte-compatibility checks recorded in lane. |
 
-Ruff, formatting, typing and public-wording checks passed at the reviewed ready heads. Local full pytest/make check runs were retired under the Owner throughput directive. No skip, xfail, test deletion, gate or tolerance change was introduced to resolve blockers.
+Final post-conflict composition passes **280 tests in each kernel**, covering UNIQUE validation, Bridge 1.3 and frozen 1.0/1.1/1.2 replay. The authorized combined nonfrozen corpus matches **390 files and 28 named refusals**. No inserted values or non-SQL artifacts changed beyond the approved type/constraint corpus deltas. Existing frozen Bridge blobs are unchanged; all **207** newly archived 1.2 schema/vector blobs match the published pre-type baseline byte for byte. Stable/plugin API checks report zero breaking changes. Ruff, formatting, mypy, wording and conformance checks pass. No local full pytest or make check was run as merge evidence.
 
-## CI and shared merge blocker
+Independent reviewers approved the final composition, Delta product changes, CI acceleration and cancellation repair. All 118 new commits were checked for DCO sign-off. Final merge still requires every triggered exact-head CI job green and current-main ancestry.
 
-The baseline locks certifi2026.7.22, affected by GHSA-6q48-6c7w-9gw2; the reported fixed version is2026.10.19. The security audit failed on both an implementation PR and the docs-only lead PR. Lead B already owns [fix PR #40](https://github.com/sqllocks/shape/pull/40); its branch was not edited, refreshed or merged by Public A. At the last successful read it remained open with 13 checks successful, 17 running and no failures.
+## CI evidence
 
-Unfinished CI on the known-vulnerable owned heads was cancelled to release capacity for the shared fix. These runs are **not merge evidence**. After the fix reaches main, merge main once into the owned ready branches, push and require every triggered job green on each exact new head.
+Merged PR #45 exact-head green workflows: [CI](https://github.com/sqllocks/shape/actions/runs/39528689508), [Documentation](https://github.com/sqllocks/shape/actions/runs/39528690005), [Security](https://github.com/sqllocks/shape/actions/runs/39528689826), [Container](https://github.com/sqllocks/shape/actions/runs/39528689918), [DCO](https://github.com/sqllocks/shape/actions/runs/39528689413), [action-selftest](https://github.com/sqllocks/shape/actions/runs/39528689400).
 
-Last current-head CI links, unsuccessful or cancelled on the vulnerable baseline:
+Merged PR #39 exact-head green workflows: [CI](https://github.com/sqllocks/shape/actions/runs/40226721627), [Documentation](https://github.com/sqllocks/shape/actions/runs/40226721586), [Security](https://github.com/sqllocks/shape/actions/runs/40226721653), [Container](https://github.com/sqllocks/shape/actions/runs/40226721599), [DCO](https://github.com/sqllocks/shape/actions/runs/40226721600), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40226721595). Fresh merged-head [CI](https://github.com/sqllocks/shape/actions/runs/40235435384), [Documentation](https://github.com/sqllocks/shape/actions/runs/40235435374) and [Security](https://github.com/sqllocks/shape/actions/runs/40235435418) also passed.
 
-- #35: [CI](https://github.com/sqllocks/shape/actions/runs/39483775008), [security failure](https://github.com/sqllocks/shape/actions/runs/39483775203).
-- #37: [CI](https://github.com/sqllocks/shape/actions/runs/39485790956).
-- #38: [CI](https://github.com/sqllocks/shape/actions/runs/39491557920).
-- #39: [CI](https://github.com/sqllocks/shape/actions/runs/39487056238).
-- Owner directive row: ready, reviewed [PR #36](https://github.com/sqllocks/shape/pull/36), head `5ae97349db0aa9531619d3a30ffe693bb0330258`; [CI](https://github.com/sqllocks/shape/actions/runs/39483639359) also awaits the shared fix.
+Merged PR #37 exact-head green workflows: [CI](https://github.com/sqllocks/shape/actions/runs/40243748742), [Documentation](https://github.com/sqllocks/shape/actions/runs/40243748741), [Security](https://github.com/sqllocks/shape/actions/runs/40243748751), [Container](https://github.com/sqllocks/shape/actions/runs/40243748808), [DCO](https://github.com/sqllocks/shape/actions/runs/40243748750), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40243748743). Fresh main macOS 3.11 subsequently exposed a pre-existing cross-store cancellation lost-update race; PR49 includes its deterministic repair rather than retrying to hide the failure.
 
-## Owner decisions still outstanding
+PR #49 **pending, not green evidence**: [CI](https://github.com/sqllocks/shape/actions/runs/40259512617), [Wheels](https://github.com/sqllocks/shape/actions/runs/40259512606), [Security](https://github.com/sqllocks/shape/actions/runs/40259512623), [Container](https://github.com/sqllocks/shape/actions/runs/40259512521), [Documentation](https://github.com/sqllocks/shape/actions/runs/40259512533), [DCO](https://github.com/sqllocks/shape/actions/runs/40259512500), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40259512531).
 
-- **#4:** authorize named preconnection refusal for undeclared indexed-string widths and the four exact additional corpus refusals. Recommended over silently guessing450. Alternative: explicitly permit a documented bounded-key exception. [Recorded question](https://github.com/sqllocks/shape/issues/4#issuecomment-6298211776).
-- **#5:** permit DuckDB's supported parent-first inline foreign keys as a documented exception to the required post-creation FK phase. Recommended; installed DuckDB1.5.6 cannot perform the literal ALTER. Alternatives: remove DuckDB from scope or await backend support. [Recorded question](https://github.com/sqllocks/shape/issues/5#issuecomment-6298361966).
-- **#8:** #5 must resolve and merge first. Its actual safe AST helper is already integrated; there is no additional feature-composition Owner question. [Dependency parking record](https://github.com/sqllocks/shape/issues/8#issuecomment-6298362470).
+## Owner decisions and remaining live actions
 
-## Pending live validation
+All policy questions are answered: indexed T-SQL strings require explicit widths; DuckDB uses its supported parent-first inline-FK exception; #8 integrates the final #5 helper; frozen Bridge 1.1/1.2 remain historical while CLI/API/new 1.3 use corrected types. No frozen baseline was amended. No unresolved contract question or parked lane remains.
 
-No account-dependent live pass is claimed.
+No account-dependent live test is claimed passing. Owner accounts/settings are still needed for PostgreSQL/MySQL source checks (#2), Snowflake/Databricks profiling (#3), cloud type/timezone readback (#4), cloud constraint enforcement (#5), cloud nested readback (#7), six Delta feature tables using SHAPE_LIVE_DELTA_URI and normal storage credentials (#8), and Oracle catalog/MAX_STRING_SIZE/account rights (#16). Actual local emulators are distinct from account-dependent live evidence. SQL Server emulator follow-up remains unexecuted locally; no SQL Server pass is claimed.
 
-- #2: real PostgreSQL/MySQL account roundtrips.
-- #3: Snowflake and Databricks account roundtrips with Owner settings.
-- #4: account-dependent type/zone/length readback after the Owner decision.
-- #5: remaining SQL Server/dialect acceptance and Snowflake/Databricks/Fabric account validation. Passed local PG/MySQL tests are emulator tests, not live-account evidence.
-- #7: PostgreSQL/MySQL nested emulator coverage remains distinct from its fake acceptance; live Snowflake/Databricks awaits Owner accounts. Local DuckDB/Delta passed.
-- #8: Fabric feature tables await Owner environment; local Delta feature tests passed.
-- #16: real Oracle19+/Autonomous TLS/wallet/account validation remains pending. Oracle Free23 local emulator passed.
+The historical maintenance PR46 Windows corrupted-Delta diagnostic failure remains unexplained: [job](https://github.com/sqllocks/shape/actions/runs/40213846736/job/121231082157). Its one diagnostic rerun and subsequent Windows heads passed, which does not establish the original cause. No test or assertion was weakened.
 
-## Preserved local work and resumption
-
-The final scratch state/report cannot be pushed while authentication fails. Last confirmed remotely pushed scratch commit: `30974d5`; local state commit `7dd2c2a` and this report are newer.
-
-#5 preserves dirty `_base.py`, `mysql.py`, `postgres.py`, `testing.py`, `tests/test_constraint_emulator.py` and `tests/test_write_constraints.py` under `/workspace/public-a-W9-04/plugins/shape-databases`. New reference safeguards have four fake and four actual-emulator green cases. Latest broader selection has two seed rerun regressions from default constraint derivation and six source CLI/bridge failures needing diagnosis. Remaining work includes existing-table verification, SQL Server/Fabric/DuckDB hooks, retail/chaos coverage and final docs/traceability. No further edits occurred after the hard stop.
-
-Oracle's temporary container/image was retired after its final successful tests to free disk. PG/MySQL services belong to compose project `shape-w9-04`; preserve or retire only that owned project as appropriate.
-
-After authentication is restored: read the prompt/state, publish the local handoff, preserve and resume #5's dirty work, absorb the other-owned shared fix from main, then run exact-head CI and merge promptly. Required implementation order is #35 before #37/#39, and #37 before #38. #8 still requires #5 first. User requests quantified updates about every five minutes and immediately on merge/blocker changes.
+No tags, releases, publishing, protected-branch pushes, repository settings or other-session branches were changed. The Premium Contract Lead questions path is absent in this public repository; recheck after the final merge batch.
