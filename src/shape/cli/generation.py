@@ -1150,7 +1150,11 @@ def _target_ddl(a: argparse.Namespace, schema: GenSchema) -> list[dict[str, str]
                     "timestamp": pa.timestamp("us"),
                     "time": pa.time64("us"),
                 }
-                if not col.generator.get("output_type") and col.strategy == "choice":
+                if col.strategy == "nested":
+                    from shape.profile.nested import arrow_type_from_spec
+
+                    arrow = arrow_type_from_spec(col.generator["arrow_type_spec"])
+                elif not col.generator.get("output_type") and col.strategy == "choice":
                     arrow = pa.array(col.generator.get("values", [])).type
                 elif not col.generator.get("output_type") and col.strategy == "constant":
                     arrow = pa.scalar(col.generator.get("value")).type
