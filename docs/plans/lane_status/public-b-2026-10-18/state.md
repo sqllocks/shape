@@ -4,7 +4,7 @@ Unattended run. Never end to wait or ask. After restart/compaction read this fil
 
 ## Active delivery
 
-**4/9 issues merged (44.4%); 5/9 remain (55.6%).** Final explicit-bootstrap ACL repair and inherited cancellation-race fix are signed/pushed and independently approved; fresh exact-head hosted CI is running. Supporting certificate PR40 is outside this denominator.
+**4/9 issues merged (44.4%); 5/9 remain (55.6%).** Final b9 head is signed/pushed and independently approved. All six ancillary workflows have succeeded; core CI is 24/27 successful, with Ubuntu3.13 heavy, Windows3.11 coverage and the minimum-dependencies second kernel suite running. No failure reported as of 2026-10-26T04:44UTC. Supporting certificate PR40 is outside this denominator.
 
 Owner explicitly demanded whatever steps are needed to accelerate delivery. Lead B consolidated ALL FIVE remaining reviewed implementations into ONE READY PR, eliminating repeated full CI after each separate merge. This REPLACES all old per-lane merge stages/holds. Do not refresh/restart/merge the old five source PRs independently. Their descriptions now point to48; preserve them as review history.
 
@@ -18,9 +18,9 @@ All seven workflows on FINALb9 REQUIRED before merge:
 
 | Workflow | Run | Latest known stage |
 |---|---|---|
-| CI |40264320674|Fresh full27-job matrix pending/running|
-| Wheels |40264320723|Fresh workflow running|
-| Documentation |40264320625|Fresh workflow running|
+| CI |40264320674|24/27 successful; three jobs running|
+| Wheels |40264320723|SUCCESS; all10jobs|
+| Documentation |40264320625|SUCCESS|
 | DCO |40264320666|SUCCESS|
 | Security |40264320751|SUCCESS|
 | Container |40264320624|SUCCESS|
@@ -92,3 +92,5 @@ CURRENT46dc gate milestone: all6ancillaryworkflows (Wheelsall10+Docs+DCO+Securit
 LATESTb9test-onlyrepair:46d min-versions job121372437150 failed8asyncBQcases becausecore-onlyenvrightlyomitsoptionalshape_databases;18940otherspassed. Fixedbyrelocating8params+entireasyncfunctionASTUNCHANGED tonewmandatoryplugin tests/test_bigquery_jobs.py; retained5coreURI+1linear controlsindependentofplugin. Coreoptionalimportblockcontrol8RED/6passbeforemove→6GREENaftereachkernel, absenceassertedbefore/after. All184BQ+pluginasync+scale+trust+coretargetedtestsGREENeachkernel; no product/CIenv/gate/marker/skip/guard/assertionchange. RootRuff/format,mypy711,publicclean. Fullindependentmetadata+formatsreview reboundEXACTb9. Alwaysverifynewcoreteststouchingoptionalpluginsunderabsencecontrol, orplaceintegrationcasesinownerplugin suite; neverimportorskip tohidefailure.
 
 Currentb9all7gatesjuststarted~03:30UTC. DCO/Container/Security/selftestSUCCESS;Docs/Wheelsrunning;CI40264320674all27required. NativeWindowsdatabaseSUCCESSalreadyincludingnew8asynccases. Minversionsordinarysuiteactive03:31:53; zeroFAILliveannotations(all16runningqueried03:35). Old46d ended18SUCCESS/1minFAIL/8CANCELLED, neverpassingfinalevidence. Formatsliveannotationcadencenow~1minute batch, noarchives. No code/reviewpending; onlyexact-head hostedgatesremain.
+
+Recovery milestone 2026-10-26T04:44UTC: exactb9 39successful checks, three running, only two structuralpublish skips. Fullreview and allsix ancillaryworkflows green; main unchanged314749d. No unpushed ownedbranch head (three oldlane refs are behindremote; genericwork branch is originalbase). Conditionalacceptance template prepared outside repo; create finalreadyPR with actualmerge/runprovenance immediately after48merge. Confirmed nightly IMPLS=(shape,) soexactlytwoNCitems/passed=required-2, notfour. Heavy nested1GB acceptance explicitlyparametrizes bothkernels and runsinCI; no missinglocalmode. Root persistentwatch377 active; resume it aftercompaction.

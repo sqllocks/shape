@@ -1,4 +1,4 @@
-# Public B interim report — 2026-10-25
+# Public B interim report — 2026-10-26
 
 Work continues. **4 of9 assigned issues merged (44.4%);5 remain unmerged (55.6%).** All9 implementations have independent approval. The five remaining implementations are consolidated in ready PR48 under the latest Owner speed directive. The explicit Windows bootstrap-ACL repair and inherited cancellation-race fix are pushed and independently approved on exact289fde5. Hosted native Windows passed on289, clearing strict staging privacy; its later plugin trust failure is repaired in46dc without changing the guard. All fresh46dc gates remain required. Neither prior Windows failure counts as passing. Earlier per-lane CI stages are superseded. None is parked or awaiting an Owner decision. Supporting certificate PR40 is outside the9-issue denominator. No live-account success is claimed.
 
@@ -78,7 +78,7 @@ These two workloads are **NOT COMPARABLE, never passes and never timing credit**
 
 The reviewed committed registry is `benchmarks/vs_refengine/comparison_contract.py` in PR42. Inputs/recordings are authenticated. Name aliases use original/current reference lineage, never numeric values, frequencies or output ranks. Scoped implicit parser date replay uses independently authenticated capture context before computation, preserves explicit dates and restores state; no output masking or threshold changes. No re-recording.
 
-#20 remains open. After42 merges, dispatch Nightly on main and require all five parity shards, `parity-publish` and `sqlserver-e2e` green. Link the qualifying dispatched run and close20 only through a subsequent acceptance PR. No qualifying run has been dispatched yet. No additional Owner comparison decision is pending.
+#20 remains open. After48 merges, dispatch Nightly on main and require all five parity shards, `parity-publish` and `sqlserver-e2e` green. Link the qualifying dispatched run and close20 only through a subsequent acceptance PR. No qualifying run has been dispatched yet. No additional Owner comparison decision is pending.
 
 ## Remaining work and Owner actions
 
