@@ -110,3 +110,9 @@ def assert_private(path: Path, mode: str = "0o600") -> None:
     assert any(e.endswith("\\" + user) or e == user for e in entries), (path, acl)
     others = [e for e in entries if e not in system and not (e.endswith("\\" + user) or e == user)]
     assert not others, (path, acl)
+
+
+class Caller13(Caller):
+    """Declare the 1.3 design DDL contract."""
+
+    version = "1.3"

@@ -1,0 +1,235 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "first-bad-version",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "bad": "last",
+          "good": "first",
+          "name": "orders",
+          "registry": "${DIR}/feed_raw"
+        },
+        "command": "bisect",
+        "id": "first-bad-version"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "bisect",
+        "id": "first-bad-version",
+        "ok": true,
+        "result": {
+          "bad": {
+            "business_date": "2026-03-06",
+            "content_id": "<any>",
+            "ref": "last"
+          },
+          "candidates": 5,
+          "changes": [
+            {
+              "after": null,
+              "before": null,
+              "column": "amount",
+              "kind": "mean_shift",
+              "redacted": true,
+              "score": 0.9448,
+              "severity": "medium"
+            },
+            {
+              "after": null,
+              "before": null,
+              "column": "amount",
+              "kind": "spread_change",
+              "redacted": true,
+              "score": 0.9054,
+              "severity": "medium"
+            },
+            {
+              "after": null,
+              "before": null,
+              "column": "amount",
+              "kind": "distribution_shift",
+              "redacted": true,
+              "score": 0.9179,
+              "severity": "medium"
+            },
+            {
+              "after": null,
+              "before": null,
+              "column": "amount",
+              "kind": "range_change",
+              "redacted": true,
+              "score": 0.9711,
+              "severity": "low"
+            },
+            {
+              "after": 0.375,
+              "before": 0.01,
+              "column": "note",
+              "kind": "null_rate_change",
+              "score": 0.365,
+              "severity": "medium"
+            }
+          ],
+          "changes_vs_good": [
+            {
+              "after": null,
+              "before": null,
+              "column": "amount",
+              "kind": "mean_shift",
+              "redacted": true,
+              "score": 0.9491,
+              "severity": "medium"
+            },
+            {
+              "after": null,
+              "before": null,
+              "column": "amount",
+              "kind": "spread_change",
+              "redacted": true,
+              "score": 0.9124,
+              "severity": "medium"
+            },
+            {
+              "after": null,
+              "before": null,
+              "column": "amount",
+              "kind": "distribution_shift",
+              "redacted": true,
+              "score": 0.9184,
+              "severity": "medium"
+            },
+            {
+              "after": null,
+              "before": null,
+              "column": "amount",
+              "kind": "range_change",
+              "redacted": true,
+              "score": 0.9732,
+              "severity": "low"
+            },
+            {
+              "after": 0.375,
+              "before": 0.005,
+              "column": "note",
+              "kind": "null_rate_change",
+              "score": 0.37,
+              "severity": "medium"
+            }
+          ],
+          "cost": {
+            "full_profile_tests": 3,
+            "versions_read": 4,
+            "window_tests": 0
+          },
+          "evaluated": 3,
+          "evaluations": [
+            {
+              "bad": true,
+              "business_date": "2026-03-06",
+              "content_id": "<any>"
+            },
+            {
+              "bad": false,
+              "business_date": "2026-03-03",
+              "content_id": "<any>"
+            },
+            {
+              "bad": true,
+              "business_date": "2026-03-04",
+              "content_id": "<any>"
+            }
+          ],
+          "first_bad": {
+            "business_date": "2026-03-04",
+            "content_id": "<any>",
+            "ref": "039e00ed66d4464ea5f80b5bcf83812f12991ecebf98f02f7411bdf594c01c43"
+          },
+          "flips": [],
+          "format": "shape-bisect",
+          "found": true,
+          "good": {
+            "business_date": "2026-03-01",
+            "content_id": "<any>",
+            "ref": "first"
+          },
+          "last_good": {
+            "business_date": "2026-03-03",
+            "content_id": "<any>",
+            "ref": "ed863798d227fb0eb5a2c57d4518f8976bf5a238ec76f2e18512368e8f0ca66e"
+          },
+          "max_evaluations": 5,
+          "mode": "bisect",
+          "name": "orders",
+          "test": {
+            "change_kind": null,
+            "column": null,
+            "contract": null,
+            "kind": "diff",
+            "source": null
+          },
+          "version": 1,
+          "warnings": []
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "good-tests-bad",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "bad": "first",
+          "good": "last",
+          "name": "orders",
+          "registry": "${DIR}/feed_raw"
+        },
+        "command": "bisect",
+        "id": "good-tests-bad"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "bisect",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "--good (last, 2026-03-06) is not older than --bad (first, 2026-03-01): versions are ordered by business_date, else by commit time"
+        },
+        "id": "good-tests-bad",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "needs-good-and-bad",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "name": "orders",
+          "registry": "${DIR}/feed_raw"
+        },
+        "command": "bisect",
+        "id": "needs-good-and-bad"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "bisect",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "bisect needs the argument 'good'"
+        },
+        "id": "needs-good-and-bad",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "bisect",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

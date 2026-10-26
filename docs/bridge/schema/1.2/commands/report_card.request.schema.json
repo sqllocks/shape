@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+      "type": "string"
+    },
+    "args": {
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "description": "a shape-verify-config file (its `utility` section drives the utility gate)",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "holdout": {
+          "description": "real rows that were not given to the generator, as a data file or a folder with one file per table: turns on the membership-inference test",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "manifest": {
+          "description": "the run manifest file of the generation: adds its reproducibility tuple and dataset id",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "output": {
+          "description": "a file to also write the card to, as JSON",
+          "type": "string",
+          "x-path": "write",
+          "x-since": "1.2"
+        },
+        "real": {
+          "description": "the real data: a data file, or a folder with one file per table",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "require": {
+          "description": "sections that must have run: one that was not run fails the card",
+          "items": {
+            "enum": [
+              "fidelity",
+              "utility",
+              "privacy"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "x-since": "1.2"
+        },
+        "synthetic": {
+          "description": "the synthetic data: a data file, or a folder with one file per table",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "tiers": {
+          "description": "the fidelity tiers to run, of 1 and 2 (default 1 and 2)",
+          "items": {
+            "type": "integer"
+          },
+          "type": "array",
+          "x-since": "1.2"
+        }
+      },
+      "required": [
+        "real",
+        "synthetic"
+      ],
+      "type": "object"
+    },
+    "command": {
+      "const": "report_card"
+    },
+    "id": {
+      "maxLength": 128,
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "async": {
+          "default": false,
+          "description": "for a command that can run as a job: return a job id at once and run in the background",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "include_raw_values": {
+          "default": false,
+          "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "max_inline_bytes": {
+          "default": 262144,
+          "description": "a result part larger than this is written to a file and returned as a reference",
+          "minimum": 1024,
+          "type": "integer",
+          "x-since": "1.0"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "command",
+    "args"
+  ],
+  "title": "report_card request",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

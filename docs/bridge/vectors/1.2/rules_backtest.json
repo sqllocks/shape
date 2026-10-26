@@ -1,0 +1,340 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "safe-history",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "contract": "${DIR}/contract_feed.json",
+          "name": "orders",
+          "registry": "${DIR}/feed_safe"
+        },
+        "command": "rules_backtest",
+        "id": "safe-history"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "rules_backtest",
+        "id": "safe-history",
+        "ok": true,
+        "result": {
+          "entries": [
+            {
+              "failed_rules": [],
+              "first_date": "2026-03-01",
+              "from": "2026-03-01",
+              "id": "2026-03-01@828f07c958fc",
+              "last_date": "2026-03-01",
+              "not_measured_rules": [
+                "orders.status.allowed_values",
+                "orders.amount.max"
+              ],
+              "rules": {
+                "failed": 0,
+                "not_measured": 2,
+                "passed": 2
+              },
+              "status": "not_measured",
+              "to": "2026-03-01",
+              "versions": [
+                "828f07c958fc361fb5c346b8b284ad934723bdd9ddec5d135b132d5e4a1dc206"
+              ],
+              "window": "day"
+            },
+            {
+              "failed_rules": [],
+              "first_date": "2026-03-02",
+              "from": "2026-03-02",
+              "id": "2026-03-02@07346306bd7f",
+              "last_date": "2026-03-02",
+              "not_measured_rules": [
+                "orders.status.allowed_values",
+                "orders.amount.max"
+              ],
+              "rules": {
+                "failed": 0,
+                "not_measured": 2,
+                "passed": 2
+              },
+              "status": "not_measured",
+              "to": "2026-03-02",
+              "versions": [
+                "07346306bd7f160ba38d8297b4ca53fc7165f806f4a6ab0e87a3cc1dccc9d671"
+              ],
+              "window": "day"
+            },
+            {
+              "failed_rules": [],
+              "first_date": "2026-03-03",
+              "from": "2026-03-03",
+              "id": "2026-03-03@b5ad07c8668e",
+              "last_date": "2026-03-03",
+              "not_measured_rules": [
+                "orders.status.allowed_values",
+                "orders.amount.max"
+              ],
+              "rules": {
+                "failed": 0,
+                "not_measured": 2,
+                "passed": 2
+              },
+              "status": "not_measured",
+              "to": "2026-03-03",
+              "versions": [
+                "b5ad07c8668e46bf1bef17989f8098a03b5de9696814b73ca4e7e956e29b3c3a"
+              ],
+              "window": "day"
+            },
+            {
+              "failed_rules": [
+                "orders.note.max_null_rate"
+              ],
+              "first_date": "2026-03-04",
+              "from": "2026-03-04",
+              "id": "2026-03-04@f1335cd0f6d8",
+              "last_date": "2026-03-04",
+              "not_measured_rules": [
+                "orders.status.allowed_values",
+                "orders.amount.max"
+              ],
+              "rules": {
+                "failed": 1,
+                "not_measured": 2,
+                "passed": 1
+              },
+              "status": "fail",
+              "to": "2026-03-04",
+              "versions": [
+                "f1335cd0f6d8c147172ef1d91e3c933561b7e2831c404c449324e02f12a39870"
+              ],
+              "window": "day"
+            },
+            {
+              "failed_rules": [
+                "orders.note.max_null_rate"
+              ],
+              "first_date": "2026-03-05",
+              "from": "2026-03-05",
+              "id": "2026-03-05@0a356ce29932",
+              "last_date": "2026-03-05",
+              "not_measured_rules": [
+                "orders.status.allowed_values",
+                "orders.amount.max"
+              ],
+              "rules": {
+                "failed": 1,
+                "not_measured": 2,
+                "passed": 1
+              },
+              "status": "fail",
+              "to": "2026-03-05",
+              "versions": [
+                "0a356ce2993297a3755fc78bb3a279d97faea7ba29d5684306acfd5d679ea766"
+              ],
+              "window": "day"
+            },
+            {
+              "failed_rules": [
+                "orders.note.max_null_rate"
+              ],
+              "first_date": "2026-03-06",
+              "from": "2026-03-06",
+              "id": "2026-03-06@13adcc218bb0",
+              "last_date": "2026-03-06",
+              "not_measured_rules": [
+                "orders.status.allowed_values",
+                "orders.amount.max"
+              ],
+              "rules": {
+                "failed": 1,
+                "not_measured": 2,
+                "passed": 1
+              },
+              "status": "fail",
+              "to": "2026-03-06",
+              "versions": [
+                "13adcc218bb05558bc4fabed8ffa2f40f3f19cf1fc0ff5d622e12cf5f73bb312"
+              ],
+              "window": "day"
+            }
+          ],
+          "format": "shape-backtest-report",
+          "name": "orders",
+          "rules": {
+            "orders.amount.max": {
+              "failed": 0,
+              "not_measured": 6
+            },
+            "orders.note.max_null_rate": {
+              "failed": 3,
+              "not_measured": 0
+            },
+            "orders.status.allowed_values": {
+              "failed": 0,
+              "not_measured": 6
+            }
+          },
+          "since": null,
+          "summary": "<any>",
+          "until": null,
+          "version": 1,
+          "window": "day"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "weekly",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "contract": "${DIR}/contract_feed.json",
+          "name": "orders",
+          "registry": "${DIR}/feed_raw",
+          "window": "week"
+        },
+        "command": "rules_backtest",
+        "id": "weekly"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "rules_backtest",
+        "id": "weekly",
+        "ok": true,
+        "result": {
+          "entries": [
+            {
+              "failed_rules": [],
+              "first_date": "2026-03-01",
+              "from": "2026-02-23",
+              "id": "2026-W09",
+              "last_date": "2026-03-01",
+              "not_measured_rules": [
+                "orders.status.allowed_values"
+              ],
+              "rules": {
+                "failed": 0,
+                "not_measured": 1,
+                "passed": 3
+              },
+              "status": "not_measured",
+              "to": "2026-03-01",
+              "versions": [
+                "8d968bb37b2834607511ca719edb9fc870d182ccb7e369962c236937d016a611"
+              ],
+              "window": "week"
+            },
+            {
+              "failed_rules": [
+                "orders.note.max_null_rate",
+                "orders.amount.max"
+              ],
+              "first_date": "2026-03-02",
+              "from": "2026-03-02",
+              "id": "2026-W10",
+              "last_date": "2026-03-06",
+              "not_measured_rules": [
+                "orders.status.allowed_values"
+              ],
+              "rules": {
+                "failed": 2,
+                "not_measured": 1,
+                "passed": 1
+              },
+              "status": "fail",
+              "to": "2026-03-08",
+              "versions": [
+                "150dccaabdb3b5f1b37be10cee11817a12864782fa6a1769fcd695c00639fdeb",
+                "ed863798d227fb0eb5a2c57d4518f8976bf5a238ec76f2e18512368e8f0ca66e",
+                "039e00ed66d4464ea5f80b5bcf83812f12991ecebf98f02f7411bdf594c01c43",
+                "d04cc388cbb9d53be18244726dde741d0222bf1336583d5281a9251e1d5abbc9",
+                "660348321b4bfa9d9c362ecd2833243362dcf2616bd7c8a8520fdbe97fbb56bc"
+              ],
+              "window": "week"
+            }
+          ],
+          "format": "shape-backtest-report",
+          "name": "orders",
+          "rules": {
+            "orders.amount.max": {
+              "failed": 1,
+              "not_measured": 0
+            },
+            "orders.note.max_null_rate": {
+              "failed": 1,
+              "not_measured": 0
+            },
+            "orders.status.allowed_values": {
+              "failed": 0,
+              "not_measured": 2
+            }
+          },
+          "since": null,
+          "summary": "<any>",
+          "until": null,
+          "version": 1,
+          "window": "week"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-name",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "contract": "${DIR}/contract_feed.json",
+          "name": "ghost",
+          "registry": "${DIR}/feed_safe"
+        },
+        "command": "rules_backtest",
+        "id": "unknown-name"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "rules_backtest",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "nothing is recorded for 'ghost' (names in this registry: orders)"
+        },
+        "id": "unknown-name",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-window",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "contract": "c",
+          "name": "orders",
+          "registry": "${DIR}/feed_safe",
+          "window": "year"
+        },
+        "command": "rules_backtest",
+        "id": "bad-window"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "rules_backtest",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'window' must be one of day, week, month, got 'year'"
+        },
+        "id": "bad-window",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "rules_backtest",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}
