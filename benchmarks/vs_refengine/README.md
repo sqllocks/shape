@@ -3,11 +3,33 @@
 The baseline is the last published Shape release, initially **Shape 0.9.1**, at the commit
 named by `v0.9.1`. The candidate is the checkout under test. The reference engine is archived
 and is never installed or run. T-20 is historical; T-21 clauses (g) and (h) are retired.
-T-21 (a)–(f), T-22, fixed seeds and all comparator tolerances remain unchanged.
+T-21 (a)–(f), T-22, fixed seeds and all numeric comparator tolerances remain unchanged.
 
-The builder delivers tools and offline tests only. There are **no real recordings or manifest
-on this branch**. Missing recordings return exit 2, never a pass. The lead captures, reviews
-and commits the release recordings before running the real acceptance commands.
+## Recorded errors are not comparable
+
+The Owner's 2026-10-20 decision permits a separate category only when the authenticated
+0.9.1 recording itself contains an error or unsupported result. The reviewed workload
+and reason list is `comparison_contract.py`: `profile:edge/x_pq_list.parquet` recorded
+`TypeError` for a list column, and `profile:edge/x_pq_nested.parquet` recorded `TypeError`
+for a struct column. These recordings contain no baseline profile values.
+
+The profile verifier authenticates the recording and input digests before classification,
+prints `NOT COMPARABLE` with the workload and reason, and exits 3. The runner records
+`verifier.status=not_comparable`, exit code 3, the workload and reason. It does not run a
+timing worker or count the result as a pass. Nightly reauthenticates the recorded refusal,
+reports the category in its separate `not_comparable` list and history, and rejects an
+unregistered workload, wrong reason, wrong exit code or timing attributed to this category.
+An overall green verdict can account for these reviewed refusals while `passed` excludes them.
+
+Successful recorded outputs continue to compare with every existing rule and threshold.
+In particular, time-only weekday histograms are data values, not runtime timestamps;
+weekday statistics are not excluded or re-recorded. Approved reference category-name changes
+use the explicit lineage contract below; neither error classification nor name aliases
+permit substituting numeric values or bypassing comparisons.
+
+The committed manifest identifies capture time `2026-10-13T01:47:50Z` and release commit
+`d09731e59b630fac11b7127c812c47ccca8ab64f`. Missing or tampered recordings return exit 2,
+never a pass. The original recordings and manifest remain unchanged.
 
 ## Environment and baseline installation
 
@@ -198,3 +220,33 @@ selectors are replaced during this capture; formatting and provider selection st
 the release implementation. Verification uses exact recorded literals and component sets,
 never broader hand-written patterns. A changed frozen setting needs its matching re-record;
 a missing form fails closed. The component-overlap threshold remains `>= 0.999`.
+
+## Approved reference category-name aliases
+
+`reference_name_aliases.json` records the 2026-10-20 Owner-approved name-only interpretation
+of the reference replacement in commit `904d5d2ed46bdd2e79c0ffb243ff82821134c4d2`.
+It binds the exact 0.9.1 reference rows and current reference rows by digest, and lists
+field-specific bijections from SHA-256 digests of old UTF-8 names to explicit synthetic names.
+Old reference labels are not redistributed. Sector and industry associations use unchanged
+IDs; procedures use the approved source-row ordinal and deterministic replacement ordinal.
+No frequency, numeric similarity or generated-row ordering infers an association.
+
+The verifier authenticates every original baseline seed against its untouched recording
+before applying in-memory name aliases. Scoped categorical observations, vocabulary pools
+and name components of coherence tuples use the same aliases. All rows, nulls, counts,
+probabilities, weights, charges, other numeric values, fixed seeds and thresholds remain
+unchanged; existing clauses a–f recompute their results. Unknown scoped names, mismatched
+provenance, incomplete/nonbijective/permuted associations and changed reference rows fail
+closed. No clinical or taxonomy semantic equivalence is asserted.
+
+## Authenticated date context for time-only profiles
+
+`capture_date_context.json` records the original capture source/run/job, full step window,
+UTC/local clock evidence, and the exact recording/input digests for the two time-only fixtures.
+The entire capture occurred on 2026-10-13; this date comes from execution provenance, not
+from a histogram. Verifier and timed profiling worker both validate that context, then supply
+that calendar date at the parser's implicit-date boundary before computing the profile.
+Explicit dates remain unchanged, all context is restored on exit, and all other workloads
+run ordinarily. There is no global clock change, timestamp exclusion, histogram rotation,
+value substitution, new recording or threshold change. Unknown replay requests, modified
+inputs/recordings, wrong provenance and ambiguous date/timezone contexts fail closed.
