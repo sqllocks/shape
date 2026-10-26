@@ -117,7 +117,7 @@ def cmd_policy(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
 
 
 _VAULT = Arg("string", "the encrypted vault file", True, path="read")
-_SHAPE = Arg("string", "the profile artifact that references the vault", True, path="read")
+_SHAPE = Arg("string", "the profile artifact file that references the vault", True, path="read")
 _KEK = Arg("string", "key-encryption key reference; never a literal key", secret=True)
 _COLUMN = obj({"column": STR, "policy": STR, "ciphertext_bytes": INT})
 _STATUS = obj(

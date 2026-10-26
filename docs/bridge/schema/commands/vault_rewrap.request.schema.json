@@ -48,7 +48,7 @@
           "x-since": "1.4"
         },
         "shape": {
-          "description": "the profile artifact that references the vault",
+          "description": "the profile artifact file that references the vault",
           "type": "string",
           "x-path": "read",
           "x-since": "1.4"

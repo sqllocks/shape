@@ -549,6 +549,10 @@
      "choices": null,
      "takes_value": false
     },
+    "--list-kinds": {
+     "choices": null,
+     "takes_value": false
+    },
     "--mode": {
      "choices": [
       "3nf",
@@ -5359,6 +5363,15 @@
     "--dry-run": {
      "choices": null,
      "takes_value": false
+    },
+    "--format": {
+     "choices": [
+      "auto",
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
     },
     "--holdout": {
      "choices": null,
