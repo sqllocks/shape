@@ -39,9 +39,12 @@ mysql = ["pymysql>=1.1.1,<2"]
 snowflake = ["snowflake-connector-python>=3.7,<5"]
 databricks = ["databricks-sql-connector>=3.1,<5"]
 duckdb = ["duckdb>=1.2"]
+bigquery = ["google-cloud-bigquery>=3,<4", "google-cloud-bigquery-storage>=2,<3"]
+
 oracle = ["oracledb>=3.0"]
 
 [project.entry-points."shape.sinks"]
+bigquery = "shape_databases.bigquery:BigQuerySink"
 postgres = "shape_databases:PostgresSink"
 mysql = "shape_databases:MySqlSink"
 snowflake = "shape_databases:SnowflakeSink"
@@ -56,6 +59,7 @@ where = ["src"]
 sqllocks-shape = { workspace = true }
 
 [project.entry-points."shape.sources"]
+bigquery = "shape_databases.bigquery:BigQuerySource"
 postgresql = "shape_databases.sources:PostgresSource"
 postgres = "shape_databases.sources:PostgresAliasSource"
 mysql = "shape_databases.sources:MySqlSource"

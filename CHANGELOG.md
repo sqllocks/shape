@@ -13,6 +13,9 @@ Status: available.
 - Compare frozen release results with explicit recorded-error noncomparability, approved
   reference category-name aliases and authenticated capture-date replay; recorded values
   and all numeric comparison thresholds remain unchanged.
+- Add experimental BigQuery Parquet load and Storage Read sources, reference-only credentials, bounded catalog sampling and a dry-run query cost guard.
+
+
 - Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
 - Keep the locked development toolchain audit clear with compatible `filelock` 3.20.3 and patched `setuptools` 84.1.0.
 - Keep the fingerprint readback test compatible with DuckDB 2.

@@ -356,6 +356,80 @@ uses PostgreSQL 16 and MySQL 8.4 from the emulator compose file. Opt-in live che
 `SHAPE_TEST_MYSQL_URI` / `SHAPE_MYSQL_PASSWORD`; each check names any missing required setting.
 Offline fake-server source acceptance runs on every PR.
 
+## BigQuery (`bigquery://`)
+
+Status: experimental. Offline acceptance uses `FakeBigQuery`; account round trips need
+`SHAPE_TEST_BIGQUERY_URI` and Google credentials and have not been verified here.
+Install `sqllocks-shape-databases[bigquery]`: `google-cloud-bigquery` and
+`google-cloud-bigquery-storage` are optional Apache-2.0 clients. Core installs neither.
+
+The URI is `bigquery://PROJECT/DATASET?location=US`; a source may add `&table=T`.
+Names use letters, digits and underscores (projects also allow hyphens). Sign in with
+Application Default Credentials, `GOOGLE_APPLICATION_CREDENTIALS`, or the `credentials`
+option containing a `file://PATH` or `env://NAME` reference to service-account JSON.
+Credential files must be private. Inline keys, passwords and tokens in URIs are refused;
+resolved secrets are scrubbed from errors. Never put key JSON in `--sink-config`.
+The SDK is loaded only when opening a connection.
+
+`BigQuerySink.write(uri, table, batches, **options)` uses private temporary Parquet files,
+removed on success and failure. Each load job stages at most `chunk_rows` rows (default
+1,000,000), checks `output_rows`, and fails on a mismatch. Parquet load jobs explicitly
+allow `NUMERIC` and `BIGNUMERIC` decimal targets, preserving wide decimal columns. `write_mode=append` uses
+`WRITE_APPEND`; `truncate` uses `WRITE_TRUNCATE` for the first load; `replace` drops and
+recreates; `fail` (also `create`, the default) refuses an existing table. A failed write
+drops a table it created unless `commit_rows` requested visible commits and at least one
+load was confirmed. A first-load failure or mismatch drops an unconfirmed created table. Successful load
+jobs on pre-existing tables cannot be rolled back. `WriteError.rows_committed` reports
+retained confirmed rows. With `commit_rows=N`, loads contain at most N rows, also bounded
+by `chunk_rows`, and become visible during the stream. Options `schema_name` (dataset),
+`table_prefix`, `columns`, `primary_key` and `schema` follow the other database sinks.
+Primary keys are declared `PRIMARY KEY (...) NOT ENFORCED`.
+
+| Arrow type | BigQuery column |
+|---|---|
+| `int8` through `int64`, `uint8` through `uint32` | `INT64` |
+| `uint64` | `NUMERIC(20,0)` |
+| `float32`, `float64` | `FLOAT64` |
+| decimal `(p,s)` with `0 <= s <= p`, `p-s <= 29`, `s <= 9` | `NUMERIC(p,s)` |
+| otherwise decimal with `0 <= s <= p`, `p-s <= 38`, `s <= 38` | `BIGNUMERIC(p,s)` |
+| string | `STRING`, or `STRING(n)` from `columns.max_length` |
+| binary, bool, `date32`, `time64` | `BYTES`, `BOOL`, `DATE`, `TIME` |
+| timestamp with zone / without zone | `TIMESTAMP` / `DATETIME` |
+| UUID metadata or Arrow UUID | `STRING` |
+| struct, list, map | JSON text in `STRING` |
+
+Other decimals and unsupported types fail before a connection, naming the column.
+Nanosecond timestamps/times also fail unless `truncate_ns=True`; explicit truncation stores
+microseconds. The catalog reverse map uses `INT64` → `int64`, `FLOAT64` → `float64`,
+`BOOL` → bool, `STRING` → string, `BYTES` → binary, `DATE` → date32, `TIME` → time64(us),
+`DATETIME` → timestamp(us), `TIMESTAMP` → timestamp(us, UTC). Parameterized `NUMERIC(p,s)`
+uses decimal128; `BIGNUMERIC(p,s)` uses decimal256. BigQuery's unparameterized `NUMERIC`
+and `BIGNUMERIC` declare precision/scale 38/9 and 76/38 respectively.
+The COLUMNS view remains authoritative for column order and nullability. Explicit
+`Client.get_table(...).schema` precision, scale and maximum length constraints are preserved
+and checked against any parameterized COLUMNS type. Table metadata is cached per read/profile.
+The [TableFieldSchema API](https://cloud.google.com/bigquery/docs/reference/rest/v2/tables#TableFieldSchema)
+defines omitted scale as zero when precision is supplied; the source retains that rule.
+Conflicting or invalid explicit constraints fail naming the column. Without explicit
+constraints, the documented unparameterized physical mapping above remains in use. This
+behavior does not assume whether COLUMNS includes type parameters in a particular result.
+
+`BigQuerySource` inherits the W9-01 database source model. `read()` obtains Arrow batches
+from `RowIterator.to_arrow_iterable` with a `BigQueryReadClient`. A dataset URI profiles
+one multi-table artifact, using `INFORMATION_SCHEMA.COLUMNS`, declared constraints and
+`KEY_COLUMN_USAGE`, with `Client.get_table(...).num_rows` as population counts.
+`sample_rows` (default 1000; 0 for catalog only) chooses `TABLESAMPLE SYSTEM (p PERCENT)`
+from each population count, then limits returned rows. Block sampling may yield fewer rows
+than requested. `tables` selects table names. `sampled_rows`, `sample_method` and `sampling`
+retain the shared model's sample/population distinction; keys use `evidence: declared`
+because BigQuery does not enforce them.
+
+Every query, including catalog and DDL, first runs dry with `maximum_bytes_billed` set.
+Estimates over `max_bytes_billed` (default 1 GiB) fail before execution, naming the table,
+estimate and option. Actual jobs retain the same limit. Profile provenance records
+`bytes_processed`. Load jobs use the load API rather than queries. The guard bounds query
+bytes billed; it does not promise a total account charge or Storage Read cost.
+
 ## Oracle
 
 Install `sqllocks-shape-databases[oracle]` for python-oracledb >=3.0. Oracle 19c and later

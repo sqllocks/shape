@@ -189,6 +189,7 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         ctx.warn("empty_table", message)
     output = args.get("output")
     database = isinstance(source, str) and source.partition("://")[0].lower() in (
+        "bigquery",
         "postgresql",
         "postgres",
         "mysql",

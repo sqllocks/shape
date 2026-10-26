@@ -809,6 +809,14 @@ requirements:
   text: Nested profiles retain child statistics under their owning column, exact or bounded by mode, with depth, paths, privacy and path-addressed consumers.
   verify: [conformance]
   owner: profiling
+- id: SHAPE-BIGQUERY-001
+  title: BigQuery bounded loads and guarded catalog sources
+  level: L1
+  milestone: W9-13
+  priority: MUST
+  text: BigQuery uses checked Parquet load jobs, reference-only credentials, exact type maps, Storage Read Arrow batches and declared catalog keys with bounded sampling and dry-run query limits.
+  verify: [bigquery-conformance]
+  owner: databases
 
 - id: SHAPE-ORACLE-001
   title: Oracle thin-mode source and sink
