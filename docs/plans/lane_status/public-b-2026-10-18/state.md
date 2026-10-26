@@ -4,11 +4,11 @@ Unattended run. Never end to wait or ask. After restart/compaction read this fil
 
 ## Active delivery
 
-**4/9 issues merged (44.4%); 5/9 remain (55.6%).** The Windows privacy failure was repaired and independently reviewed; fresh exact-head hosted CI is running. Supporting certificate PR40 is outside this denominator.
+**4/9 issues merged (44.4%); 5/9 remain (55.6%).** Native Windows still fails the privacy assertion on bad1; final explicit-bootstrap-ACL repair is active, alongside a narrowly diagnosed inherited cancellation-race fix. Supporting certificate PR40 is outside this denominator.
 
 Owner explicitly demanded whatever steps are needed to accelerate delivery. Lead B consolidated ALL FIVE remaining reviewed implementations into ONE READY PR, eliminating repeated full CI after each separate merge. This REPLACES all old per-lane merge stages/holds. Do not refresh/restart/merge the old five source PRs independently. Their descriptions now point to48; preserve them as review history.
 
-**PR https://github.com/sqllocks/shape/pull/48** (ready/non-draft, artifact attached successfully). Final signed/pushed/clean local=remote=PR head **bad1b322b5be1a09205e577a0ccabb8978a7623d**. Branch `lead/public-b-integration`, worktree `/workspace/shape-public-b-integration`. Full independent Wanted/security/scope APPROVED metadata_oct25 exactbad1b32; second34/42 preservation review APPROVED formats_oct25 exactbad1b32. Every old lane product/acceptance remains included. No pending code/review/Owner decision; native Windows validation remains a required CI gate. Root solely handles merges.
+**PR https://github.com/sqllocks/shape/pull/48** (ready/non-draft, artifact attached successfully). Final signed/pushed/clean local=remote=PR head **bad1b322b5be1a09205e577a0ccabb8978a7623d**. Branch `lead/public-b-integration`, worktree `/workspace/shape-public-b-integration`. Full independent Wanted/security/scope APPROVED metadata_oct25 exactbad1b32; second34/42 preservation review APPROVED formats_oct25 exactbad1b32. Every old lane product/acceptance remains included. Code repair and exact-head review are pending; no Owner decision is needed. DO NOT merge bad1 even if other checks finish. Root solely handles merges.
 
 Contains current main **314749d37aba9141a2ff68a33cfdb91e8a87cca5**, otherSession PR37 Snowflake/Databricks. Main moved just as31 finished all7old-source workflows green; old31head24a lacks314749d and was NOT merged. That base-change cost prompted consolidation. Current main is watched by metadata; no failure observed. Our preceding merged dbt main90fb is fully green.
 
@@ -18,15 +18,17 @@ All seven workflows on finalb86 REQUIRED before merge:
 
 | Workflow | Run | Latest known stage |
 |---|---|---|
-| CI |40256165922|Fresh full27-job matrix pending/running|
-| Wheels |40256165928|Fresh build/sdist/Intel smoke matrix running|
-| Documentation |40256165941|Running|
+| CI |40256165922|FAIL Windows database privacy assertion again, job121358713451|
+| Wheels |40256165928|SUCCESS all10jobs, historical until final repair pushed|
+| Documentation |40256165941|SUCCESS|
 | DCO |40256165916|SUCCESS|
-| Security |40256165950|Running|
-| Container |40256165921|Running|
-| action-selftest |40256165918|Running|
+| Security |40256165950|SUCCESS|
+| Container |40256165921|SUCCESS|
+| action-selftest |40256165918|SUCCESS|
 
-Historicalb86 Windows failure was isolated with actuallogs:929passed/1failed/1existingPOSIXskip/31deselected, only test_parquet_chunks_private_cleanup_and_declared_key. Fixed inbad1b32 by enforcing EXISTING restrict_to_current_user on stagingdir+emptyfile before Parquet content; Fake validatesactualWindowsACL notPOSIXmode, strictPOSIX/originalallprivateassert preserved. Three newregressions REDeachkernel→ALL95BQGREENeachkernel; ACLerrorsfailclosed/noLoad/newtablecleanup. Both independentreviews reboundexactbad1. Oldb86CI remainsFAILED/obsolete, notpassing evidence; itsoldWheelsall10/lightgreens do notqualifynewhead. OldCIalreadycompletedbyguardwhenrootconsideredcancel, noforcecancelperformed. Pending/canceled checks never pass. Root canceled ONLY obsolete initialf302 integration CI/Wheels/Docs/Security/Container, plus obsolete individual34 core40243543568 after exact-head verification, freeing runners. No current finalbad1 run canceled. Do not archive polling logs, gate JSON, heartbeats or receipt indexes. Update current state only at meaningful milestones.
+B86 firstWindows failure1failed929passed; bad1 portable-helper repair passed3new tests but SAMEprivacyassertion stillfailed nativeWindows (1failed932passed1existingPOSIXskip31deselected). Author confirmed CPython3.11.10+ mkdir0700 creates EXPLICIT SY/BA/OW bootstrap ACEs; inherited-onlyexistinghelperleaves them. FinalrepairactiveBQfresh-empty-stagingONLY: remove exact documented bootstrap SIDs BEFOREfinalexistingrestrict so currentSYSTEMuser is regranted; failclosed/no contentbefore allstepssuccess; actualACL/principaldiagnostics onfailure. Originalallprivatepredicate/POSIXstat retained; neverallowextraACE/Truefallback/skip. BQauthor ownsONLY3BQfiles; three explicit-ACE controls alreadyREDbothkernels, finalfix/greenpending. Priorbad1local95BQgreen was NOTnativeWindowsproof.
+
+INHERITED MAIN FAILURE: current314749d macOS3.11tests/scale/test_jobs.py test_a_cancel_from_another_process_stops_the_run_between_chunks (cancelTrue→statussucceeded),1failed18568passed. jobs.py/tests identical90fb/main/bad1, notown48regression. Ownerlatestneededthroughputsteps: minimal common-acceptance stabilityrepair in integration only. Eventhouseauthor ownsONLYjobs.py/test_jobs.py; DONEdirty1deterministicREDeachkernel→41GREENeachkernel, reuseexistingcrossplatformOSsidecarlock around durableJobStore.update get/mutate/put; memoryunchanged, noACLhelperchange/no sleeps/assertion/timeoutweakening. Metadataread-onlyreviewpasses, needsfinalexactbind afterbothrepairs. Do not stageunfinishedBQfiles. RootmustcommitBOTHrepairs+record whenBQgreen, pushnewhead andrunallnewexactgates, oldbad1FAILEDnotpass. Pending/canceled checks never pass. Root canceled ONLY obsolete initialf302 integration CI/Wheels/Docs/Security/Container, plus obsolete individual34 core40243543568 after exact-head verification, freeing runners. No current finalbad1 run canceled. Do not archive polling logs, gate JSON, heartbeats or receipt indexes. Update current state only at meaningful milestones.
 
 **NEXT:** monitor48, merge immediately once every triggered workflow/job succeeds on exactapprovedbad1, nonempty complete rollup and fresh currentmain ancestry. Use `/workspace/public-b-validation/merge_ready.py 48 bad1b322b5be1a09205e577a0ccabb8978a7623d --merge`; root separately confirms independent approval (already bound). API merge commit with DCO; never direct main push. If main moves, refresh ONLY integration once, push; clean refresh NO local reruns. Actual code conflicts: targeted affected tests only and rebind review. Assign concrete failures to original module authors in parallel; no full local suite.
 
@@ -67,7 +69,7 @@ No implementation parked. Pending external live actions, never claimed passing: 
 
 ## Agents, environment and hard stops
 
-Root owns integration/scratch commits and all merges. formats_oct25 watches48fullCI/Wheels; metadata_oct25 independent/mainwatch. Both available through **2026-10-26T12:00UTC**; renew before bound. Completed authors available viafollowup: eventhouse(cloud/broker),bigquery(BQ/security),iceberg(nativeSDK/depth),dbt(merged29). No active file ownership; Windowsfix signed/pushed, integration clean. Authors completed and available viafollowup; rootowns future integration commits. Ghostdbt_resume/recover are stale, do not resurrect. User original prompt explicitly authorizes per-issue agents and independent reviewer.
+Root owns integration/scratch commits and all merges. formats_oct25 watches48fullCI/Wheels; metadata_oct25 independent/mainwatch. Both available through **2026-10-26T12:00UTC**; renew before bound. Completed authors available viafollowup: eventhouse(cloud/broker),bigquery(BQ/security),iceberg(nativeSDK/depth),dbt(merged29). ACTIVE: bigquery_oct25 owns ONLYBQruntimebigquery.py/testing.py/test_bigquery.py unfinishedstrictbootstrapACLrepair; eventhousecompletedjobs.py/test_jobs.py dirtyready rootcommit; metadataread-onlyreviewsboth. Rootowns docs/finalcommit/push. Do not touch author files until green report. Ghostdbt_resume/recover are stale, do not resurrect. User original prompt explicitly authorizes per-issue agents and independent reviewer.
 
 Cloudskill c5/cloud-environment-runtime read on recovery; current enforcedunrestricted HTTP/networkpolicy VPNfalse; GHready and actual gitlsremote+ghAPI exit0. Preserve proxy/CA/auth, never print tokens/env/secretfiles/changegitconfig/globalsettings. Transient scratch503 recovered immediately; no persistent credential failure. Persistent401/403/failedpush hardstop only after actual5/10/20min gitlsremote+ghAPI retries allfail; do useful local work between. Logs404/blob403 not auth failure if APIs work.
 
