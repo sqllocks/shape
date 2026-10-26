@@ -6,7 +6,7 @@ Updated 2026-10-26; final integration in progress. This file is the current chec
 
 Continue until all seven assigned issues are merged or legitimately parked. Do not end a turn merely to wait or ask. Original prompt: `/workspace/attachments/9302a188-787d-4428-9403-3510325ce6a1/4-NEW-WINDOW-shape-public-A.md`. Read it and this state after any restart.
 
-**3/7 merged (42.9% done), 4/7 remaining (57.1%). All four remaining issues are in ONE READY integration PR #49; zero parked.** #2/PR45, #16/PR39 and #3/PR37 are merged. Current main is314749d37aba9141a2ff68a33cfdb91e8a87cca5. Final PR https://github.com/sqllocks/shape/pull/49 closes #4/#5/#7/#8 together, exact head5941963d8adc7d5adc90be51800823389b3b9248 on lead/public-a-integration-2026-10-26 in /workspace/public-a-W9-06. Root owns the clean/released batch. All builders and independent reviewers have finished; every required scope is approved at this head. Current exact-head CI is running; poll /tmp/public-a-poll-final.py. Do not make additional changes without an actual failure or base move. Once every triggered check is green/current, merge promptly through the merge-commit API with exact SHA guard and DCO message. Historical PR38/41/44 are closed superseded; their issues stay open until49 merges. All Owner decisions are resolved, including Bridge1.3; frozen artifacts remain unchanged. Latest two CI corrections were current-server documentation version fields and a Python3.14 test-fixture literal in a traceback; neither changes production sanitization or assertions. Their precise evidence and current run IDs are in the final sections below.
+**3/7 merged (42.9% done), 4/7 remaining (57.1%). All four remaining issues are in ONE READY integration PR #49; zero parked.** #2/PR45, #16/PR39 and #3/PR37 are merged. Current main is314749d37aba9141a2ff68a33cfdb91e8a87cca5. Final PR https://github.com/sqllocks/shape/pull/49 closes #4/#5/#7/#8 together, exact head7c2091cc7612b742b24ebf5403a054355902b13a on lead/public-a-integration-2026-10-26 in /workspace/public-a-W9-06. Root owns the clean/released batch. All builders and independent reviewers have finished; every required scope is approved at this head. Current exact-head CI is running; poll /tmp/public-a-poll-final.py. Do not make additional changes without an actual failure or base move. Once every triggered check is green/current, merge promptly through the merge-commit API with exact SHA guard and DCO message. Historical PR38/41/44 are closed superseded; their issues stay open until49 merges. All Owner decisions are resolved, including Bridge1.3; frozen artifacts remain unchanged. Latest CI corrections cover current-server documentation version fields, a Python3.14 fixture literal in traceback source and portable file-URI failure injection on Windows. All original assertions remain intact. An additive five-module CI acceptance step now runs before the unchanged full core suite on every existing platform. Their precise evidence and current run IDs are in the final sections below.
 
 Give meaningful commentary at least every60seconds while working, quantified totals about every5minutes and immediately on merge/blocker changes. CI counts are a separate metric from issues merged.
 
@@ -371,3 +371,29 @@ NewfullCIrunsonthecorrectedexacthead; oldheadresultsnotmergeevidence:
 CI40262750522,Documentation40262750397,action-selftest40262750353,
 Container40262750433,Security40262750425,Wheels40262750438,DCO40262750448.
 InitiallyPENDINGexceptDCOgreen. PollscriptupdatednewSHA.
+
+
+## PR49 portable URI correction and early acceptance — 7c2091c
+
+Exactcurrenthead7c2091cc7612b742b24ebf5403a054355902b13a, parent
+b991043cf1eb00ca5be59ca1cba607fef961ef68 (parent5941963). Windows3.14
+CIhad2failure-injectionfixturesDIDNOTRAISE/18960pass becauseURIpath
+wascomparedtonativeWindowspath. CanonicalPath.resolve().as_uri()comparison
+nowmatchestargetexactly; originalprivacyassertionsremain. Addedspaces/#/%
+pathcasesreproduced2red/2plaincontrols locally, then95Deltafeaturecases
+passedEACHkernel. Addedexact-oncetargetinjectionassert. No productionchange
+orlocalWindowspassclaimed. ReviewerWindowsdiffscanfoundnootherconcrete
+pathcomparisonfault. Prior3.14literal-tracebackfailurepassedintheWindowsrun.
+
+CIfront-loads5corewriteacceptancemodulesbeforeunchangedfullcorematrix;
+matchinglocalselection251passed7.63s. Sixadditiveworkflowlinesonly;
+independentbytecomparisonprovesallprevioussteps/selectors/coverage86/
+matrices/heavy/kernels/driftunchanged. Wording/diffgreen. ReviewerOct25
+APPROVEDexact7c2091c,remote/DCOverified. NewexactheadCIrequired.
+Currentruns: CI40265587355,Wheels40265587311,Security40265587323,
+Container40265587370,Documentation40265587636,DCO40265587315,
+action-selftest40265587405. InitiallypendingexceptDCOgreen.
+Pollandguardedsingle-PRmergescriptsupdatedto7c2091c:
+/tmp/public-a-poll-final.py and /tmp/public-a-merge-final.py.
+Invoke merge script ONLY once allrequiredjobs/workflowssuccess; itchecks
+exacthead/currentmainancestryandusesmergecommitAPI+SHAguard+DCO.
