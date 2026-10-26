@@ -148,3 +148,59 @@ def test_bridge_owns_stdin_and_invalid_policy_errors_are_metadata_only(tmp_path,
     )
     response = call(tmp_path, "vault_policy", policy=policy)
     assert not response["ok"] and "PRIVATE_VALUE" not in json.dumps(response)
+
+
+@pytest.mark.parametrize("field", ["shape_version", "min_shape_version"])
+@pytest.mark.parametrize(
+    "value", [{"secret": "PRIVATE_VALUE"}, ["PRIVATE_VALUE"], "PRIVATE_VALUE", 123, True]
+)
+def test_status_rejects_unvalidated_release_metadata(tmp_path, vault_pair, field, value):
+    _, vault, _ = vault_pair
+    doc = json.loads(vault.read_bytes())
+    doc[field] = value
+    vault.write_text(json.dumps(doc))
+    response = call(tmp_path, "vault_status", vault=vault)
+    assert not response["ok"]
+    assert response["error"]["code"] == "input.invalid_value"
+    assert "PRIVATE_VALUE" not in json.dumps(response)
+
+
+@pytest.mark.parametrize("command", ["vault_status", "vault_verify", "vault_rewrap"])
+def test_malformed_vault_errors_never_echo_header_content(tmp_path, vault_pair, command):
+    import hashlib
+
+    from shape.artifact.io import read_artifact, write_artifact
+
+    profile, vault, _ = vault_pair
+    doc = json.loads(vault.read_bytes())
+    doc["format"] = "PRIVATE_VALUE"
+    vault.write_text(json.dumps(doc))
+    manifest, components = read_artifact(profile, notice=False)
+    manifest["vault"]["sha256"] = hashlib.sha256(vault.read_bytes()).hexdigest()
+    write_artifact(profile, manifest, components)
+    args = {"vault": vault}
+    if command != "vault_status":
+        args["shape"] = profile
+    if command == "vault_rewrap":
+        args.update(
+            kek="env://VAULT_OLD",
+            new_kek="env://VAULT_NEW",
+            out_shape=tmp_path / "out.shape",
+            out_vault=tmp_path / "out.shapevault",
+            dry_run=True,
+        )
+    response = call(tmp_path, command, **args)
+    assert not response["ok"]
+    assert "PRIVATE_VALUE" not in json.dumps(response)
+
+
+def test_newer_vault_version_preserves_safe_upgrade_guidance(tmp_path, vault_pair):
+    _, vault, _ = vault_pair
+    doc = json.loads(vault.read_bytes())
+    doc.update(version=999, min_shape_version="9.9.0")
+    vault.write_text(json.dumps(doc))
+    response = call(tmp_path, "vault_status", vault=vault)
+    assert not response["ok"]
+    assert response["error"]["code"] == "input.unsupported_format_version"
+    assert "9.9.0" in response["error"]["message"]
+    assert "upgrade Shape" in response["error"]["hint"]
