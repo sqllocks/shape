@@ -193,6 +193,8 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         "postgresql",
         "postgres",
         "mysql",
+        "snowflake",
+        "databricks",
         "oracle",
         "tcps",
     )

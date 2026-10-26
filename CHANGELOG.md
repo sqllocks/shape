@@ -16,6 +16,7 @@ Status: available.
 - Add experimental BigQuery Parquet load and Storage Read sources, reference-only credentials, bounded catalog sampling and a dry-run query cost guard.
 
 
+- Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.
 - Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
 - Keep the locked development toolchain audit clear with compatible `filelock` 3.20.3 and patched `setuptools` 84.1.0.
 - Keep the fingerprint readback test compatible with DuckDB 2.
@@ -2081,6 +2082,9 @@ Converting a full capture to the safe form now gives a different content ID when
   named catalogs, native nested types, width restoration, partition transforms,
   snapshot micro-batches/fingerprints, time travel and namespace profiling. CLI
   URI targets and additive bridge API 1.2 target arguments are supported.
+- W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+  catalog row counts and whole-database profiles through the KQL endpoint.
+  Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
 
 ### W9-10
 
@@ -2099,9 +2103,6 @@ Converting a full capture to the safe form now gives a different content ID when
   bridge arguments are `tables` and `sample_rows`. Catalog-only capture uses sample size zero.
 - Database profiles and bridge database artifacts use existing safe capture rules.
 
-- W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
-  catalog row counts and whole-database profiles through the KQL endpoint.
-  Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.
 
 ### W9-08: broker message metadata
 
