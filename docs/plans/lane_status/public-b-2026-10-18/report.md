@@ -6,7 +6,7 @@ Current main is `314749d37aba9141a2ff68a33cfdb91e8a87cca5` after another session
 
 ## Active combined delivery PR
 
-[PR48](https://github.com/sqllocks/shape/pull/48) is ready and contains all five remaining implementations, exact signed/pushed head `289fde54c2530b5420dd493255d11d87ea0ea860`, based on current main314749d. Full independent Wanted/security/scope review APPROVED this exact head; a second reviewer approved broker/FRZ preservation. All required hosted workflows are running on this final head. Original per-lane merge stages below are historical; the combined PR replaces repeated full CI after each separate merge.
+[PR48](https://github.com/sqllocks/shape/pull/48) is ready and contains all five remaining implementations, exact signed/pushed head `289fde54c2530b5420dd493255d11d87ea0ea860`, based on current main314749d. Full independent Wanted/security/scope review APPROVED this exact head; a second reviewer approved broker/FRZ preservation. All five lightweight workflows and all10Wheels jobs passed on this final head; the remaining core CI jobs are running, with no failures. Original per-lane merge stages below are historical; the combined PR replaces repeated full CI after each separate merge.
 
 Targeted integration evidence: broker223+6cases eachkernel, cloud12red→90green eachkernel, BigQuery101green eachkernel, Iceberg4red→136green eachkernel, asyncBigQuery9red plus linear-time timeout red→70combinedsecuritygreen eachkernel. Ruff/format, mypy711 and publicwording pass. Actual191plugin transcripts match exactly. The inherited durable-cancellation race reproduces red and passes all41jobtests in each kernel after transactional locking. Original acceptance proofs and pendinglive actions remain recorded. #20 stays open until required dispatched-main Nightly and a subsequent acceptance PR.
 
@@ -60,7 +60,7 @@ Supporting [PR40](https://github.com/sqllocks/shape/pull/40) merged as53d3d0c af
 
 ## Frozen comparisons: passes and errors reported separately
 
-These are actual targeted results from the reviewed fix; **they are not the required post-merge main Nightly acceptance**.
+These four value workloads were rerun successfully against the combined289 implementation; **they are not the required post-merge main Nightly acceptance**.
 
 | Workload with recorded values | Targeted result |
 |---|---|

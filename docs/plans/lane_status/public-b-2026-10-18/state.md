@@ -20,7 +20,7 @@ All seven workflows on finalb86 REQUIRED before merge:
 |---|---|---|
 | CI |40258183976|Fresh full27-job matrix pending/running|
 | Wheels |40258183984|SUCCESS all10jobs|
-| Documentation |40258183966|Running|
+| Documentation |40258183966|SUCCESS|
 | DCO |40258184029|SUCCESS|
 | Security |40258183964|SUCCESS|
 | Container |40258183957|SUCCESS|
@@ -79,4 +79,4 @@ User wants progress updates without asking: meaningful updates aboutminute, full
 
 Failure log access: CLI log download hits sidecar403 on Azureblob, not GHauth; do not bypass proxy/routing or print signedURLs onstderr. Installed standard GitHub connector `github_fetch_workflow_job_logs` with configured Primarysqllocks link_id link_6abacc0c2f408191aff9ab5aec95acde works and supplied actual traceback. Use connector for future joblogs, filter only failure text; no rawlog archives. GitHub API/credentials remain working.
 
-Active FRZintegration acceptance: formats author uses existing authenticated baseline5seed outputs/read-onlyhistoryenv, regenerates ONLY2candidate domains in temporary output and verifiesunchangedclausesa–f plus2timefixtures and2separateNOTCOMPARABLE refusals on289. No rerecord/envsync/timing/fullsuite. This runs whileCI finishes, resultpending; no sourcechurn. CI289 currently31successfulchecks/no failure, Docs+core stillactive; allWheels+otherlights green.
+FRZ COMBINED289 acceptance COMPLETE: four actualVALUE workloadsPASS separately—healthcare80/80columns/capital_markets64/64 fulloriginalclausesa–f; time-onlyCSV+AMPMCSV alloriginalfields0mismatches each. Separately two authenticatedrecordedlist/structParquetTypeErrors NOTCOMPARABLE/exit3, neverpasses/timingcredit. Candidate seed1042 generatedfrom289; originalall5baseline seedbytesauthenticatedagainstUNCHANGEDrecords. Existingbaselineenv0.9.1Arrow26 differscandidateArrow25 asbefore; no whole-environment/timingclaim. No rerecord/reference/env/sourcechanges. Allfive48lightworkflows+Wheelsall10SUCCESS; core17of27green/10running at02:31UTC, no failure. Rootawaitsall27/currenthead/mainbeforemerge, thenmainNightly+parallelacceptancePR.
