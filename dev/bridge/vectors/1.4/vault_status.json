@@ -1,0 +1,68 @@
+{
+  "api_version": "1.4",
+  "cases": [
+    {
+      "name": "metadata",
+      "request": {
+        "api_version": "1.4",
+        "args": {
+          "vault": "${DIR}/example.shapevault"
+        },
+        "command": "vault_status",
+        "id": "vault_status-0"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "vault_status",
+        "id": "vault_status-0",
+        "ok": true,
+        "result": {
+          "algorithm": "AES-256-GCM",
+          "columns": [
+            {
+              "ciphertext_bytes": 52,
+              "column": "t.status",
+              "policy": "categories"
+            }
+          ],
+          "format": "shape-vault",
+          "kek_id": "630dcd2966c43366",
+          "min_shape_version": "0.9.0",
+          "ok": true,
+          "profile_content_id": "0260b9926e9a5fc44af76e9d2ac48811d15c47cfd6255af3e289bca593e280db",
+          "shape_version": "0.9.3",
+          "vault_id": "4b13d6a232c5f72cf7d0e6d0b72063f1",
+          "version": 1
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-input",
+      "request": {
+        "api_version": "1.4",
+        "args": {
+          "vault": "${DIR}/missing.shapevault"
+        },
+        "command": "vault_status",
+        "id": "vault_status-1"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "vault_status",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "vault file not found: ${DIR}/missing.shapevault"
+        },
+        "id": "vault_status-1",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "vault_status",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

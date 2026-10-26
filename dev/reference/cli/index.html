@@ -12644,7 +12644,7 @@ Exit codes:
 </code></pre></div>
 <h2 id="shape-chaos"><code>shape chaos</code><a class="headerlink" href="#shape-chaos" title="Permanent link">&para;</a></h2>
 <p>Stability: <strong>experimental</strong>.</p>
-<div class="highlight"><pre><span></span><code>usage: shape chaos [-h] [--mode {3nf,star}] [--input DIR] -o DIR
+<div class="highlight"><pre><span></span><code>usage: shape chaos [-h] [--mode {3nf,star}] [--input DIR] (-o DIR | --list-kinds)
                    [--corrupt KIND[=RATE][@TABLE[.COLUMN]][:OPT=V,...]] [--seed SEED]
                    [--scale PRESET] [--batch BATCH] [--start-date YYYY-MM-DD]
                    [--format {csv,parquet,jsonl}] [--ground-truth FILE] [--allow-real-input]
@@ -12667,6 +12667,7 @@ options:
   --mode {3nf,star}     the schema mode of a domain
   --input DIR           the tables to corrupt, flat files or &lt;table&gt;/ingest_date=YYYY-MM-DD/&lt;file&gt;
   -o DIR, --output DIR  where the files go
+  --list-kinds          list targeted corruption kinds without reading or writing data
   --corrupt KIND[=RATE][@TABLE[.COLUMN]][:OPT=V,...]
                         a corruption (repeatable), e.g. duplicates=0.02
                         orphan_keys=0.01@order.customer_id pii_fill=0.05@customer.notes
@@ -13899,9 +13900,9 @@ Exit codes:
 </code></pre></div>
 <h2 id="shape-report-card"><code>shape report-card</code><a class="headerlink" href="#shape-report-card" title="Permanent link">&para;</a></h2>
 <p>Stability: <strong>experimental</strong>.</p>
-<div class="highlight"><pre><span></span><code>usage: shape report-card [-h] [--config VERIFY.json] [--tiers 1,2] [--holdout HOLDOUT]
-                         [--manifest RUN_MANIFEST.json] [-o CARD] [--json] [--require SECTION,...]
-                         [--dry-run]
+<div class="highlight"><pre><span></span><code>usage: shape report-card [-h] [--format {auto,csv,parquet,jsonl}] [--config VERIFY.json]
+                         [--tiers 1,2] [--holdout HOLDOUT] [--manifest RUN_MANIFEST.json]
+                         [-o CARD] [--json] [--require SECTION,...] [--dry-run]
                          REAL SYNTHETIC
 
 (experimental) Compare SYNTHETIC with REAL (a file, or a directory of one file per table) and
@@ -13916,6 +13917,8 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
+  --format {auto,csv,parquet,jsonl}
+                        input data format for real, synthetic and holdout (default: auto)
   --config VERIFY.json  a shape-verify-config file (see docs/VERIFY.md)
   --tiers 1,2           fidelity tiers to run (default 1,2)
   --holdout HOLDOUT     real rows that were not given to the generator (same layout as REAL):

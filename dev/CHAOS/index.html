@@ -6641,6 +6641,10 @@ kinds: Sequence[str] | None = None, protect: Sequence[str] = ()) -&gt; AnomalyRe
 <p>This function is the only API a stream emitter needs. Nothing else in <code>shape.chaos</code> is required
 for <code>--anomaly-fraction</code>.</p>
 <h2 id="targeted-corruptions-and-the-ground-truth-log-shape-chaos">Targeted corruptions and the ground-truth log (<code>shape chaos</code>)<a class="headerlink" href="#targeted-corruptions-and-the-ground-truth-log-shape-chaos" title="Permanent link">&para;</a></h2>
+<p><code>shape chaos --list-kinds</code> lists every targeted kind, its options, defaults and rate
+semantics without input data or an output directory. Add <code>--json</code> for the catalogue
+object also returned by bridge 1.4 <code>chaos_kinds</code>. Scheduled category mutators and the
+row anomaly API below have their own controls.</p>
 <p>The categories below are randomised: a scheduler decides what fires and each mutator picks its
 own rows. To corrupt a table in a known way and score a quality check against the answer, use named
 corruptions, each with a rate, and the <strong>ground-truth log</strong> they write.</p>

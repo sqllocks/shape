@@ -1,5 +1,5 @@
 {
-  "api_version": "1.3",
+  "api_version": "1.4",
   "commands": {
     "bisect": {
       "args": {
@@ -73,6 +73,17 @@
       "result": "commands/chaos.result.schema.json",
       "since": "1.2",
       "summary": "Corrupt tables on purpose and write the ground-truth log (job-capable, cancellable before the files are written)."
+    },
+    "chaos_kinds": {
+      "args": {},
+      "cancellable": false,
+      "effects": [],
+      "job": "never",
+      "pending": null,
+      "request": "commands/chaos_kinds.request.schema.json",
+      "result": "commands/chaos_kinds.result.schema.json",
+      "since": "1.4",
+      "summary": "List every targeted corruption kind, its options and rate semantics; reads no data."
     },
     "check": {
       "args": {
@@ -578,6 +589,7 @@
     "report_card": {
       "args": {
         "config": "1.2",
+        "format": "1.4",
         "holdout": "1.2",
         "manifest": "1.2",
         "output": "1.2",
@@ -853,6 +865,80 @@
       "result": "commands/validate.result.schema.json",
       "since": "1.0",
       "summary": "Validate a generation schema file (or a contract)."
+    },
+    "vault_policy": {
+      "args": {
+        "classification": "1.4",
+        "column": "1.4",
+        "policy": "1.4"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/vault_policy.request.schema.json",
+      "result": "commands/vault_policy.result.schema.json",
+      "since": "1.4",
+      "summary": "Read and resolve column policy without reading vault values."
+    },
+    "vault_rewrap": {
+      "args": {
+        "dry_run": "1.4",
+        "kek": "1.4",
+        "key": "1.4",
+        "new_kek": "1.4",
+        "out_shape": "1.4",
+        "out_vault": "1.4",
+        "passphrase_env": "1.4",
+        "shape": "1.4",
+        "vault": "1.4"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/vault_rewrap.request.schema.json",
+      "result": "commands/vault_rewrap.result.schema.json",
+      "since": "1.4",
+      "summary": "Rotate vault encryption keys and write a new profile and vault."
+    },
+    "vault_status": {
+      "args": {
+        "vault": "1.4"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/vault_status.request.schema.json",
+      "result": "commands/vault_status.result.schema.json",
+      "since": "1.4",
+      "summary": "Inspect a vault's metadata without opening its values."
+    },
+    "vault_verify": {
+      "args": {
+        "kek": "1.4",
+        "shape": "1.4",
+        "vault": "1.4",
+        "verify": "1.4"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/vault_verify.request.schema.json",
+      "result": "commands/vault_verify.result.schema.json",
+      "since": "1.4",
+      "summary": "Verify a vault's profile reference and optionally its key and signature."
     },
     "verify": {
       "args": {

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "kinds": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "column": {
+            "type": "string"
+          },
+          "default_rate": {
+            "type": "number"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "options": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "rate_max": {
+            "type": "number"
+          },
+          "rate_min": {
+            "type": "number"
+          },
+          "rate_semantics": {
+            "type": "string"
+          },
+          "targeting": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "column",
+          "targeting",
+          "default_rate",
+          "rate_min",
+          "rate_max",
+          "rate_semantics",
+          "options"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "surface": {
+      "type": "string"
+    },
+    "syntax": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "surface",
+    "syntax",
+    "kinds"
+  ],
+  "title": "chaos_kinds result",
+  "type": "object",
+  "x-api-version": "1.4",
+  "x-since": "1.4"
+}

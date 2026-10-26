@@ -1,0 +1,66 @@
+{
+  "api_version": "1.4",
+  "cases": [
+    {
+      "name": "metadata",
+      "request": {
+        "api_version": "1.4",
+        "args": {
+          "column": "t.status",
+          "policy": "${DIR}/vault-policy.json"
+        },
+        "command": "vault_policy",
+        "id": "vault_policy-0"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "vault_policy",
+        "id": "vault_policy-0",
+        "ok": true,
+        "result": {
+          "effective": "categories",
+          "ok": true,
+          "policy": {
+            "by_classification": {},
+            "columns": {
+              "t.status": "categories"
+            },
+            "default": "none",
+            "format": "shape-vault-policy",
+            "min_shape_version": "0.9.0",
+            "shape_version": "0.9.3",
+            "version": 1
+          }
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-input",
+      "request": {
+        "api_version": "1.4",
+        "args": {
+          "policy": "${DIR}/missing-policy.json"
+        },
+        "command": "vault_policy",
+        "id": "vault_policy-1"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "vault_policy",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/missing-policy.json"
+        },
+        "id": "vault_policy-1",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "vault_policy",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

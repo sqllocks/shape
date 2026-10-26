@@ -3537,6 +3537,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#targeted-chaos-catalogue-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Targeted chaos catalogue (1.4)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vault-management-api-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vault management (API 1.4)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7646,6 +7668,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#targeted-chaos-catalogue-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Targeted chaos catalogue (1.4)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vault-management-api-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vault management (API 1.4)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7715,7 +7759,7 @@ parsing command-line text.</p>
 <tbody>
 <tr>
 <td><code>api_version</code></td>
-<td><code>"MAJOR.MINOR"</code>. Optional (assumed current, 1.1, with a warning) but you should send it. A request that declares <code>"1.0"</code> is answered as the 1.0 bridge answers it (below).</td>
+<td><code>"MAJOR.MINOR"</code>. Optional (assumed current, 1.4, with a warning) but you should send it. A request that declares <code>"1.0"</code> is answered as the 1.0 bridge answers it (below).</td>
 </tr>
 <tr>
 <td><code>id</code></td>
@@ -7797,7 +7841,7 @@ is <code>warning_codes</code> in <a href="../bridge/schema/index.json"><code>doc
 <code>input.unknown_source</code> and <code>input.unknown_format</code>; 1.2 adds <code>input.contract_conflict</code> and
 <code>policy.unverified_input</code>.</p>
 <h2 id="versions-and-the-stability-promise">Versions and the stability promise<a class="headerlink" href="#versions-and-the-stability-promise" title="Permanent link">&para;</a></h2>
-<p><code>api_version</code> is <code>MAJOR.MINOR</code>; this bridge speaks <strong>1.3</strong> and serves <strong>1.0 to 1.3</strong>.</p>
+<p><code>api_version</code> is <code>MAJOR.MINOR</code>; this bridge speaks <strong>1.4</strong> and serves <strong>1.0 to 1.4</strong>.</p>
 <ul>
 <li><strong>Minor versions only add:</strong> a command, an optional argument, an option, a result field, an error
   code, a warning code. A client written for 1.0 keeps working on 1.7, so <strong>a client ignores result
@@ -7806,11 +7850,11 @@ is <code>warning_codes</code> in <a href="../bridge/schema/index.json"><code>doc
   result field, error code or the meaning of any of them.</li>
 <li><strong>A major version may break.</strong> A bridge serves one major version. A request for another is refused
   with <code>usage.unsupported_version</code>, and the message names the supported range
-  (<code>... this bridge serves 1.0 to 1.3</code>). The response always carries the bridge's own
+  (<code>... this bridge serves 1.0 to 1.4</code>). The response always carries the bridge's own
   <code>api_version</code>, so a client can read it from the refusal.</li>
 <li>A request with a newer <em>minor</em> than the bridge's is served, with the warning
   <code>newer_minor_version</code>: what the newer minor added is not available.</li>
-<li>A request with <strong>no <code>api_version</code></strong> is served as 1.3, with the warning <code>api_version_assumed</code>.</li>
+<li>A request with <strong>no <code>api_version</code></strong> is served as 1.4, with the warning <code>api_version_assumed</code>.</li>
 <li>Persisted files declare their own <code>format</code> and integer <code>version</code> (the job file below, the vector
   files). A file written by a newer Shape is refused with <code>input.unsupported_format_version</code>, never
   misread. The job file <code>shape-bridge-job</code> and the vector files <code>shape-bridge-vectors</code> are still
@@ -7990,7 +8034,7 @@ working; Shape's own commands are added.</p>
 <tr>
 <td><code>report_card</code></td>
 <td>one report card for a synthetic dataset: fidelity, utility, privacy (1.2, job-capable)</td>
-<td><code>real</code>*, <code>synthetic</code>*, <code>config</code>, <code>tiers</code>, <code>holdout</code>, <code>manifest</code>, <code>require</code>, <code>output</code></td>
+<td><code>real</code>*, <code>synthetic</code>*, <code>config</code>, <code>tiers</code>, <code>holdout</code>, <code>manifest</code>, <code>require</code>, <code>output</code>, <code>format</code> (1.4)</td>
 </tr>
 <tr>
 <td><code>report_card_read</code></td>
@@ -8619,9 +8663,32 @@ is not installed).</p>
 standard deviation and top values, read from the stored profiles; frames where <code>shape diff</code> reports a
 change are change points. <code>table</code> picks the table of a dataset profile; <code>since</code> and <code>until</code> limit
 the versions (dates, inclusive).</p>
-<p>Result: <code>column</code>, <code>table</code>, <code>window</code>, <code>change_points</code> and <code>frames</code>, which is <strong>spillable</strong>
-(<em>Large results</em>). A frame from a share-safe version has <code>form: "safe"</code> and only what the safe form
-holds.</p>
+<p>Frames are ordered by effective date, then commit timestamp, then registry log position
+for ties. The effective date is <code>business_date</code> when valid, otherwise the UTC commit date.
+The inclusive date filter runs before window grouping. Without <code>window</code> there is exactly
+one frame per selected registry entry, including entries on the same date. With <code>window</code>
+there is exactly one frame per occupied calendar day, ISO week (Monday to Sunday), or
+calendar month; empty periods produce no frames. A frame's <code>date</code> and <code>end</code> are the first
+and last selected version dates, rather than the calendar period boundaries. <code>versions</code>
+is the number of registry entries in that frame; <code>content_ids</code> follows their history order.
+Multi-entry windows require raw profiles with sketch state and sum their row counts.</p>
+<p>Result: <code>format: "shape-timelapse"</code>, integer <code>version: 1</code>, <code>name</code>, <code>column</code>, <code>table</code>, <code>window</code>,
+<code>since</code>, <code>until</code>, <code>source</code>, <code>change_points</code>, <code>notes</code> and <code>frames</code>, which is <strong>spillable</strong>
+(<em>Large results</em>). <code>change_points</code> lists the dates of marked frames in frame order.
+Every frame has <code>date</code>, <code>end</code>, <code>versions</code>, <code>content_ids</code>, <code>form</code> (<code>raw</code> or <code>safe</code>), <code>gap</code>,
+<code>row_count</code>, <code>null_rate</code>, <code>cardinality</code>, <code>mean</code>, <code>std</code>, <code>quantiles</code>, <code>top_values</code>,
+<code>change_point</code> and <code>changes</code>. Statistics unavailable in the stored profile are <code>null</code>.
+<code>quantiles</code> is <code>null</code> or an object with <code>p1</code>, <code>p5</code>, <code>p10</code>, <code>p25</code>, <code>p50</code>, <code>p75</code>, <code>p90</code>,
+<code>p95</code> and <code>p99</code> (each a number or <code>null</code>). <code>top_values</code> is <code>null</code> or up to five objects
+with <code>value</code> (string, or <code>null</code> when redacted) and numeric <code>share</code>.
+<code>changes</code> contains sorted, distinct change-kind strings, rather than change objects.</p>
+<p>A missing column is a gap frame: its statistics are <code>null</code>, <code>changes</code> is empty and
+<code>change_point</code> is <code>false</code>. Non-gap frames compare against the previous non-gap frame;
+the first has <code>change_point: false</code>. A frame from a share-safe version has <code>form: "safe"</code>
+and only what the safe form holds. A comparison involving a share-safe frame has
+<code>change_point: null</code> and no changes. When the bridge withholds top values it adds
+<code>redacted: true</code> to the frame. The published result schema describes these same fields in its emitted-frame branch;
+the earlier frame branch remains accepted for compatibility.</p>
 <p>Errors: <code>input.not_found</code>, <code>input.invalid_value</code> (a name, column or table that is not there, a date
 that is not a date, <code>since</code> after <code>until</code>), <code>usage.invalid_argument</code> (<code>window</code>).</p>
 <p>```json request
@@ -8999,6 +9066,10 @@ bridge until its protocol says so), and it does not touch <code>generate</code>,
 <td><code>shape chaos</code> (<code>shape.chaos</code>: <code>corrupt_tables</code>, <code>verify_chaos_input</code>, <code>write_ground_truth</code>)</td>
 </tr>
 <tr>
+<td><code>chaos_kinds</code> (1.4)</td>
+<td><code>shape chaos --list-kinds</code> (<code>shape.chaos.catalogue</code>)</td>
+</tr>
+<tr>
 <td><code>safe_scan</code></td>
 <td><code>shape profile validate --safe</code> (<code>shape.privacy.safe_validator.SafeProfileValidator</code>)</td>
 </tr>
@@ -9088,7 +9159,7 @@ mutually exclusive. Sink partition options can be a list of transform expression
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
-<div class="expected highlight"><pre><span></span><code>{"api_version": "1.3", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
+<div class="expected highlight"><pre><span></span><code>{"api_version": "1.4", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
 </code></pre></div>
 </details>
 <p><a id="local-example-112"></a></p>
@@ -9103,9 +9174,9 @@ mutually exclusive. Sink partition options can be a list of transform expression
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
-<div class="expected highlight"><pre><span></span><code>{"api_version": "1.3", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
-{"api_version": "1.3", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
-{"api_version": "1.3", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
+<div class="expected highlight"><pre><span></span><code>{"api_version": "1.4", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
+{"api_version": "1.4", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
+{"api_version": "1.4", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
 </code></pre></div>
 </details>
 <p>Oracle sources (<code>oracle://</code> and <code>tcps://</code>, from <code>sqllocks-shape-databases[oracle]</code>) support
@@ -9113,6 +9184,47 @@ mutually exclusive. Sink partition options can be a list of transform expression
 by default. Oracle connection credentials and wallet passwords are never artifact metadata.
 The catalog count and LAST_ANALYZED describe the population; sampled distributions describe
 only the bounded sample. See the database plugin README for exact counts and type mapping.</p>
+<h2 id="targeted-chaos-catalogue-14">Targeted chaos catalogue (1.4)<a class="headerlink" href="#targeted-chaos-catalogue-14" title="Permanent link">&para;</a></h2>
+<p><code>chaos_kinds</code> takes no arguments and returns <code>surface: "targeted_corruptions"</code>,
+<code>syntax</code> and <code>kinds</code>. Each kind records its name, column requirement (<code>required</code>,
+<code>optional</code> or <code>forbidden</code>), automatic targeting, default rate, rate bounds, rate
+semantics and all accepted options with their defaults. It reads no data and writes
+no files. <code>shape chaos --list-kinds --json</code> returns the same fields in its standard CLI
+result envelope; omit <code>--json</code>
+for text. The catalogue covers every kind accepted by <code>chaos.corrupt</code> / <code>--corrupt</code>.
+The separate scheduled category mutators and row anomaly API retain their controls
+as described in <a href="../CHAOS/">Chaos</a>.</p>
+<p>Rates range from 0 to 1 and default to 0.02. Targeted row selection uses Python
+<code>round(current_table_rows * rate)</code> (ties to even), capped at eligible rows for each
+column. Duplicates append that many copies. <code>null_creep</code> adds <code>step</code> per batch after
+<code>from</code>, capped at 1. <code>type_change</code> ignores the rate and converts the entire column,
+even at rate 0. <code>from</code> and <code>to</code> are inclusive batch bounds for every kind.</p>
+<h2 id="vault-management-api-14">Vault management (API 1.4)<a class="headerlink" href="#vault-management-api-14" title="Permanent link">&para;</a></h2>
+<p><code>vault_status</code> takes <code>vault</code> and returns the header, column names, policies and
+ciphertext sizes without opening the vault. <code>vault_verify</code> takes <code>vault</code>, <code>shape</code>,
+optional <code>kek</code> and optional <code>verify</code> (a profile signature public key file). A failed
+verification is a successful response with <code>result.ok: false</code> and metadata checks.</p>
+<p><code>vault_rewrap</code> takes <code>vault</code>, <code>shape</code>, <code>kek</code>, <code>new_kek</code>, <code>out_vault</code>, <code>out_shape</code>,
+optional <code>dry_run</code>, <code>key</code> (signing key file) and <code>passphrase_env</code>. It calls the existing
+<code>shape vault rekey</code> operation: both the data key and wrapping key rotate, the input
+files stay intact, and existing output paths are refused. The profile components
+stay byte-identical; its manifest references the new vault, so an existing signature
+is dropped unless <code>key</code> signs the new profile. Notices explain this in the result.
+A dry run checks the pair and keys and returns planned writes without writing.
+The output vault must be ignored by Git, as for the command line.</p>
+<p><code>vault_policy</code> takes a <code>policy</code> JSON file and returns its validated policy metadata.
+Optional <code>column</code> (<code>TABLE.COLUMN</code>) and <code>classification</code> resolve its effective
+policy using the existing explicit-column, classification, then default precedence.
+It does not change an encrypted vault's retention policy or decrypt its payload.</p>
+<p>Keys are references (<code>env://NAME</code>, <code>file://PATH</code>, a key file path or a registered
+credential reference), never literals. Standard input belongs to the bridge and
+cannot supply signing keys, verification keys or passphrases. None of these commands
+returns key material, ciphertext or decrypted data, even with <code>include_raw_values</code>.
+Earlier minor requests do not recognize these commands. The 1.3 schemas are frozen
+in <code>docs/bridge/schema/1.3/</code>; the existing 1.3 vectors remain unchanged.</p>
+<p>Bridge 1.4 <code>report_card</code> accepts optional <code>format</code> (<code>auto</code>, <code>csv</code>, <code>parquet</code>,
+<code>jsonl</code>), matching the command line <code>--format</code> and Python <code>data_format</code>. The default
+<code>auto</code> preserves extension-based discovery.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+JSON+bridge&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FBRIDGE%2F">Report a problem with this page</a></p>
 
 

@@ -1,0 +1,164 @@
+{
+  "api_version": "1.4",
+  "cases": [
+    {
+      "name": "catalogue",
+      "request": {
+        "api_version": "1.4",
+        "args": {},
+        "command": "chaos_kinds",
+        "id": "catalogue"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "chaos_kinds",
+        "id": "catalogue",
+        "ok": true,
+        "result": {
+          "kinds": [
+            {
+              "column": "forbidden",
+              "default_rate": 0.02,
+              "kind": "duplicates",
+              "options": {
+                "from": "Integer at least 0, default 0: first active batch (inclusive).",
+                "fuzz": "Number 0 to 1, default 0: damage probability per copied non-key cell.",
+                "to": "Integer at least from, default no end: last active batch (inclusive)."
+              },
+              "rate_max": 1,
+              "rate_min": 0,
+              "rate_semantics": "Append round(current table rows * rate) copied rows; Python round uses ties to even.",
+              "targeting": "Whole rows; copies are appended to the table."
+            },
+            {
+              "column": "optional",
+              "default_rate": 0.02,
+              "kind": "orphan_keys",
+              "options": {
+                "from": "Integer at least 0, default 0: first active batch (inclusive).",
+                "to": "Integer at least from, default no end: last active batch (inclusive)."
+              },
+              "rate_max": 1,
+              "rate_min": 0,
+              "rate_semantics": "Select round(current table rows * rate) rows per target column, capped at eligible rows; Python round uses ties to even.",
+              "targeting": "Declared foreign keys, else non-primary *_id columns; integer, float or text."
+            },
+            {
+              "column": "optional",
+              "default_rate": 0.02,
+              "kind": "date_shift",
+              "options": {
+                "days": "Integer at least 1, default 7: maximum absolute shift in days.",
+                "direction": "both (default), late or early.",
+                "from": "Integer at least 0, default 0: first active batch (inclusive).",
+                "to": "Integer at least from, default no end: last active batch (inclusive)."
+              },
+              "rate_max": 1,
+              "rate_min": 0,
+              "rate_semantics": "Select round(current table rows * rate) rows per target column, capped at eligible rows; Python round uses ties to even.",
+              "targeting": "Every date or timestamp column; only non-null rows are eligible."
+            },
+            {
+              "column": "optional",
+              "default_rate": 0.02,
+              "kind": "negative_amounts",
+              "options": {
+                "from": "Integer at least 0, default 0: first active batch (inclusive).",
+                "to": "Integer at least from, default no end: last active batch (inclusive)."
+              },
+              "rate_max": 1,
+              "rate_min": 0,
+              "rate_semantics": "Select round(current table rows * rate) rows per target column, capped at eligible rows; Python round uses ties to even.",
+              "targeting": "Signed number columns excluding keys; only positive rows are eligible."
+            },
+            {
+              "column": "optional",
+              "default_rate": 0.02,
+              "kind": "case_whitespace",
+              "options": {
+                "from": "Integer at least 0, default 0: first active batch (inclusive).",
+                "to": "Integer at least from, default no end: last active batch (inclusive)."
+              },
+              "rate_max": 1,
+              "rate_min": 0,
+              "rate_semantics": "Select round(current table rows * rate) rows per target column, capped at eligible rows; Python round uses ties to even.",
+              "targeting": "Non-key text with at most 50 distinct values; only changing variants."
+            },
+            {
+              "column": "required",
+              "default_rate": 0.02,
+              "kind": "pii_fill",
+              "options": {
+                "from": "Integer at least 0, default 0: first active batch (inclusive).",
+                "pii": "ssn (default), email or phone.",
+                "to": "Integer at least from, default no end: last active batch (inclusive)."
+              },
+              "rate_max": 1,
+              "rate_min": 0,
+              "rate_semantics": "Select round(current table rows * rate) rows per target column, capped at eligible rows; Python round uses ties to even.",
+              "targeting": "An explicit text column, including null cells."
+            },
+            {
+              "column": "required",
+              "default_rate": 0.02,
+              "kind": "type_change",
+              "options": {
+                "from": "Integer at least 0, default 0: first active batch (inclusive).",
+                "to": "Integer at least from, default no end: last active batch (inclusive)."
+              },
+              "rate_max": 1,
+              "rate_min": 0,
+              "rate_semantics": "Rate is ignored: the entire column is converted, even when rate is 0.",
+              "targeting": "An explicit non-text column, converted in full to text."
+            },
+            {
+              "column": "required",
+              "default_rate": 0.02,
+              "kind": "null_creep",
+              "options": {
+                "from": "Integer at least 0, default 0: first active batch (inclusive).",
+                "step": "Number at least 0, default 0: rate added per batch after from.",
+                "to": "Integer at least from, default no end: last active batch (inclusive)."
+              },
+              "rate_max": 1,
+              "rate_min": 0,
+              "rate_semantics": "Effective rate = min(1, rate + step * (batch - from)); Select round(current table rows * rate) rows per target column, capped at eligible rows; Python round uses ties to even.",
+              "targeting": "An explicit column of any type; only non-null rows are eligible."
+            }
+          ],
+          "surface": "targeted_corruptions",
+          "syntax": "KIND[=RATE][@TABLE[.COLUMN]][:OPT=V,...]"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-argument",
+      "request": {
+        "api_version": "1.4",
+        "args": {
+          "input": "never-read"
+        },
+        "command": "chaos_kinds",
+        "id": "unknown-argument"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "chaos_kinds",
+        "error": {
+          "code": "usage.unknown_argument",
+          "group": "usage",
+          "hint": "it takes: no arguments",
+          "message": "chaos_kinds does not take argument(s): input"
+        },
+        "id": "unknown-argument",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "chaos_kinds",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

@@ -6574,6 +6574,10 @@ no configuration format of its own.</p>
 </thead>
 <tbody>
 <tr>
+<td><code>--format auto/csv/parquet/jsonl</code></td>
+<td>input format for REAL, SYNTHETIC and HOLDOUT; default <code>auto</code> reads each supported file by extension; a fixed format selects only that format in folders</td>
+</tr>
+<tr>
 <td><code>--config VERIFY.json</code></td>
 <td>the verify configuration (<code>classifications</code>, <code>memorization</code>, <code>utility</code>, <code>privacy</code>; other keys belong to <code>shape verify</code> and are ignored)</td>
 </tr>
@@ -6613,8 +6617,9 @@ section, or <code>utility</code> required while scikit-learn is missing).</p>
                    <span class="n">holdout</span><span class="o">=</span><span class="s2">"holdout/"</span><span class="p">,</span> <span class="n">manifest</span><span class="o">=</span><span class="s2">"out/RUN_MANIFEST.json"</span><span class="p">)</span>
 <span class="n">card</span><span class="o">.</span><span class="n">to_dict</span><span class="p">();</span> <span class="n">card</span><span class="o">.</span><span class="n">to_markdown</span><span class="p">();</span> <span class="n">card</span><span class="o">.</span><span class="n">to_html</span><span class="p">()</span>
 </code></pre></div>
-<p>The inputs may also be mappings of table name to <code>pyarrow.Table</code>. <code>require=("utility",)</code> is the one
-keyword beyond the arguments above. The renderers are also <code>shape.quality.reportcard.render_markdown</code>
+<p>The inputs may also be mappings of table name to <code>pyarrow.Table</code>. The optional keyword
+<code>data_format="auto"</code> matches <code>--format</code>; it leaves Arrow inputs unchanged.
+<code>require=("utility",)</code> selects required sections. The renderers are also <code>shape.quality.reportcard.render_markdown</code>
 and <code>render_html</code>, which take a card read with <code>shape.quality.load_report_card(path)</code>.</p>
 <h2 id="the-sections">The sections<a class="headerlink" href="#the-sections" title="Permanent link">&para;</a></h2>
 <p>A section is <code>pass</code> when none of its gates failed and at least one passed, <code>fail</code> when one failed,

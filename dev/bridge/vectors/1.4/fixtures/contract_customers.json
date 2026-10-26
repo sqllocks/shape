@@ -1,0 +1,24 @@
+{
+  "columns": {
+    "customer_id": {
+      "dtype": "integer",
+      "unique": true
+    },
+    "tier": {
+      "allowed_values": [
+        "gold",
+        "silver",
+        "bronze"
+      ]
+    },
+    "amount": {
+      "min": 0
+    },
+    "email": {
+      "nullable": false
+    }
+  },
+  "row_count": {
+    "min": 50
+  }
+}
