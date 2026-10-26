@@ -139,3 +139,18 @@ def test_timed_worker_reauthenticates_and_uses_same_parser_date(monkeypatch, inp
     else:
         module.worker("shape", ds)
     assert dtparse._midnight is host
+
+
+@pytest.mark.parametrize("location", ["context", "provenance", "workload"])
+def test_unexpected_date_field_fails_closed(inputs, location):
+    replay = replay_module()
+    doc = json.loads(replay.CONTEXT.read_text())
+    dataset = "edge/x_time_only.csv"
+    target = {
+        "context": doc,
+        "provenance": doc["provenance"],
+        "workload": doc["workloads"][dataset],
+    }[location]
+    target["unexpected_date"] = "2030-01-01"
+    with pytest.raises(replay.RecordingError):
+        replay.capture_day(dataset, inputs, doc)
