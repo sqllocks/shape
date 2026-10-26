@@ -1392,6 +1392,7 @@ There is no second implementation: a command calls what the matching command lin
 | `registry_diff` | `shape registry ROOT diff` (`shape.registry.drift`: `diff_safe`; `shape.diff` for two raw versions) |
 | `suite_list`, `suite_run` | `shape pack list --library`, `shape suite run` (`shape.scenario.library`: `list_scenarios`, `list_suites`, `load_suite`, `run_scenario`) |
 | `chaos` | `shape chaos` (`shape.chaos`: `corrupt_tables`, `verify_chaos_input`, `write_ground_truth`) |
+| `chaos_kinds` (1.4) | `shape chaos --list-kinds` (`shape.chaos.catalogue`) |
 | `safe_scan` | `shape profile validate --safe` (`shape.privacy.safe_validator.SafeProfileValidator`) |
 
 ## Security
@@ -1537,3 +1538,22 @@ Oracle sources (`oracle://` and `tcps://`, from `sqllocks-shape-databases[oracle
 by default. Oracle connection credentials and wallet passwords are never artifact metadata.
 The catalog count and LAST_ANALYZED describe the population; sampled distributions describe
 only the bounded sample. See the database plugin README for exact counts and type mapping.
+
+
+## Targeted chaos catalogue (1.4)
+
+`chaos_kinds` takes no arguments and returns `surface: "targeted_corruptions"`,
+`syntax` and `kinds`. Each kind records its name, column requirement (`required`,
+`optional` or `forbidden`), automatic targeting, default rate, rate bounds, rate
+semantics and all accepted options with their defaults. It reads no data and writes
+no files. `shape chaos --list-kinds --json` returns the same fields in its standard CLI
+result envelope; omit `--json`
+for text. The catalogue covers every kind accepted by `chaos.corrupt` / `--corrupt`.
+The separate scheduled category mutators and row anomaly API retain their controls
+as described in [Chaos](CHAOS.md).
+
+Rates range from 0 to 1 and default to 0.02. Targeted row selection uses Python
+`round(current_table_rows * rate)` (ties to even), capped at eligible rows for each
+column. Duplicates append that many copies. `null_creep` adds `step` per batch after
+`from`, capped at 1. `type_change` ignores the rate and converts the entire column,
+even at rate 0. `from` and `to` are inclusive batch bounds for every kind.
