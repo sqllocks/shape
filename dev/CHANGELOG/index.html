@@ -6766,10 +6766,16 @@
 <p><strong>Early access 0.9.3.</strong> Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.</p>
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Kafka and Event Hubs read and write plain Avro and Protobuf with local schemas,
+<li>
+<p>Iceberg catalog endpoints use <code>catalog_uri</code> without colliding with the destination URI.
+  REST emulator startup builds the pinned official storage releases from source.</p>
+</li>
+<li>
+<p>Kafka and Event Hubs read and write plain Avro and Protobuf with local schemas,
   preserve nested Arrow fields, and count malformed or incompatible rows. Kafka
   Avro reads resolve writer schema ids with a per-read cache; Event Hubs supports
-  Azure Schema Registry Avro through its optional schema-registry extra.</li>
+  Azure Schema Registry Avro through its optional schema-registry extra.</p>
+</li>
 <li>Compare frozen release results with explicit recorded-error noncomparability, approved
   reference category-name aliases and authenticated capture-date replay; recorded values
   and all numeric comparison thresholds remain unchanged.</li>

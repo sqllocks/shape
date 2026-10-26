@@ -7723,7 +7723,7 @@ shape<span class="w"> </span>profile<span class="w"> </span>iceberg+file:///ware
 shape<span class="w"> </span>profile<span class="w"> </span>iceberg+file:///warehouse/ns<span class="w"> </span>-o<span class="w"> </span>namespace.shape
 </code></pre></div>
 <p>Named catalog writes use <code>--to iceberg://catalog/ns/items --yes</code>. Catalog options
-use <code>--sink-config iceberg.catalog_type=rest</code> and <code>iceberg.uri=https://catalog.example</code>;
+use <code>--sink-config iceberg.catalog_type=rest</code> and <code>iceberg.catalog_uri=https://catalog.example</code>;
 secrets use references such as <code>iceberg.token=env://ICEBERG_TOKEN</code>. URI secrets are
 refused. Local <code>iceberg+file</code> writes need no remote confirmation. Python source
 options provide <code>snapshot_id</code> and <code>as_of</code>; <code>shape profile --as-of</code> selects a timestamp.

@@ -7059,9 +7059,9 @@ own commit option. Check it with <code>shape.plugins.kit.check_sink</code> and <
 <code>iceberg+file:///warehouse/ns/items</code> creates a local SQLite catalog at
 <code>/warehouse/catalog.db</code> on first write. <code>iceberg://catalog/ns/items</code> uses a named
 catalog from <code>~/.pyiceberg.yaml</code>, or options <code>catalog_type</code> (<code>rest</code>, <code>sql</code>, <code>glue</code>,
-<code>hive</code>), <code>uri</code> and <code>warehouse</code>. Glue and Hive option acceptance is untested against
+<code>hive</code>), <code>catalog_uri</code> (the catalog endpoint) and <code>warehouse</code>. Glue and Hive option acceptance is untested against
 services. <code>credential</code> and <code>token</code> are references (<code>env://NAME</code>, private <code>file://PATH</code>
-or <code>kv://VAULT/NAME</code>); credentials and query parameters are refused in URIs.</p>
+or <code>kv://VAULT/NAME</code>); credentials, query parameters and fragments are refused in URIs.</p>
 <p><code>IcebergSink.write(uri, table, batches, **options)</code> writes the table named by the
 URI. A table URI accepts one generated table per target. Default mode is
 <code>overwrite</code>; <code>append</code> preserves rows. Format version is 2; <code>format_version=1</code> is
