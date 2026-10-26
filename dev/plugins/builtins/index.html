@@ -6377,6 +6377,16 @@ plugin and is reached through the <a href="../host/">plugin host</a>. <code>shap
 <td>Delta tables: a local directory, or <code>delta+abfss://</code> in OneLake and ADLS Gen2 (extra <code>[azure]</code> for cloud tables)</td>
 </tr>
 <tr>
+<td><code>shape.sources</code></td>
+<td><code>iceberg</code></td>
+<td>Local SQLite/file or named catalog native Iceberg scans; optional <code>[iceberg]</code>.</td>
+</tr>
+<tr>
+<td><code>shape.sinks</code></td>
+<td><code>iceberg</code></td>
+<td>Native Iceberg tables, partition transforms and snapshots; optional <code>[iceberg]</code>.</td>
+</tr>
+<tr>
 <td><code>shape.sinks</code></td>
 <td><code>csv</code></td>
 <td>CSV file</td>

@@ -3002,6 +3002,23 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-binary-schemas-and-nested-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local binary schemas and nested events
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Local binary schemas and nested events">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#message-metadata-w9-08" class="md-nav__link">
     <span class="md-ellipsis">
@@ -6816,6 +6833,23 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-binary-schemas-and-nested-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local binary schemas and nested events
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Local binary schemas and nested events">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#message-metadata-w9-08" class="md-nav__link">
     <span class="md-ellipsis">
@@ -7175,7 +7209,7 @@ the Kafka emitter derives a schema from the table's Arrow schema, registers it w
 Confluent-compatible registry, and sends the Confluent wire format: byte <code>0</code>, the 4-byte
 big-endian schema id, then the payload (Protobuf adds the message-index list <code>[0]</code>, one zero byte,
 as Confluent's serializers do). The message key stays <code>&lt;table&gt;/&lt;seq&gt;</code> (D-12) and the headers are
-unchanged. Only <code>kafka://</code> takes a registry format: any other target refuses it (exit 2).</p>
+unchanged. Kafka supports all four formats; Event Hubs supports JSON, Avro and Protobuf.</p>
 <!-- example: 2 -->
 
 <p>Install the Kafka plugin's <code>[avro]</code> extra first. This example uses the workflow's disposable broker and a Schema Registry with HTTP Basic authentication. The runner verifies that an unauthenticated request returns 401 before emitting. The loopback HTTP registry is for the isolated container example; use HTTPS outside it. <code>REGISTRY_PASSWORD</code> is supplied privately by the runner.</p>
@@ -8718,6 +8752,80 @@ shape emit: live fidelity 76.34 over 9 tables, 3 alerts, FAILED: overall score 7
 </code></pre></div>
 </details>
 <p>This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.</p>
+<h2 id="local-binary-schemas-and-nested-events">Local binary schemas and nested events<a class="headerlink" href="#local-binary-schemas-and-nested-events" title="Permanent link">&para;</a></h2>
+<p>Avro and Protobuf work on both Kafka and Event Hubs. Set <code>event_format=avro</code>
+and <code>schema_file=events.avsc</code>, or <code>event_format=protobuf</code>, <code>schema_file=events.proto</code>
+and <code>message=package.Message</code>. These local-schema modes send <strong>plain binary bytes,
+with no registry wire-format prefix</strong>. Protobuf uses the built-in proto3 parser;
+no <code>protoc</code> executable is needed. A schema mismatch names the field and stops
+before any event from that batch is sent. Local schemas describe the data fields;
+Shape's <code>_shape_*</code> fields are included only when declared in the schema.
+Local schema matching allows same-sign integer widening and unsigned-to-signed
+widening only when the destination is wider. Narrowing, signed-to-unsigned
+conversion, and uint64-to-Avro-long are refused at preflight. Registry-derived
+Avro retains its per-value uint64 overflow check. UUID extension fields map to
+wire strings; Avro logical UUIDs read as strings, including in nested fields.</p>
+<p>For CLI writes, use <code>--event-format avro</code> with
+<code>--sink-config kafka.schema_file=events.avsc</code>, or the same key under <code>eventhubs</code>.
+Protobuf also needs <code>--sink-config kafka.message=package.Message</code> (or
+<code>eventhubs.message</code>). Binary writes require the <code>flat</code> envelope. Install the plugin's
+<code>[avro]</code> or <code>[protobuf]</code> extra for the selected format.</p>
+<p>The source API accepts <code>format="avro", schema_file="events.avsc"</code> or
+<code>format="protobuf", schema_file="events.proto", message="package.Message"</code> on
+<code>KafkaStreamSource.read(...)</code> and <code>EventHubsStreamSource.read(...)</code>.
+Kafka Avro reads can instead use <code>schema_registry_url="https://registry"</code>, with
+<code>schema_registry_username</code> and a separately supplied <code>schema_registry_password</code>
+for basic authentication. Never put credentials in a URI. Each message's writer
+schema id is resolved and cached for the read. A reader <code>schema=pyarrow.schema(...)</code>
+pins the returned batch schema. Malformed messages increment <code>undecodable</code>;
+rows that do not fit the reader schema increment <code>rejected</code>. Their offsets advance.
+<code>on_error="raise"</code> stops at the first such message. Without a reader schema, binary batches follow the writer schemas; compatible
+numeric changes are promoted. Distinct writer ids form separate batches so
+incompatible writer types retain their values. JSON keeps its existing first-batch schema.
+For Protobuf integer event timestamps encoded in microseconds, pass
+<code>event_time_unit="us"</code>; Avro logical timestamps are read directly.</p>
+<table>
+<thead>
+<tr>
+<th>Arrow</th>
+<th>Avro</th>
+<th>Protobuf</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>struct</code></td>
+<td>record</td>
+<td>message</td>
+</tr>
+<tr>
+<td><code>list</code></td>
+<td>array</td>
+<td><code>repeated</code> field</td>
+</tr>
+<tr>
+<td><code>map</code></td>
+<td>map with string keys</td>
+<td><code>map</code> field</td>
+</tr>
+</tbody>
+</table>
+<p>Nested records, lists and maps retain these Arrow types on read and write.
+Protobuf event schemas declare their types in one file; recursive messages,
+<code>oneof</code>, <code>Any</code> and extensions are unsupported. Avro unions allow <code>null</code> plus
+one value type. Protobuf repeated/map containers and scalars without presence
+cannot represent null; such values are refused rather than changed to empty
+collections or scalar defaults. JSON Schema on Event Hubs is unsupported.</p>
+<p>For Azure Schema Registry, install <code>sqllocks-shape-eventhubs[schema-registry,entra]</code>.
+Writes use <code>event_format=avro</code>, <code>schema_file</code>,
+<code>schema_registry_url=&lt;namespace.servicebus.windows.net&gt;</code> and
+<code>schema_registry_group=&lt;group&gt;</code>. The CLI keys have the <code>eventhubs.</code> prefix.
+Reads use <code>format="avro", schema_registry_url="namespace.servicebus.windows.net"</code>.
+The SDK uses Microsoft Entra credentials (or an explicit API <code>credential</code>) and
+caches schemas by the <code>avro/binary+&lt;schema-id&gt;</code> content type; Azure messages use
+that content type with the Avro binary body, rather than the Kafka wire prefix.
+The account needs permission on the registry group. Azure live validation requires
+Owner-provided account access and is pending; offline tests use an encoder fake.</p>
 <h3 id="message-metadata-w9-08">Message metadata (W9-08)<a class="headerlink" href="#message-metadata-w9-08" title="Permanent link">&para;</a></h3>
 <p>Both broker emitters accept <code>key="column"</code> or <code>key="a|b"</code> (values joined with
 <code>|</code>; null components become empty strings), and <code>headers=["name=value",

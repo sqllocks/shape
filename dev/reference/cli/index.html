@@ -10548,16 +10548,16 @@ Exit codes:
                      [--classify COLUMN=LEVEL] [--vault OUT.shapevault]
                      [--vault-policy POLICY.json] [--kek REF] [--dataset] [--sketches]
                      [--univariate] [--multivariate] [--name NAME] [--delimiter CHAR]
-                     [--encoding NAME] [--quotechar CHAR] [--header | --no-header]
-                     [--string-columns NAMES] [--types FILE.json] [--infer-types {auto,off}]
-                     [--decisions DECISIONS.json] [--version N] [--as-of TIMESTAMP]
-                     [--fail-on-empty] [--reference-pair COLS=REFERENCE] [--validate COLUMN=KIND]
-                     [--joint | --no-joint] [--time-column COL] [--sheet SHEET] [--include-hidden]
-                     [--sample-rows SAMPLE_ROWS] [--tables TABLES] [--sample N|P%]
-                     [--sample-method {random,systematic,head}] [--sample-seed S]
-                     [--html REPORT.html] [--json SUMMARY.json] [--project FILE] [--no-project]
-                     [--auth {cli,msi,spn,sql,device-code,fabric,kerberos}] [--tenant-id GUID]
-                     [--client-id GUID] [--client-secret REF] [--sql-user NAME]
+                     [--max-depth MAX_DEPTH] [--encoding NAME] [--quotechar CHAR]
+                     [--header | --no-header] [--string-columns NAMES] [--types FILE.json]
+                     [--infer-types {auto,off}] [--decisions DECISIONS.json] [--version N]
+                     [--as-of TIMESTAMP] [--fail-on-empty] [--reference-pair COLS=REFERENCE]
+                     [--validate COLUMN=KIND] [--joint | --no-joint] [--time-column COL]
+                     [--sheet SHEET] [--include-hidden] [--sample-rows SAMPLE_ROWS]
+                     [--tables TABLES] [--sample N|P%] [--sample-method {random,systematic,head}]
+                     [--sample-seed S] [--html REPORT.html] [--json SUMMARY.json] [--project FILE]
+                     [--no-project] [--auth {cli,msi,spn,sql,device-code,fabric,kerberos}]
+                     [--tenant-id GUID] [--client-id GUID] [--client-secret REF] [--sql-user NAME]
                      [--sql-password REF] [--keytab REF] [--principal NAME@REALM] [--dry-run]
                      SRC
 
@@ -10611,6 +10611,8 @@ options:
                         stable name)
   --delimiter CHAR      CSV field delimiter (default: sniffed among comma, semicolon, tab and
                         pipe)
+  --max-depth MAX_DEPTH
+                        nested child depth (default: 8; 0 keeps opaque columns)
   --encoding NAME       CSV text encoding (default: utf-8)
   --quotechar CHAR      CSV quote character (default: ")
   --header, --no-header
@@ -11898,8 +11900,8 @@ options:
                         flat rows (default) or CloudEvents 1.0 structured JSON
   --event-format {json,avro,protobuf,json-schema}
                         the message format of a kafka:// target: json (default: the flat event's
-                        JSON), or avro, protobuf or json-schema through a schema registry (--sink-
-                        config kafka.schema_registry_url=URL; see docs/EMIT.md)
+                        JSON), or Avro or Protobuf from a schema file, or Kafka registry formats
+                        (--sink-config NAME.schema_file=PATH; see docs/EMIT.md)
   --dry-run             resolve everything the run would use (target, tables, destinations and
                         their plugins, checkpoint state, rate schedule, drift plan) and print it,
                         opening no connection, writing no file and sending no event; exit 2 when
@@ -12164,8 +12166,8 @@ options:
                         flat rows (default) or CloudEvents 1.0 structured JSON
   --event-format {json,avro,protobuf,json-schema}
                         the message format of a kafka:// target: json (default: the flat event's
-                        JSON), or avro, protobuf or json-schema through a schema registry (--sink-
-                        config kafka.schema_registry_url=URL; see docs/EMIT.md)
+                        JSON), or Avro or Protobuf from a schema file, or Kafka registry formats
+                        (--sink-config NAME.schema_file=PATH; see docs/EMIT.md)
   --dry-run             resolve everything the run would use (target, tables, destinations and
                         their plugins, checkpoint state, rate schedule, drift plan) and print it,
                         opening no connection, writing no file and sending no event; exit 2 when

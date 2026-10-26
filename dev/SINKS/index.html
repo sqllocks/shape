@@ -2795,6 +2795,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Writing a sink">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#apache-iceberg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Apache Iceberg
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2822,6 +2839,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bigquery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BigQuery
+      
+    </span>
+  </a>
   
 </li>
       
@@ -6539,6 +6567,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Writing a sink">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#apache-iceberg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Apache Iceberg
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -6566,6 +6611,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bigquery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BigQuery
+      
+    </span>
+  </a>
   
 </li>
       
@@ -6997,6 +7053,90 @@ one resolver in core, <code>shape.security.credrefs</code>.</p>
 **options)</code> returning an object with <code>write_batch</code>, <code>flush</code> (make everything so far visible and
 durable), <code>close</code> and <code>abort</code>; without it the stream drives <code>write</code> on a thread and relies on its
 own commit option. Check it with <code>shape.plugins.kit.check_sink</code> and <code>shape conformance</code>.</p>
+<h3 id="apache-iceberg">Apache Iceberg<a class="headerlink" href="#apache-iceberg" title="Permanent link">&para;</a></h3>
+<p>Install <code>pip install 'sqllocks-shape[iceberg]'</code>. The optional extra uses
+<code>pyiceberg[pyarrow,sql-sqlite,pyiceberg-core]&gt;=0.9</code>; it loads only when Iceberg is used.
+<code>iceberg+file:///warehouse/ns/items</code> creates a local SQLite catalog at
+<code>/warehouse/catalog.db</code> on first write. <code>iceberg://catalog/ns/items</code> uses a named
+catalog from <code>~/.pyiceberg.yaml</code>, or options <code>catalog_type</code> (<code>rest</code>, <code>sql</code>, <code>glue</code>,
+<code>hive</code>), <code>uri</code> and <code>warehouse</code>. Glue and Hive option acceptance is untested against
+services. <code>credential</code> and <code>token</code> are references (<code>env://NAME</code>, private <code>file://PATH</code>
+or <code>kv://VAULT/NAME</code>); credentials and query parameters are refused in URIs.</p>
+<p><code>IcebergSink.write(uri, table, batches, **options)</code> writes the table named by the
+URI. A table URI accepts one generated table per target. Default mode is
+<code>overwrite</code>; <code>append</code> preserves rows. Format version is 2; <code>format_version=1</code> is
+accepted. Schema differences refuse the write naming the column, with no evolution.
+<code>partition_by</code> accepts <code>id</code>, <code>day(ts)</code>, <code>month(ts)</code>, <code>bucket(16, id)</code> and
+<code>truncate(4, s)</code>; types and positive widths are checked before catalog writes.
+<code>commit_rows</code> and <code>commit_seconds</code> commit one snapshot per micro-batch; the first
+snapshot applies the mode, later snapshots append. <code>fingerprint=True</code> (or a run
+context) sets snapshot summary <code>shape.fingerprint</code> for that batch.</p>
+<table>
+<thead>
+<tr>
+<th>Arrow</th>
+<th>Iceberg</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>int8, int16, int32</td>
+<td>int</td>
+</tr>
+<tr>
+<td>int64, uint32</td>
+<td>long</td>
+</tr>
+<tr>
+<td>uint64</td>
+<td>decimal(20,0)</td>
+</tr>
+<tr>
+<td>float32, float64</td>
+<td>float, double</td>
+</tr>
+<tr>
+<td>decimal precision &lt;= 38</td>
+<td>decimal(p,s)</td>
+</tr>
+<tr>
+<td>string, binary, bool, date</td>
+<td>string, binary, boolean, date</td>
+</tr>
+<tr>
+<td>time64</td>
+<td>time (microseconds)</td>
+</tr>
+<tr>
+<td>zoned / zone-less timestamp</td>
+<td>timestamptz (UTC) / timestamp (microseconds)</td>
+</tr>
+<tr>
+<td>binary field with <code>uuid=true</code> metadata</td>
+<td>uuid</td>
+</tr>
+<tr>
+<td>list, struct, map</td>
+<td>native list, struct, map</td>
+</tr>
+</tbody>
+</table>
+<p>Original widths and field metadata are recorded in field documentation and a
+<code>shape.iceberg.arrow-schema</code> format/version-1 table property. The source restores
+widths recursively; temporal values normalize to microseconds and zoned timestamps
+to UTC. Nanosecond timestamps/time refuse the column unless <code>truncate_ns=True</code>
+explicitly allows truncation. Decimal precision above 38 is refused.</p>
+<p><code>IcebergSource.read</code> scans Arrow batches. <code>snapshot_id</code> (integer) or <code>as_of</code>
+(ISO timestamp), mutually exclusive, selects an earlier snapshot. Profile provenance
+records catalog, table identifier, snapshot id and snapshot summary <code>total-records</code>.
+A namespace URI (<code>iceberg://catalog/ns</code> or <code>iceberg+file:///warehouse/ns</code>) profiles
+all its tables. Nested columns follow opaque profiling semantics. Row-level deletes,
+MERGE, format 3, branches/tags, evolution and maintenance are unsupported.</p>
+<p>UUID logical fields may use <code>uuid=true</code> metadata on 16-byte binary or
+<code>shape.type=uuid</code> metadata on strings; native Arrow UUID fields are accepted too.
+String UUIDs read back in canonical hyphenated form. Invalid UUID values refuse the
+column without quoting its data. Decimal scale must be between zero and precision,
+as required by Iceberg; unsupported scales are rejected before catalog writes.</p>
 <h2 id="complete-local-run">Complete local run<a class="headerlink" href="#complete-local-run" title="Permanent link">&para;</a></h2>
 <p>Run these commands in order after preparing the fixtures above.</p>
 <p><a id="local-example-4"></a></p>
@@ -7012,6 +7152,14 @@ shape<span class="w"> </span>emit<span class="w"> </span>retail<span class="w"> 
 shape emit: 10,000 events delivered, offset 10,000 of 21,750, max-events, 40,123 events/s
 </code></pre></div>
 </details>
+<h2 id="bigquery">BigQuery<a class="headerlink" href="#bigquery" title="Permanent link">&para;</a></h2>
+<p>The experimental <code>bigquery</code> sink accepts <code>bigquery://PROJECT/DATASET?location=US</code> through
+<code>shape generate --to</code>. Install <code>sqllocks-shape-databases[bigquery]</code> and configure Google ADC
+or a credentials reference. Writes use bounded Parquet load jobs; <code>commit_rows</code> makes load
+results visible while a stream runs. The default mode refuses an existing table. Query
+jobs are dry-run checked against <code>max_bytes_billed</code> (default 1 GiB). See the
+<a href="https://github.com/sqllocks/shape/blob/main/plugins/shape-databases/README.md#bigquery-bigquery">database plugin README</a> for sign-in,
+types, write modes and partial failure behavior. Real account execution needs owner validation.</p>
 <h2 id="oracle">Oracle<a class="headerlink" href="#oracle" title="Permanent link">&para;</a></h2>
 <p>The <code>oracle</code> sink in <code>sqllocks-shape-databases[oracle]</code> writes Oracle 19c+ through thin-mode
 bound array DML. Use <code>oracle://user@host:1521/service?schema=S</code>, or <code>tcps://</code> for TLS, with

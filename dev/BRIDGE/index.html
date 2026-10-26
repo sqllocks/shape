@@ -8971,6 +8971,13 @@ bridge until its protocol says so), and it does not touch <code>generate</code>,
 </table>
 <h2 id="security">Security<a class="headerlink" href="#security" title="Permanent link">&para;</a></h2>
 <p><code>profile</code> opens a database connection when its <code>source</code> is a database URI.
+BigQuery (<code>bigquery://PROJECT/DATASET?location=US</code>, optionally <code>&amp;table=T</code>) opens HTTPS
+connections to the BigQuery query/load service and the Storage Read API. Its optional
+<code>[bigquery]</code> clients use ADC or private credential references; URI keys and tokens are
+refused. Every query is dry-run checked against <code>max_bytes_billed</code> (default 1 GiB).
+Dataset profiling supports <code>tables</code> and <code>sample_rows</code>, records actual sampled rows and
+bytes processed, and saves with safe capture. Storage Read and account charges still
+require account policy; no live account verification is claimed.
 PostgreSQL (<code>postgresql://</code>, also <code>postgres://</code>), MySQL (<code>mysql://</code>), Snowflake
 (<code>snowflake://</code>) and Databricks (<code>databricks://</code>) profile a schema
 or a URI-selected table. Optional <code>tables</code> is an array of table names; <code>sample_rows</code> is
@@ -9026,6 +9033,16 @@ log. Job files and spilled results are created with mode <code>0600</code> in a 
 <span class="nb">print</span><span class="p">(</span><span class="n">drift</span><span class="p">[</span><span class="s2">"drifted"</span><span class="p">],</span> <span class="p">[(</span><span class="n">n</span><span class="p">[</span><span class="s2">"column"</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="s2">"metric"</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">drift</span><span class="p">[</span><span class="s2">"not_measured"</span><span class="p">]])</span>
 </code></pre></div>
 <p>(<code>call</code> is the helper above, with <code>"api_version": "1.2"</code> in the request.)</p>
+<p>Iceberg (API 1.2): <code>generate</code> accepts <code>to</code> (a sink URI), <code>sink_options</code> (an option
+object) and <code>confirm_remote</code> (boolean). <code>to</code> cannot combine with a file <code>format</code> or
+<code>output_dir</code>. An exact Iceberg table URI accepts one generated table; credential
+options are references, never secret literals. Local <code>iceberg+file://</code> writes need
+no confirmation; named <code>iceberg://</code> targets require confirmation. <code>profile.source</code>
+accepts both URI forms and namespace URIs, and <code>as_of</code> selects an earlier snapshot.
+Artifacts preserve Iceberg provenance. Existing API 1.1 requests remain unchanged.</p>
+<p><code>profile.source_options</code> (API 1.2) accepts Iceberg catalog options and integer
+<code>snapshot_id</code>; credential values remain references. <code>as_of</code> and <code>snapshot_id</code> are
+mutually exclusive. Sink partition options can be a list of transform expressions.</p>
 <h2 id="complete-local-run">Complete local run<a class="headerlink" href="#complete-local-run" title="Permanent link">&para;</a></h2>
 <p>Run these commands in order after preparing the fixtures above.</p>
 <p><a id="local-example-0"></a></p>

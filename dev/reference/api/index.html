@@ -6680,6 +6680,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#shape.builtins.sinks.IcebergSink" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IcebergSink
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#shape.builtins.sinks.AbfssSink" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6873,6 +6884,17 @@
     <span class="md-ellipsis">
       
         SHAPE_API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shape.builtins.sources.IcebergSource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IcebergSource
       
     </span>
   </a>
@@ -26795,6 +26817,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#shape.builtins.sinks.IcebergSink" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IcebergSink
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#shape.builtins.sinks.AbfssSink" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -26988,6 +27021,17 @@
     <span class="md-ellipsis">
       
         SHAPE_API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shape.builtins.sources.IcebergSource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IcebergSource
       
     </span>
   </a>
@@ -43639,7 +43683,7 @@ field's name and nullability; raises :class:<code>shape.errors.ShapeTypeError</c
     </div>
 
 </div><h3 id="shape.profile">shape.profile<a class="headerlink" href="#shape.profile" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">shape</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">as_of</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">string_columns</span><span class="o">=</span><span class="p">(),</span> <span class="n">types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">infer_types</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">,</span> <span class="n">reference_pairs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">joint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sheet</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_hidden</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sketches</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">univariate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">multivariate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_method</span><span class="o">=</span><span class="s1">'random'</span><span class="p">,</span> <span class="n">sample_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decisions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validators</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_column</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_rows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tables</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">shape</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">as_of</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">string_columns</span><span class="o">=</span><span class="p">(),</span> <span class="n">types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">infer_types</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">,</span> <span class="n">reference_pairs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">joint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sheet</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_hidden</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sketches</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">univariate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">multivariate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_method</span><span class="o">=</span><span class="s1">'random'</span><span class="p">,</span> <span class="n">sample_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decisions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validators</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_column</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">sample_rows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tables</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -43647,7 +43691,7 @@ field's name and nullability; raises :class:<code>shape.errors.ShapeTypeError</c
 
 
 <h2 id="shape.profile.reference.profile.profile" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">shape</span><span class="o">.</span><span class="n">profile</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">profile</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">as_of</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">string_columns</span><span class="o">=</span><span class="p">(),</span> <span class="n">types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">infer_types</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">,</span> <span class="n">reference_pairs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">joint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sheet</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_hidden</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sketches</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">univariate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">multivariate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_method</span><span class="o">=</span><span class="s1">'random'</span><span class="p">,</span> <span class="n">sample_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decisions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validators</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_column</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_rows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tables</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">shape</span><span class="o">.</span><span class="n">profile</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">profile</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">as_of</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">string_columns</span><span class="o">=</span><span class="p">(),</span> <span class="n">types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">infer_types</span><span class="o">=</span><span class="s1">'auto'</span><span class="p">,</span> <span class="n">reference_pairs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">joint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sheet</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">include_hidden</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sketches</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">univariate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">multivariate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_method</span><span class="o">=</span><span class="s1">'random'</span><span class="p">,</span> <span class="n">sample_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decisions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validators</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_column</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">sample_rows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tables</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 <a href="#shape.profile.reference.profile.profile" class="headerlink" title="Permanent link">&para;</a></h2>
 
@@ -43694,6 +43738,8 @@ a <code>float</code> above 0 and up to 1 a fraction of them (<code>"10%"</code> 
 start) or <code>head</code> (the first rows); <code>sample_seed</code> defaults to 42. The same rows are chosen
 on every run and in both kernel modes. Nothing is sampled without <code>sample</code>, and every table's
 profile records what was done in <code>sampling</code> (<code>docs/PROFILING_NOTES.md</code>).</p>
+<p><code>max_depth</code> limits nested struct/list/map child statistics (default 8; 0 keeps
+opaque columns). Child paths and statistics stay below their owning column.</p>
 <p><code>time_column</code> names the date or timestamp column that each numeric column's <code>seasonality</code>
 is measured against (default: the table's only date or timestamp column; a dict of tables
 uses it for the tables that have it). It is an error when no table has the column, or when it
@@ -48095,7 +48141,7 @@ timestamps), so a report can be committed and diffed.</p>
     </div>
 
 </div><h2 id="shapebuiltinssinks">shape.builtins.sinks<a class="headerlink" href="#shapebuiltinssinks" title="Permanent link">&para;</a></h2>
-<p>Public names: <code>SHAPE_API</code>, <code>AbfssSink</code>, <code>CsvSink</code>, <code>DeltaSink</code>, <code>ExcelSink</code>, <code>FabricMirrorSink</code>, <code>IpcSink</code>, <code>JsonlSink</code>, <code>ParquetSink</code>, <code>SqlSink</code>, <code>TsvSink</code>.</p>
+<p>Public names: <code>SHAPE_API</code>, <code>IcebergSink</code>, <code>AbfssSink</code>, <code>CsvSink</code>, <code>DeltaSink</code>, <code>ExcelSink</code>, <code>FabricMirrorSink</code>, <code>IpcSink</code>, <code>JsonlSink</code>, <code>ParquetSink</code>, <code>SqlSink</code>, <code>TsvSink</code>.</p>
 
 
 <div class="doc doc-object doc-module">
@@ -48153,6 +48199,52 @@ Delta sink and the cloud libraries behind it.</p>
 </div>
 
 
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="shape.builtins.sinks.IcebergSink" class="doc doc-heading">
+            <code>IcebergSink</code>
+
+
+<a href="#shape.builtins.sinks.IcebergSink" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Write Arrow batches to an optional local or named Iceberg catalog.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-class">
 
@@ -48690,7 +48782,7 @@ Delta sink and the cloud libraries behind it.</p>
     </div>
 
 </div><h2 id="shapebuiltinssources">shape.builtins.sources<a class="headerlink" href="#shapebuiltinssources" title="Permanent link">&para;</a></h2>
-<p>Public names: <code>SHAPE_API</code>, <code>AbfssSource</code>, <code>CsvSource</code>, <code>DeltaSource</code>, <code>IpcSource</code>, <code>JsonSource</code>, <code>JsonlSource</code>, <code>ParquetSource</code>, <code>XmlSource</code>.</p>
+<p>Public names: <code>SHAPE_API</code>, <code>IcebergSource</code>, <code>AbfssSource</code>, <code>CsvSource</code>, <code>DeltaSource</code>, <code>IpcSource</code>, <code>JsonSource</code>, <code>JsonlSource</code>, <code>ParquetSource</code>, <code>XmlSource</code>.</p>
 
 
 <div class="doc doc-object doc-module">
@@ -48748,6 +48840,52 @@ files in OneLake and ADLS Gen2, and Delta tables.</p>
 </div>
 
 
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="shape.builtins.sources.IcebergSource" class="doc doc-heading">
+            <code>IcebergSource</code>
+
+
+<a href="#shape.builtins.sources.IcebergSource" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Read native Iceberg snapshots and profile a table or namespace.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-class">
 

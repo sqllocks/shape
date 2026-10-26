@@ -6426,6 +6426,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#w9-05-nested-child-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W9-05: nested child profiling
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6717,6 +6728,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#w9-05-nested-child-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        W9-05: nested child profiling
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6744,7 +6766,19 @@
 <p><strong>Early access 0.9.3.</strong> Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.</p>
 <h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.</li>
+<li>Kafka and Event Hubs read and write plain Avro and Protobuf with local schemas,
+  preserve nested Arrow fields, and count malformed or incompatible rows. Kafka
+  Avro reads resolve writer schema ids with a per-read cache; Event Hubs supports
+  Azure Schema Registry Avro through its optional schema-registry extra.</li>
+<li>Compare frozen release results with explicit recorded-error noncomparability, approved
+  reference category-name aliases and authenticated capture-date replay; recorded values
+  and all numeric comparison thresholds remain unchanged.</li>
+<li>
+<p>Add experimental BigQuery Parquet load and Storage Read sources, reference-only credentials, bounded catalog sampling and a dry-run query cost guard.</p>
+</li>
+<li>
+<p>Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.</p>
+</li>
 <li>Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.</li>
 <li>Keep the locked development toolchain audit clear with compatible <code>filelock</code> 3.20.3 and patched <code>setuptools</code> 84.1.0.</li>
 <li>
@@ -8923,10 +8957,14 @@
   take whole values, and backticks in Spark column names are doubled (#300).</p>
 </li>
 <li>
-<p>W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
-  catalog row counts and whole-database profiles through the KQL endpoint.
-  Emitter metadata is excluded from profiles; <code>dedupe=true</code> collapses retries.</p>
+<p>W9-16: optional native Apache Iceberg source and sink with local SQLite/file or
+  named catalogs, native nested types, width restoration, partition transforms,
+  snapshot micro-batches/fingerprints, time travel and namespace profiling. CLI
+  URI targets and additive bridge API 1.2 target arguments are supported.</p>
 </li>
+<li>W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+  catalog row counts and whole-database profiles through the KQL endpoint.
+  Emitter metadata is excluded from profiles; <code>dedupe=true</code> collapses retries.</li>
 </ul>
 <h3 id="w9-10">W9-10<a class="headerlink" href="#w9-10" title="Permanent link">&para;</a></h3>
 <ul>
@@ -8951,6 +8989,15 @@
   controls and event-time message timestamps; replay keys remain available.</li>
 <li>Stream sources expose message metadata on request and drift ignores it by
   default. The CLI exposes both write and read metadata options.</li>
+</ul>
+<h3 id="w9-05-nested-child-profiling">W9-05: nested child profiling<a class="headerlink" href="#w9-05-nested-child-profiling" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Profile struct fields, list elements and map keys/values under their owning column,
+  with child paths, presence rates, length statistics and configurable depth.</li>
+<li>Preserve bounded child sketches through stream checkpoints; compare and check
+  child paths, and include them in safe capture, JSON summaries and explanations.</li>
+<li>Keep fixed-size binary and fixed-binary-backed extension children opaque, preserve existing parent
+  length-drift names, and generate safe nested captures using public length defaults.</li>
 </ul>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Changelog&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FCHANGELOG%2F">Report a problem with this page</a></p>
 

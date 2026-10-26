@@ -4494,6 +4494,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#nested-child-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested child evidence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-shape-artifact" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6426,6 +6437,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#nested-child-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested child evidence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-shape-artifact" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6568,6 +6590,15 @@ SHOULD and MAY text, where it appears, is advice and is not tested.</p>
 <li><strong>SH2-007</strong> A Shape MUST NOT retain original source rows.</li>
 <li><strong>SH2-032</strong> Profiling the same input in exact mode MUST produce the same document every time.</li>
 </ul>
+<h2 id="nested-child-evidence">Nested child evidence<a class="headerlink" href="#nested-child-evidence" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>SH2-033</strong> Nested profiling MUST retain child statistics and paths under their
+  owning column, carry mode-appropriate error evidence, and suppress child values
+  in safe captures independently of repeated element counts.</li>
+</ul>
+<p>Children are optional for older profiles. The depth, path syntax, parent-null
+semantics and consumers are described in <code>docs/PROFILING_NOTES.md</code> and tracked by
+<code>SHAPE-NESTED-CHILD-001</code>.</p>
 <h2 id="the-shape-artifact">The <code>.shape</code> artifact<a class="headerlink" href="#the-shape-artifact" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>SH2-008</strong> A writer MUST write <code>.shape</code> format version 2.</li>

@@ -6625,6 +6625,11 @@ where the table was generated.</p>
 <!-- preservation-table:end -->
 
 <p>Only local tools are tested; Fabric-side preservation is not.</p>
+<p>Iceberg sink <code>fingerprint=True</code> (or a run context) stores a versioned
+<code>shape.fingerprint</code> record in each committed snapshot summary. The fingerprint
+covers that micro-batch, including restored Arrow widths, rather than the cumulative
+table. Inspect the selected snapshot's summary property through PyIceberg. This
+adds no file-footer or catalog credential information to the fingerprint.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Fingerprint&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FFINGERPRINT%2F">Report a problem with this page</a></p>
 
 

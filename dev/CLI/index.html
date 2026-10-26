@@ -4435,6 +4435,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="History: shape bisect and shape timelapse">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iceberg-targets-and-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iceberg targets and profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -4504,6 +4521,23 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#binary-broker-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Binary broker formats
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Binary broker formats">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#postgresql-and-mysql-profiling" class="md-nav__link">
     <span class="md-ellipsis">
@@ -4520,6 +4554,17 @@
     <span class="md-ellipsis">
       
         Message metadata (W9-08)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bigquery-profiling-and-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BigQuery profiling and generation
       
     </span>
   </a>
@@ -6934,6 +6979,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="History: shape bisect and shape timelapse">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iceberg-targets-and-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iceberg targets and profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -7003,6 +7065,23 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#binary-broker-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Binary broker formats
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Binary broker formats">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#postgresql-and-mysql-profiling" class="md-nav__link">
     <span class="md-ellipsis">
@@ -7019,6 +7098,17 @@
     <span class="md-ellipsis">
       
         Message metadata (W9-08)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bigquery-profiling-and-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BigQuery profiling and generation
       
     </span>
   </a>
@@ -7625,6 +7715,21 @@ tests bad, <code>--bad</code> tests good, or a version cannot be tested, for exa
 <code>bisect layers</code> finds the layer of a pipeline where a change appears (exit 0 a layer shows it, 1
 none does, 2 unusable input). <code>timelapse</code> follows one column across the versions (<code>-o OUT.html</code> is
 one offline page). See <code>docs/HISTORY.md</code>.</p>
+<h3 id="iceberg-targets-and-profiles">Iceberg targets and profiles<a class="headerlink" href="#iceberg-targets-and-profiles" title="Permanent link">&para;</a></h3>
+<p>With <code>[iceberg]</code> installed, write one generated table to an exact table URI:</p>
+<div class="highlight"><pre><span></span><code>shape<span class="w"> </span>generate<span class="w"> </span>items.json<span class="w"> </span>--to<span class="w"> </span>iceberg+file:///warehouse/ns/items
+shape<span class="w"> </span>generate<span class="w"> </span>items.json<span class="w"> </span>--to<span class="w"> </span>iceberg+file:///warehouse/ns/items<span class="w"> </span>--write-mode<span class="w"> </span>append<span class="w"> </span>--commit-rows<span class="w"> </span><span class="m">10000</span>
+shape<span class="w"> </span>profile<span class="w"> </span>iceberg+file:///warehouse/ns/items<span class="w"> </span>-o<span class="w"> </span>items.shape
+shape<span class="w"> </span>profile<span class="w"> </span>iceberg+file:///warehouse/ns<span class="w"> </span>-o<span class="w"> </span>namespace.shape
+</code></pre></div>
+<p>Named catalog writes use <code>--to iceberg://catalog/ns/items --yes</code>. Catalog options
+use <code>--sink-config iceberg.catalog_type=rest</code> and <code>iceberg.uri=https://catalog.example</code>;
+secrets use references such as <code>iceberg.token=env://ICEBERG_TOKEN</code>. URI secrets are
+refused. Local <code>iceberg+file</code> writes need no remote confirmation. Python source
+options provide <code>snapshot_id</code> and <code>as_of</code>; <code>shape profile --as-of</code> selects a timestamp.
+See <code>docs/SINKS.md</code> for native types, partition transforms and snapshot micro-batches.</p>
+<p>Partition transforms are repeatable quoted arguments, for example
+<code>--partition-by 'bucket(16, id)' --partition-by 'truncate(4, label)'</code>.</p>
 <h2 id="complete-local-run">Complete local run<a class="headerlink" href="#complete-local-run" title="Permanent link">&para;</a></h2>
 <p>Run these commands in order after preparing the fixtures above.</p>
 <p><a id="local-example-0"></a></p>
@@ -7811,6 +7916,17 @@ Optional
 Result: OK
 </code></pre></div>
 </details>
+<h2 id="binary-broker-formats">Binary broker formats<a class="headerlink" href="#binary-broker-formats" title="Permanent link">&para;</a></h2>
+<p><code>shape emit</code> and <code>shape stream</code> accept <code>--event-format avro</code> or
+<code>--event-format protobuf</code> for Kafka and Event Hubs. For plain binary writes, set
+<code>--sink-config kafka.schema_file=events.avsc</code> (Avro), or
+<code>--sink-config kafka.schema_file=events.proto --sink-config kafka.message=package.Message</code>
+(Protobuf). Replace <code>kafka</code> with <code>eventhubs</code> for Event Hubs. These modes add no
+registry prefix. Both require a flat envelope. The source APIs use <code>format="avro"</code>
+or <code>format="protobuf"</code> with the same <code>schema_file</code> and <code>message</code> options;
+<code>schema=pyarrow.schema(...)</code> pins the reader schema and counts rejected rows.
+See <a href="../EMIT/#local-binary-schemas-and-nested-events">the binary format guide</a> for
+nested types, registry schema evolution and Azure Schema Registry options.</p>
 <h3 id="postgresql-and-mysql-profiling">PostgreSQL and MySQL profiling<a class="headerlink" href="#postgresql-and-mysql-profiling" title="Permanent link">&para;</a></h3>
 <p>Install the database plugin and its driver extra. <code>shape profile</code> accepts
 <code>postgresql://user@host:5432/db?schema=public</code> (also <code>postgres://</code>) and
@@ -7854,6 +7970,17 @@ one with <code>only_columns</code> to compare it.</p>
 --timestamp event_time</code> (Kafka); use <code>--partition-key customer_id</code> for Event
 Hubs. <code>shape stream-profile URI --with-key --with-headers --with-timestamp</code>
 reads metadata. The existing <code>--option nested=false</code> selects JSON-text maps.</p>
+<h3 id="bigquery-profiling-and-generation">BigQuery profiling and generation<a class="headerlink" href="#bigquery-profiling-and-generation" title="Permanent link">&para;</a></h3>
+<p>The experimental database plugin extra <code>sqllocks-shape-databases[bigquery]</code> adds
+<code>bigquery://PROJECT/DATASET?location=US</code> to <code>shape profile</code> and <code>shape generate --to</code>.
+Add <code>&amp;table=T</code> to read one table. Dataset profiling accepts <code>--tables T,U</code> and
+<code>--sample-rows N</code> (default 1000; 0 catalog only), and saves the W9-01 sampling metadata.
+Configure ADC or <code>GOOGLE_APPLICATION_CREDENTIALS</code>; <code>--source-config credentials=env://NAME</code>
+and <code>--sink-config bigquery.credentials=env://NAME</code> select references to service-account JSON.
+The URI option <code>max_bytes_billed=1073741824</code> selects the query limit; the default is 1 GiB.
+Every query is dry-run checked. Row counts come from table metadata and distributions
+from bounded system samples. <code>--table-prefix</code> also applies to BigQuery generation.
+Account execution requires owner validation; the offline acceptance uses fake SDK responses.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Command+line&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FCLI%2F">Report a problem with this page</a></p>
 
 

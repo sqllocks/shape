@@ -5611,6 +5611,24 @@ profile
 opens a database connection when its
 source
 is a database URI.
+BigQuery (
+bigquery://PROJECT/DATASET?location=US
+, optionally
+&table=T
+) opens HTTPS
+connections to the BigQuery query/load service and the Storage Read API. Its optional
+[bigquery]
+clients use ADC or private credential references; URI keys and tokens are
+refused. Every query is dry-run checked against
+max_bytes_billed
+(default 1 GiB).
+Dataset profiling supports
+tables
+and
+sample_rows
+, records actual sampled rows and
+bytes processed, and saves with safe capture. Storage Read and account charges still
+require account policy; no live account verification is claimed.
 PostgreSQL (
 postgresql://
 , also
@@ -6045,6 +6063,42 @@ call
 is the helper above, with
 "api_version": "1.2"
 in the request.)
+Iceberg (API 1.2):
+generate
+accepts
+to
+(a sink URI),
+sink_options
+(an option
+object) and
+confirm_remote
+(boolean).
+to
+cannot combine with a file
+format
+or
+output_dir
+. An exact Iceberg table URI accepts one generated table; credential
+options are references, never secret literals. Local
+iceberg+file://
+writes need
+no confirmation; named
+iceberg://
+targets require confirmation.
+profile.source
+accepts both URI forms and namespace URIs, and
+as_of
+selects an earlier snapshot.
+Artifacts preserve Iceberg provenance. Existing API 1.1 requests remain unchanged.
+profile.source_options
+(API 1.2) accepts Iceberg catalog options and integer
+snapshot_id
+; credential values remain references.
+as_of
+and
+snapshot_id
+are
+mutually exclusive. Sink partition options can be a list of transform expressions.
 Complete local run
 ¶
 Run these commands in order after preparing the fixtures above.
@@ -6379,6 +6433,14 @@ Early access 0.9.3.
 Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 Unreleased
 ¶
+Kafka and Event Hubs read and write plain Avro and Protobuf with local schemas,
+  preserve nested Arrow fields, and count malformed or incompatible rows. Kafka
+  Avro reads resolve writer schema ids with a per-read cache; Event Hubs supports
+  Azure Schema Registry Avro through its optional schema-registry extra.
+Compare frozen release results with explicit recorded-error noncomparability, approved
+  reference category-name aliases and authenticated capture-date replay; recorded values
+  and all numeric comparison thresholds remain unchanged.
+Add experimental BigQuery Parquet load and Storage Read sources, reference-only credentials, bounded catalog sampling and a dry-run query cost guard.
 Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.
 Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
 Keep the locked development toolchain audit clear with compatible
@@ -13124,6 +13186,10 @@ The kql scale sink percent-encodes its database name (#295); Spark job and
 COPY INTO
 checks
   take whole values, and backticks in Spark column names are doubled (#300).
+W9-16: optional native Apache Iceberg source and sink with local SQLite/file or
+  named catalogs, native nested types, width restoration, partition transforms,
+  snapshot micro-batches/fingerprints, time travel and namespace profiling. CLI
+  URI targets and additive bridge API 1.2 target arguments are supported.
 W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
   catalog row counts and whole-database profiles through the KQL endpoint.
   Emitter metadata is excluded from profiles;
@@ -13166,6 +13232,14 @@ Kafka and Event Hubs support column/composite keys, user headers, partition
   controls and event-time message timestamps; replay keys remain available.
 Stream sources expose message metadata on request and drift ignores it by
   default. The CLI exposes both write and read metadata options.
+W9-05: nested child profiling
+¶
+Profile struct fields, list elements and map keys/values under their owning column,
+  with child paths, presence rates, length statistics and configurable depth.
+Preserve bounded child sketches through stream checkpoints; compare and check
+  child paths, and include them in safe capture, JSON summaries and explanations.
+Keep fixed-size binary and fixed-binary-backed extension children opaque, preserve existing parent
+  length-drift names, and generate safe nested captures using public length defaults.
 Report a problem with this page
 
 ## Chaos: deterministic data-quality fault injection
@@ -16550,6 +16624,62 @@ is
 one offline page). See
 docs/HISTORY.md
 .
+Iceberg targets and profiles
+¶
+With
+[iceberg]
+installed, write one generated table to an exact table URI:
+shape
+generate
+items.json
+--to
+iceberg+file:///warehouse/ns/items
+shape
+generate
+items.json
+--to
+iceberg+file:///warehouse/ns/items
+--write-mode
+append
+--commit-rows
+10000
+shape
+profile
+iceberg+file:///warehouse/ns/items
+-o
+items.shape
+shape
+profile
+iceberg+file:///warehouse/ns
+-o
+namespace.shape
+Named catalog writes use
+--to iceberg://catalog/ns/items --yes
+. Catalog options
+use
+--sink-config iceberg.catalog_type=rest
+and
+iceberg.uri=https://catalog.example
+;
+secrets use references such as
+iceberg.token=env://ICEBERG_TOKEN
+. URI secrets are
+refused. Local
+iceberg+file
+writes need no remote confirmation. Python source
+options provide
+snapshot_id
+and
+as_of
+;
+shape profile --as-of
+selects a timestamp.
+See
+docs/SINKS.md
+for native types, partition transforms and snapshot micro-batches.
+Partition transforms are repeatable quoted arguments, for example
+--partition-by 'bucket(16, id)' --partition-by 'truncate(4, label)'
+.
 Complete local run
 ¶
 Run these commands in order after preparing the fixtures above.
@@ -16755,6 +16885,39 @@ Optional
   OK      tzdata        2026.3
 
 Result: OK
+Binary broker formats
+¶
+shape emit
+and
+shape stream
+accept
+--event-format avro
+or
+--event-format protobuf
+for Kafka and Event Hubs. For plain binary writes, set
+--sink-config kafka.schema_file=events.avsc
+(Avro), or
+--sink-config kafka.schema_file=events.proto --sink-config kafka.message=package.Message
+(Protobuf). Replace
+kafka
+with
+eventhubs
+for Event Hubs. These modes add no
+registry prefix. Both require a flat envelope. The source APIs use
+format="avro"
+or
+format="protobuf"
+with the same
+schema_file
+and
+message
+options;
+schema=pyarrow.schema(...)
+pins the reader schema and counts rejected rows.
+See
+the binary format guide
+for
+nested types, registry schema evolution and Azure Schema Registry options.
 PostgreSQL and MySQL profiling
 ¶
 Install the database plugin and its driver extra.
@@ -16878,6 +17041,39 @@ shape stream-profile URI --with-key --with-headers --with-timestamp
 reads metadata. The existing
 --option nested=false
 selects JSON-text maps.
+BigQuery profiling and generation
+¶
+The experimental database plugin extra
+sqllocks-shape-databases[bigquery]
+adds
+bigquery://PROJECT/DATASET?location=US
+to
+shape profile
+and
+shape generate --to
+.
+Add
+&table=T
+to read one table. Dataset profiling accepts
+--tables T,U
+and
+--sample-rows N
+(default 1000; 0 catalog only), and saves the W9-01 sampling metadata.
+Configure ADC or
+GOOGLE_APPLICATION_CREDENTIALS
+;
+--source-config credentials=env://NAME
+and
+--sink-config bigquery.credentials=env://NAME
+select references to service-account JSON.
+The URI option
+max_bytes_billed=1073741824
+selects the query limit; the default is 1 GiB.
+Every query is dry-run checked. Row counts come from table metadata and distributions
+from bounded system samples.
+--table-prefix
+also applies to BigQuery generation.
+Account execution requires owner validation; the offline acceptance uses fake SDK responses.
 Report a problem with this page
 
 ## CLI stability: the promise for 1.x
@@ -20791,7 +20987,7 @@ shape
 plugins
 list
 Output (exit 0)
-187 plugin(s)
+191 plugin(s)
   shape.behaviors:entity_lifecycle        unloaded [sqllocks-shape-behavior]
   shape.behaviors:equipment_maintenance   unloaded [sqllocks-shape-behavior]
   shape.behaviors:event_sequence          unloaded [sqllocks-shape-behavior]
@@ -20889,6 +21085,7 @@ Output (exit 0)
   shape.reports:json                      unloaded [sqllocks-shape]
   shape.reports:md                        unloaded [sqllocks-shape]
   shape.sinks:abfss                       unloaded [sqllocks-shape]
+  shape.sinks:bigquery                    unloaded [sqllocks-shape-databases]
   shape.sinks:csv                         unloaded [sqllocks-shape]
   shape.sinks:databricks                  unloaded [sqllocks-shape-databases]
   shape.sinks:dbt-seeds                   unloaded [sqllocks-shape-dbt]
@@ -20898,6 +21095,7 @@ Output (exit 0)
   shape.sinks:fabric-mirror               unloaded [sqllocks-shape]
   shape.sinks:fhir-bundle                 unloaded [sqllocks-shape-healthcare-standards]
   shape.sinks:fhir-ndjson                 unloaded [sqllocks-shape-healthcare-standards]
+  shape.sinks:iceberg                     unloaded [sqllocks-shape]
   shape.sinks:ipc                         unloaded [sqllocks-shape]
   shape.sinks:jsonl                       unloaded [sqllocks-shape]
   shape.sinks:mysql                       unloaded [sqllocks-shape-databases]
@@ -20918,12 +21116,14 @@ Output (exit 0)
   shape.sinks:x12-837i                    unloaded [sqllocks-shape-healthcare-standards]
   shape.sinks:x12-837p                    unloaded [sqllocks-shape-healthcare-standards]
   shape.sources:abfss                     unloaded [sqllocks-shape]
+  shape.sources:bigquery                  unloaded [sqllocks-shape-databases]
   shape.sources:csv                       unloaded [sqllocks-shape]
   shape.sources:databricks                unloaded [sqllocks-shape-databases]
   shape.sources:delta                     unloaded [sqllocks-shape]
   shape.sources:duckdb                    unloaded [sqllocks-shape-integrations]
   shape.sources:eventhouse                unloaded [sqllocks-shape-fabric]
   shape.sources:hl7v2                     unloaded [sqllocks-shape-healthcare-standards]
+  shape.sources:iceberg                   unloaded [sqllocks-shape]
   shape.sources:ipc                       unloaded [sqllocks-shape]
   shape.sources:json                      unloaded [sqllocks-shape]
   shape.sources:jsonl                     unloaded [sqllocks-shape]
@@ -26476,9 +26676,7 @@ big-endian schema id, then the payload (Protobuf adds the message-index list
 as Confluent's serializers do). The message key stays
 <table>/<seq>
 (D-12) and the headers are
-unchanged. Only
-kafka://
-takes a registry format: any other target refuses it (exit 2).
+unchanged. Kafka supports all four formats; Event Hubs supports JSON, Avro and Protobuf.
 Install the Kafka plugin's
 [avro]
 extra first. This example uses the workflow's disposable broker and a Schema Registry with HTTP Basic authentication. The runner verifies that an unauthenticated request returns 401 before emitting. The loopback HTTP registry is for the isolated container example; use HTTPS outside it.
@@ -28587,6 +28785,134 @@ shape emit: ALERT [error] score-low: overall: live score 76.34 < 85 after 21,750
 shape emit: 21,750 events delivered, offset 21,750 of 21,750, complete, 52,526 events/s
 shape emit: live fidelity 76.34 over 9 tables, 3 alerts, FAILED: overall score 76.34 < 85; table address: score 65.93 < 70; table customer: score 62.89 < 70
 This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.
+Local binary schemas and nested events
+¶
+Avro and Protobuf work on both Kafka and Event Hubs. Set
+event_format=avro
+and
+schema_file=events.avsc
+, or
+event_format=protobuf
+,
+schema_file=events.proto
+and
+message=package.Message
+. These local-schema modes send
+plain binary bytes,
+with no registry wire-format prefix
+. Protobuf uses the built-in proto3 parser;
+no
+protoc
+executable is needed. A schema mismatch names the field and stops
+before any event from that batch is sent. Local schemas describe the data fields;
+Shape's
+_shape_*
+fields are included only when declared in the schema.
+Local schema matching allows same-sign integer widening and unsigned-to-signed
+widening only when the destination is wider. Narrowing, signed-to-unsigned
+conversion, and uint64-to-Avro-long are refused at preflight. Registry-derived
+Avro retains its per-value uint64 overflow check. UUID extension fields map to
+wire strings; Avro logical UUIDs read as strings, including in nested fields.
+For CLI writes, use
+--event-format avro
+with
+--sink-config kafka.schema_file=events.avsc
+, or the same key under
+eventhubs
+.
+Protobuf also needs
+--sink-config kafka.message=package.Message
+(or
+eventhubs.message
+). Binary writes require the
+flat
+envelope. Install the plugin's
+[avro]
+or
+[protobuf]
+extra for the selected format.
+The source API accepts
+format="avro", schema_file="events.avsc"
+or
+format="protobuf", schema_file="events.proto", message="package.Message"
+on
+KafkaStreamSource.read(...)
+and
+EventHubsStreamSource.read(...)
+.
+Kafka Avro reads can instead use
+schema_registry_url="https://registry"
+, with
+schema_registry_username
+and a separately supplied
+schema_registry_password
+for basic authentication. Never put credentials in a URI. Each message's writer
+schema id is resolved and cached for the read. A reader
+schema=pyarrow.schema(...)
+pins the returned batch schema. Malformed messages increment
+undecodable
+;
+rows that do not fit the reader schema increment
+rejected
+. Their offsets advance.
+on_error="raise"
+stops at the first such message. Without a reader schema, binary batches follow the writer schemas; compatible
+numeric changes are promoted. Distinct writer ids form separate batches so
+incompatible writer types retain their values. JSON keeps its existing first-batch schema.
+For Protobuf integer event timestamps encoded in microseconds, pass
+event_time_unit="us"
+; Avro logical timestamps are read directly.
+Arrow
+Avro
+Protobuf
+struct
+record
+message
+list
+array
+repeated
+field
+map
+map with string keys
+map
+field
+Nested records, lists and maps retain these Arrow types on read and write.
+Protobuf event schemas declare their types in one file; recursive messages,
+oneof
+,
+Any
+and extensions are unsupported. Avro unions allow
+null
+plus
+one value type. Protobuf repeated/map containers and scalars without presence
+cannot represent null; such values are refused rather than changed to empty
+collections or scalar defaults. JSON Schema on Event Hubs is unsupported.
+For Azure Schema Registry, install
+sqllocks-shape-eventhubs[schema-registry,entra]
+.
+Writes use
+event_format=avro
+,
+schema_file
+,
+schema_registry_url=<namespace.servicebus.windows.net>
+and
+schema_registry_group=<group>
+. The CLI keys have the
+eventhubs.
+prefix.
+Reads use
+format="avro", schema_registry_url="namespace.servicebus.windows.net"
+.
+The SDK uses Microsoft Entra credentials (or an explicit API
+credential
+) and
+caches schemas by the
+avro/binary+<schema-id>
+content type; Azure messages use
+that content type with the Avro binary body, rather than the Kafka wire prefix.
+The account needs permission on the registry group. Azure live validation requires
+Owner-provided account access and is pending; offline tests use an encoder fake.
 Message metadata (W9-08)
 ¶
 Both broker emitters accept
@@ -38600,6 +38926,14 @@ extension)
 Delta table
 lost
 Only local tools are tested; Fabric-side preservation is not.
+Iceberg sink
+fingerprint=True
+(or a run context) stores a versioned
+shape.fingerprint
+record in each committed snapshot summary. The fingerprint
+covers that micro-batch, including restored Arrow widths, rather than the cumulative
+table. Inspect the selected snapshot's summary property through PyIceberg. This
+adds no file-footer or catalog credential information to the fingerprint.
 Report a problem with this page
 
 ## Game days
@@ -47464,6 +47798,8 @@ sign
 ,
 delta
 ,
+iceberg
+,
 delta-fallback
 ,
 excel
@@ -47590,7 +47926,7 @@ Optional
   OK      tzdata        2026.3
 
 Result: OK
-[{"detail": "", "name": "artifact", "passed": true}, {"detail": "", "name": "capture", "passed": true}, {"detail": "", "name": "generation", "passed": true}, {"detail": "", "name": "SH2-001", "passed": true}, {"detail": "", "name": "SH2-002", "passed": true}, {"detail": "", "name": "SH2-003", "passed": true}, {"detail": "", "name": "SH2-004", "passed": true}, {"detail": "", "name": "SH2-005", "passed": true}, {"detail": "", "name": "SH2-006", "passed": true}, {"detail": "", "name": "SH2-007", "passed": true}, {"detail": "", "name": "SH2-008", "passed": true}, {"detail": "", "name": "SH2-009", "passed": true}, {"detail": "", "name": "SH2-010", "passed": true}, {"detail": "", "name": "SH2-011", "passed": true}, {"detail": "", "name": "SH2-012", "passed": true}, {"detail": "", "name": "SH2-013", "passed": true}, {"detail": "", "name": "SH2-014", "passed": true}, {"detail": "", "name": "SH2-015", "passed": true}, {"detail": "", "name": "SH2-016", "passed": true}, {"detail": "", "name": "SH2-017", "passed": true}, {"detail": "", "name": "SH2-018", "passed": true}, {"detail": "", "name": "SH2-019", "passed": true}, {"detail": "", "name": "SH2-020", "passed": true}, {"detail": "", "name": "SH2-021", "passed": true}, {"detail": "", "name": "SH2-022", "passed": true}, {"detail": "", "name": "SH2-023", "passed": true}, {"detail": "", "name": "SH2-024", "passed": true}, {"detail": "", "name": "SH2-025", "passed": true}, {"detail": "", "name": "SH2-026", "passed": true}, {"detail": "", "name": "SH2-027", "passed": true}, {"detail": "", "name": "SH2-028", "passed": true}, {"detail": "", "name": "SH2-029", "passed": true}, {"detail": "", "name": "SH2-030", "passed": true}, {"detail": "", "name": "SH2-031", "passed": true}, {"detail": "", "name": "SH2-032", "passed": true}]
+[{"detail": "", "name": "artifact", "passed": true}, {"detail": "", "name": "capture", "passed": true}, {"detail": "", "name": "generation", "passed": true}, {"detail": "", "name": "SH2-001", "passed": true}, {"detail": "", "name": "SH2-002", "passed": true}, {"detail": "", "name": "SH2-003", "passed": true}, {"detail": "", "name": "SH2-004", "passed": true}, {"detail": "", "name": "SH2-005", "passed": true}, {"detail": "", "name": "SH2-006", "passed": true}, {"detail": "", "name": "SH2-007", "passed": true}, {"detail": "", "name": "SH2-008", "passed": true}, {"detail": "", "name": "SH2-009", "passed": true}, {"detail": "", "name": "SH2-010", "passed": true}, {"detail": "", "name": "SH2-011", "passed": true}, {"detail": "", "name": "SH2-012", "passed": true}, {"detail": "", "name": "SH2-013", "passed": true}, {"detail": "", "name": "SH2-014", "passed": true}, {"detail": "", "name": "SH2-015", "passed": true}, {"detail": "", "name": "SH2-016", "passed": true}, {"detail": "", "name": "SH2-017", "passed": true}, {"detail": "", "name": "SH2-018", "passed": true}, {"detail": "", "name": "SH2-019", "passed": true}, {"detail": "", "name": "SH2-020", "passed": true}, {"detail": "", "name": "SH2-021", "passed": true}, {"detail": "", "name": "SH2-022", "passed": true}, {"detail": "", "name": "SH2-023", "passed": true}, {"detail": "", "name": "SH2-024", "passed": true}, {"detail": "", "name": "SH2-025", "passed": true}, {"detail": "", "name": "SH2-026", "passed": true}, {"detail": "", "name": "SH2-027", "passed": true}, {"detail": "", "name": "SH2-028", "passed": true}, {"detail": "", "name": "SH2-029", "passed": true}, {"detail": "", "name": "SH2-030", "passed": true}, {"detail": "", "name": "SH2-031", "passed": true}, {"detail": "", "name": "SH2-032", "passed": true}, {"detail": "", "name": "SH2-033", "passed": true}]
 Example 2
 ¶
 pip
@@ -49988,7 +50324,7 @@ token
 ssn
 --json
 Output (exit 0)
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
   Read customers: 20 rows x 10 columns
   Read orders: 100 rows x 23 columns
@@ -50020,7 +50356,7 @@ Masking result
     Masked: customer_email (email), region (state), zip (zip), city (city), state (state), iban (iban), token (ssn), ssn (ssn)
 
 Written 2 PARQUET files to masked/
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"files": ["masked/orders.csv"], "keyed": false, "columns_masked": {"orders": ["customer_email", "region", "zip", "city", "state", "iban", "token", "ssn"]}, "column_types": {"orders": {"customer_email": "email", "region": "state", "zip": "zip", "city": "city", "state": "state", "iban": "iban", "token": "ssn", "ssn": "ssn"}}, "stats": {"orders": {"total_cols": 23, "masked_cols": 8, "rows": 100}}, "format": "shape-result", "version": 1, "command": "mask", "exit_code": 0}
 Example 3
@@ -50051,7 +50387,7 @@ mask
 mask.key
 # chmod 600
 Output (exit 0)
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
   Read customers: 20 rows x 10 columns
   Read orders: 100 rows x 23 columns
@@ -50064,7 +50400,7 @@ Masking result
     Masked: customer_email (email), region (state), zip (zip), city (city), state (state), iban (iban), token (ssn), ssn (ssn)
 
 Written 2 CSV files to masked/
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
   Read customers: 20 rows x 10 columns
   Read orders: 100 rows x 23 columns
@@ -51018,12 +51354,12 @@ orders
 parity.json
 Output (exit 0)
 shape: note: /tmp/docs-reference-runs/PARITY/shape.yml defines 2 sources and none was selected: its source settings were not applied (use --source NAME)
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "f5aa5cd05dbb670cd59c18c96342ca86e548132c25fd07e343a6cd0cba95f772", "written": "prod.shape"}
 shape: note: prod.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
 {"unsafe": false, "written": "prod.safe.json"}
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 A: prod.safe.json (safe-profile, 2a9adfaef97e)
 B: dev-data (data, 8c68726c18f9)
@@ -52308,16 +52644,16 @@ orders.full.shape
 full
 # real values: do not commit or share
 Output (exit 0)
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5", "written": "orders.shape"}
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "bca50b3fa97121a44d1c6395f800a57600c80d2ed40fa9348e4f16a0b7284a17", "written": "orders.shape"}
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5", "written": "orders.shape"}
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 shape: warning: --capture full keeps real values in orders.full.shape; do not commit or share it
 {"shape_content_id": "0320083af8a193c72f4e302aa1bd6484eee33ddba696c5a5e3543088e9ffca2d", "written": "orders.full.shape"}
@@ -52348,7 +52684,7 @@ csv
 -o
 out
 Output (exit 0)
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5", "vault": "orders.shapevault", "written": "orders.shape"}
 shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
@@ -55239,8 +55575,28 @@ shape profile
 reads them (Shape 0.9.1 stopped with
 unhashable type: nested Arrow column
 ). A nested column is
-recorded as a whole. Nothing inside its values is profiled: a struct's fields, a list's elements and a map's keys and
-values have no statistics of their own.
+recorded as a whole, with optional
+children
+underneath it. Each struct field, list element
+(
+[]
+) and map key/value (
+{key}
+,
+{value}
+) has its ordinary statistics and a
+path
+, such as
+$.address.city
+or
+$.items[].price
+. Child
+row_count
+excludes null parents; list elements
+include null elements. A struct field's
+present
+rate counts non-null fields among its non-null
+parent structs (null for no parents). Names containing punctuation use JSON-quoted brackets.
 The column has
 dtype
 nested
@@ -55261,8 +55617,8 @@ max_value
 mean
 ,
 pattern
-or value counts, and it is never a key. Three keys
-only a nested column has:
+or value counts, and it is never a key. Additional keys
+a nested column carries:
 Key
 Meaning
 arrow_type
@@ -55542,7 +55898,7 @@ raw.shape
 --no-header
 # columns are f0, f1, ...
 Output (exit 0)
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: export.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: export.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "6d093e05eddaf930c70203ffa852139c4007a26df4b083236be3515bb40f059d", "written": "export.shape"}
 {"shape_content_id": "a605edae085e7c45531e83ad09147e7ab2b5b8237d5c8494cc8b0ecc15dc112a", "written": "raw.shape"}
@@ -55573,10 +55929,10 @@ members.shape
 off
 # read every column as text
 Output (exit 0)
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "d3fd1943d642e07d8b12312432fc4bd78c95d3f2d4575d052ddb8f9c1623f6ca", "written": "members.shape"}
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "0f819d1eb8d21d6e3383a0d2333bcf76bf04dc31291fe1f27d6adcde7913cc30", "written": "members.shape"}
 {"shape_content_id": "5983c8d28223c591e9620e2bc7f9bea100abbf66e0dfa41361f50d888c66a4f9", "written": "members.shape"}
@@ -55627,19 +55983,84 @@ shop.shape
 %
 # each table
 Output (exit 0)
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 shape: note: profiled a random sample of 100 of 100 rows (seed 42)
 {"shape_content_id": "2dfcbd3536f3d02c1b30242e1c213f718f9793e9ee16ea6e17ab38776e25ba09", "written": "orders.shape"}
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 shape: note: profiled a systematic sample of 10 of 100 rows (seed 7)
 {"shape_content_id": "b5e327e3c20efdddc04d35b81ea4c6a5a57549389a1580eb139d571f2d904aef", "written": "orders.shape"}
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 shape: note: profiled a random sample of 4 of 20 rows (seed 42), table customers
 shape: note: profiled a random sample of 20 of 100 rows (seed 42), table orders
 {"shape_content_id": "e61f01b12dfbf067d390c120e7e78ec5a08e94c833ebdabb71f70c57ce96baf3", "written": "shop.shape"}
+Child depth, streams and privacy
+¶
+shape profile INPUT --max-depth 8 --json profile.json
+includes up to eight child
+levels, as does
+shape.profile(source, max_depth=8)
+. Zero keeps the existing opaque
+record. Depth must be an integer from 0 to 64. Older profiles without
+children
+load unchanged. IPC/Arrow files (
+.ipc
+,
+.arrow
+,
+.feather
+) are also accepted.
+length
+contains the ordinary numeric statistics of non-null list/map lengths.
+Exact files and tables use exact statistics. Bounded engine profiles and stream
+windows use T-14 sketches for every child and length distribution, record their
+error models and retain those sketches through checkpoints and window merges.
+An older checkpoint without child sketches stays opaque after restore; replay
+from data to capture children rather than inventing historical child counts.
+Fixed-size binary and fixed-binary-backed extension children retain their Arrow type, null/presence
+counts and distinct counts as opaque scalar leaves. Their text and numeric value
+statistics are unavailable. Distinct counts are exact for files and tables and use
+the existing bounded cardinality sketch for streaming profiles.
+For a JSON stream,
+shape stream-profile events.jsonl -o stream.json --option nested=true
+decodes nested payload objects/lists as Arrow fields. Without that option payloads
+retain the existing JSON-text behavior; broker header metadata retains its existing
+representation. In Python use
+decode_messages(messages, nested=True)
+.
+shape diff
+reports child additions/removals and statistic changes by path; list
+length distributions use the existing KS-distance threshold and minimum-row rule,
+including distributions whose means agree.
+shape check
+accepts both
+items[].price
+and
+$.items[].price
+column rules, such as
+{"min": 4}
+.
+shape explain
+names those paths. JSON summaries and bridge
+profile_show
+keep
+children under their column. Generation does not use the child distributions.
+Safe captures suppress child values, extremes, quantiles, means and standard
+deviations conservatively, even if repeated elements make an apparent large cohort.
+Counts, types, null/presence rates and length aggregates remain available. Full
+capture is explicit.
+safe_scan
+walks children using the existing fail-closed
+rules; safe captures omit the opaque nested length extreme pair those rules deny.
+Generation from these captures uses the existing public default of one to three
+elements per variable-length list/map, without reconstructing suppressed extremes
+from retained length bins. Full profiles retain their recorded length distribution.
+Nested comparison workloads whose authenticated 0.9.1 recording is an error are
+reported separately as NOT COMPARABLE through the reviewed comparison registry.
+They never count as passing parity; workloads with recorded values keep unchanged
+comparisons and tolerances. No recording is refreshed.
 Report a problem with this page
 
 ## The project file:
@@ -57224,7 +57645,7 @@ orders.shape
 contract.json
 # exit 0: the contract passes on that profile
 Output (exit 0)
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5", "written": "orders.shape"}
 shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
@@ -58587,7 +59008,7 @@ dataset iso_3166_1: 249 rows, fields alpha2, alpha3, numeric, name
   alpha2=AF  alpha3=AFG  numeric=004  name=Afghanistan
   alpha2=AG  alpha3=ATG  numeric=028  name=Antigua & Barbuda
   alpha2=AI  alpha3=AIA  numeric=660  name=Anguilla
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "074a5609a612b6daef9bde0067ddb5aadd0026c9802ae6c33fa0661cccdbf6cb", "written": "orders.shape"}
 Example 4
@@ -58631,7 +59052,7 @@ country
 =
 iso3166_alpha2
 Output (exit 0)
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "2de35ceba8a7ba7e641853441ebe290d23fae5ef57bea5ea75e28497d6caf21a", "written": "orders.shape"}
 Report a problem with this page
@@ -66061,10 +66482,10 @@ release.pub
 # also check, diff, query, plan
 Output (exit 0)
 {"encrypted": true, "key_id": "d03e8cd9841b3fe6", "private_key": "release.key", "public_key": "release.pub"}
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: data.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: data.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "9865171cc49d7241aa6d994f131a40e7992a79fe1ebb537dbdd52b7dedab1d9a", "signed_by": "d03e8cd9841b3fe6", "written": "data.shape"}
-<checkout>/src/shape/profile/reference/sources.py:430: UserWarning: data.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+<checkout>/src/shape/profile/reference/sources.py:436: UserWarning: data.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
   kind, table = _read_files([path], threads, csv)
 {"shape_content_id": "47e391816f192210bfa00f6f99d7c615c56814645610ce7f24841e9ec8f286ea", "signed_by": "d03e8cd9841b3fe6", "written": "data.shape"}
 {"key_id": "d03e8cd9841b3fe6", "signed": "data.shape"}
@@ -67679,6 +68100,134 @@ shape.plugins.kit.check_sink
 and
 shape conformance
 .
+Apache Iceberg
+¶
+Install
+pip install 'sqllocks-shape[iceberg]'
+. The optional extra uses
+pyiceberg[pyarrow,sql-sqlite,pyiceberg-core]>=0.9
+; it loads only when Iceberg is used.
+iceberg+file:///warehouse/ns/items
+creates a local SQLite catalog at
+/warehouse/catalog.db
+on first write.
+iceberg://catalog/ns/items
+uses a named
+catalog from
+~/.pyiceberg.yaml
+, or options
+catalog_type
+(
+rest
+,
+sql
+,
+glue
+,
+hive
+),
+uri
+and
+warehouse
+. Glue and Hive option acceptance is untested against
+services.
+credential
+and
+token
+are references (
+env://NAME
+, private
+file://PATH
+or
+kv://VAULT/NAME
+); credentials and query parameters are refused in URIs.
+IcebergSink.write(uri, table, batches, **options)
+writes the table named by the
+URI. A table URI accepts one generated table per target. Default mode is
+overwrite
+;
+append
+preserves rows. Format version is 2;
+format_version=1
+is
+accepted. Schema differences refuse the write naming the column, with no evolution.
+partition_by
+accepts
+id
+,
+day(ts)
+,
+month(ts)
+,
+bucket(16, id)
+and
+truncate(4, s)
+; types and positive widths are checked before catalog writes.
+commit_rows
+and
+commit_seconds
+commit one snapshot per micro-batch; the first
+snapshot applies the mode, later snapshots append.
+fingerprint=True
+(or a run
+context) sets snapshot summary
+shape.fingerprint
+for that batch.
+Arrow
+Iceberg
+int8, int16, int32
+int
+int64, uint32
+long
+uint64
+decimal(20,0)
+float32, float64
+float, double
+decimal precision <= 38
+decimal(p,s)
+string, binary, bool, date
+string, binary, boolean, date
+time64
+time (microseconds)
+zoned / zone-less timestamp
+timestamptz (UTC) / timestamp (microseconds)
+binary field with
+uuid=true
+metadata
+uuid
+list, struct, map
+native list, struct, map
+Original widths and field metadata are recorded in field documentation and a
+shape.iceberg.arrow-schema
+format/version-1 table property. The source restores
+widths recursively; temporal values normalize to microseconds and zoned timestamps
+to UTC. Nanosecond timestamps/time refuse the column unless
+truncate_ns=True
+explicitly allows truncation. Decimal precision above 38 is refused.
+IcebergSource.read
+scans Arrow batches.
+snapshot_id
+(integer) or
+as_of
+(ISO timestamp), mutually exclusive, selects an earlier snapshot. Profile provenance
+records catalog, table identifier, snapshot id and snapshot summary
+total-records
+.
+A namespace URI (
+iceberg://catalog/ns
+or
+iceberg+file:///warehouse/ns
+) profiles
+all its tables. Nested columns follow opaque profiling semantics. Row-level deletes,
+MERGE, format 3, branches/tags, evolution and maintenance are unsupported.
+UUID logical fields may use
+uuid=true
+metadata on 16-byte binary or
+shape.type=uuid
+metadata on strings; native Arrow UUID fields are accepted too.
+String UUIDs read back in canonical hyphenated form. Invalid UUID values refuse the
+column without quoting its data. Decimal scale must be between zero and precision,
+as required by Iceberg; unsupported scales are rejected before catalog writes.
 Complete local run
 ¶
 Run these commands in order after preparing the fixtures above.
@@ -67705,6 +68254,27 @@ append
 Output (exit 0)
 Wrote 21,750 rows in 9 tables to duckdb:///out/retail.duckdb (0.52s)
 shape emit: 10,000 events delivered, offset 10,000 of 21,750, max-events, 40,123 events/s
+BigQuery
+¶
+The experimental
+bigquery
+sink accepts
+bigquery://PROJECT/DATASET?location=US
+through
+shape generate --to
+. Install
+sqllocks-shape-databases[bigquery]
+and configure Google ADC
+or a credentials reference. Writes use bounded Parquet load jobs;
+commit_rows
+makes load
+results visible while a stream runs. The default mode refuses an existing table. Query
+jobs are dry-run checked against
+max_bytes_billed
+(default 1 GiB). See the
+database plugin README
+for sign-in,
+types, write modes and partial failure behavior. Real account execution needs owner validation.
 Oracle
 ¶
 The
@@ -76377,7 +76947,7 @@ Output (exit 0)
   shape.detectors:presidio   unloaded [sqllocks-shape-integrations]
   shape.detectors:us_ssn     unloaded [sqllocks-shape]
 shape: error: no plugin 'shape.detectors:iban' (see `shape plugins list`)
-plugin API 1.0: 187 plugin(s)
+plugin API 1.0: 191 plugin(s)
   ok    shape.behaviors:entity_lifecycle [sqllocks-shape-behavior]
   ok    shape.behaviors:equipment_maintenance [sqllocks-shape-behavior]
   ok    shape.behaviors:event_sequence [sqllocks-shape-behavior]
@@ -76475,6 +77045,7 @@ plugin API 1.0: 187 plugin(s)
   ok    shape.reports:json [sqllocks-shape]
   ok    shape.reports:md [sqllocks-shape]
   ok    shape.sinks:abfss [sqllocks-shape]
+  ok    shape.sinks:bigquery [sqllocks-shape-databases]
   ok    shape.sinks:csv [sqllocks-shape]
   ok    shape.sinks:databricks [sqllocks-shape-databases]
   ok    shape.sinks:dbt-seeds [sqllocks-shape-dbt]
@@ -76484,6 +77055,7 @@ plugin API 1.0: 187 plugin(s)
   ok    shape.sinks:fabric-mirror [sqllocks-shape]
   ok    shape.sinks:fhir-bundle [sqllocks-shape-healthcare-standards]
   ok    shape.sinks:fhir-ndjson [sqllocks-shape-healthcare-standards]
+  ok    shape.sinks:iceberg [sqllocks-shape]
   ok    shape.sinks:ipc [sqllocks-shape]
   ok    shape.sinks:jsonl [sqllocks-shape]
   ok    shape.sinks:mysql [sqllocks-shape-databases]
@@ -76504,12 +77076,14 @@ plugin API 1.0: 187 plugin(s)
   ok    shape.sinks:x12-837i [sqllocks-shape-healthcare-standards]
   ok    shape.sinks:x12-837p [sqllocks-shape-healthcare-standards]
   ok    shape.sources:abfss [sqllocks-shape]
+  ok    shape.sources:bigquery [sqllocks-shape-databases]
   ok    shape.sources:csv [sqllocks-shape]
   ok    shape.sources:databricks [sqllocks-shape-databases]
   ok    shape.sources:delta [sqllocks-shape]
   ok    shape.sources:duckdb [sqllocks-shape-integrations]
   ok    shape.sources:eventhouse [sqllocks-shape-fabric]
   ok    shape.sources:hl7v2 [sqllocks-shape-healthcare-standards]
+  ok    shape.sources:iceberg [sqllocks-shape]
   ok    shape.sources:ipc [sqllocks-shape]
   ok    shape.sources:json [sqllocks-shape]
   ok    shape.sources:jsonl [sqllocks-shape]
@@ -78521,6 +79095,16 @@ delta+abfss://
 in OneLake and ADLS Gen2 (extra
 [azure]
 for cloud tables)
+shape.sources
+iceberg
+Local SQLite/file or named catalog native Iceberg scans; optional
+[iceberg]
+.
+shape.sinks
+iceberg
+Native Iceberg tables, partition transforms and snapshots; optional
+[iceberg]
+.
 shape.sinks
 csv
 CSV file
@@ -88199,6 +88783,10 @@ time_column
 =
 None
 ,
+max_depth
+=
+8
+,
 sample_rows
 =
 None
@@ -88311,6 +88899,10 @@ None
 time_column
 =
 None
+,
+max_depth
+=
+8
 ,
 sample_rows
 =
@@ -88483,6 +89075,9 @@ sampling
 (
 docs/PROFILING_NOTES.md
 ).
+max_depth
+limits nested struct/list/map child statistics (default 8; 0 keeps
+opaque columns). Child paths and statistics stay below their owning column.
 time_column
 names the date or timestamp column that each numeric column's
 seasonality
@@ -91106,6 +91701,8 @@ shape.builtins.sinks
 Public names:
 SHAPE_API
 ,
+IcebergSink
+,
 AbfssSink
 ,
 CsvSink
@@ -91141,6 +91738,9 @@ SHAPE_API
 '1.0'
 module-attribute
 ¶
+IcebergSink
+¶
+Write Arrow batches to an optional local or named Iceberg catalog.
 AbfssSink
 ¶
 Tables as files in OneLake or ADLS Gen2, by
@@ -91268,6 +91868,8 @@ shape.builtins.sources
 Public names:
 SHAPE_API
 ,
+IcebergSource
+,
 AbfssSource
 ,
 CsvSource
@@ -91302,6 +91904,9 @@ SHAPE_API
 '1.0'
 module-attribute
 ¶
+IcebergSource
+¶
+Read native Iceberg snapshots and profile a table or namespace.
 AbfssSource
 ¶
 Files in OneLake and ADLS Gen2, by
@@ -111430,16 +112035,16 @@ usage: shape profile [-h] [-o OUT] [--sign KEY] [--passphrase-env VAR] [--passph
                      [--classify COLUMN=LEVEL] [--vault OUT.shapevault]
                      [--vault-policy POLICY.json] [--kek REF] [--dataset] [--sketches]
                      [--univariate] [--multivariate] [--name NAME] [--delimiter CHAR]
-                     [--encoding NAME] [--quotechar CHAR] [--header | --no-header]
-                     [--string-columns NAMES] [--types FILE.json] [--infer-types {auto,off}]
-                     [--decisions DECISIONS.json] [--version N] [--as-of TIMESTAMP]
-                     [--fail-on-empty] [--reference-pair COLS=REFERENCE] [--validate COLUMN=KIND]
-                     [--joint | --no-joint] [--time-column COL] [--sheet SHEET] [--include-hidden]
-                     [--sample-rows SAMPLE_ROWS] [--tables TABLES] [--sample N|P%]
-                     [--sample-method {random,systematic,head}] [--sample-seed S]
-                     [--html REPORT.html] [--json SUMMARY.json] [--project FILE] [--no-project]
-                     [--auth {cli,msi,spn,sql,device-code,fabric,kerberos}] [--tenant-id GUID]
-                     [--client-id GUID] [--client-secret REF] [--sql-user NAME]
+                     [--max-depth MAX_DEPTH] [--encoding NAME] [--quotechar CHAR]
+                     [--header | --no-header] [--string-columns NAMES] [--types FILE.json]
+                     [--infer-types {auto,off}] [--decisions DECISIONS.json] [--version N]
+                     [--as-of TIMESTAMP] [--fail-on-empty] [--reference-pair COLS=REFERENCE]
+                     [--validate COLUMN=KIND] [--joint | --no-joint] [--time-column COL]
+                     [--sheet SHEET] [--include-hidden] [--sample-rows SAMPLE_ROWS]
+                     [--tables TABLES] [--sample N|P%] [--sample-method {random,systematic,head}]
+                     [--sample-seed S] [--html REPORT.html] [--json SUMMARY.json] [--project FILE]
+                     [--no-project] [--auth {cli,msi,spn,sql,device-code,fabric,kerberos}]
+                     [--tenant-id GUID] [--client-id GUID] [--client-secret REF] [--sql-user NAME]
                      [--sql-password REF] [--keytab REF] [--principal NAME@REALM] [--dry-run]
                      SRC
 
@@ -111493,6 +112098,8 @@ options:
                         stable name)
   --delimiter CHAR      CSV field delimiter (default: sniffed among comma, semicolon, tab and
                         pipe)
+  --max-depth MAX_DEPTH
+                        nested child depth (default: 8; 0 keeps opaque columns)
   --encoding NAME       CSV text encoding (default: utf-8)
   --quotechar CHAR      CSV quote character (default: ")
   --header, --no-header
@@ -112838,8 +113445,8 @@ options:
                         flat rows (default) or CloudEvents 1.0 structured JSON
   --event-format {json,avro,protobuf,json-schema}
                         the message format of a kafka:// target: json (default: the flat event's
-                        JSON), or avro, protobuf or json-schema through a schema registry (--sink-
-                        config kafka.schema_registry_url=URL; see docs/EMIT.md)
+                        JSON), or Avro or Protobuf from a schema file, or Kafka registry formats
+                        (--sink-config NAME.schema_file=PATH; see docs/EMIT.md)
   --dry-run             resolve everything the run would use (target, tables, destinations and
                         their plugins, checkpoint state, rate schedule, drift plan) and print it,
                         opening no connection, writing no file and sending no event; exit 2 when
@@ -113106,8 +113713,8 @@ options:
                         flat rows (default) or CloudEvents 1.0 structured JSON
   --event-format {json,avro,protobuf,json-schema}
                         the message format of a kafka:// target: json (default: the flat event's
-                        JSON), or avro, protobuf or json-schema through a schema registry (--sink-
-                        config kafka.schema_registry_url=URL; see docs/EMIT.md)
+                        JSON), or Avro or Protobuf from a schema file, or Kafka registry formats
+                        (--sink-config NAME.schema_file=PATH; see docs/EMIT.md)
   --dry-run             resolve everything the run would use (target, tables, destinations and
                         their plugins, checkpoint state, rate schedule, drift plan) and print it,
                         opening no connection, writing no file and sending no event; exit 2 when
@@ -117035,6 +117642,18 @@ SH2-007
 A Shape MUST NOT retain original source rows.
 SH2-032
 Profiling the same input in exact mode MUST produce the same document every time.
+Nested child evidence
+¶
+SH2-033
+Nested profiling MUST retain child statistics and paths under their
+  owning column, carry mode-appropriate error evidence, and suppress child values
+  in safe captures independently of repeated element counts.
+Children are optional for older profiles. The depth, path syntax, parent-null
+semantics and consumers are described in
+docs/PROFILING_NOTES.md
+and tracked by
+SHAPE-NESTED-CHILD-001
+.
 The
 .shape
 artifact
