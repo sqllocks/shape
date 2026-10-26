@@ -10,6 +10,8 @@ import importlib
 import json
 import os
 import re
+import subprocess
+import sys
 import tempfile
 import uuid
 from collections.abc import Iterable, Iterator, Mapping
@@ -434,8 +436,22 @@ class BigQuerySink(DatabaseSink):
         disposition = "WRITE_TRUNCATE" if plan.mode == "truncate" else "WRITE_APPEND"
         from shape.scale.jobs import restrict_to_current_user
 
+        def protect_staging(path: Path) -> None:
+            if sys.platform == "win32":
+                # CPython 3.11.10+ mkdir(0700) explicitly grants SYSTEM, Administrators,
+                # and OWNER RIGHTS. Remove only these fresh-directory bootstrap grants;
+                # the final existing helper regrants this identity even when it is SYSTEM.
+                subprocess.run(
+                    ["icacls", str(path), "/remove:g", "*S-1-5-18", "*S-1-5-32-544", "*S-1-3-4"],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    timeout=30,
+                )
+            restrict_to_current_user(path)
+
         with tempfile.TemporaryDirectory(prefix="shape-bigquery-") as folder:
-            restrict_to_current_user(Path(folder))
+            protect_staging(Path(folder))
 
             def flush() -> int:
                 nonlocal disposition
@@ -482,7 +498,7 @@ class BigQuerySink(DatabaseSink):
                 # POSIX modes and the existing Windows ACL helper both fail closed.
                 fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
                 os.close(fd)
-                restrict_to_current_user(path)
+                protect_staging(path)
                 pq.write_table(staged, path)
                 with path.open("rb") as stream:
                     job = conn.load_table_from_file(

@@ -945,6 +945,7 @@ class _FakeBigQueryClient:
         server = self.server
         data = pq.read_table(stream)
         path = str(stream.name)
+        privacy_diagnostics = []
         if sys.platform == "win32":
             from shape.scale.jobs import windows_current_user
 
@@ -953,6 +954,9 @@ class _FakeBigQueryClient:
                     ["icacls", str(target)], capture_output=True, text=True, check=True, timeout=30
                 ).stdout
                 entries = re.findall(r"(\S+):\(", acl.replace(str(target), ""))
+                privacy_diagnostics.append(
+                    {"principal": windows_current_user()[:256], "acl": acl[:2048]}
+                )
                 return (
                     len(entries) == 1
                     and entries[0].rsplit("\\", 1)[-1].casefold()
@@ -960,7 +964,9 @@ class _FakeBigQueryClient:
                     and "(F)" in acl
                 )
 
-            is_private = private(Path(path)) and private(Path(path).parent)
+            file_private = private(Path(path))
+            directory_private = private(Path(path).parent)
+            is_private = file_private and directory_private
         else:
             is_private = (
                 os.stat(path).st_mode & 0o077 == 0
@@ -971,6 +977,7 @@ class _FakeBigQueryClient:
                 "rows": data.num_rows,
                 "path": path,
                 "private": is_private,
+                "privacy_diagnostics": privacy_diagnostics,
                 "format": job_config.source_format,
                 "disposition": job_config.write_disposition,
                 "decimal_target_types": getattr(job_config, "decimal_target_types", None),

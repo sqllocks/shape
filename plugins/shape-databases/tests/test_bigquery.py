@@ -30,7 +30,9 @@ def test_parquet_chunks_private_cleanup_and_declared_key():
     sink = BigQuerySink(connect=server.connect)
     assert sink.write(URI, "items", [batch()], chunk_rows=2, primary_key=["id"]) == 5
     assert [j["rows"] for j in server.loads] == [2, 2, 1]
-    assert all(j["format"] == "PARQUET" and j["private"] for j in server.loads)
+    assert all(j["format"] == "PARQUET" and j["private"] for j in server.loads), [
+        j["privacy_diagnostics"] for j in server.loads
+    ]
     assert all(not Path(j["path"]).exists() for j in server.loads)
     assert any("PRIMARY KEY (`id`) NOT ENFORCED" in q for q, _ in server.queries)
     assert sink.plan(URI, "x", {}).options["chunk_rows"] == 1_000_000
@@ -762,3 +764,61 @@ def test_staging_acl_failure_refuses_load_and_cleans_created_table(monkeypatch, 
     assert not server.loads
     assert "test-project.dataset.items" not in server.tables
     assert protected and all(not path.exists() for path in protected)
+
+
+@pytest.mark.parametrize("fail_target", [None, "directory", "file"])
+@pytest.mark.parametrize("principal", ["current-user", "*S-1-5-18"])
+def test_windows_staging_removes_explicit_python_acl_grants(monkeypatch, fail_target, principal):
+    from types import SimpleNamespace
+
+    import shape_databases.bigquery as bigquery
+
+    from shape.scale import jobs
+
+    python_grants = {"*S-1-5-18", "*S-1-5-32-544", "*S-1-3-4"}
+    grants, commands, paths = {}, [], []
+
+    def inherited_only_helper(path):
+        paths.append(path)
+        grants.setdefault(path, set(python_grants)).add(principal)
+
+    def remove_explicit(command, **kwargs):
+        path = Path(command[1])
+        paths.append(path)
+        assert command[:1] == ["icacls"]
+        assert command[2] == "/remove:g" and set(command[3:]) == python_grants
+        assert kwargs["check"] and kwargs["capture_output"] and kwargs["timeout"] == 30
+        if (fail_target == "directory" and path.is_dir()) or (
+            fail_target == "file" and path.is_file()
+        ):
+            raise OSError("explicit staging ACL unavailable")
+        commands.append(command)
+        grants.setdefault(path, set(python_grants)).difference_update(python_grants)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(jobs, "restrict_to_current_user", inherited_only_helper)
+    monkeypatch.setattr(bigquery, "sys", SimpleNamespace(platform="win32"), raising=False)
+    monkeypatch.setattr(bigquery, "subprocess", SimpleNamespace(run=remove_explicit), raising=False)
+    server = FakeBigQuery()
+
+    def connect(**options):
+        client = server.connect(**options)
+        load = client.load_table_from_file
+
+        def checked_load(stream, table, **kwargs):
+            path = Path(stream.name)
+            assert grants[path] == grants[path.parent] == {principal}
+            return load(stream, table, **kwargs)
+
+        client.load_table_from_file = checked_load
+        return client
+
+    if fail_target is None:
+        assert BigQuerySink(connect=connect).write(URI, "items", [batch()]) == 5
+        assert len(commands) == 2
+    else:
+        with pytest.raises(WriteError, match="explicit staging ACL unavailable") as error:
+            BigQuerySink(connect=connect).write(URI, "items", [batch()])
+        assert error.value.rows_committed == 0
+        assert not server.loads and "test-project.dataset.items" not in server.tables
+    assert paths and all(not path.exists() for path in paths)
