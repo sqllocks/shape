@@ -126,3 +126,84 @@ def test_explicit_feature_preview_without_derived_checks_stays_exact(
     assert protocol["reader_features"] == features
     assert protocol["writer_features"] == features
     assert not (tmp_path / "absent").exists()
+
+
+@pytest.mark.parametrize("as_json", [False, True])
+def test_delta_target_preview_includes_checks_from_later_table(
+    tmp_path, monkeypatch, capsys, as_json
+):
+    source = schema(business_rule=False)
+    source.tables["z_later"] = Table(
+        "z_later", {"id": Column("id", "integer", {"strategy": "sequence"})}
+    )
+    source.business_rules.append(BusinessRule("later_positive", "constraint", "id > 0", "z_later"))
+    monkeypatch.setattr(generation, "load_target", lambda *args: source)
+    monkeypatch.setattr(delta, "_location", lambda *a, **k: pytest.fail("no storage"))
+    monkeypatch.setattr(delta, "_deltalake", lambda: pytest.fail("no native writer"))
+    argv = [
+        "generate",
+        "preview",
+        "--format",
+        "parquet",
+        "--dry-run",
+        "--sql-constraints",
+        "all",
+        "--to",
+        "delta+abfss://container@account.dfs.core.windows.net/tables",
+    ]
+    if as_json:
+        argv.append("--json")
+    assert main(argv) == 0
+    text = capsys.readouterr().out
+    if as_json:
+        protocol = json.loads(text)["delta_protocol"]
+        assert protocol == {
+            "min_reader_version": 1,
+            "min_writer_version": 3,
+            "reader_features": [],
+            "writer_features": ["checkConstraints"],
+        }
+    else:
+        assert "Delta protocol: reader 1 / writer 3" in text
+        assert "writer features: checkConstraints" in text
+
+
+@pytest.mark.parametrize("as_json", [False, True])
+def test_fitted_profile_preview_includes_contract_delta_checks(
+    tmp_path, monkeypatch, capsys, as_json
+):
+    import pyarrow as pa
+    import shape
+
+    profile = tmp_path / "profile.shape"
+    shape.save(shape.profile(pa.table({"id": [1, 2, 3]}), name="t"), profile)
+    contract = tmp_path / "contract.json"
+    contract.write_text('{"columns":{"id":{"min":1}}}')
+    monkeypatch.setattr(delta, "_location", lambda *a, **k: pytest.fail("no storage"))
+    monkeypatch.setattr(delta, "_deltalake", lambda: pytest.fail("no native writer"))
+    argv = [
+        "generate",
+        "--from",
+        str(profile),
+        "--format",
+        "delta",
+        "--dry-run",
+        "--sql-constraints",
+        "all",
+        "--contract",
+        str(contract),
+        "--output",
+        str(tmp_path / "absent"),
+    ]
+    if as_json:
+        argv.append("--json")
+    assert main(argv) == 0
+    text = capsys.readouterr().out
+    if as_json:
+        protocol = json.loads(text)["delta_protocol"]
+        assert protocol["min_writer_version"] == 3
+        assert protocol["writer_features"] == ["checkConstraints"]
+    else:
+        assert "Delta protocol: reader 1 / writer 3" in text
+        assert "writer features: checkConstraints" in text
+    assert not (tmp_path / "absent").exists()

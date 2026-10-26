@@ -260,3 +260,63 @@ def test_mapped_native_ntz_refusal_leaves_existing_destination_unchanged(
     unchanged = deltalake.DeltaTable(str(tmp_path / "t"))
     assert unchanged.version() == table.version()
     assert read(unchanged).to_pydict() == original.to_pydict()
+
+
+@pytest.mark.parametrize(
+    "raw,names",
+    [
+        ("true", {"ck_t_id_min", "not_null_id"}),
+        ("false", {"ck_t_id_min"}),
+        (
+            '{"check":{"explicit_positive":{"op":">","left":{"column":"id"},"right":{"literal":0}}}}',
+            {"ck_t_id_min", "explicit_positive"},
+        ),
+    ],
+)
+def test_cli_constraint_strings_compose_with_contract_in_native_write(
+    tmp_path, monkeypatch, capsys, raw, names
+):
+    from shape.cli import generation
+    from shape.cli.main import main
+    from shape.generation.schema import Column, GenSchema, Model, Table
+
+    schema = GenSchema(
+        Model("cli", "cli"),
+        {"t": Table("t", {"id": Column("id", "integer", {"strategy": "sequence", "start": 1})})},
+    )
+    monkeypatch.setattr(generation, "load_target", lambda *args: schema)
+    contract = tmp_path / "contract.json"
+    contract.write_text('{"columns":{"id":{"min":1}}}')
+    output = tmp_path / "out"
+    assert (
+        main(
+            [
+                "generate",
+                "cli",
+                "--rows",
+                "t=2",
+                "--format",
+                "delta",
+                "--json",
+                "--sql-constraints",
+                "all",
+                "--contract",
+                str(contract),
+                "--sink-config",
+                "delta.constraints=" + raw,
+                "--output",
+                str(output),
+            ]
+        )
+        == 0
+    )
+    table = deltalake.DeltaTable(str(output / "t"))
+    assert read(table).to_pydict() == {"id": [1, 2]}
+    actual = {
+        key.removeprefix("delta.constraints.")
+        for key in table.metadata().configuration
+        if key.startswith("delta.constraints.")
+    }
+    assert actual == names
+    assert table.protocol().min_writer_version == 3
+    capsys.readouterr()
