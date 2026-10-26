@@ -397,3 +397,13 @@ Pollandguardedsingle-PRmergescriptsupdatedto7c2091c:
 /tmp/public-a-poll-final.py and /tmp/public-a-merge-final.py.
 Invoke merge script ONLY once allrequiredjobs/workflowssuccess; itchecks
 exacthead/currentmainancestryandusesmergecommitAPI+SHAguard+DCO.
+
+
+## Exact-head cross-platform acceptance is green
+
+On PR49 exact7c2091c, the new existing-matrix acceptance step passed ALL8
+combinations: Linux3.11/3.12/3.13/3.14, macOS3.11/3.14, Windows3.11/3.14.
+This verifies portable URI injection, privacy assertions, SQL types/UNIQUE,
+Bridge1.3 and constraint acceptance across platforms. No failed check currently.
+FullCI/remainingchecks stillRUNNING; do notmergeuntilallrequiredgreen.
+Samecurrentrunsandguardedscriptsabove; no furtherbranchchangesarepending.
