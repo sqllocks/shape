@@ -2,6 +2,12 @@
 
 Updated 2026-10-26; final integration in progress. This file is the current checkpoint; lane records retain acceptance evidence.
 
+## Latest checkpoint — DBT transcript correction ready
+
+Local integration head26234a4cc0c8d9ea28dd00a1052f761f4f42a727 (signed/pushed on isolated docs progress branch; integration push pending review/current-main check). Parent1a715 CI docs-test failed ONLY five recorded DBT warning prefixes: actual private<work> vs historical shared<checkout>.170otherdocs tests passed, includingCONTRIBUTING and all other affected install pages. Fix changes precisely five expected path tokens, preserving commands/assertions/normalization/warnings/counts. Actual DBT reference page passed292.42s including private native build and plugin tests. Original failure: https://github.com/sqllocks/shape/actions/runs/40289326030/job/121460404509 . No rerun-to-hide or new test relaxation.
+
+Own unfinished1a715 CI and Documentation workflows canceled as superseded; all completed green results remain historical, not merge evidence. No B/main workflow changed. At08:29UTC BPR50 is in final Windows drift checks, stillopen; root checking for actualmerge before nextfullCI to avoid needless repeatedbase refresh. Main still682. Root owns releasedintegration; reviewer validatesexact26234a4. No localfullsuite.
+
 ## Latest checkpoint — docs isolation fix pushed
 
 PR49 exact current head is `1a715e5f96fbaa67a023f6036196589572248450`, independently approved and pushed to origin. Base remains6827598. Prior601 finished41/42required checks green; only docs-test failed with native child SIGBUS. All8 core platforms, both database-plugin jobs and Wheels passed. These old-head results are not final merge evidence.
