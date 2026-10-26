@@ -335,3 +335,19 @@ frequentuserupdates; noendingtowait. Onceallgreen/current/reviewed,merge
 promptlyviaAPImergecommitwithexactSHAguardandsignedmessage. Check
 ContractLeadquestionspathaftermerge. RecordCIgreenURLs/mergedSHAinfinal
 reportonthisscratchbranch,withoutanotherbookkeepingPR/CIcycle.
+
+
+## PR49 corrected exact head — abdcdf1
+
+FirstcompletedbatchCI found one missed current-server docs transcript version:
+BRIDGE runnable example expects1.2, serverreturns1.3.165otherdocstestspass.
+Rootreproducedtargetedred1/2.76s, correctedonlyfour responseversionfields
+in2runnableblocks(nohistorical/frozen/resultbody/request/assertionchange),
+then targetedgreen1/3.81s. Signed/pushed
+abdcdf1f0833cc2dc2d871f655367478bbbb09bd, parent23c; ReviewerOct25
+extendedexactheadAPPROVAL. NewcurrentheadCIrequired; old23cresults
+notmergeevidence. CorrectedimmediatelytoavoidwaitingobsoleteheadCI.
+Currentruns: CI40260449004, Wheels40260449160, Security40260449076,
+Container40260449310, Documentation40260448973, DCO40260449020,
+action-selftest40260449057. AllPENDINGinitially. SamePR49/allfourissues.
+Pollscript /tmp/public-a-poll-final.py updatedtonewSHA.

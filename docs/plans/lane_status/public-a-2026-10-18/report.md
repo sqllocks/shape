@@ -2,7 +2,7 @@
 
 **3/7 merged (42.9% done), 4/7 remaining (57.1%). All four remaining issues are in one ready PR; none is parked.** This replaces the superseded October 20 credential-handoff report. Credentials work, all local implementation handoffs are pushed, and the Owner has resolved the policy decisions.
 
-The Owner requested one final integration PR and full CI at the end. [PR #49](https://github.com/sqllocks/shape/pull/49), exact head `23c90c0f6fff5f6ed3d418b9a2986677ecde83f3`, contains #4/#5/#7/#8, the reviewed CI acceleration and a minimal cancellation-race repair exposed by fresh main CI. It is ready, independently reviewed and based on current main `314749d37aba9141a2ff68a33cfdb91e8a87cca5`. Full CI is pending; no merge or green result is claimed for #49.
+The Owner requested one final integration PR and full CI at the end. [PR #49](https://github.com/sqllocks/shape/pull/49), exact head `abdcdf1f0833cc2dc2d871f655367478bbbb09bd`, contains #4/#5/#7/#8, the reviewed CI acceleration and a minimal cancellation-race repair exposed by fresh main CI. It is ready, independently reviewed and based on current main `314749d37aba9141a2ff68a33cfdb91e8a87cca5`. Full CI is pending; no merge or green result is claimed for #49.
 
 | Issue | Status / PR | Actual merge SHA | Targeted acceptance |
 |---|---|---|---|
@@ -26,7 +26,7 @@ Merged PR #39 exact-head green workflows: [CI](https://github.com/sqllocks/shape
 
 Merged PR #37 exact-head green workflows: [CI](https://github.com/sqllocks/shape/actions/runs/40243748742), [Documentation](https://github.com/sqllocks/shape/actions/runs/40243748741), [Security](https://github.com/sqllocks/shape/actions/runs/40243748751), [Container](https://github.com/sqllocks/shape/actions/runs/40243748808), [DCO](https://github.com/sqllocks/shape/actions/runs/40243748750), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40243748743). Fresh main macOS 3.11 subsequently exposed a pre-existing cross-store cancellation lost-update race; PR49 includes its deterministic repair rather than retrying to hide the failure.
 
-PR #49 **pending, not green evidence**: [CI](https://github.com/sqllocks/shape/actions/runs/40259512617), [Wheels](https://github.com/sqllocks/shape/actions/runs/40259512606), [Security](https://github.com/sqllocks/shape/actions/runs/40259512623), [Container](https://github.com/sqllocks/shape/actions/runs/40259512521), [Documentation](https://github.com/sqllocks/shape/actions/runs/40259512533), [DCO](https://github.com/sqllocks/shape/actions/runs/40259512500), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40259512531).
+PR #49 **pending, not green evidence**: [CI](https://github.com/sqllocks/shape/actions/runs/40260449004), [Wheels](https://github.com/sqllocks/shape/actions/runs/40260449160), [Security](https://github.com/sqllocks/shape/actions/runs/40260449076), [Container](https://github.com/sqllocks/shape/actions/runs/40260449310), [Documentation](https://github.com/sqllocks/shape/actions/runs/40260448973), [DCO](https://github.com/sqllocks/shape/actions/runs/40260449020), [action-selftest](https://github.com/sqllocks/shape/actions/runs/40260449057).
 
 ## Owner decisions and remaining live actions
 
@@ -37,3 +37,5 @@ No account-dependent live test is claimed passing. Owner accounts/settings are s
 The historical maintenance PR46 Windows corrupted-Delta diagnostic failure remains unexplained: [job](https://github.com/sqllocks/shape/actions/runs/40213846736/job/121231082157). Its one diagnostic rerun and subsequent Windows heads passed, which does not establish the original cause. No test or assertion was weakened.
 
 No tags, releases, publishing, protected-branch pushes, repository settings or other-session branches were changed. The Premium Contract Lead questions path is absent in this public repository; recheck after the final merge batch.
+
+First batch CI exposed a missed current-server Bridge transcript version. The exact reference-page test reproduced one failure, then passed after four current-server output fields changed to 1.3; historical examples and frozen artifacts are unchanged. The updated exact head above is independently approved and requires fresh CI.
