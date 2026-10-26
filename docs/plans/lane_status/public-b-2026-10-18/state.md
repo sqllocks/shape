@@ -1,3 +1,9 @@
+# Active Windows diagnosis and retry — 2026-10-26
+
+No product patch justified yet. Existing corrupt-scan6CLI regression passes Linux; separateinstrumentation confirms30activefiles/corruptactive/pristine30000rows;6threaded+6serialreadsraiseArrowInvalid, no samples/CLIexitcodeswallowfound. RootrequestedONLYfailedWindowsjobrerun withdebuglogging; sourceCI40276205316attempt2active onUNCHANGEDapproved48f33d7. Initialfailure ispreserved, neverclaimedpassed. Need actualWindowsobservations ANDalloriginalPRgatesgreen beforemerge; don'tguessproductpatch.
+
+Dedicateddiagnosticbranch `lead/public-b-delta-diagnostic` at74dbac235f01fb1ead2eb67127e4624e3ba79ec0 (worktree/workspace/shape-delta-diagnostic), manualrun40288193171/job121456772158. AdditionalfixedWindows3.14jobcopiesfixtureobservationsscript60CLIattempts+4directArrowreads, activefilemembership/outputexistence/rowcounts. ALLoriginalCIjobs/commands/selectors/gatesretained withADDEDneedsdiagnostic(stricter); branchNEVERmerge/nevermergeevidence. Rootpersistentfunctions.exec491polls5s andAUTOCANCELS ONLYverifiedscratchrun once diagnosticjob completes, avoidingextraoriginalmatrix. Do notcancel sourcePR50rerun or main/LeadAworkflows. UseGHconnectorcompletedjoblogfilteronly diagnostic fixtureobservations; no rawarchive/envsecretprinting. Parentpreviouswatch423endedfailed. No duplicate dispatch/retry.
+
 # Current blocker — 2026-10-26T07:40UTC
 
 PR50 exact48f33d7 full CI40276205316 finished26/27coreSUCCESS, sole Windows3.14job121419797579 FAILURE: corrupt-Delta regression `test_a_delta_read_that_fails_after_the_scan_started_exits_2_not_hangs` run1 returns0 instead2 (1failed18913passed). All five ancillary workflows SUCCESS; NO merge/falsepass/blindrerun. Mainremote6827598 unchanged, allfourpushworkflows SUCCESS verified06:33:54UTC (CI40272522171 all27, Docs40272522213, Security40272522152, Wheels40272522202). Nightlyrequired7+artifact67/65/exact2NC stayssatisfied.
