@@ -51,6 +51,13 @@ this Shape supports is refused with an error that says so.
 Names may not be empty. A name may appear once in a key, a dependency side, a hierarchy or a fact's attribute lists, and a
 decimal's `scale` may not exceed its `precision`; either is refused with the path of the problem.
 
+For design DDL, an omitted decimal `precision` defaults to 18 and an omitted
+`scale` defaults to 2. An explicit zero scale stays zero. Supplied dimensions
+still pass the SQL dialect's validation, including validation of the resulting
+precision/scale pair. These design defaults do not relax validation for other
+SQL sink callers. Unbounded non-indexed strings remain unbounded in current DDL;
+T-SQL indexed strings still require an explicit `max_length`.
+
 Declared keys count as dependencies (`key -> every other attribute`). An entity with no key gets
 the first candidate key found from its dependencies.
 
