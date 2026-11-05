@@ -375,8 +375,8 @@ ignore_imports = [
 [dependency-groups]
 dev = [
   "pyiceberg[pyarrow,sql-sqlite,pyiceberg-core]>=0.9",
-  # Snowflake requires filelock<4; 3.20.3 predates the affected lock features.
-  "filelock==3.20.3",
+  # Patched against CVE-2026-112909 and CVE-2026-112910.
+  "filelock==4.2.1",
   "setuptools>=68",
   "pytest>=9.0.3",
   "pytest-xdist==3.8.0",
