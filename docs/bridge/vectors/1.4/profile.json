@@ -63,6 +63,64 @@
       }
     },
     {
+      "name": "safe-capture-1.4",
+      "request": {
+        "api_version": "1.4",
+        "args": {
+          "capture": "safe",
+          "output": "${DIR}/safe.shape",
+          "source": "${DIR}/a.csv"
+        },
+        "command": "profile",
+        "id": "safe-capture-1.4"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "profile",
+        "id": "safe-capture-1.4",
+        "ok": true,
+        "result": {
+          "content_id": "<any>",
+          "name": "a",
+          "path": "${DIR}/safe.shape",
+          "summary": "<any>",
+          "tables": {
+            "a": {
+              "columns": 4,
+              "rows": 40
+            }
+          }
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "invalid-capture-1.4",
+      "request": {
+        "api_version": "1.4",
+        "args": {
+          "capture": "invalid",
+          "source": "${DIR}/a.csv"
+        },
+        "command": "profile",
+        "id": "invalid-capture-1.4"
+      },
+      "response": {
+        "api_version": "1.4",
+        "command": "profile",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'capture' must be one of safe, full, got 'invalid'"
+        },
+        "id": "invalid-capture-1.4",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    },
+    {
       "name": "source-name",
       "request": {
         "api_version": "1.1",

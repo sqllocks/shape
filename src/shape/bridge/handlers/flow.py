@@ -4,8 +4,8 @@ can run it without parsing CLI text. They call what ``shape profile|diff|check|v
 These handlers read real data, so they are safe by default: a column the safe-profile gate
 classifies (a personal-data pattern, or nearly every value distinct) has its raw values withheld
 from the result unless the request sets ``options.include_raw_values``. Withheld values are
-``null`` and the entry says ``"redacted": true``. The ``.shape`` file ``profile`` writes is the
-full profile: it is written where the caller says, and it holds real values."""
+``null`` and the entry says ``"redacted": true``. The ``.shape`` file ``profile`` writes is full
+unless API 1.4 requests safe capture; database artifacts always use safe capture."""
 
 from __future__ import annotations
 
@@ -198,7 +198,7 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         "oracle",
         "tcps",
     )
-    capture = "safe" if database else BRIDGE_CAPTURE
+    capture = "safe" if database else args.get("capture", BRIDGE_CAPTURE)
     with writing():
         if output:
             target = Path(output)
@@ -396,6 +396,12 @@ COMMANDS = [
             "tables": Arg("array", "database: table names to include", items="string", since="1.2"),
             "output": Arg(
                 "string", "where to write the .shape profile (default: the jobs directory)"
+            ),
+            "capture": Arg(
+                "string",
+                "artifact capture mode (default full; databases always safe)",
+                enum=("safe", "full"),
+                since="1.4",
             ),
             "name": Arg("string", "the profile's name"),
             "dataset": Arg("boolean", "a folder of table files: one table per file"),
