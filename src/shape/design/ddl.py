@@ -115,6 +115,13 @@ def _create(
         }
         for c in table.columns
     }
+    # Design dimensions are optional. Resolve only omitted decimal metadata at
+    # this boundary; the shared SQL sink must still validate every explicit
+    # value and remain strict for non-design callers.
+    for column in table.columns:
+        if column.type == "decimal":
+            meta[column.name].setdefault("precision", 18)
+            meta[column.name].setdefault("scale", 2)
     try:
         text: str = sink._ddl(
             table.name,
