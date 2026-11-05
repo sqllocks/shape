@@ -6825,33 +6825,35 @@ person and any server-side workflow are out of scope. Drift thresholds, kinds an
 unchanged. <code>shape verify</code> applies entries only to the schema drift gate: the other gates have no
 drift kinds.</p>
 <h2 id="complete-local-run">Complete local run<a class="headerlink" href="#complete-local-run" title="Permanent link">&para;</a></h2>
-<p>Run these commands in order after preparing the fixtures above.</p>
+<p>Run these commands in order after preparing the fixtures above. The first two commands use
+<code>--on 2026-11-15</code> so you can replay the same planned-change window on any day. These fixtures
+have no <code>loyalty_tier</code> change, so the active expectation appears in <code>planned_not_observed</code>.</p>
 <p><a id="local-example-1"></a></p>
 <h3 id="example-2">Example 2<a class="headerlink" href="#example-2" title="Permanent link">&para;</a></h3>
 <!-- example: 1 -->
 
-<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>diff<span class="w"> </span>base.shape<span class="w"> </span>today.shape<span class="w"> </span>--fail-on-drift<span class="w"> </span>--changes<span class="w"> </span>shape-changes.yml
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>diff<span class="w"> </span>base.shape<span class="w"> </span>today.shape<span class="w"> </span>--fail-on-drift<span class="w"> </span>--changes<span class="w"> </span>shape-changes.yml<span class="w"> </span>--on<span class="w"> </span><span class="m">2026</span>-11-15
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
 <div class="expected highlight"><pre><span></span><code>shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
 shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
 bump: none (0 breaking, 0 additive, 0 cosmetic)
-{"changes": [], "drifted": false, "expired": [], "planned": [], "planned_not_observed": [], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
+{"changes": [], "drifted": false, "expired": [], "planned": [], "planned_not_observed": [{"action": "expect", "column": "loyalty_tier", "from": "2026-11-01", "id": "orders-loyalty-tier", "kinds": ["column_added"], "reason": "Example additive change", "until": "2026-11-30"}], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
 </code></pre></div>
 </details>
 <p><a id="local-example-2"></a></p>
 <h3 id="example-3">Example 3<a class="headerlink" href="#example-3" title="Permanent link">&para;</a></h3>
 <!-- example: 2 -->
 
-<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>diff<span class="w"> </span>base.shape<span class="w"> </span>today.shape<span class="w"> </span>--fail-on<span class="w"> </span>breaking<span class="w"> </span>--changes<span class="w"> </span>shape-changes.yml
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>diff<span class="w"> </span>base.shape<span class="w"> </span>today.shape<span class="w"> </span>--fail-on<span class="w"> </span>breaking<span class="w"> </span>--changes<span class="w"> </span>shape-changes.yml<span class="w"> </span>--on<span class="w"> </span><span class="m">2026</span>-11-15
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
 <div class="expected highlight"><pre><span></span><code>shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
 shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
 bump: none (0 breaking, 0 additive, 0 cosmetic)
-{"changes": [], "drifted": false, "expired": [], "fail_on": "breaking", "failed": false, "planned": [], "planned_not_observed": [], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
+{"changes": [], "drifted": false, "expired": [], "fail_on": "breaking", "failed": false, "planned": [], "planned_not_observed": [{"action": "expect", "column": "loyalty_tier", "from": "2026-11-01", "id": "orders-loyalty-tier", "kinds": ["column_added"], "reason": "Example additive change", "until": "2026-11-30"}], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
 </code></pre></div>
 </details>
 <p><a id="local-example-5"></a></p>

@@ -1987,7 +1987,13 @@ as_of
 fail_on_empty
 ,
 project
-(1.1)
+(1.1),
+capture
+(1.4:
+safe
+or
+full
+)
 diff
 compare two profiles
 before
@@ -5494,19 +5500,36 @@ the frozen 1.1 vector keeps it. The
 details
 of its gates (1.1) hold counts, rates, distances and
 scores only.
-Two things the default does not do: it does not change the
+Response redaction does not change the
 .shape
 file
 profile
-writes, which is
-still the full profile (
-capture="full"
-) and holds real values (the warning
+writes. For file sources,
+the bridge retains its full-artifact default: omitting
+capture
+or requesting
+"full"
+writes
+real values and emits
 profile_file_holds_values
-says so; the safe default of
-shape profile
-does not apply to the
-bridge until its protocol says so), and it does not touch
+. API 1.4 accepts optional
+capture: "safe"
+to persist a safe artifact instead, for both synchronous calls and
+options.async
+jobs. Database sources always persist safe artifacts, even if
+"full"
+is
+requested. Requests declaring API 1.0 through 1.3 do not recognize
+capture
+and return
+usage.unknown_argument
+when it is supplied.
+Artifact capture and response permissions are separate:
+capture: "full"
+does not enable
+options.include_raw_values
+, and safe capture does not replace the response-redaction gate.
+Response redaction does not touch
 generate
 ,
 preview
@@ -6356,6 +6379,28 @@ from
 and
 to
 are inclusive batch bounds for every kind.
+Profile artifact capture (API 1.4)
+¶
+profile
+accepts optional
+capture
+with the values
+"safe"
+and
+"full"
+.
+For example,
+{"api_version":"1.4","command":"profile","args":{"source":"data.csv","capture":"safe"},"options":{"async":true}}
+starts a real profile job whose persisted artifact uses safe capture. Poll
+job_status
+with
+its
+job_id
+to obtain the artifact path and content ID. The same argument works without
+options.async
+. An invalid capture value or type is refused before a job is created.
+File-source requests that omit capture keep the existing full-artifact default; database
+artifacts always use safe capture. Older API minors reject the new argument.
 Vault management (API 1.4)
 ¶
 vault_status
@@ -52461,7 +52506,14 @@ applies entries only to the schema drift gate: the other gates have no
 drift kinds.
 Complete local run
 ¶
-Run these commands in order after preparing the fixtures above.
+Run these commands in order after preparing the fixtures above. The first two commands use
+--on 2026-11-15
+so you can replay the same planned-change window on any day. These fixtures
+have no
+loyalty_tier
+change, so the active expectation appears in
+planned_not_observed
+.
 Example 2
 ¶
 shape
@@ -52471,11 +52523,14 @@ today.shape
 --fail-on-drift
 --changes
 shape-changes.yml
+--on
+2026
+-11-15
 Output (exit 0)
 shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
 shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
 bump: none (0 breaking, 0 additive, 0 cosmetic)
-{"changes": [], "drifted": false, "expired": [], "planned": [], "planned_not_observed": [], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
+{"changes": [], "drifted": false, "expired": [], "planned": [], "planned_not_observed": [{"action": "expect", "column": "loyalty_tier", "from": "2026-11-01", "id": "orders-loyalty-tier", "kinds": ["column_added"], "reason": "Example additive change", "until": "2026-11-30"}], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
 Example 3
 ¶
 shape
@@ -52486,11 +52541,14 @@ today.shape
 breaking
 --changes
 shape-changes.yml
+--on
+2026
+-11-15
 Output (exit 0)
 shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
 shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
 bump: none (0 breaking, 0 additive, 0 cosmetic)
-{"changes": [], "drifted": false, "expired": [], "fail_on": "breaking", "failed": false, "planned": [], "planned_not_observed": [], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
+{"changes": [], "drifted": false, "expired": [], "fail_on": "breaking", "failed": false, "planned": [], "planned_not_observed": [{"action": "expect", "column": "loyalty_tier", "from": "2026-11-01", "id": "orders-loyalty-tier", "kinds": ["column_added"], "reason": "Example additive change", "until": "2026-11-30"}], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
 Example 6
 ¶
 shape

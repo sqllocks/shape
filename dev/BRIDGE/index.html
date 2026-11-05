@@ -3549,6 +3549,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#profile-artifact-capture-api-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile artifact capture (API 1.4)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#vault-management-api-14" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7680,6 +7691,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#profile-artifact-capture-api-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile artifact capture (API 1.4)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#vault-management-api-14" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7954,7 +7976,7 @@ working; Shape's own commands are added.</p>
 <tr>
 <td><code>profile</code></td>
 <td>profile a file, folder, glob or Delta table into a <code>.shape</code> artifact (job-capable)</td>
-<td><code>source</code>*, <code>output</code>, <code>name</code>, <code>dataset</code>, <code>version</code>, <code>as_of</code>, <code>fail_on_empty</code>, <code>project</code> (1.1)</td>
+<td><code>source</code>*, <code>output</code>, <code>name</code>, <code>dataset</code>, <code>version</code>, <code>as_of</code>, <code>fail_on_empty</code>, <code>project</code> (1.1), <code>capture</code> (1.4: <code>safe</code> or <code>full</code>)</td>
 </tr>
 <tr>
 <td><code>diff</code></td>
@@ -8970,11 +8992,16 @@ is withheld for a classified column (safe by default). For a column that is not 
 message still quotes it (<code>(actual max: ...)</code>): that is the frozen, documented 1.1 return value, and
 the frozen 1.1 vector keeps it. The <code>details</code> of its gates (1.1) hold counts, rates, distances and
 scores only.</p>
-<p>Two things the default does not do: it does not change the <code>.shape</code> file <code>profile</code> writes, which is
-still the full profile (<code>capture="full"</code>) and holds real values (the warning
-<code>profile_file_holds_values</code> says so; the safe default of <code>shape profile</code> does not apply to the
-bridge until its protocol says so), and it does not touch <code>generate</code>, <code>preview</code> or
-<code>stream</code>, which return generated data.</p>
+<p>Response redaction does not change the <code>.shape</code> file <code>profile</code> writes. For file sources,
+the bridge retains its full-artifact default: omitting <code>capture</code> or requesting <code>"full"</code> writes
+real values and emits <code>profile_file_holds_values</code>. API 1.4 accepts optional
+<code>capture: "safe"</code> to persist a safe artifact instead, for both synchronous calls and
+<code>options.async</code> jobs. Database sources always persist safe artifacts, even if <code>"full"</code> is
+requested. Requests declaring API 1.0 through 1.3 do not recognize <code>capture</code> and return
+<code>usage.unknown_argument</code> when it is supplied.</p>
+<p>Artifact capture and response permissions are separate: <code>capture: "full"</code> does not enable
+<code>options.include_raw_values</code>, and safe capture does not replace the response-redaction gate.
+Response redaction does not touch <code>generate</code>, <code>preview</code> or <code>stream</code>, which return generated data.</p>
 <h2 id="what-each-command-runs">What each command runs<a class="headerlink" href="#what-each-command-runs" title="Permanent link">&para;</a></h2>
 <p>There is no second implementation: a command calls what the matching command line calls.</p>
 <table>
@@ -9199,6 +9226,14 @@ as described in <a href="../CHAOS/">Chaos</a>.</p>
 column. Duplicates append that many copies. <code>null_creep</code> adds <code>step</code> per batch after
 <code>from</code>, capped at 1. <code>type_change</code> ignores the rate and converts the entire column,
 even at rate 0. <code>from</code> and <code>to</code> are inclusive batch bounds for every kind.</p>
+<h2 id="profile-artifact-capture-api-14">Profile artifact capture (API 1.4)<a class="headerlink" href="#profile-artifact-capture-api-14" title="Permanent link">&para;</a></h2>
+<p><code>profile</code> accepts optional <code>capture</code> with the values <code>"safe"</code> and <code>"full"</code>.
+For example, <code>{"api_version":"1.4","command":"profile","args":{"source":"data.csv","capture":"safe"},"options":{"async":true}}</code>
+starts a real profile job whose persisted artifact uses safe capture. Poll <code>job_status</code> with
+its <code>job_id</code> to obtain the artifact path and content ID. The same argument works without
+<code>options.async</code>. An invalid capture value or type is refused before a job is created.
+File-source requests that omit capture keep the existing full-artifact default; database
+artifacts always use safe capture. Older API minors reject the new argument.</p>
 <h2 id="vault-management-api-14">Vault management (API 1.4)<a class="headerlink" href="#vault-management-api-14" title="Permanent link">&para;</a></h2>
 <p><code>vault_status</code> takes <code>vault</code> and returns the header, column names, policies and
 ciphertext sizes without opening the vault. <code>vault_verify</code> takes <code>vault</code>, <code>shape</code>,
