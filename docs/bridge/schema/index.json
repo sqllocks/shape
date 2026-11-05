@@ -403,6 +403,7 @@
     "profile": {
       "args": {
         "as_of": "1.0",
+        "capture": "1.4",
         "dataset": "1.0",
         "fail_on_empty": "1.0",
         "name": "1.0",

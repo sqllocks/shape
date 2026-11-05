@@ -195,15 +195,23 @@ def test_what_1_2_adds_to_a_1_1_command_is_marked_and_nothing_else_changed():
         "generate": {"identifiers", "to", "sink_options", "confirm_remote"},
         "profile": {"source_options", "sample_rows", "tables"},
     }
+    # Keep the exact 1.2 additions above while accounting for the named 1.4 extension.
+    later = {"profile": {"capture"}}
     for name, entry in frozen_index()["commands"].items():
         now = schemas[entry["request"]]["properties"]["args"]["properties"]
         before = frozen(entry["request"])["properties"]["args"]["properties"]
         assert set(before) <= set(now), f"{name} lost an argument in 1.2"
-        assert set(now) - set(before) == added.get(name, set()), f"{name} gained an argument"
+        assert set(now) - set(before) == added.get(name, set()) | later.get(name, set()), (
+            f"{name} gained an argument"
+        )
         for arg in added.get(name, set()):
             assert now[arg]["x-since"] == "1.2", (name, arg)
             required = schemas[entry["request"]]["properties"]["args"].get("required", [])
             assert arg not in required, (name, arg)
+        for arg in later.get(name, set()):
+            assert now[arg]["x-since"] == "1.4", (name, arg)
+            assert arg not in schemas[entry["request"]]["properties"]["args"].get("required", [])
+            assert all(arg not in COMMANDS[name].visible_args(minor) for minor in range(4))
 
 
 # ---- jobs written by the 1.1 bridge are read by the 1.2 bridge ---

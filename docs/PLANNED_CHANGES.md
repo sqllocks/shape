@@ -188,7 +188,9 @@ drift kinds.
 
 ## Complete local run
 
-Run these commands in order after preparing the fixtures above.
+Run these commands in order after preparing the fixtures above. The first two commands use
+`--on 2026-11-15` so you can replay the same planned-change window on any day. These fixtures
+have no `loyalty_tier` change, so the active expectation appears in `planned_not_observed`.
 
 <a id="local-example-1"></a>
 
@@ -197,7 +199,7 @@ Run these commands in order after preparing the fixtures above.
 <!-- example: 1 -->
 
 ```bash {.runnable-reference}
-shape diff base.shape today.shape --fail-on-drift --changes shape-changes.yml
+shape diff base.shape today.shape --fail-on-drift --changes shape-changes.yml --on 2026-11-15
 ```
 
 ??? info "Output (exit 0)"
@@ -206,7 +208,7 @@ shape diff base.shape today.shape --fail-on-drift --changes shape-changes.yml
     shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     bump: none (0 breaking, 0 additive, 0 cosmetic)
-    {"changes": [], "drifted": false, "expired": [], "planned": [], "planned_not_observed": [], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
+    {"changes": [], "drifted": false, "expired": [], "planned": [], "planned_not_observed": [{"action": "expect", "column": "loyalty_tier", "from": "2026-11-01", "id": "orders-loyalty-tier", "kinds": ["column_added"], "reason": "Example additive change", "until": "2026-11-30"}], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
     ```
 
 <a id="local-example-2"></a>
@@ -216,7 +218,7 @@ shape diff base.shape today.shape --fail-on-drift --changes shape-changes.yml
 <!-- example: 2 -->
 
 ```bash {.runnable-reference}
-shape diff base.shape today.shape --fail-on breaking --changes shape-changes.yml
+shape diff base.shape today.shape --fail-on breaking --changes shape-changes.yml --on 2026-11-15
 ```
 
 ??? info "Output (exit 0)"
@@ -225,7 +227,7 @@ shape diff base.shape today.shape --fail-on breaking --changes shape-changes.yml
     shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     bump: none (0 breaking, 0 additive, 0 cosmetic)
-    {"changes": [], "drifted": false, "expired": [], "fail_on": "breaking", "failed": false, "planned": [], "planned_not_observed": [], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
+    {"changes": [], "drifted": false, "expired": [], "fail_on": "breaking", "failed": false, "planned": [], "planned_not_observed": [{"action": "expect", "column": "loyalty_tier", "from": "2026-11-01", "id": "orders-loyalty-tier", "kinds": ["column_added"], "reason": "Example additive change", "until": "2026-11-30"}], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
     ```
 
 <a id="local-example-5"></a>

@@ -116,7 +116,9 @@ class Slow(BaseSink):
 def test_cancel_stops_the_run_between_chunks():
     event = threading.Event()
     sink = Slow(2, event)
-    engine = Engine(plain_schema({"customer": 40, "order": 4000, "order_line": 9000}), seed=11)
+    engine = Engine(
+        plain_schema({"customer": 40, "order": 4000, "order_line": 9000}), seed=11, chunk_rows=100
+    )
     router = ScaleRouter(engine, [sink], mode="local_single", chunk_size=100, cancel=event)
     with pytest.raises(ScaleCancelled):
         router.run()

@@ -169,7 +169,7 @@ working; Shape's own commands are added.
 | `stream` | start a background stream (always a job, cancellable) | `domain`\*, `scale`, `seed`, `sinks`, `sink_config`, `interval_seconds`, `chunk_size`, `max_chunks`, `mode`, `profile` |
 | `stream_status`, `stream_stop` | a stream's state; stop it | `stream_id`\* |
 | `scale_status`, `scale_cancel` | a scale job's state; cancel it | `job_id`\*, `token` |
-| `profile` | profile a file, folder, glob or Delta table into a `.shape` artifact (job-capable) | `source`\*, `output`, `name`, `dataset`, `version`, `as_of`, `fail_on_empty`, `project` (1.1) |
+| `profile` | profile a file, folder, glob or Delta table into a `.shape` artifact (job-capable) | `source`\*, `output`, `name`, `dataset`, `version`, `as_of`, `fail_on_empty`, `project` (1.1), `capture` (1.4: `safe` or `full`) |
 | `diff` | compare two profiles | `before`\*, `after`\*, `policy`, `thresholds`, `column_thresholds`, `ignore_columns`, `only_columns`, `project` (1.1), `source` (1.1) |
 | `check` | check a profile against a contract | `profile`\*, `contract`\*, `project` (1.1), `source` (1.1) |
 | `verify` | run the validation gates over data files (job-capable) | `path`\*, `format`, `schema`, `config`, `statistical`, `strict`, `project` (1.1), `source` (1.1) |
@@ -1360,11 +1360,17 @@ message still quotes it (`(actual max: ...)`): that is the frozen, documented 1.
 the frozen 1.1 vector keeps it. The `details` of its gates (1.1) hold counts, rates, distances and
 scores only.
 
-Two things the default does not do: it does not change the `.shape` file `profile` writes, which is
-still the full profile (`capture="full"`) and holds real values (the warning
-`profile_file_holds_values` says so; the safe default of `shape profile` does not apply to the
-bridge until its protocol says so), and it does not touch `generate`, `preview` or
-`stream`, which return generated data.
+Response redaction does not change the `.shape` file `profile` writes. For file sources,
+the bridge retains its full-artifact default: omitting `capture` or requesting `"full"` writes
+real values and emits `profile_file_holds_values`. API 1.4 accepts optional
+`capture: "safe"` to persist a safe artifact instead, for both synchronous calls and
+`options.async` jobs. Database sources always persist safe artifacts, even if `"full"` is
+requested. Requests declaring API 1.0 through 1.3 do not recognize `capture` and return
+`usage.unknown_argument` when it is supplied.
+
+Artifact capture and response permissions are separate: `capture: "full"` does not enable
+`options.include_raw_values`, and safe capture does not replace the response-redaction gate.
+Response redaction does not touch `generate`, `preview` or `stream`, which return generated data.
 
 ## What each command runs
 
@@ -1557,6 +1563,16 @@ Rates range from 0 to 1 and default to 0.02. Targeted row selection uses Python
 column. Duplicates append that many copies. `null_creep` adds `step` per batch after
 `from`, capped at 1. `type_change` ignores the rate and converts the entire column,
 even at rate 0. `from` and `to` are inclusive batch bounds for every kind.
+
+## Profile artifact capture (API 1.4)
+
+`profile` accepts optional `capture` with the values `"safe"` and `"full"`.
+For example, `{"api_version":"1.4","command":"profile","args":{"source":"data.csv","capture":"safe"},"options":{"async":true}}`
+starts a real profile job whose persisted artifact uses safe capture. Poll `job_status` with
+its `job_id` to obtain the artifact path and content ID. The same argument works without
+`options.async`. An invalid capture value or type is refused before a job is created.
+File-source requests that omit capture keep the existing full-artifact default; database
+artifacts always use safe capture. Older API minors reject the new argument.
 
 ## Vault management (API 1.4)
 

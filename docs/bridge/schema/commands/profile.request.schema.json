@@ -14,6 +14,15 @@
           "type": "string",
           "x-since": "1.0"
         },
+        "capture": {
+          "description": "artifact capture mode (default full; databases always safe)",
+          "enum": [
+            "safe",
+            "full"
+          ],
+          "type": "string",
+          "x-since": "1.4"
+        },
         "dataset": {
           "description": "a folder of table files: one table per file",
           "type": "boolean",

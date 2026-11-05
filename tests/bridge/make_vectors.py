@@ -332,6 +332,19 @@ FILES: dict[str, dict[str, Any]] = {
                 "profile",
                 {"source": f"{D}/missing.csv", "output": f"{D}/m.shape"},
             ),
+            case(
+                "safe-capture-1.4",
+                "profile",
+                {"source": f"{D}/a.csv", "output": f"{D}/safe.shape", "capture": "safe"},
+                version="1.4",
+            ),
+            case(
+                "invalid-capture-1.4",
+                "profile",
+                {"source": f"{D}/a.csv", "capture": "invalid"},
+                version="1.4",
+                valid_request=False,
+            ),
         ]
     },
     "diff": {

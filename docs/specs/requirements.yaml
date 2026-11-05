@@ -876,3 +876,13 @@ requirements:
   text: Oracle 19c+ supports bounded array writes and Arrow or cursor reads with exact declared types, schema catalogs, explicit empty-string handling, referenced credentials and safe artifacts.
   verify: [oracle-source-sink-conformance, oracle-emulator]
   owner: databases
+
+- id: SHAPE-BRIDGE-001
+  title: Versioned bridge profile capture
+  level: L1
+  milestone: M5
+  priority: MUST
+  text: Bridge API 1.4 profile requests may select safe or full artifact capture for synchronous calls and real asynchronous jobs. Omitted capture preserves the full file-source default, database artifacts remain safe, and artifact capture never grants raw response permission. Earlier API minors reject the argument; invalid capture values are rejected before writes or job creation.
+  verify: [unit, conformance, compatibility, privacy]
+  tests: [tests/bridge/test_profile_capture_1_4.py]
+  owner: bridge
