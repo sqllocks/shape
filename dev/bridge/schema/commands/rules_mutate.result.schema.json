@@ -230,6 +230,6 @@
     }
   ],
   "title": "rules_mutate result",
-  "x-api-version": "1.5",
+  "x-api-version": "1.6",
   "x-since": "1.2"
 }
