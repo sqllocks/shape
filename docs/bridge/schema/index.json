@@ -1,5 +1,5 @@
 {
-  "api_version": "1.5",
+  "api_version": "1.6",
   "commands": {
     "bisect": {
       "args": {
@@ -892,18 +892,22 @@
       "args": {
         "classification": "1.4",
         "column": "1.4",
-        "policy": "1.4"
+        "kek": "1.6",
+        "new_policy": "1.6",
+        "policy": "1.4",
+        "vault": "1.6"
       },
       "cancellable": false,
       "effects": [
-        "reads_files"
+        "reads_files",
+        "writes_files"
       ],
       "job": "never",
       "pending": null,
       "request": "commands/vault_policy.request.schema.json",
       "result": "commands/vault_policy.result.schema.json",
       "since": "1.4",
-      "summary": "Read and resolve column policy without reading vault values."
+      "summary": "Read policy, or atomically change an authenticated vault column policy (1.6)."
     },
     "vault_rewrap": {
       "args": {

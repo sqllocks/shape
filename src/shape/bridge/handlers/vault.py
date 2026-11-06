@@ -110,6 +110,9 @@ def cmd_policy(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     from shape.vault.errors import VaultInputError
     from shape.vault.policy import load_policy
 
+    if any(name in args for name in ("vault", "kek", "new_policy")):
+        return _write_policy(args)
+
     try:
         policy = load_policy(args["policy"])
     except VaultInputError:
@@ -121,6 +124,69 @@ def cmd_policy(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     elif args.get("classification"):
         raise BridgeError("input.invalid_value", "classification requires column")
     return result
+
+
+def _write_policy(args: dict[str, Any]) -> dict[str, Any]:
+    import hashlib
+    import re
+
+    from shape.artifact.canonical import canonical_json
+    from shape.compat import parse_release
+    from shape.vault.errors import VaultError
+    from shape.vault.format import open_vault, parse_vault, seal_vault
+    from shape.vault.kek import resolve_kek
+    from shape.vault.ops import read_vault_bytes, write_file
+
+    if (
+        not args.get("vault")
+        or not args.get("column")
+        or "policy" in args
+        or args.get("new_policy") not in ("none", "categories", "extremes", "all")
+        or "classification" in args
+        or not re.fullmatch(r"env://[A-Z_][A-Z0-9_]{0,127}", args.get("kek", ""))
+    ):
+        raise BridgeError("usage.invalid_argument", "invalid vault policy mutation")
+    try:
+        raw = read_vault_bytes(args["vault"])
+        parsed = parse_vault(raw)
+        for field in ("shape_version", "min_shape_version"):
+            if parsed.doc.get(field) is not None and parse_release(parsed.doc[field]) is None:
+                raise BridgeError("input.invalid_value", "invalid vault release metadata")
+        # Mutation is stricter than legacy readers: unknown metadata is never discarded.
+        if set(parsed.doc) - {
+            "format",
+            "version",
+            "shape_version",
+            "min_shape_version",
+            "vault_id",
+            "profile_content_id",
+            "algorithm",
+            "kek_id",
+            "wrapped_key",
+            "columns",
+        }:
+            raise BridgeError("input.invalid_value", "unknown vault metadata")
+        kek = resolve_kek(args["kek"])
+        opened = open_vault(raw, kek)
+        if args["column"] not in opened.columns:
+            raise BridgeError("input.invalid_value", "unknown vault column")
+        before = {"columns": {name: col.policy for name, col in sorted(opened.columns.items())}}
+        columns = {name: (col.policy, col.payload) for name, col in opened.columns.items()}
+        columns[args["column"]] = (args["new_policy"], opened.columns[args["column"]].payload)
+        updated = seal_vault(columns, opened.profile_content_id, kek)
+        policy = {"columns": {name: entry[0] for name, entry in sorted(columns.items())}}
+        result = {
+            "ok": True,
+            "before_policy": before,
+            "policy": policy,
+            "policy_digest": hashlib.sha256(canonical_json(policy)).hexdigest(),
+            "key_reference": args["kek"],
+        }
+        with writing():
+            write_file(args["vault"], updated)
+        return result
+    except VaultError:
+        raise BridgeError("input.invalid_value", "vault policy mutation failed") from None
 
 
 _VAULT = Arg("string", "the encrypted vault file", True, path="read")
@@ -225,15 +291,35 @@ COMMANDS = [
     ),
     Command(
         "vault_policy",
-        "Read and resolve column policy without reading vault values.",
+        "Read policy, or atomically change an authenticated vault column policy (1.6).",
         {
             "policy": Arg("string", "the vault policy JSON file", True, path="read"),
+            "new_policy": Arg(
+                "string", "new column policy for mutation", since="1.6", alias_for="policy"
+            ),
+            "vault": Arg("string", "vault file to update atomically", since="1.6", path="write"),
+            "kek": Arg(
+                "string", "environment key reference for mutation", since="1.6", secret=True
+            ),
             "column": Arg("string", "TABLE.COLUMN whose effective policy to resolve"),
             "classification": Arg("string", "classification used for the column fallback"),
         },
-        _POLICY,
+        {
+            "oneOf": [
+                _POLICY,
+                obj(
+                    {
+                        "ok": BOOL,
+                        "before_policy": obj({"columns": mapping(STR)}),
+                        "policy": obj({"columns": mapping(STR)}),
+                        "policy_digest": STR,
+                        "key_reference": STR,
+                    }
+                ),
+            ]
+        },
         cmd_policy,
         since="1.4",
-        effects=("reads_files",),
+        effects=("reads_files", "writes_files"),
     ),
 ]

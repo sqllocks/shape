@@ -68,7 +68,7 @@ def test_all_five_historical_columns_keep_old_minors_and_use_unbounded_1_3(
         argv += ["--drop"]
     assert main(argv) == 0
     assert capsys.readouterr().out == canonical
-    assert API_VERSION == "1.5"
+    assert API_VERSION == "1.6"
     assert parse_request({"api_version": "1.3", "command": "design"}).minor == 3
 
 

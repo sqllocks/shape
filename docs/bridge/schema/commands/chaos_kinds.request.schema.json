@@ -53,6 +53,6 @@
   ],
   "title": "chaos_kinds request",
   "type": "object",
-  "x-api-version": "1.5",
+  "x-api-version": "1.6",
   "x-since": "1.4"
 }

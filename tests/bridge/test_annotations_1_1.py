@@ -139,6 +139,7 @@ def test_write_paths_are_the_ones_a_command_writes():
         ("vault_rewrap", "out_shape"),
         ("vault_rewrap", "out_vault"),
         ("rules_apply", "contract"),
+        ("vault_policy", "vault"),
     }
 
 
@@ -221,6 +222,7 @@ def test_the_commands_that_write_say_so():
         "chaos",
         "suite_run",
         "vault_rewrap",
+        "vault_policy",
         "rules_apply",
     }
     assert {n for n, c in COMMANDS.items() if "cancels" in c.effects} == {
