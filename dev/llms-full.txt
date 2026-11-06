@@ -1554,7 +1554,7 @@ field
 meaning
 api_version
 "MAJOR.MINOR"
-. Optional (assumed current, 1.4, with a warning) but you should send it. A request that declares
+. Optional (assumed current, 1.5, with a warning) but you should send it. A request that declares
 "1.0"
 is answered as the 1.0 bridge answers it (below).
 id
@@ -1721,9 +1721,9 @@ api_version
 is
 MAJOR.MINOR
 ; this bridge speaks
-1.4
+1.5
 and serves
-1.0 to 1.4
+1.0 to 1.5
 .
 Minor versions only add:
 a command, an optional argument, an option, a result field, an error
@@ -1740,7 +1740,7 @@ A bridge serves one major version. A request for another is refused
 usage.unsupported_version
 , and the message names the supported range
   (
-... this bridge serves 1.0 to 1.4
+... this bridge serves 1.0 to 1.5
 ). The response always carries the bridge's own
 api_version
 , so a client can read it from the refusal.
@@ -1752,7 +1752,7 @@ newer_minor_version
 A request with
 no
 api_version
-is served as 1.4, with the warning
+is served as 1.5, with the warning
 api_version_assumed
 .
 Persisted files declare their own
@@ -2153,7 +2153,11 @@ require
 output
 ,
 format
-(1.4)
+(1.4),
+source
+,
+path
+(1.5)
 report_card_read
 a stored report card, checked (1.2)
 path
@@ -2289,6 +2293,11 @@ scale
 seed
 ,
 output_dir
+,
+input
+,
+name
+(1.5)
 job_status
 ,
 job_cancel
@@ -3623,6 +3632,15 @@ Report card
 ¶
 report_card
 ¶
+API 1.5 also accepts
+source
+and
+path
+, aliases for
+real
+and
+synthetic
+.
 Runs what
 shape report-card
 runs (
@@ -4779,6 +4797,11 @@ usage.unknown_argument
 {"api_version": "1.2", "command": "suite_list", "error": {"code": "usage.unknown_argument", "group": "usage", "hint": "it takes: no arguments", "message": "suite_list does not take argument(s): suite"}, "id": "takes-no-arguments", "ok": false, "warnings": []}
 suite_run
 ¶
+API 1.5 also accepts
+input
+(a folder of selected tables) and
+name
+(a result label).
 Runs a suite of library scenarios and compares each outcome with its answer key: what
 shape suite
 run --json
@@ -6299,7 +6322,7 @@ echo
 shape
 bridge
 Output (exit 0)
-{"api_version": "1.4", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
+{"api_version": "1.5", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
 Example 113
 ¶
 shape
@@ -6312,9 +6335,9 @@ bridge
 {"api_version": "1.0", "id": 3, "command": "generate", "args": {"domain": "retail", "scale": "small", "format": "parquet", "output_dir": "./out"}, "options": {"async": true}}
 EOF
 Output (exit 0)
-{"api_version": "1.4", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
-{"api_version": "1.4", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
-{"api_version": "1.4", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
+{"api_version": "1.5", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
+{"api_version": "1.5", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
+{"api_version": "1.5", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
 Oracle sources (
 oracle://
 and
@@ -6498,6 +6521,66 @@ data_format
 . The default
 auto
 preserves extension-based discovery.
+Rule application and selected inputs (API 1.5)
+¶
+API 1.5 adds
+rules_apply
+with
+decisions
+(read path) and
+contract
+(write path).
+It applies accepted rule proposals, preserves existing contract rules, and returns
+applied
+,
+rejected
+and
+contract
+. Repeating the same request applies zero new
+rules and preserves the contract bytes. Conflicting rules are refused. The same
+operation is available as
+shape rules apply CONTRACT --decisions FILE --json
+.
+suite_run
+accepts optional
+input
+(a local folder of tables) and
+name
+(a label for the result). Selected tables replace generation; the scenario's defects
+and validation gates still run. The source files are never modified. The input must
+contain the domain's tables. Drift scenarios require generated day-by-day data and
+refuse selected input with
+input.invalid_value
+before a job starts. Missing input
+answers
+input.not_found
+. Omitting
+input
+retains the existing generation behavior.
+report_card
+accepts
+source
+as an alias for
+real
+, and
+path
+as an alias for
+synthetic
+. Its 1.5 result includes boolean
+passed
+, true exactly when
+overall
+is
+pass
+. This result contains aggregate metrics and no source cell values. Stored
+report cards remain readable with
+report_card_read
+.
+Requests served as 1.0 through 1.4 retain their result shapes and refuse the new
+arguments. Frozen 1.4 schemas are in
+docs/bridge/schema/1.4/
+; earlier schemas and
+vectors remain unchanged. Response envelopes report the current server version.
 Report a problem with this page
 
 ## Canaries
@@ -6789,6 +6872,17 @@ Early access 0.9.3.
 Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 Unreleased
 ¶
+Bridge API 1.5 adds
+rules_apply
+(also
+shape rules apply
+), preserving existing rules and reporting applied/rejected proposal counts.
+suite_run
+can execute scenarios on selected local input tables;
+report_card
+accepts source/generated-data aliases and includes a boolean
+passed
+verdict for certification consumers. Earlier minor results and frozen schema/vector publications remain unchanged.
 Bridge API 1.4 adds metadata-only vault status, verification, key rotation and column-policy lookup, a read-only chaos-kind catalogue and optional report-card input format selection. The catalogue is also available through
 shape chaos --list-kinds
 ; report-card accepts
@@ -30446,6 +30540,14 @@ ok
 2
 bad input: a missing or unreadable file, the wrong kind of file, or a bad argument
 shape resolve synth
+¶
+Code
+Meaning
+0
+ok
+2
+bad input: a missing or unreadable file, the wrong kind of file, or a bad argument
+shape rules apply
 ¶
 Code
 Meaning
@@ -110356,6 +110458,10 @@ None
 root
 =
 None
+,
+input
+=
+None
 )
 ¶
 Run the library scenario
@@ -115750,19 +115856,39 @@ shape rules
 Stability:
 experimental
 .
-usage: shape rules [-h] {mutate,backtest} ...
+usage: shape rules [-h] {apply,mutate,backtest} ...
 
 (experimental) `rules mutate` plants known faults in the data and reports which rules of a
 contract catch them; `rules backtest` replays a contract over a registry's history. See
 docs/RULES_TESTING.md.
 
 positional arguments:
-  {mutate,backtest}
-    mutate           plant known faults and report which rules catch them
-    backtest         replay a contract over every committed version of a registry name
+  {apply,mutate,backtest}
+    apply               merge accepted rule proposals into a contract
+    mutate              plant known faults and report which rules catch them
+    backtest            replay a contract over every committed version of a registry name
 
 options:
-  -h, --help         show this help message and exit
+  -h, --help            show this help message and exit
+shape rules apply
+¶
+Stability:
+experimental
+.
+usage: shape rules apply [-h] --decisions DECISIONS.json [--json] CONTRACT.json
+
+positional arguments:
+  CONTRACT.json
+
+options:
+  -h, --help            show this help message and exit
+  --decisions DECISIONS.json
+  --json                print applied and rejected counts
+
+Exit codes:
+  0   ok
+  2   bad input: a missing or unreadable file, the wrong kind of file,
+      or a bad argument
 shape rules mutate
 ¶
 Stability:

@@ -3570,6 +3570,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#rule-application-and-selected-inputs-api-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule application and selected inputs (API 1.5)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7712,6 +7723,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#rule-application-and-selected-inputs-api-15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rule application and selected inputs (API 1.5)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -7781,7 +7803,7 @@ parsing command-line text.</p>
 <tbody>
 <tr>
 <td><code>api_version</code></td>
-<td><code>"MAJOR.MINOR"</code>. Optional (assumed current, 1.4, with a warning) but you should send it. A request that declares <code>"1.0"</code> is answered as the 1.0 bridge answers it (below).</td>
+<td><code>"MAJOR.MINOR"</code>. Optional (assumed current, 1.5, with a warning) but you should send it. A request that declares <code>"1.0"</code> is answered as the 1.0 bridge answers it (below).</td>
 </tr>
 <tr>
 <td><code>id</code></td>
@@ -7863,7 +7885,7 @@ is <code>warning_codes</code> in <a href="../bridge/schema/index.json"><code>doc
 <code>input.unknown_source</code> and <code>input.unknown_format</code>; 1.2 adds <code>input.contract_conflict</code> and
 <code>policy.unverified_input</code>.</p>
 <h2 id="versions-and-the-stability-promise">Versions and the stability promise<a class="headerlink" href="#versions-and-the-stability-promise" title="Permanent link">&para;</a></h2>
-<p><code>api_version</code> is <code>MAJOR.MINOR</code>; this bridge speaks <strong>1.4</strong> and serves <strong>1.0 to 1.4</strong>.</p>
+<p><code>api_version</code> is <code>MAJOR.MINOR</code>; this bridge speaks <strong>1.5</strong> and serves <strong>1.0 to 1.5</strong>.</p>
 <ul>
 <li><strong>Minor versions only add:</strong> a command, an optional argument, an option, a result field, an error
   code, a warning code. A client written for 1.0 keeps working on 1.7, so <strong>a client ignores result
@@ -7872,11 +7894,11 @@ is <code>warning_codes</code> in <a href="../bridge/schema/index.json"><code>doc
   result field, error code or the meaning of any of them.</li>
 <li><strong>A major version may break.</strong> A bridge serves one major version. A request for another is refused
   with <code>usage.unsupported_version</code>, and the message names the supported range
-  (<code>... this bridge serves 1.0 to 1.4</code>). The response always carries the bridge's own
+  (<code>... this bridge serves 1.0 to 1.5</code>). The response always carries the bridge's own
   <code>api_version</code>, so a client can read it from the refusal.</li>
 <li>A request with a newer <em>minor</em> than the bridge's is served, with the warning
   <code>newer_minor_version</code>: what the newer minor added is not available.</li>
-<li>A request with <strong>no <code>api_version</code></strong> is served as 1.4, with the warning <code>api_version_assumed</code>.</li>
+<li>A request with <strong>no <code>api_version</code></strong> is served as 1.5, with the warning <code>api_version_assumed</code>.</li>
 <li>Persisted files declare their own <code>format</code> and integer <code>version</code> (the job file below, the vector
   files). A file written by a newer Shape is refused with <code>input.unsupported_format_version</code>, never
   misread. The job file <code>shape-bridge-job</code> and the vector files <code>shape-bridge-vectors</code> are still
@@ -8056,7 +8078,7 @@ working; Shape's own commands are added.</p>
 <tr>
 <td><code>report_card</code></td>
 <td>one report card for a synthetic dataset: fidelity, utility, privacy (1.2, job-capable)</td>
-<td><code>real</code>*, <code>synthetic</code>*, <code>config</code>, <code>tiers</code>, <code>holdout</code>, <code>manifest</code>, <code>require</code>, <code>output</code>, <code>format</code> (1.4)</td>
+<td><code>real</code>*, <code>synthetic</code>*, <code>config</code>, <code>tiers</code>, <code>holdout</code>, <code>manifest</code>, <code>require</code>, <code>output</code>, <code>format</code> (1.4), <code>source</code>, <code>path</code> (1.5)</td>
 </tr>
 <tr>
 <td><code>report_card_read</code></td>
@@ -8106,7 +8128,7 @@ working; Shape's own commands are added.</p>
 <tr>
 <td><code>suite_run</code></td>
 <td>run a suite of scenarios against their answer keys (1.2, job-capable, cancellable)</td>
-<td><code>suite</code>*, <code>scale</code>, <code>seed</code>, <code>output_dir</code></td>
+<td><code>suite</code>*, <code>scale</code>, <code>seed</code>, <code>output_dir</code>, <code>input</code>, <code>name</code> (1.5)</td>
 </tr>
 <tr>
 <td><code>job_status</code>, <code>job_cancel</code>, <code>job_list</code></td>
@@ -8495,6 +8517,7 @@ the 1.2 bridge.</p>
 published vectors, with <code>/work</code> for the scratch folder), its error codes and its warnings.</p>
 <h2 id="report-card">Report card<a class="headerlink" href="#report-card" title="Permanent link">&para;</a></h2>
 <h3 id="report_card"><code>report_card</code><a class="headerlink" href="#report_card" title="Permanent link">&para;</a></h3>
+<p>API 1.5 also accepts <code>source</code> and <code>path</code>, aliases for <code>real</code> and <code>synthetic</code>.</p>
 <p>Runs what <code>shape report-card</code> runs (<code>shape.quality.report_card</code>): one card for a synthetic dataset,
 with its fidelity scores and tiers, the utility gate, the memorization gate and, with <code>holdout</code>, the
 membership-inference test. <code>real</code>, <code>synthetic</code> and <code>holdout</code> are each a data file or a folder with one
@@ -8822,6 +8845,7 @@ changed (before and after); it is written, never returned.</p>
 {"api_version": "1.2", "command": "suite_list", "error": {"code": "usage.unknown_argument", "group": "usage", "hint": "it takes: no arguments", "message": "suite_list does not take argument(s): suite"}, "id": "takes-no-arguments", "ok": false, "warnings": []}
 </code></pre></div></p>
 <h3 id="suite_run"><code>suite_run</code><a class="headerlink" href="#suite_run" title="Permanent link">&para;</a></h3>
+<p>API 1.5 also accepts <code>input</code> (a folder of selected tables) and <code>name</code> (a result label).</p>
 <p>Runs a suite of library scenarios and compares each outcome with its answer key: what <code>shape suite
 run --json</code> does (<code>shape.scenario.library.run_suite</code>). <code>suite</code> is a built-in name (see <code>suite_list</code>)
 or the path of a suite file (format <code>shape-suite</code>, version 1; a file of a newer version answers
@@ -9186,7 +9210,7 @@ mutually exclusive. Sink partition options can be a list of transform expression
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
-<div class="expected highlight"><pre><span></span><code>{"api_version": "1.4", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
+<div class="expected highlight"><pre><span></span><code>{"api_version": "1.5", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
 </code></pre></div>
 </details>
 <p><a id="local-example-112"></a></p>
@@ -9201,9 +9225,9 @@ mutually exclusive. Sink partition options can be a list of transform expression
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
-<div class="expected highlight"><pre><span></span><code>{"api_version": "1.4", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
-{"api_version": "1.4", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
-{"api_version": "1.4", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
+<div class="expected highlight"><pre><span></span><code>{"api_version": "1.5", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.3"}, "warnings": []}
+{"api_version": "1.5", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
+{"api_version": "1.5", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
 </code></pre></div>
 </details>
 <p>Oracle sources (<code>oracle://</code> and <code>tcps://</code>, from <code>sqllocks-shape-databases[oracle]</code>) support
@@ -9260,6 +9284,25 @@ in <code>docs/bridge/schema/1.3/</code>; the existing 1.3 vectors remain unchang
 <p>Bridge 1.4 <code>report_card</code> accepts optional <code>format</code> (<code>auto</code>, <code>csv</code>, <code>parquet</code>,
 <code>jsonl</code>), matching the command line <code>--format</code> and Python <code>data_format</code>. The default
 <code>auto</code> preserves extension-based discovery.</p>
+<h2 id="rule-application-and-selected-inputs-api-15">Rule application and selected inputs (API 1.5)<a class="headerlink" href="#rule-application-and-selected-inputs-api-15" title="Permanent link">&para;</a></h2>
+<p>API 1.5 adds <code>rules_apply</code> with <code>decisions</code> (read path) and <code>contract</code> (write path).
+It applies accepted rule proposals, preserves existing contract rules, and returns
+<code>applied</code>, <code>rejected</code> and <code>contract</code>. Repeating the same request applies zero new
+rules and preserves the contract bytes. Conflicting rules are refused. The same
+operation is available as <code>shape rules apply CONTRACT --decisions FILE --json</code>.</p>
+<p><code>suite_run</code> accepts optional <code>input</code> (a local folder of tables) and <code>name</code>
+(a label for the result). Selected tables replace generation; the scenario's defects
+and validation gates still run. The source files are never modified. The input must
+contain the domain's tables. Drift scenarios require generated day-by-day data and
+refuse selected input with <code>input.invalid_value</code> before a job starts. Missing input
+answers <code>input.not_found</code>. Omitting <code>input</code> retains the existing generation behavior.</p>
+<p><code>report_card</code> accepts <code>source</code> as an alias for <code>real</code>, and <code>path</code> as an alias for
+<code>synthetic</code>. Its 1.5 result includes boolean <code>passed</code>, true exactly when <code>overall</code> is
+<code>pass</code>. This result contains aggregate metrics and no source cell values. Stored
+report cards remain readable with <code>report_card_read</code>.</p>
+<p>Requests served as 1.0 through 1.4 retain their result shapes and refuse the new
+arguments. Frozen 1.4 schemas are in <code>docs/bridge/schema/1.4/</code>; earlier schemas and
+vectors remain unchanged. Response envelopes report the current server version.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+JSON+bridge&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FBRIDGE%2F">Report a problem with this page</a></p>
 
 

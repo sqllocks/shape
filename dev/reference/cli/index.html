@@ -4804,6 +4804,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#shape-rules-apply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape rules apply
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#shape-rules-mutate" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8805,6 +8816,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#shape-rules-apply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape rules apply
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#shape-rules-mutate" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12797,19 +12819,37 @@ Exit codes:
 </code></pre></div>
 <h2 id="shape-rules"><code>shape rules</code><a class="headerlink" href="#shape-rules" title="Permanent link">&para;</a></h2>
 <p>Stability: <strong>experimental</strong>.</p>
-<div class="highlight"><pre><span></span><code>usage: shape rules [-h] {mutate,backtest} ...
+<div class="highlight"><pre><span></span><code>usage: shape rules [-h] {apply,mutate,backtest} ...
 
 (experimental) `rules mutate` plants known faults in the data and reports which rules of a
 contract catch them; `rules backtest` replays a contract over a registry's history. See
 docs/RULES_TESTING.md.
 
 positional arguments:
-  {mutate,backtest}
-    mutate           plant known faults and report which rules catch them
-    backtest         replay a contract over every committed version of a registry name
+  {apply,mutate,backtest}
+    apply               merge accepted rule proposals into a contract
+    mutate              plant known faults and report which rules catch them
+    backtest            replay a contract over every committed version of a registry name
 
 options:
-  -h, --help         show this help message and exit
+  -h, --help            show this help message and exit
+</code></pre></div>
+<h3 id="shape-rules-apply"><code>shape rules apply</code><a class="headerlink" href="#shape-rules-apply" title="Permanent link">&para;</a></h3>
+<p>Stability: <strong>experimental</strong>.</p>
+<div class="highlight"><pre><span></span><code>usage: shape rules apply [-h] --decisions DECISIONS.json [--json] CONTRACT.json
+
+positional arguments:
+  CONTRACT.json
+
+options:
+  -h, --help            show this help message and exit
+  --decisions DECISIONS.json
+  --json                print applied and rejected counts
+
+Exit codes:
+  0   ok
+  2   bad input: a missing or unreadable file, the wrong kind of file,
+      or a bad argument
 </code></pre></div>
 <h3 id="shape-rules-mutate"><code>shape rules mutate</code><a class="headerlink" href="#shape-rules-mutate" title="Permanent link">&para;</a></h3>
 <p>Stability: <strong>experimental</strong>.</p>

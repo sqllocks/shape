@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "effective": {
+      "type": "string"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "policy": {
+      "additionalProperties": true,
+      "properties": {
+        "by_classification": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "columns": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "default": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "min_shape_version": {
+          "type": "string"
+        },
+        "shape_version": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "format",
+        "version",
+        "shape_version",
+        "min_shape_version",
+        "default",
+        "columns",
+        "by_classification"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "ok",
+    "policy"
+  ],
+  "title": "vault_policy result",
+  "type": "object",
+  "x-api-version": "1.4",
+  "x-since": "1.4"
+}

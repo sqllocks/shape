@@ -9,6 +9,17 @@
     "args": {
       "additionalProperties": false,
       "properties": {
+        "input": {
+          "description": "local folder of tables to use instead of generating scenario data",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.5"
+        },
+        "name": {
+          "description": "label for this suite run",
+          "type": "string",
+          "x-since": "1.5"
+        },
         "output_dir": {
           "description": "write each scenario's tables under output_dir/<scenario>/ (default: write nothing)",
           "type": "string",
@@ -80,6 +91,6 @@
   ],
   "title": "suite_run request",
   "type": "object",
-  "x-api-version": "1.4",
+  "x-api-version": "1.5",
   "x-since": "1.2"
 }
