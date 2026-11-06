@@ -76,6 +76,7 @@ def test_additive_vectors(tmp_path):
         for case in doc["cases"]:
             actual = bridge.handle(vectors_lib.substitute(case["request"], str(directory)))
             expected = vectors_lib.substitute(case["response"], str(directory))
+            expected["api_version"] = actual["api_version"]
             assert vectors_lib.matches(expected, actual) == []
             assert (
                 validate(

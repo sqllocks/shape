@@ -105,5 +105,5 @@
   ],
   "title": "bridge request",
   "type": "object",
-  "x-api-version": "1.5"
+  "x-api-version": "1.6"
 }

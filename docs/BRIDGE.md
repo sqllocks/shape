@@ -106,7 +106,7 @@ The full list, with a sentence for each, is `error_codes` in
 
 ## Versions and the stability promise
 
-`api_version` is `MAJOR.MINOR`; this bridge speaks **1.5** and serves **1.0 to 1.5**.
+`api_version` is `MAJOR.MINOR`; this bridge speaks **1.6** and serves **1.0 to 1.6**.
 
 - **Minor versions only add:** a command, an optional argument, an option, a result field, an error
   code, a warning code. A client written for 1.0 keeps working on 1.7, so **a client ignores result
@@ -1633,3 +1633,20 @@ report cards remain readable with `report_card_read`.
 Requests served as 1.0 through 1.4 retain their result shapes and refuse the new
 arguments. Frozen 1.4 schemas are in `docs/bridge/schema/1.4/`; earlier schemas and
 vectors remain unchanged. Response envelopes report the current server version.
+
+
+### Vault policy mutation (1.6)
+
+`vault_policy` accepts `vault`, `kek` (`env://NAME`), `column` (`TABLE.COLUMN`),
+and `new_policy` (`none`, `categories`, `extremes`, `all`). `new_policy` replaces the required policy-file argument for mutation;
+`policy` and `classification` are refused in mutation mode.
+It authenticates the entire vault and atomically replaces it with a newly sealed
+vault carrying the changed column policy. Existing encrypted payloads are retained;
+this changes policy metadata and does not recapture values. A profile referencing
+the old vault hash must be refreshed before verification against the updated vault.
+Failures before replacement retain the original bytes. Unknown arguments and
+unknown vault fields are refused. No key material or stored values are returned.
+The result contains `ok`, `before_policy`, `policy` (both `{columns: {name: policy}}`),
+`policy_digest` (lowercase SHA-256 of canonical JSON of `policy`), and `key_reference`.
+Older minors refuse the new arguments and retain their policy-file read behavior.
+Frozen schema/vector publications are not regenerated.

@@ -8,6 +8,22 @@
     },
     "args": {
       "additionalProperties": false,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "required": [
+                "policy"
+              ]
+            },
+            {
+              "required": [
+                "new_policy"
+              ]
+            }
+          ]
+        }
+      ],
       "properties": {
         "classification": {
           "description": "classification used for the column fallback",
@@ -19,16 +35,29 @@
           "type": "string",
           "x-since": "1.4"
         },
+        "kek": {
+          "description": "environment key reference for mutation",
+          "type": "string",
+          "x-since": "1.6"
+        },
+        "new_policy": {
+          "description": "new column policy for mutation",
+          "type": "string",
+          "x-since": "1.6"
+        },
         "policy": {
           "description": "the vault policy JSON file",
           "type": "string",
           "x-path": "read",
           "x-since": "1.4"
+        },
+        "vault": {
+          "description": "vault file to update atomically",
+          "type": "string",
+          "x-path": "write",
+          "x-since": "1.6"
         }
       },
-      "required": [
-        "policy"
-      ],
       "type": "object"
     },
     "command": {
@@ -74,6 +103,6 @@
   ],
   "title": "vault_policy request",
   "type": "object",
-  "x-api-version": "1.5",
+  "x-api-version": "1.6",
   "x-since": "1.4"
 }
