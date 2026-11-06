@@ -36,6 +36,22 @@ def prepare_run(args: dict[str, Any], ctx: Context) -> None:
     from shape.scenario.library.formats import VERSION
 
     not_local(args.get("output_dir"), "output_dir")
+    if args.get("input") is not None:
+        from shape.scenario.library import load_scenario, load_suite
+
+        source = Path(str(args["input"]))
+        not_local(str(source), "input")
+        if not source.exists():
+            raise BridgeError("input.not_found", f"input not found: {source}")
+        for scenario in load_suite(str(args["suite"]))["scenarios"]:
+            if args.get("output_dir") is not None:
+                from shape.scenario.library.run import check_selected_output
+
+                check_selected_output(source, Path(str(args["output_dir"])) / scenario)
+            if load_scenario(scenario).get("drift"):
+                raise BridgeError(
+                    "input.invalid_value", "selected input is not supported for drift scenarios"
+                )
     target = str(args["suite"])
     if target in list_suites():
         return
@@ -78,7 +94,7 @@ def cmd_run(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     seed = None if args.get("seed") is None else int(args["seed"])
     output = args.get("output_dir")
     total = len(doc["scenarios"])
-    result = SuiteResult(str(doc["name"]), scale)
+    result = SuiteResult(str(args.get("name", doc["name"])), scale)
     for done, name in enumerate(doc["scenarios"]):
         if ctx.cancel.is_set():
             met = sum(r.met for r in result.results)
@@ -93,7 +109,12 @@ def cmd_run(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
             )
         ctx.progress({"scenario": name, "scenarios_run": done, "scenarios_total": total})
         with writing():
-            one: ScenarioResult = run_scenario(name, scale=scale, seed=seed, output=output)
+            kwargs: dict[str, Any] = {}
+            if args.get("input") is not None:
+                kwargs["input"] = args["input"]
+            one: ScenarioResult = run_scenario(
+                name, scale=scale, seed=seed, output=output, **kwargs
+            )
         result.results.append(one)
     out = result.to_dict()
     out["passed"] = result.met
@@ -154,6 +175,13 @@ COMMANDS = [
                 "(format shape-suite)",
                 True,
                 name_or_path=True,
+            ),
+            "name": Arg("string", "label for this suite run", since="1.5"),
+            "input": Arg(
+                "string",
+                "local folder of tables to use instead of generating scenario data",
+                path="read",
+                since="1.5",
             ),
             "scale": Arg(
                 "string", "a scale preset of the scenarios' domain, or tiny (default: small)"

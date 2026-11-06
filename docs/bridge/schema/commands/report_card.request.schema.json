@@ -8,6 +8,36 @@
     },
     "args": {
       "additionalProperties": false,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "required": [
+                "real"
+              ]
+            },
+            {
+              "required": [
+                "source"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "synthetic"
+              ]
+            },
+            {
+              "required": [
+                "path"
+              ]
+            }
+          ]
+        }
+      ],
       "properties": {
         "config": {
           "description": "a shape-verify-config file (its `utility` section drives the utility gate)",
@@ -44,6 +74,12 @@
           "x-path": "write",
           "x-since": "1.2"
         },
+        "path": {
+          "description": "alias of synthetic for the generated data",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.5"
+        },
         "real": {
           "description": "the real data: a data file, or a folder with one file per table",
           "type": "string",
@@ -63,6 +99,12 @@
           "type": "array",
           "x-since": "1.2"
         },
+        "source": {
+          "description": "alias of real for the source data",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.5"
+        },
         "synthetic": {
           "description": "the synthetic data: a data file, or a folder with one file per table",
           "type": "string",
@@ -78,10 +120,6 @@
           "x-since": "1.2"
         }
       },
-      "required": [
-        "real",
-        "synthetic"
-      ],
       "type": "object"
     },
     "command": {
@@ -127,6 +165,6 @@
   ],
   "title": "report_card request",
   "type": "object",
-  "x-api-version": "1.4",
+  "x-api-version": "1.5",
   "x-since": "1.2"
 }

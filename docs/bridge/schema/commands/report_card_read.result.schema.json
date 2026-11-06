@@ -23,6 +23,9 @@
           },
           "type": "array"
         },
+        "passed": {
+          "type": "boolean"
+        },
         "require": {
           "items": {
             "type": "string"
@@ -75,6 +78,6 @@
     }
   ],
   "title": "report_card_read result",
-  "x-api-version": "1.4",
+  "x-api-version": "1.5",
   "x-since": "1.2"
 }

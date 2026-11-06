@@ -102,7 +102,7 @@ def test_every_1_1_vector_gets_the_recorded_response_from_the_1_2_bridge(
             monkeypatch.setattr("shape.scale.http.urllib_transport", FakeFabric())
         actual = bridge.handle(substitute(one["request"], str(directory)))
         expected = substitute(one["response"], str(directory))
-        assert actual["api_version"] == API_VERSION == "1.4"  # the one field that differs
+        assert actual["api_version"] == API_VERSION == "1.5"  # the one field that differs
         assert differences(without_version(expected), without_version(actual)) == [], (
             path.stem,
             one["name"],
@@ -168,7 +168,7 @@ def test_the_1_1_commands_are_published_as_since_1_0_or_1_1_and_the_new_ones_as_
         n: c["since"] for n, c in old.items()
     }
     new = sorted(set(index) - set(old))
-    assert new and all(index[n]["since"] in ("1.2", "1.4") for n in new)
+    assert new and all(index[n]["since"] in ("1.2", "1.4", "1.5") for n in new)
     for name in new:
         # every argument of a new command is new too (`suite_list` has none)
         args = index[name]["args"]

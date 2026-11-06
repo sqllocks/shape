@@ -54,7 +54,7 @@ A request:
 
 | field | meaning |
 |---|---|
-| `api_version` | `"MAJOR.MINOR"`. Optional (assumed current, 1.4, with a warning) but you should send it. A request that declares `"1.0"` is answered as the 1.0 bridge answers it (below). |
+| `api_version` | `"MAJOR.MINOR"`. Optional (assumed current, 1.5, with a warning) but you should send it. A request that declares `"1.0"` is answered as the 1.0 bridge answers it (below). |
 | `id` | Any string or integer of at most 128 characters. Echoed in the response; use it to match answers. |
 | `command` | One of the commands below. |
 | `args` | The command's arguments (an object; `null` means none). Unknown names are refused. A `null` value is the same as leaving the argument out. |
@@ -106,7 +106,7 @@ The full list, with a sentence for each, is `error_codes` in
 
 ## Versions and the stability promise
 
-`api_version` is `MAJOR.MINOR`; this bridge speaks **1.4** and serves **1.0 to 1.4**.
+`api_version` is `MAJOR.MINOR`; this bridge speaks **1.5** and serves **1.0 to 1.5**.
 
 - **Minor versions only add:** a command, an optional argument, an option, a result field, an error
   code, a warning code. A client written for 1.0 keeps working on 1.7, so **a client ignores result
@@ -115,11 +115,11 @@ The full list, with a sentence for each, is `error_codes` in
   result field, error code or the meaning of any of them.
 - **A major version may break.** A bridge serves one major version. A request for another is refused
   with `usage.unsupported_version`, and the message names the supported range
-  (`... this bridge serves 1.0 to 1.4`). The response always carries the bridge's own
+  (`... this bridge serves 1.0 to 1.5`). The response always carries the bridge's own
   `api_version`, so a client can read it from the refusal.
 - A request with a newer *minor* than the bridge's is served, with the warning
   `newer_minor_version`: what the newer minor added is not available.
-- A request with **no `api_version`** is served as 1.4, with the warning `api_version_assumed`.
+- A request with **no `api_version`** is served as 1.5, with the warning `api_version_assumed`.
 - Persisted files declare their own `format` and integer `version` (the job file below, the vector
   files). A file written by a newer Shape is refused with `input.unsupported_format_version`, never
   misread. The job file `shape-bridge-job` and the vector files `shape-bridge-vectors` are still
@@ -185,7 +185,7 @@ working; Shape's own commands are added.
 | `contract_validate` | validate a contract of the format `shape check` reads (1.1) | `path` or `text` |
 | `safe_scan` | scan a share-safe profile for leaks (1.1) | `path` or `text` |
 | `proposals_contract` | write the accepted rule proposals as a contract (1.2) | `decisions`\*, `output`\*, `merge` |
-| `report_card` | one report card for a synthetic dataset: fidelity, utility, privacy (1.2, job-capable) | `real`\*, `synthetic`\*, `config`, `tiers`, `holdout`, `manifest`, `require`, `output`, `format` (1.4) |
+| `report_card` | one report card for a synthetic dataset: fidelity, utility, privacy (1.2, job-capable) | `real`\*, `synthetic`\*, `config`, `tiers`, `holdout`, `manifest`, `require`, `output`, `format` (1.4), `source`, `path` (1.5) |
 | `report_card_read` | a stored report card, checked (1.2) | `path`\* |
 | `rules_mutate` | mutation-test a contract against planted faults (1.2, job-capable, cancellable) | `data`\*, `contract`\*, `plan`, `seed`, `rate`, `min_score` |
 | `rules_backtest` | replay a contract over a registry's history (1.2, job-capable) | `registry`\*, `name`\*, `contract`\*, `since`, `until`, `window`, `incidents`, `compare` |
@@ -195,7 +195,7 @@ working; Shape's own commands are added.
 | `registry_diff` | drift between two versions in a registry, raw or share-safe (1.2) | `root`\*, `name`\*, `ref1`\*, `ref2`\*, `policy`, `thresholds` |
 | `chaos` | corrupt tables on purpose, with a ground-truth log (1.2, job-capable, cancellable) | `output_dir`\*, `corrupt`\*, `input`, `domain`, `mode`, `scale`, `seed`, `format`, `batch`, `start_date`, `ground_truth`, `allow_real_input` |
 | `suite_list` | the built-in suites and the starter scenarios (1.2) | none |
-| `suite_run` | run a suite of scenarios against their answer keys (1.2, job-capable, cancellable) | `suite`\*, `scale`, `seed`, `output_dir` |
+| `suite_run` | run a suite of scenarios against their answer keys (1.2, job-capable, cancellable) | `suite`\*, `scale`, `seed`, `output_dir`, `input`, `name` (1.5) |
 | `job_status`, `job_cancel`, `job_list` | any job's state, cancel, list | `job_id`\*, `token`; `status`, `limit` |
 | `demo_list`, `demo_run`, `demo_status`, `demo_cleanup` | the demo scenarios (see below) | see the schema |
 
@@ -725,6 +725,8 @@ published vectors, with `/work` for the scratch folder), its error codes and its
 
 ### `report_card`
 
+API 1.5 also accepts `source` and `path`, aliases for `real` and `synthetic`.
+
 Runs what `shape report-card` runs (`shape.quality.report_card`): one card for a synthetic dataset,
 with its fidelity scores and tiers, the utility gate, the memorization gate and, with `holdout`, the
 membership-inference test. `real`, `synthetic` and `holdout` are each a data file or a folder with one
@@ -1178,6 +1180,8 @@ Errors: `usage.unknown_argument`.
 
 ### `suite_run`
 
+API 1.5 also accepts `input` (a folder of selected tables) and `name` (a result label).
+
 Runs a suite of library scenarios and compares each outcome with its answer key: what `shape suite
 run --json` does (`shape.scenario.library.run_suite`). `suite` is a built-in name (see `suite_list`)
 or the path of a suite file (format `shape-suite`, version 1; a file of a newer version answers
@@ -1605,3 +1609,27 @@ in `docs/bridge/schema/1.3/`; the existing 1.3 vectors remain unchanged.
 Bridge 1.4 `report_card` accepts optional `format` (`auto`, `csv`, `parquet`,
 `jsonl`), matching the command line `--format` and Python `data_format`. The default
 `auto` preserves extension-based discovery.
+
+## Rule application and selected inputs (API 1.5)
+
+API 1.5 adds `rules_apply` with `decisions` (read path) and `contract` (write path).
+It applies accepted rule proposals, preserves existing contract rules, and returns
+`applied`, `rejected` and `contract`. Repeating the same request applies zero new
+rules and preserves the contract bytes. Conflicting rules are refused. The same
+operation is available as `shape rules apply CONTRACT --decisions FILE --json`.
+
+`suite_run` accepts optional `input` (a local folder of tables) and `name`
+(a label for the result). Selected tables replace generation; the scenario's defects
+and validation gates still run. The source files are never modified. The input must
+contain the domain's tables. Drift scenarios require generated day-by-day data and
+refuse selected input with `input.invalid_value` before a job starts. Missing input
+answers `input.not_found`. Omitting `input` retains the existing generation behavior.
+
+`report_card` accepts `source` as an alias for `real`, and `path` as an alias for
+`synthetic`. Its 1.5 result includes boolean `passed`, true exactly when `overall` is
+`pass`. This result contains aggregate metrics and no source cell values. Stored
+report cards remain readable with `report_card_read`.
+
+Requests served as 1.0 through 1.4 retain their result shapes and refuse the new
+arguments. Frozen 1.4 schemas are in `docs/bridge/schema/1.4/`; earlier schemas and
+vectors remain unchanged. Response envelopes report the current server version.

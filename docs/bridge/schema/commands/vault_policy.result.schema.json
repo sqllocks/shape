@@ -57,6 +57,6 @@
   ],
   "title": "vault_policy result",
   "type": "object",
-  "x-api-version": "1.4",
+  "x-api-version": "1.5",
   "x-since": "1.4"
 }

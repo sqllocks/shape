@@ -15,9 +15,11 @@ from fakes import FakeFabric
 from jsonschema_lite import validate
 
 from shape.bridge.core import Bridge
+from shape.bridge.protocol import API_VERSION
 from shape.bridge.registry import COMMANDS
 
-SCHEMAS = Path(__file__).resolve().parents[2] / "docs" / "bridge" / "schema"
+SCHEMAS = Path(__file__).resolve().parents[2] / "docs" / "bridge" / "schema" / "1.4"
+FROZEN_COMMANDS = sorted(n for n, command in COMMANDS.items() if command.since != "1.5")
 
 
 def schema(rel: str):
@@ -26,10 +28,10 @@ def schema(rel: str):
 
 def test_there_is_a_vector_file_for_every_command_and_no_other():
     names = {p.stem for p in lib.VECTOR_DIR.glob("*.json")}
-    assert names == set(COMMANDS)
+    assert names == set(FROZEN_COMMANDS)
 
 
-@pytest.mark.parametrize("command", sorted(COMMANDS))
+@pytest.mark.parametrize("command", FROZEN_COMMANDS)
 def test_every_command_has_a_success_and_a_failure_vector(command):
     doc = lib.load(command)
     assert (
@@ -41,7 +43,7 @@ def test_every_command_has_a_success_and_a_failure_vector(command):
     assert outcomes == {True, False}
 
 
-@pytest.mark.parametrize("command", sorted(COMMANDS))
+@pytest.mark.parametrize("command", FROZEN_COMMANDS)
 def test_the_vectors_agree_with_the_published_schemas(command):
     doc = lib.load(command)
     request_schema = schema(f"commands/{command}.request.schema.json")
@@ -62,7 +64,7 @@ def test_the_vectors_agree_with_the_published_schemas(command):
             )
 
 
-@pytest.mark.parametrize("command", sorted(COMMANDS))
+@pytest.mark.parametrize("command", FROZEN_COMMANDS)
 def test_a_live_bridge_gives_the_responses_of_the_vectors(command, tmp_path, monkeypatch):
     import base64
     import time
@@ -85,7 +87,14 @@ def test_a_live_bridge_gives_the_responses_of_the_vectors(command, tmp_path, mon
                 monkeypatch.setattr("shape.scale.http.urllib_transport", FakeFabric())
             actual = bridge.handle(request)
             expected = lib.substitute(one["response"], str(directory))
-            assert lib.matches(expected, actual) == [], (command, one["name"], actual)
+            assert actual["api_version"] == API_VERSION
+            from test_compat_1_0 import without_version
+
+            assert lib.matches(without_version(expected), without_version(actual)) == [], (
+                command,
+                one["name"],
+                actual,
+            )
     deadline = time.time() + 60
     while time.time() < deadline and any(j["status"] == "running" for j in bridge.jobs.list()):
         time.sleep(0.05)

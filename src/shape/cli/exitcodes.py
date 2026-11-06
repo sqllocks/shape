@@ -182,6 +182,7 @@ _EXTRA: dict[str, dict[int, str]] = {
     "report-card": {1: "a section that ran failed"},
     "resolve run": {},
     "resolve synth": {},
+    "rules apply": {},
     "rules backtest": {1: "an incident was missed (with `--fail-on-miss`)"},
     "rules mutate": {1: "the mutation score is below `--min-score`"},
     "scorecard": {1: "a slice gap is above `--max-slice-gap`"},

@@ -235,6 +235,8 @@ def test_effects_and_annotations():
     assert card.job and not card.cancellable and card.since == read.since == "1.2"
     assert card.effects == ("reads_files", "writes_files") and read.effects == ("reads_files",)
     assert {k: a.path for k, a in card.args.items() if a.path} == {
+        "source": "read",
+        "path": "read",
         "real": "read",
         "synthetic": "read",
         "config": "read",

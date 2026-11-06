@@ -22,7 +22,7 @@ Handler = Callable[[dict[str, Any], "Context"], dict[str, Any]]
 _TYPES = ("string", "integer", "number", "boolean", "object", "array")
 
 #: The versions a command or argument can have been added in, with their minor number.
-SINCE = {"1.0": 0, "1.1": 1, "1.2": 2, "1.3": 3, "1.4": 4}
+SINCE = {"1.0": 0, "1.1": 1, "1.2": 2, "1.3": 3, "1.4": 4, "1.5": 5}
 #: What a command can do to the system outside the bridge's own job files (published as
 #: ``effects`` in ``index.json``).
 EFFECTS = ("reads_files", "writes_files", "cancels", "network")
@@ -50,6 +50,8 @@ class Arg:
     #: Values of ``enum`` or ``items_enum`` that a later version added (value to version): a
     #: request served as an older one does not know them, and gets the refusal it always got.
     enum_since: dict[str, str] | None = None
+    # An optional newer argument may supply an older required argument.
+    alias_for: str | None = None
     secret: bool = False
     #: The version that added the argument; a request for an older one does not know it.
     since: str = "1.0"
@@ -142,8 +144,17 @@ class Command:
             "properties": props,
             "additionalProperties": False,
         }
-        if required:
-            schema["required"] = required
+        aliases = {a.alias_for: k for k, a in self.args.items() if a.alias_for}
+        plain = [k for k in required if k not in aliases]
+        if plain:
+            schema["required"] = plain
+        alternatives = [
+            {"oneOf": [{"required": [k]}, {"required": [aliases[k]]}]}
+            for k in required
+            if k in aliases
+        ]
+        if alternatives:
+            schema["allOf"] = alternatives
         return schema
 
 
@@ -190,8 +201,15 @@ def check_args(command: Command, args: dict[str, Any], minor: int = API_MINOR) -
         )
     given = {k: v for k, v in args.items() if v is not None}
     for name, arg in known.items():
+        if arg.alias_for and name in given and arg.alias_for in given:
+            raise BridgeError(
+                "usage.invalid_argument",
+                f"give only one of {name} and {arg.alias_for}",
+            )
         if name not in given:
-            if arg.required:
+            if arg.required and not any(
+                a.alias_for == name and k in given for k, a in known.items()
+            ):
                 raise BridgeError(
                     "usage.missing_argument", f"{command.name} needs the argument {name!r}"
                 )

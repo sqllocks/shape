@@ -5550,6 +5550,27 @@
    "positionals": [],
    "stability": "experimental",
    "subcommands": {
+    "apply": {
+     "flags": {
+      "--decisions": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "CONTRACT.json",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
     "backtest": {
      "flags": {
       "--compare": {

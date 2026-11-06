@@ -138,6 +138,7 @@ def test_write_paths_are_the_ones_a_command_writes():
         ("suite_run", "output_dir"),
         ("vault_rewrap", "out_shape"),
         ("vault_rewrap", "out_vault"),
+        ("rules_apply", "contract"),
     }
 
 
@@ -220,6 +221,7 @@ def test_the_commands_that_write_say_so():
         "chaos",
         "suite_run",
         "vault_rewrap",
+        "rules_apply",
     }
     assert {n for n, c in COMMANDS.items() if "cancels" in c.effects} == {
         "scale_generate",

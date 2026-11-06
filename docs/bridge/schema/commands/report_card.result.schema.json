@@ -23,6 +23,9 @@
           },
           "type": "array"
         },
+        "passed": {
+          "type": "boolean"
+        },
         "require": {
           "items": {
             "type": "string"
@@ -46,7 +49,8 @@
         "inputs",
         "sections",
         "overall",
-        "overall_reasons"
+        "overall_reasons",
+        "passed"
       ],
       "type": "object"
     },
@@ -75,6 +79,6 @@
     }
   ],
   "title": "report_card result",
-  "x-api-version": "1.4",
+  "x-api-version": "1.5",
   "x-since": "1.2"
 }

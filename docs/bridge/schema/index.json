@@ -1,5 +1,5 @@
 {
-  "api_version": "1.4",
+  "api_version": "1.5",
   "commands": {
     "bisect": {
       "args": {
@@ -594,8 +594,10 @@
         "holdout": "1.2",
         "manifest": "1.2",
         "output": "1.2",
+        "path": "1.5",
         "real": "1.2",
         "require": "1.2",
+        "source": "1.5",
         "synthetic": "1.2",
         "tiers": "1.2"
       },
@@ -625,6 +627,23 @@
       "result": "commands/report_card_read.result.schema.json",
       "since": "1.2",
       "summary": "Read a stored report card after checking its format and version."
+    },
+    "rules_apply": {
+      "args": {
+        "contract": "1.5",
+        "decisions": "1.5"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/rules_apply.request.schema.json",
+      "result": "commands/rules_apply.result.schema.json",
+      "since": "1.5",
+      "summary": "Merge accepted rule proposals into a contract, preserving existing rules."
     },
     "rules_backtest": {
       "args": {
@@ -813,6 +832,8 @@
     },
     "suite_run": {
       "args": {
+        "input": "1.5",
+        "name": "1.5",
         "output_dir": "1.2",
         "scale": "1.2",
         "seed": "1.2",

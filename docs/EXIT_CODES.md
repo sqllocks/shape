@@ -379,6 +379,13 @@ parse, and 130 when a scale run is interrupted. See `docs/CLI.md` and `docs/CI.m
 | 0 | ok |
 | 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
 
+## `shape rules apply`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
 ## `shape rules mutate`
 
 | Code | Meaning |

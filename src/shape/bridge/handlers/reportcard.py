@@ -17,6 +17,7 @@ from shape.bridge.context import Context
 from shape.bridge.errors import writing
 from shape.bridge.handlers.common import (
     ANY,
+    BOOL,
     INT,
     STR,
     STRS,
@@ -38,12 +39,12 @@ _CARD = obj(
         "overall": {"enum": ["pass", "fail"]},
         "overall_reasons": STRS,
     },
-    {"shape_version": STR, "require": STRS},
+    {"shape_version": STR, "require": STRS, "passed": BOOL},
 )
 
 
 def prepare_report_card(args: dict[str, Any], ctx: Context) -> None:
-    for name in ("real", "synthetic", "holdout", "manifest", "config"):
+    for name in ("real", "synthetic", "source", "path", "holdout", "manifest", "config"):
         value = args.get(name)
         if value is not None and not Path(str(value)).exists():
             raise BridgeError("input.not_found", f"{name} not found: {value}")
@@ -53,8 +54,8 @@ def cmd_report_card(args: dict[str, Any], ctx: Context) -> Any:
     from shape.quality.reportcard import report_card
 
     card = report_card(
-        str(args["real"]),
-        str(args["synthetic"]),
+        str(args.get("real", args.get("source"))),
+        str(args.get("synthetic", args.get("path"))),
         config=args.get("config"),
         tiers=[int(t) for t in args["tiers"]] if args.get("tiers") else (1, 2),
         holdout=args.get("holdout"),
@@ -63,6 +64,8 @@ def cmd_report_card(args: dict[str, Any], ctx: Context) -> Any:
         require=list(args.get("require") or ()),
     )
     data = card.to_dict()
+    if ctx.minor >= 5:
+        data["passed"] = data["overall"] == "pass"
     output = args.get("output")
     if output:
         with writing():
@@ -106,6 +109,9 @@ def cmd_report_card_read(args: dict[str, Any], ctx: Context) -> Any:
     return ctx.spill("the report card", read_card(str(args["path"])))
 
 
+_CERTIFIED_CARD = {**_CARD, "required": [*_CARD["required"], "passed"]}
+
+
 COMMANDS = [
     Command(
         "report_card",
@@ -122,6 +128,20 @@ COMMANDS = [
                 "the synthetic data: a data file, or a folder with one file per table",
                 True,
                 path="read",
+            ),
+            "source": Arg(
+                "string",
+                "alias of real for the source data",
+                path="read",
+                since="1.5",
+                alias_for="real",
+            ),
+            "path": Arg(
+                "string",
+                "alias of synthetic for the generated data",
+                path="read",
+                since="1.5",
+                alias_for="synthetic",
             ),
             "format": Arg(
                 "string",
@@ -157,7 +177,7 @@ COMMANDS = [
             ),
             "output": Arg("string", "a file to also write the card to, as JSON", path="write"),
         },
-        or_spilled(_CARD),
+        or_spilled(_CERTIFIED_CARD),
         cmd_report_card,
         job=True,
         prepare=prepare_report_card,

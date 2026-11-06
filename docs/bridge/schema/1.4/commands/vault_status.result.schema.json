@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "algorithm": {
+      "type": "string"
+    },
+    "columns": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "ciphertext_bytes": {
+            "type": "integer"
+          },
+          "column": {
+            "type": "string"
+          },
+          "policy": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "column",
+          "policy",
+          "ciphertext_bytes"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "format": {
+      "type": "string"
+    },
+    "kek_id": {
+      "type": "string"
+    },
+    "min_shape_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "profile_content_id": {
+      "type": "string"
+    },
+    "shape_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "vault_id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "ok",
+    "format",
+    "version",
+    "shape_version",
+    "min_shape_version",
+    "vault_id",
+    "profile_content_id",
+    "algorithm",
+    "kek_id",
+    "columns"
+  ],
+  "title": "vault_status result",
+  "type": "object",
+  "x-api-version": "1.4",
+  "x-since": "1.4"
+}
