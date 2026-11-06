@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+      "type": "string"
+    },
+    "args": {
+      "additionalProperties": false,
+      "properties": {
+        "dry_run": {
+          "description": "validate and list writes without writing",
+          "type": "boolean",
+          "x-since": "1.4"
+        },
+        "kek": {
+          "description": "key-encryption key reference; never a literal key",
+          "type": "string",
+          "x-since": "1.4"
+        },
+        "key": {
+          "description": "optional signing key file",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.4"
+        },
+        "new_kek": {
+          "description": "new key-encryption key reference",
+          "type": "string",
+          "x-since": "1.4"
+        },
+        "out_shape": {
+          "description": "new profile path; never overwrites",
+          "type": "string",
+          "x-path": "write",
+          "x-since": "1.4"
+        },
+        "out_vault": {
+          "description": "new vault path; never overwrites",
+          "type": "string",
+          "x-path": "write",
+          "x-since": "1.4"
+        },
+        "passphrase_env": {
+          "description": "environment variable holding the signing key passphrase",
+          "type": "string",
+          "x-since": "1.4"
+        },
+        "shape": {
+          "description": "the profile artifact file that references the vault",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.4"
+        },
+        "vault": {
+          "description": "the encrypted vault file",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.4"
+        }
+      },
+      "required": [
+        "vault",
+        "shape",
+        "kek",
+        "new_kek",
+        "out_shape",
+        "out_vault"
+      ],
+      "type": "object"
+    },
+    "command": {
+      "const": "vault_rewrap"
+    },
+    "id": {
+      "maxLength": 128,
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "async": {
+          "default": false,
+          "description": "for a command that can run as a job: return a job id at once and run in the background",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "include_raw_values": {
+          "default": false,
+          "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "max_inline_bytes": {
+          "default": 262144,
+          "description": "a result part larger than this is written to a file and returned as a reference",
+          "minimum": 1024,
+          "type": "integer",
+          "x-since": "1.0"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "command",
+    "args"
+  ],
+  "title": "vault_rewrap request",
+  "type": "object",
+  "x-api-version": "1.4",
+  "x-since": "1.4"
+}

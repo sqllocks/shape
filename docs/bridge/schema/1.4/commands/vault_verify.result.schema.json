@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "checks": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "check": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "check",
+          "ok",
+          "detail"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "columns": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "vault_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "ok",
+    "vault_id",
+    "columns",
+    "checks"
+  ],
+  "title": "vault_verify result",
+  "type": "object",
+  "x-api-version": "1.4",
+  "x-since": "1.4"
+}

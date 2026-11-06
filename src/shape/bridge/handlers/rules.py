@@ -152,6 +152,26 @@ def cmd_backtest(args: dict[str, Any], ctx: Context) -> Any:
     return ctx.spill("the backtest report", result.to_dict())
 
 
+# ---- rules_apply --------------------------------------------------------------------------
+
+
+def cmd_apply(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
+    from shape.bridge.errors import writing
+    from shape.bridge.handlers.proposals import read_decisions
+    from shape.rules.apply import RuleWriteError, apply_rules
+
+    if Path(args["decisions"]).resolve() == Path(args["contract"]).resolve():
+        raise BridgeError(
+            "usage.invalid_argument", "decisions and contract must be different files"
+        )
+    decisions = read_decisions(args["decisions"], ctx.minor)
+    try:
+        return apply_rules(decisions, args["contract"])
+    except RuleWriteError as exc:
+        with writing():
+            raise exc
+
+
 # ---- schemas ------------------------------------------------------------------------------
 
 _SCORE = obj({"killed": INT, "applicable": INT, "score": nullable(NUM)})
@@ -195,6 +215,22 @@ _BACKTEST = obj(
 )
 
 COMMANDS = [
+    Command(
+        "rules_apply",
+        "Merge accepted rule proposals into a contract, preserving existing rules.",
+        {
+            "decisions": Arg("string", "the rule proposal decision file", True, path="read"),
+            "contract": Arg("string", "the contract to create or update", True, path="write"),
+        },
+        obj({"contract": STR, "applied": INT, "rejected": INT}),
+        cmd_apply,
+        since="1.5",
+        effects=("reads_files", "writes_files"),
+        notes=(
+            "applied counts newly merged proposals; rejected counts rejected rule decisions; "
+            "pending, deferred and stale proposals are ignored; conflicts write nothing",
+        ),
+    ),
     Command(
         "rules_mutate",
         "Plant known faults in data and report which rules of a contract catch them "

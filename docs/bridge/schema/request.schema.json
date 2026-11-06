@@ -45,6 +45,7 @@
         "registry_diff",
         "report_card",
         "report_card_read",
+        "rules_apply",
         "rules_backtest",
         "rules_mutate",
         "safe_scan",
@@ -104,5 +105,5 @@
   ],
   "title": "bridge request",
   "type": "object",
-  "x-api-version": "1.4"
+  "x-api-version": "1.5"
 }

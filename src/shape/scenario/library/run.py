@@ -148,6 +148,7 @@ def run_scenario(
     seed: int | None = None,
     output: str | Path | None = None,
     root: Path | None = None,
+    input: str | Path | None = None,
 ) -> ScenarioResult:
     """Run the library scenario ``name`` and compare it with its answer key.
 
@@ -166,14 +167,31 @@ def run_scenario(
             f"answer key of {name} lists gates the scenario does not check: {', '.join(unknown)}"
         )
     schema = _schema(spec["domain"])
+    if input is not None and spec.get("drift"):
+        raise LibraryError("selected input is not supported for drift scenarios")
     out_dir = None if output is None else Path(output) / name
+    if input is not None and out_dir is not None:
+        check_selected_output(input, out_dir)
     outcome = Outcome(name, spec["domain"], scale, seed)
     if spec.get("drift"):
         _run_drift(spec, schema, outcome, out_dir)
     else:
-        _run_data(spec, schema, outcome, out_dir)
+        _run_data(spec, schema, outcome, out_dir, input)
     outcome.elapsed_seconds = time.perf_counter() - started
     return ScenarioResult(outcome, mismatches(expect, outcome))
+
+
+def check_selected_output(source: str | Path, output: str | Path) -> None:
+    """Refuse overlap or existing output symlinks before selected data can be written."""
+    source_path = Path(source).resolve()
+    target = Path(output).resolve()
+    if (
+        target == source_path
+        or source_path in target.parents
+        or target in source_path.parents
+        or any(p.is_symlink() for p in target.rglob("*"))
+    ):
+        raise LibraryError("suite output overlaps selected input or contains symbolic links")
 
 
 def _generate(schema: Any, scale: str, seed: int) -> Any:
@@ -190,11 +208,33 @@ def _write(result: Any, directory: Path) -> list[str]:
     return [str(p) for p in write_result(result, "parquet", directory)]
 
 
-def _run_data(spec: dict[str, Any], schema: Any, outcome: Outcome, out_dir: Path | None) -> None:
+def _run_data(
+    spec: dict[str, Any],
+    schema: Any,
+    outcome: Outcome,
+    out_dir: Path | None,
+    input: str | Path | None = None,
+) -> None:
     from shape.scenario.library.defects import apply_defects
     from shape.scenario.runner import _run_gate
 
-    generated = _generate(schema, outcome.scale, outcome.seed)
+    if input is None:
+        generated = _generate(schema, outcome.scale, outcome.seed)
+    else:
+        from shape.cli.incremental import read_tables
+        from shape.generation.engine import GenerationResult
+
+        tables = read_tables(str(input))
+        missing = sorted(set(schema.tables) - set(tables))
+        if missing:
+            raise LibraryError("selected input is missing tables: " + ", ".join(missing))
+        generated = GenerationResult(
+            tables=tables,
+            schema=schema,
+            generation_order=list(tables),
+            elapsed_seconds=0.0,
+            row_counts={n: t.num_rows for n, t in tables.items()},
+        )
     tables, outcome.defects = apply_defects(
         generated.tables, list(spec.get("defects", [])), schema, outcome.seed
     )

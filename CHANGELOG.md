@@ -6,6 +6,8 @@ Status: available.
 
 ## Unreleased
 
+- Bridge API 1.5 adds `rules_apply` (also `shape rules apply`), preserving existing rules and reporting applied/rejected proposal counts. `suite_run` can execute scenarios on selected local input tables; `report_card` accepts source/generated-data aliases and includes a boolean `passed` verdict for certification consumers. Earlier minor results and frozen schema/vector publications remain unchanged.
+
 - Bridge API 1.4 adds metadata-only vault status, verification, key rotation and column-policy lookup, a read-only chaos-kind catalogue and optional report-card input format selection. The catalogue is also available through `shape chaos --list-kinds`; report-card accepts `--format` and Python `data_format`. Timelapse frame ordering, window counts and its emitted schema are documented and tested. Existing minor requests and their frozen outputs remain supported.
 
 - Preserve cancellation across concurrent persisted job-store progress updates.

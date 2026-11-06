@@ -26,6 +26,11 @@ def add_arguments(sub: Any) -> None:
     )
     cmds = top.add_subparsers(dest="rules_cmd", required=True)
 
+    apply = cmds.add_parser("apply", help="merge accepted rule proposals into a contract")
+    apply.add_argument("contract", metavar="CONTRACT.json")
+    apply.add_argument("--decisions", required=True, metavar="DECISIONS.json")
+    apply.add_argument("--json", action="store_true", help="print applied and rejected counts")
+
     m = cmds.add_parser(
         "mutate",
         help="plant known faults and report which rules catch them",
@@ -157,6 +162,18 @@ def backtest_text(report: dict[str, Any]) -> str:
 
 
 def run(a: argparse.Namespace) -> int:
+    if a.rules_cmd == "apply":
+        from shape.proposals import DecisionFile
+        from shape.rules.apply import apply_rules
+
+        if Path(a.decisions).resolve() == Path(a.contract).resolve():
+            raise ValueError("decisions and contract must be different files")
+        applied = apply_rules(DecisionFile.read(a.decisions), a.contract)
+        if a.json:
+            print(json.dumps(applied, sort_keys=True))
+        else:
+            print(f"{a.contract}: {applied['applied']} applied, {applied['rejected']} rejected")
+        return 0
     if a.rules_cmd == "mutate":
         from shape.rules.mutation import MutationError, mutation_test
 

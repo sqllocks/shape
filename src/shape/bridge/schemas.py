@@ -104,7 +104,7 @@ def response_envelope() -> dict[str, Any]:
 
 def command_request(command: Command) -> dict[str, Any]:
     args = command.request_schema()
-    required = ["command"] + (["args"] if args.get("required") else [])
+    required = ["command"] + (["args"] if any(a.required for a in command.args.values()) else [])
     return _doc(
         f"{command.name} request",
         {

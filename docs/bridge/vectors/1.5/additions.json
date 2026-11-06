@@ -1,0 +1,303 @@
+{
+  "api_version": "1.5",
+  "cases": [
+    {
+      "request": {
+        "api_version": "1.5",
+        "args": {
+          "contract": "${DIR}/contract.json",
+          "decisions": "${DIR}/decisions.json"
+        },
+        "command": "rules_apply"
+      },
+      "response": {
+        "api_version": "1.5",
+        "command": "rules_apply",
+        "id": null,
+        "ok": true,
+        "result": {
+          "applied": 0,
+          "contract": "${DIR}/contract.json",
+          "rejected": 0
+        },
+        "warnings": []
+      }
+    },
+    {
+      "request": {
+        "api_version": "1.5",
+        "args": {
+          "input": "${DIR}/selected",
+          "name": "selected",
+          "suite": "${DIR}/suite.json"
+        },
+        "command": "suite_run"
+      },
+      "response": {
+        "api_version": "1.5",
+        "command": "suite_run",
+        "id": null,
+        "ok": true,
+        "result": {
+          "met": true,
+          "passed": true,
+          "scale": null,
+          "scenarios": [
+            {
+              "met": true,
+              "mismatches": [],
+              "outcome": {
+                "defects": {},
+                "domain": "retail",
+                "drift": [],
+                "elapsed_seconds": "<any>",
+                "files": [],
+                "gate_messages": {},
+                "gates": {
+                  "null_check": true,
+                  "referential_integrity": true,
+                  "row_count": true,
+                  "schema_conformance": true,
+                  "uniqueness": true
+                },
+                "scale": "small",
+                "scenario": "clean_baseline",
+                "seed": 42
+              },
+              "scenario": "clean_baseline"
+            }
+          ],
+          "suite": "selected"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "request": {
+        "api_version": "1.5",
+        "args": {
+          "format": "csv",
+          "path": "${DIR}/generated",
+          "source": "${DIR}/real",
+          "tiers": [
+            2
+          ]
+        },
+        "command": "report_card"
+      },
+      "response": {
+        "api_version": "1.5",
+        "command": "report_card",
+        "id": null,
+        "ok": true,
+        "result": {
+          "format": "shape-report-card",
+          "inputs": {
+            "holdout": null,
+            "manifest": null,
+            "real": {
+              "dataset_id": "sha256:73ed9583b8e5ae846ec298492e343cbb094360897ea04bfe2e6e4d059465abb3",
+              "tables": {
+                "data": 4
+              }
+            },
+            "synthetic": {
+              "dataset_id": "sha256:73ed9583b8e5ae846ec298492e343cbb094360897ea04bfe2e6e4d059465abb3",
+              "tables": {
+                "data": 4
+              }
+            }
+          },
+          "overall": "pass",
+          "overall_reasons": [],
+          "passed": true,
+          "require": [],
+          "sections": {
+            "fidelity": {
+              "gates": [
+                {
+                  "name": "overall_score",
+                  "relation": ">=",
+                  "status": "pass",
+                  "threshold": 85.0,
+                  "value": 92.85714285714286
+                },
+                {
+                  "name": "table_score",
+                  "relation": ">=",
+                  "status": "pass",
+                  "table": "data",
+                  "threshold": 70.0,
+                  "value": 92.85714285714286
+                },
+                {
+                  "name": "coverage",
+                  "status": "pass"
+                },
+                {
+                  "name": "tier2_pass_rate",
+                  "relation": ">=",
+                  "status": "pass",
+                  "table": "data",
+                  "threshold": 1.0,
+                  "value": 1.0
+                }
+              ],
+              "metrics": {
+                "extra_tables": [],
+                "issues": [],
+                "missing_tables": [],
+                "overall_score": 92.85714285714286,
+                "tables": {
+                  "data": {
+                    "columns": {
+                      "amount": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": null,
+                        "chi2_statistic": null,
+                        "dtype_match": true,
+                        "ks_statistic": null,
+                        "mean_delta": 0.0,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 92.85714285714286,
+                        "std_ratio": 1.0,
+                        "value_overlap": null
+                      },
+                      "id": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": null,
+                        "chi2_statistic": null,
+                        "dtype_match": true,
+                        "ks_statistic": null,
+                        "mean_delta": 0.0,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 92.85714285714286,
+                        "std_ratio": 1.0,
+                        "value_overlap": null
+                      }
+                    },
+                    "extra_columns": [],
+                    "issues": [],
+                    "missing_columns": [],
+                    "present": true,
+                    "row_count_real": 4,
+                    "row_count_synth": 4,
+                    "score": 92.85714285714286
+                  }
+                },
+                "thresholds": {
+                  "min_column": null,
+                  "min_overall": 85.0,
+                  "min_table": 70.0
+                },
+                "tier2": {
+                  "data": {
+                    "anomaly_rate": null,
+                    "cardinality": {
+                      "amount": {
+                        "column": "amount",
+                        "deviation": 0.0,
+                        "passed": true,
+                        "ratio": 1.0,
+                        "real_cardinality": 4,
+                        "synth_cardinality": 4
+                      },
+                      "id": {
+                        "column": "id",
+                        "deviation": 0.0,
+                        "passed": true,
+                        "ratio": 1.0,
+                        "real_cardinality": 4,
+                        "synth_cardinality": 4
+                      }
+                    },
+                    "format_preservation": {},
+                    "passing_rate": 1.0,
+                    "string_similarity": {}
+                  }
+                }
+              },
+              "notes": [],
+              "status": "pass"
+            },
+            "privacy": {
+              "gates": [
+                {
+                  "name": "memorization",
+                  "status": "pass",
+                  "value": 1.0
+                },
+                {
+                  "name": "membership_inference",
+                  "reason": "no holdout was given (--holdout): membership inference needs real rows that were not given to the generator",
+                  "status": "not_run"
+                }
+              ],
+              "metrics": {
+                "membership_inference": {
+                  "reason": "no holdout was given (--holdout): membership inference needs real rows that were not given to the generator",
+                  "status": "not_run"
+                },
+                "memorization": {
+                  "fail_at": "CONFIDENTIAL",
+                  "min_nn_distance": null,
+                  "tables": {
+                    "data": {
+                      "columns": [
+                        "amount",
+                        "id"
+                      ],
+                      "exact_match_rate": 1.0,
+                      "nn_distance": {
+                        "columns": [
+                          "id",
+                          "amount"
+                        ],
+                        "median": 0.0,
+                        "min": 0.0,
+                        "p05": 0.0,
+                        "rows_checked": 4
+                      },
+                      "reproduced_row_indices": [
+                        0,
+                        1,
+                        2,
+                        3
+                      ],
+                      "reproduced_rows": 4,
+                      "restricted": false,
+                      "rows": 4,
+                      "source_rows": 4
+                    }
+                  }
+                }
+              },
+              "notes": [
+                "data: no column is classified CONFIDENTIAL or above, so reproduced rows are reported but cannot fail the gate (set \"classifications\" in the verify configuration)"
+              ],
+              "status": "pass"
+            },
+            "utility": {
+              "gates": [
+                {
+                  "name": "utility_retention",
+                  "reason": "no verify configuration was given (--config), so there is no `utility` section",
+                  "status": "not_run"
+                }
+              ],
+              "metrics": {},
+              "notes": [],
+              "reason": "no verify configuration was given (--config), so there is no `utility` section",
+              "status": "not_run"
+            }
+          },
+          "shape_version": "0.9.3",
+          "version": 1
+        },
+        "warnings": []
+      }
+    }
+  ]
+}

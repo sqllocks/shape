@@ -71,6 +71,7 @@ ADDED_1_2 = {
 
 def test_the_command_set_is_the_plans_plus_the_core_workflow_and_the_job_commands():
     assert set(COMMANDS) == PLAN_COMMANDS | ADDED | JOBS | ADDED_1_1 | ADDED_1_2 | {
+        "rules_apply",
         "chaos_kinds",
         "vault_status",
         "vault_verify",
@@ -95,7 +96,13 @@ def test_every_command_has_a_published_request_and_result_schema(name):
     assert request["additionalProperties"] is False and result["x-api-version"] == API_VERSION
     assert request["properties"]["args"]["additionalProperties"] is False
     required = [k for k, a in COMMANDS[name].args.items() if a.required]
-    assert request["properties"]["args"].get("required", []) == required
+    aliases = {a.alias_for: k for k, a in COMMANDS[name].args.items() if a.alias_for}
+    assert request["properties"]["args"].get("required", []) == [
+        k for k in required if k not in aliases
+    ]
+    assert request["properties"]["args"].get("allOf", []) == [
+        {"oneOf": [{"required": [k]}, {"required": [aliases[k]]}]} for k in required if k in aliases
+    ]
     assert ("args" in request["required"]) == bool(required)
     kinds = {"array": ["x"], "object": {}, "integer": 1, "number": 1, "boolean": True}
     sample = {

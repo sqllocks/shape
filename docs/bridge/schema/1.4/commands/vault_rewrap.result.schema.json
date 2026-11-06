@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "columns": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "dry_run": {
+      "type": "boolean"
+    },
+    "notices": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "sha256": {
+      "type": "string"
+    },
+    "signed": {
+      "type": "boolean"
+    },
+    "vault_id": {
+      "type": "string"
+    },
+    "writes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "ok",
+    "dry_run",
+    "writes",
+    "columns",
+    "signed",
+    "notices"
+  ],
+  "title": "vault_rewrap result",
+  "type": "object",
+  "x-api-version": "1.4",
+  "x-since": "1.4"
+}
