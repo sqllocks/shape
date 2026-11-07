@@ -44057,7 +44057,7 @@ certificate.</p>
     </div>
 
 </div><h3 id="shape.check">shape.check<a class="headerlink" href="#shape.check" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">shape</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">contract</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">enforce_learned</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">shape</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">contract</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">enforce_learned</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">as_of</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -44065,7 +44065,7 @@ certificate.</p>
 
 
 <h2 id="shape.contracts.v1.check" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">shape</span><span class="o">.</span><span class="n">contracts</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">contract</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">enforce_learned</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">shape</span><span class="o">.</span><span class="n">contracts</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">contract</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">enforce_learned</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">as_of</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 <a href="#shape.contracts.v1.check" class="headerlink" title="Permanent link">&para;</a></h2>
 
@@ -44073,6 +44073,9 @@ certificate.</p>
     <div class="doc doc-contents first">
 
         <p>Check <code>profile</code> against a v1 contract (a dict, or the path to a JSON file).</p>
+<p><code>regex</code> checks stored profile values or exact values when <code>data</code> is supplied.
+Relative <code>min</code>/<code>max</code> bounds require an explicit <code>as_of</code> date, recorded in the result;
+<code>as_of_timezone</code> defines their calendar days (UTC by default).</p>
 <p>The optional <code>timeseries</code> and <code>reconcile</code> rules check data, not a profile (see
 <code>docs/VERIFY.md</code>): <code>data</code> is the tables (<code>{name: pyarrow.Table}</code>, or a path that
 :func:<code>shape.quality.load_tables</code> reads), and a contract with such rules and no <code>data</code>

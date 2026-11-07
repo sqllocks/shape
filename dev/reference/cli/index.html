@@ -14762,10 +14762,10 @@ Exit codes:
 </code></pre></div>
 <h2 id="shape-check"><code>shape check</code><a class="headerlink" href="#shape-check" title="Permanent link">&para;</a></h2>
 <p>Stability: <strong>stable</strong>.</p>
-<div class="highlight"><pre><span></span><code>usage: shape check [-h] [--data DATA] [--format {auto,csv,parquet,jsonl}] [--json RESULT.json]
-                   [--junit FILE] [--sarif FILE] [--notify REF] [--project FILE] [--no-project]
-                   [--source NAME] [--changes FILE] [--no-changes] [--on YYYY-MM-DD] [--strict]
-                   [--enforce-learned] [--verify PUBKEY] [--dry-run]
+<div class="highlight"><pre><span></span><code>usage: shape check [-h] [--data DATA] [--as-of YYYY-MM-DD] [--format {auto,csv,parquet,jsonl}]
+                   [--json RESULT.json] [--junit FILE] [--sarif FILE] [--notify REF]
+                   [--project FILE] [--no-project] [--source NAME] [--changes FILE] [--no-changes]
+                   [--on YYYY-MM-DD] [--strict] [--enforce-learned] [--verify PUBKEY] [--dry-run]
                    PROFILE.shape [CONTRACT.json]
 
 Check a profile (or a captured evidence document) against a contract. Exit 0 when it passes, 1
@@ -14780,6 +14780,7 @@ options:
   --data DATA           a data file or directory of data files: needed by the contract's
                         `timeseries` and `reconcile` rules, which check data rather than the
                         profile
+  --as-of YYYY-MM-DD    explicit batch date for relative min/max
   --format {auto,csv,parquet,jsonl}
   --json RESULT.json
   --notify REF          also send the result to this webhook (an env:// or file:// reference to

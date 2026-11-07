@@ -6762,6 +6762,10 @@ schema and suite (<code>shape check</code> reports it missing). A column with no
 <td><code>CHECK (col ~ 'regex')</code> on PostgreSQL, <code>REGEXP</code> on MySQL</td>
 </tr>
 <tr>
+<td><code>regex</code></td>
+<td>whole-value <code>CHECK</code> on PostgreSQL/MySQL when <code>min_match_rate</code> is 1; gap on T-SQL, Fabric Warehouse or a lower rate</td>
+</tr>
+<tr>
 <td><code>required_columns</code>, <code>allow_extra_columns: false</code></td>
 <td>the table has exactly its columns</td>
 </tr>
@@ -6805,6 +6809,10 @@ from its rules (a number bound gives <code>integer</code> or <code>float</code>,
 <tr>
 <td><code>pattern</code></td>
 <td><code>pattern</code></td>
+</tr>
+<tr>
+<td><code>regex</code></td>
+<td>whole-value <code>pattern</code> at rate 1; lower rates remain in <code>x-shape</code>; combined with a label through <code>allOf</code></td>
 </tr>
 <tr>
 <td><code>required_columns</code></td>
@@ -6855,6 +6863,10 @@ emitting imports neither pandera nor pandas. It imports <code>pandera.pandas</co
 <tr>
 <td><code>pattern</code></td>
 <td><code>Check.str_matches(regex)</code></td>
+</tr>
+<tr>
+<td><code>regex</code></td>
+<td>whole-value <code>Check.str_matches</code> at rate 1; lower rates are a gap kept in metadata</td>
 </tr>
 <tr>
 <td><code>row_count</code></td>
@@ -6912,6 +6924,10 @@ timestamp. Each expectation names its contract rule in <code>meta.shape_rule</co
 <tr>
 <td><code>pattern</code></td>
 <td><code>expect_column_values_to_match_regex</code> with <code>mostly</code> 0.9</td>
+</tr>
+<tr>
+<td><code>regex</code></td>
+<td><code>expect_column_values_to_match_regex</code> with whole-value expression and <code>mostly</code> = <code>min_match_rate</code></td>
 </tr>
 <tr>
 <td><code>row_count</code></td>
@@ -7053,6 +7069,12 @@ the list; without <code>--strict</code> the file is written and the list is in <
 <span class="n">contract_from</span><span class="p">(</span><span class="s2">"jsonschema"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>                  <span class="c1"># what the schema states</span>
 <span class="n">contract_from</span><span class="p">(</span><span class="s2">"jsonschema"</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">use_meta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>   <span class="c1"># the whole contract, from x-shape</span>
 </code></pre></div>
+<p>Relative <code>min</code> and <code>max</code> objects (<code>as_of_offset_days</code>) are gaps in every target:
+DDL, GX, JSON Schema and pandera cannot resolve a runtime batch date statically.
+They are preserved in each target's metadata where available, never frozen to a
+constant. The timezone context is also a gap and is retained in metadata where
+available, including a dataset timezone inherited by the emitted table. Constant
+numeric bounds retain their existing mappings.</p>
 <h2 id="what-is-out-of-scope">What is out of scope<a class="headerlink" href="#what-is-out-of-scope" title="Permanent link">&para;</a></h2>
 <p>dbt has its own command (<code>shape to-dbt-tests</code>, <a href="../DBT/">DBT.md</a>). Running the emitted artifacts
 against a database or a data frame is not part of <code>shape check</code>. Reading a pandera schema or a GX
@@ -7077,6 +7099,9 @@ shape<span class="w"> </span>contract<span class="w"> </span>emit<span class="w"
 </code></pre></div>
 </details>
 <p>This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.</p>
+<p>Imported GX and JSON Schema expressions matching a known label still become <code>pattern</code>.
+Other expressions become <code>regex</code>; GX preserves <code>mostly</code> as <code>min_match_rate</code>.
+Target regex engines may differ from RE2; check expression compatibility before execution.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Emitting+a+contract&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FCONTRACT_EMIT%2F">Report a problem with this page</a></p>
 
 

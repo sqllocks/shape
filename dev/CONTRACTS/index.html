@@ -1628,6 +1628,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#user-defined-regular-expressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User-defined regular expressions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#relative-date-and-timestamp-bounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relative date and timestamp bounds
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -6336,6 +6358,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#user-defined-regular-expressions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User-defined regular expressions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#relative-date-and-timestamp-bounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relative date and timestamp bounds
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -6376,7 +6420,7 @@ object that maps each table name to a contract of its own.</p>
 </tr>
 <tr>
 <td><code>columns</code></td>
-<td>per column: <code>dtype</code>, <code>nullable</code>, <code>unique</code>, <code>max_null_rate</code>, <code>pattern</code>, <code>allowed_values</code>, <code>min</code>, <code>max</code>, <code>distribution</code>, <code>min_true_rate</code>, <code>max_true_rate</code>, <code>no_placeholder</code>, <code>valid_as</code>, <code>strength</code></td>
+<td>per column: <code>dtype</code>, <code>nullable</code>, <code>unique</code>, <code>max_null_rate</code>, <code>pattern</code>, <code>regex</code>, <code>allowed_values</code>, <code>min</code>, <code>max</code>, <code>distribution</code>, <code>min_true_rate</code>, <code>max_true_rate</code>, <code>no_placeholder</code>, <code>valid_as</code>, <code>strength</code></td>
 </tr>
 <tr>
 <td><code>required_columns</code>, <code>allow_extra_columns</code></td>
@@ -6393,6 +6437,10 @@ object that maps each table name to a contract of its own.</p>
 <tr>
 <td><code>timeseries</code>, <code>reconcile</code></td>
 <td>time-series and reconciliation rules; <code>shape check --data DATA</code> supplies the data (<a href="../VERIFY/">Verification</a>)</td>
+</tr>
+<tr>
+<td><code>as_of_timezone</code></td>
+<td>IANA timezone for relative date bounds (UTC by default)</td>
 </tr>
 <tr>
 <td><code>drift</code></td>
@@ -6479,6 +6527,86 @@ takes the harder of the strengths of <code>min_true_rate</code> and <code>max_tr
 <p>From Python: <code>shape.check(profile, contract, strict=False, enforce_learned=False)</code>.</p>
 <p>Writing <code>strength: learned</code> from <code>shape proposals</code> is not done yet: <code>learned</code> is for contracts
 produced by tools or edited by hand.</p>
+<h2 id="user-defined-regular-expressions">User-defined regular expressions<a class="headerlink" href="#user-defined-regular-expressions" title="Permanent link">&para;</a></h2>
+<p>The column rule <code>regex</code> tests whole non-null values. It is independent of <code>pattern</code>,
+which still compares a detected label. Both rules can appear on the same column.
+The short form <code>"regex": "[A-Z]{3}"</code> requires every tested value to match. The object
+form accepts <code>expression</code>, <code>min_match_rate</code> (default 1.0), and optional <code>strength</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"columns"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"product_code"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"regex"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"expression"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[A-Z]{3}-[0-9]{4}"</span><span class="p">,</span><span class="w"> </span><span class="nt">"min_match_rate"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9</span><span class="p">}},</span>
+<span class="w">    </span><span class="nt">"load_date"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"regex"</span><span class="p">:</span><span class="w"> </span><span class="s2">"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"</span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>For example, 90 matching codes out of 100 non-null values pass a minimum rate of
+0.9; 89 fail. Nulls are ignored; use <code>nullable</code> or <code>max_null_rate</code> to govern them.
+An empty or all-null column passes this rule. Expressions are wrapped as
+<code>^(?:expression)$</code>, so <code>\d{3}</code> rejects <code>"1234"</code>.</p>
+<p>Matching uses PyArrow's linear-time RE2 engine. RE2 has no backreferences or
+lookaround. Invalid RE2 syntax, empty expressions, unknown object keys, and rates
+that are not finite numbers in [0, 1] are contract errors before evaluation.
+Values use the profiler's text spelling, including ISO dates and timestamps and
+canonical numeric text. Nested values and nonfinite numbers without an unambiguous
+profiler text conversion raise a named <code>ContractError</code> on the data path.</p>
+<p>Without <code>--data</code>, the rule tests <code>value_counts_ext</code>. Complete stored values give an
+exact result: every distinct value must be present, with counts covering all
+non-null rows. Profiles store six-place proportions; the checker reconstructs
+counts only when they are uniquely determined and sum to the non-null count.
+Truncated strings and ambiguous rounded counts cannot prove completeness.
+A known nonmatching stored value is a definite violation at the default rate of 1.
+Otherwise an incomplete, folded or redacted profile is blind: <code>not_evaluable</code>
+records the rule and <code>passed</code> is false. Pass <code>--data</code> or re-profile with
+<code>capture="full"</code> to supply the missing evidence.</p>
+<p><code>shape check PROFILE.shape CONTRACT.json --data DATA.parquet</code> tests every non-null
+value exactly, replacing the profile result for <code>regex</code>. From Python, pass
+<code>data={"table": arrow_table}</code>. Dataset contracts put rules in each table's <code>columns</code>.</p>
+<p>Violations record the expression and rate in <code>expected</code>. <code>observed</code> contains
+<code>match_rate</code>, <code>non_matching_count</code>, <code>tested_count</code>, and up to 20 distinct
+<code>non_matching_values</code>. The value list is empty for sensitive or redacted columns,
+or whenever a safe capture would withhold their values, including on the data path.
+Column strength and rule-local regex strength support <code>hard</code>, <code>soft</code> and <code>learned</code>;
+rule-local strength takes precedence. Strict and learned enforcement work as usual.</p>
+<h2 id="relative-date-and-timestamp-bounds">Relative date and timestamp bounds<a class="headerlink" href="#relative-date-and-timestamp-bounds" title="Permanent link">&para;</a></h2>
+<p><code>min</code> and <code>max</code> accept <code>{"as_of_offset_days": N}</code> for integer calendar-day offsets.
+Constant bounds keep their existing behavior. A relative bound requires an explicit
+batch date: <code>shape check PROFILE.shape CONTRACT.json --as-of 2026-10-07</code>, or
+<code>shape.check(profile, contract, as_of="2026-10-07")</code>. Python also accepts a <code>date</code>.
+There is no implicit current date; the result records the supplied date as <code>as_of</code>.</p>
+<p>For a daily order file, this contract accepts only orders dated on the batch day:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"as_of_timezone"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UTC"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"columns"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"order_date"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"min"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"as_of_offset_days"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span>
+<span class="w">      </span><span class="nt">"max"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"as_of_offset_days"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>A synthetic October 7 batch with 1,974 October 7 orders and 104 orders dated
+September 27–October 6 fails with the September 27 minimum. The same contract
+accepts a clean October 6 batch when checked with <code>--as-of 2026-10-06</code>.
+To allow orders one day before the batch, change the minimum offset to <code>-1</code>.
+For an October 7 batch, October 6 at midnight then passes, while October 5 at
+23:59:59 fails.</p>
+<p>For dates, bounds compare calendar dates inclusively. For timestamps, <code>min</code> is
+midnight at the start of the resolved day, while <code>max</code> accepts every instant
+before the following midnight. The expected maximum timestamp records that
+exclusive next-midnight boundary. Days use UTC by default. Set <code>as_of_timezone</code>
+to an IANA zone such as <code>America/New_York</code> to use local calendar days, including
+DST transitions. A dataset may set the zone at the root and override it per table.
+Aware timestamps are compared as instants; naive timestamps are read in that zone.
+Timezone information is preserved.</p>
+<p>The profile path parses the stored minimum or maximum as an ISO date or timestamp.
+Unparseable or non-temporal observations produce the usual not-comparable violation.
+<code>--data</code> uses exact column extremes. Redacted extremes remain blind, preserving the
+existing safe-capture rule. Invalid offsets, unknown bound keys, invalid zones and
+missing or malformed as-of dates raise <code>ContractError</code>. Strength applies separately
+to <code>min</code> and <code>max</code>.</p>
+<p>A relative-bound violation records the original offset, <code>as_of</code>, and resolved ISO
+<code>bound</code> in <code>expected</code>, with the observed extreme in <code>observed</code>. Relative bounds
+remain gaps in every static emitter; emitting never freezes them to a date.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Contracts&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FCONTRACTS%2F">Report a problem with this page</a></p>
 
 
