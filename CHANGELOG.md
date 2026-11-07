@@ -2,29 +2,23 @@
 
 Status: available.
 
-**Early access 0.9.3.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+**Early access 0.9.4.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
 ## Unreleased
 
+## 0.9.4
+
+### Added
+
 - Contracts accept whole-value RE2 `regex` rules over complete profile values or exact `--data`, with match-rate thresholds, strength, blind evidence reporting and privacy-controlled failure samples. Relative date/timestamp `min` and `max` bounds use explicit `--as-of` dates and IANA calendar-day zones. Emitters map regex rules, preserve custom imports and report relative bounds as gaps.
-
 - Bridge API 1.5 adds `rules_apply` (also `shape rules apply`), preserving existing rules and reporting applied/rejected proposal counts. `suite_run` can execute scenarios on selected local input tables; `report_card` accepts source/generated-data aliases and includes a boolean `passed` verdict for certification consumers. Earlier minor results and frozen schema/vector publications remain unchanged.
-
 - Bridge API 1.4 adds metadata-only vault status, verification, key rotation and column-policy lookup, a read-only chaos-kind catalogue and optional report-card input format selection. The catalogue is also available through `shape chaos --list-kinds`; report-card accepts `--format` and Python `data_format`. Timelapse frame ordering, window counts and its emitted schema are documented and tested. Existing minor requests and their frozen outputs remain supported.
-
-- Preserve cancellation across concurrent persisted job-store progress updates.
-
-- Bridge API 1.3 design DDL uses unbounded SQL strings consistently with the CLI and Python API. Bridge 1.1 and 1.2 retain historical DDL after canonical validation; indexed SQL Server strings still require an explicit `max_length`.
-
-- Run SQL/Delta write acceptance before the full CI suite on every platform, use two workers for macOS/Windows core tests and reuse native build dependencies; test coverage and acceptance gates remain enforced.
+- Bridge API 1.6 adds authenticated vault column-policy mutation while retaining earlier minor request and result contracts.
 - Generation derives SQL keys by default; `--sql-constraints all` adds supported structured
   CHECK and literal DEFAULT clauses from schemas and JSON/YAML contracts. Database writes
   verify existing declarations and preserve enforced references during supported dataset
   reruns; unsafe combinations fail before mutation with a named constraint. DuckDB uses
   parent-first inline foreign keys. Warehouse constraint limitations are reported explicitly.
-
-### W9-07: opt-in Delta table features
-
 - Delta `table_properties`, not-null/check `constraints`, `column_mapping="name"`,
   `deletion_vectors=true`, `generated_columns` and `timestamp_ntz=true` use supported
   delta-rs APIs, with capability refusals naming the installed and verified version.
@@ -32,55 +26,42 @@ Status: available.
   reader/writer feature lists. Failed validation names the rule or generated column
   and keeps an existing table's version. Default output and pinned fixtures stay
   unchanged. Renaming, deletion-vector actions and upsert are outside this package.
-
-
-- PostgreSQL sources retain native array element types, and Databricks sources parse declared
-  recursive catalog types. Source URIs refuse writer-only nested options before connecting.
-
 - Delta adds `nested=json` for explicit JSON text storage. Native maps keep their entries
   and normalize nested timestamps to UTC and microsecond precision, matching scalar/list
   read-back; unsupported nested shapes fail before storage.
 - DuckDB native container roundtrips use the existing read-only Source, with UTC instants.
   JSON-backed read-back can restore caller-supplied Arrow types with strict one-pass parsing;
   ambiguous JSON and temporal precision loss are refused.
-
-- Database sinks now default to native nested types: PostgreSQL scalar arrays/JSONB, MySQL
-  JSON and recursive Databricks ARRAY/STRUCT/MAP. `nested=json` preserves earlier text paths;
-  Snowflake also accepts `nested=typed` for ARRAY/OBJECT and uses vectorized nested Parquet
-  COPY to retain null array positions. Unsupported shapes fail before connecting; strict
-  JSON conversion refuses duplicate object map keys, non-finite numbers and malformed values.
-
-- DuckDB writes Arrow lists, structs and maps natively by default. The new `nested=json`
-  option stores nested values as JSON text; unsupported native shapes fail before connection
-  with their column and the JSON alternative named. Nested temporal values use the same
-  documented microsecond normalization as scalar values.
-
-- Iceberg catalog endpoints use `catalog_uri` without colliding with the destination URI.
-  REST emulator startup builds the pinned official storage releases from source.
-
 - Kafka and Event Hubs read and write plain Avro and Protobuf with local schemas,
   preserve nested Arrow fields, and count malformed or incompatible rows. Kafka
   Avro reads resolve writer schema ids with a per-read cache; Event Hubs supports
   Azure Schema Registry Avro through its optional schema-registry extra.
-- Compare frozen release results with explicit recorded-error noncomparability, approved
-  reference category-name aliases and authenticated capture-date replay; recorded values
-  and all numeric comparison thresholds remain unchanged.
 - Add experimental BigQuery Parquet load and Storage Read sources, reference-only credentials, bounded catalog sampling and a dry-run query cost guard.
-
-
 - Add Snowflake and Databricks SQL warehouse sources with Arrow reads, declared catalog keys, bounded samples, explicit population counts and Snowflake warehouse provenance. Live read validation remains pending Owner accounts.
-
 - Add an optional Oracle 19c+ thin-mode source and array-DML sink, exact decimal/temporal reads, bounded LOB fallback, schema keys/statistics and safe CLI/bridge capture. Empty strings fail by default, with explicit nullable conversion.
-- Keep the locked development toolchain audit clear with compatible `filelock` 3.20.3 and patched `setuptools` 84.1.0.
-- Keep the fingerprint readback test compatible with DuckDB 2.
-
 - W9-12: semantic model profiles retain table measures and read-only TOM roles. `semantic-model://`
   accepts `as_role` for native DAX role-filtered reads, and plain profiles retain hidden columns.
   `export-model --from-profile` preserves measures and roles; `known-answer MODEL.shape --measures
   from-profile` computes supported aggregates and lists unsupported DAX under `skipped`.
   Model diffs report `measure_change` and `role_change` with no numeric drift score.
   See `docs/SEMANTIC_MODEL.md`.
+- Read standard dated landing layouts in `shape chaos --input`, preserving table names and provenance checks.
 
+### Changed
+
+- **Breaking change:** `shape plan` now prints text by default; scripts that parse it must add `--json` (the JSON keys are unchanged).
+- Bridge API 1.3 design DDL uses unbounded SQL strings consistently with the CLI and Python API. Bridge 1.1 and 1.2 retain historical DDL after canonical validation; indexed SQL Server strings still require an explicit `max_length`.
+- PostgreSQL sources retain native array element types, and Databricks sources parse declared
+  recursive catalog types. Source URIs refuse writer-only nested options before connecting.
+- Database sinks now default to native nested types: PostgreSQL scalar arrays/JSONB, MySQL
+  JSON and recursive Databricks ARRAY/STRUCT/MAP. `nested=json` preserves earlier text paths;
+  Snowflake also accepts `nested=typed` for ARRAY/OBJECT and uses vectorized nested Parquet
+  COPY to retain null array positions. Unsupported shapes fail before connecting; strict
+  JSON conversion refuses duplicate object map keys, non-finite numbers and malformed values.
+- DuckDB writes Arrow lists, structs and maps natively by default. The new `nested=json`
+  option stores nested values as JSON text; unsupported native shapes fail before connection
+  with their column and the JSON alternative named. Nested temporal values use the same
+  documented microsecond normalization as scalar values.
 - SQL writes preserve Arrow integer widths, decimal dimensions, float32 and temporal precision.
   Zoned values keep their instant to the microsecond and normalize to UTC; zone names are not
   preserved. Undeclared strings are now unbounded instead of VARCHAR(255), and database writers
@@ -88,28 +69,35 @@ Status: available.
   resolved DDL without connecting or generating values. T-SQL and Warehouse string key columns
   require explicit `max_length`; missing widths are refused before connecting, naming the column.
   See `docs/SINKS.md`.
+- the `anonymeter` extra of sqllocks-shape-integrations is withdrawn; Anonymeter 1.x requires NumPy < 1.27 and Shape requires NumPy >= 2, so the extra could not be installed. The adapter stays and explains this when Anonymeter is missing.
 
-- Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.
+### Fixed
 
-Development: the dev and CI environment is now locked with uv; user installs are unchanged.
-
-Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
-
-Integrations: the `anonymeter` extra of sqllocks-shape-integrations is withdrawn; Anonymeter 1.x requires NumPy < 1.27 and Shape requires NumPy >= 2, so the extra could not be installed. The adapter stays and explains this when Anonymeter is missing.
-
-Fix: `shape diff` now refuses safe profiles instead of reporting no changes (they cannot be diffed, as docs/PROJECT.md states).
-
-Fix: `shape validate` accepts v1 contracts; unknown contract rules are now errors instead of being ignored; CONTRACTS.md lists every rule (including valid_as).
-
-Fix (privacy): safe profiles no longer keep an excluded column's name or a sensitive column's fitted distribution, whatever path built them.
-
-Converting a full capture to the safe form now gives a different content ID when the profile has sensitive columns, because their fitted distributions are no longer kept.
-
+- Preserve cancellation across concurrent persisted job-store progress updates.
+- Iceberg catalog endpoints use `catalog_uri` without colliding with the destination URI.
+  REST emulator startup builds the pinned official storage releases from source.
+- `shape diff` now refuses safe profiles instead of reporting no changes (they cannot be diffed, as docs/PROJECT.md states).
+- `shape validate` accepts v1 contracts; unknown contract rules are now errors instead of being ignored; CONTRACTS.md lists every rule (including valid_as).
 - Correct Fabric plugin PyPI installation guidance and align GitHub Action status with the experimental CI capability.
 - Keep the GitHub Action comment source label when a missing baseline leaves no project annotation in the result.
 - Clarify that Excel sentinel findings include typed date/datetime cells and cover six `9999-12-31` datetime cells with a regression test.
-- Read standard dated landing layouts in `shape chaos --input`, preserving table names and provenance checks.
-- Changed: `shape plan` now prints human-readable text by default; scripts that parse its output must add `--json` (the JSON keys are unchanged).
+
+### Privacy
+
+- safe profiles no longer keep an excluded column's name or a sensitive column's fitted distribution, whatever path built them.
+- Converting a full capture to the safe form now gives a different content ID when the profile has sensitive columns, because their fitted distributions are no longer kept.
+
+### Development
+
+- Run SQL/Delta write acceptance before the full CI suite on every platform, use two workers for macOS/Windows core tests and reuse native build dependencies; test coverage and acceptance gates remain enforced.
+- Compare frozen release results with explicit recorded-error noncomparability, approved
+  reference category-name aliases and authenticated capture-date replay; recorded values
+  and all numeric comparison thresholds remain unchanged.
+- Keep the locked development toolchain audit clear with compatible `filelock` 3.20.3 and patched `setuptools` 84.1.0.
+- Keep the fingerprint readback test compatible with DuckDB 2.
+- Refresh the locked certificate bundle for GHSA-6q48-6c7w-9gw2 and use the prepared Playwright browser for documentation verification.
+- the dev and CI environment is now locked with uv; user installs are unchanged.
+- README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
 
 ## 0.9.3
 

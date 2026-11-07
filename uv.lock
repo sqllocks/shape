@@ -8220,7 +8220,7 @@ wheels = [
 
 [[package]]
 name = "sqllocks-shape"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "." }
 dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12' or (extra == 'group-14-sqllocks-shape-benchmark' and extra == 'group-14-sqllocks-shape-fabric-demo') or (extra == 'group-14-sqllocks-shape-docs' and extra == 'group-14-sqllocks-shape-fabric-demo')" },
@@ -8718,7 +8718,7 @@ fabric-demo = [
 
 [[package]]
 name = "sqllocks-shape-behavior"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-behavior" }
 dependencies = [
     { name = "sqllocks-shape" },
@@ -8729,7 +8729,7 @@ requires-dist = [{ name = "sqllocks-shape", editable = "." }]
 
 [[package]]
 name = "sqllocks-shape-databases"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-databases" }
 dependencies = [
     { name = "sqllocks-shape" },
@@ -8775,7 +8775,7 @@ provides-extras = ["postgres", "mysql", "snowflake", "databricks", "duckdb", "bi
 
 [[package]]
 name = "sqllocks-shape-dbt"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-dbt" }
 dependencies = [
     { name = "pyyaml" },
@@ -8790,7 +8790,7 @@ requires-dist = [
 
 [[package]]
 name = "sqllocks-shape-domains"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-domains" }
 dependencies = [
     { name = "faker" },
@@ -8805,7 +8805,7 @@ requires-dist = [
 
 [[package]]
 name = "sqllocks-shape-eventhubs"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-eventhubs" }
 dependencies = [
     { name = "azure-eventhub" },
@@ -8841,7 +8841,7 @@ provides-extras = ["avro", "protobuf", "schema-registry", "entra"]
 
 [[package]]
 name = "sqllocks-shape-fabric"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-fabric" }
 dependencies = [
     { name = "sqllocks-shape" },
@@ -8877,7 +8877,7 @@ provides-extras = ["eventhubs", "sqlserver", "entra", "onelake", "semantic-link"
 
 [[package]]
 name = "sqllocks-shape-healthcare-codes"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-healthcare-codes" }
 dependencies = [
     { name = "sqllocks-shape" },
@@ -8888,7 +8888,7 @@ requires-dist = [{ name = "sqllocks-shape", editable = "." }]
 
 [[package]]
 name = "sqllocks-shape-healthcare-standards"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-healthcare-standards" }
 dependencies = [
     { name = "sqllocks-shape" },
@@ -8912,7 +8912,7 @@ provides-extras = ["test"]
 
 [[package]]
 name = "sqllocks-shape-integrations"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-integrations" }
 dependencies = [
     { name = "sqllocks-shape" },
@@ -8950,7 +8950,7 @@ provides-extras = ["openlineage", "mlflow", "presidio", "sdmetrics", "ibis"]
 
 [[package]]
 name = "sqllocks-shape-kafka"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-kafka" }
 dependencies = [
     { name = "confluent-kafka" },
@@ -8976,7 +8976,7 @@ provides-extras = ["avro", "protobuf"]
 
 [[package]]
 name = "sqllocks-shape-simulation"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-simulation" }
 dependencies = [
     { name = "sqllocks-shape" },
@@ -8987,7 +8987,7 @@ requires-dist = [{ name = "sqllocks-shape", editable = "." }]
 
 [[package]]
 name = "sqllocks-shape-sqlserver"
-version = "0.9.3"
+version = "0.9.4"
 source = { editable = "plugins/shape-sqlserver" }
 dependencies = [
     { name = "pyodbc" },
