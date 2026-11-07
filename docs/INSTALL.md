@@ -21,7 +21,7 @@ python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" INSTALL
     ```
 
 
-**Early access 0.9.3.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+**Early access 0.9.4.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
 Supported Python: 3.11–3.14, the versions exercised by the CI matrix. Install Shape and its domain plugin:
 

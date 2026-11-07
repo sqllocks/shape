@@ -177,7 +177,7 @@
       },
       "image": {
         "type": "string",
-        "defaultValue": "ghcr.io/sqllocks/shape:0.9.3"
+        "defaultValue": "ghcr.io/sqllocks/shape:0.9.4"
       },
       "scriptsFolder": {
         "type": "string",
