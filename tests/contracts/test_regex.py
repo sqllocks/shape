@@ -333,3 +333,12 @@ def test_exact_data_replaces_definite_profile_violation() -> None:
     assert shape.check(
         profile, contract(r"\d{3}"), data={"batch": pa.table({"code": ["123"]})}
     ).passed
+
+
+def test_exact_data_new_rare_value_does_not_bypass_safe_capture() -> None:
+    profile = shape.profile(pa.table({"code": ["good"] * 50 + ["bad"] * 50}))
+    data = pa.table({"code": ["good"] * 99 + ["NEW-PRIVATE-VALUE"]})
+    result = shape.check(profile, contract("good"), data={"batch": data})
+    assert not result.passed
+    assert result.violations[0]["observed"]["non_matching_values"] == []
+    assert "NEW-PRIVATE-VALUE" not in json.dumps(result.to_dict())

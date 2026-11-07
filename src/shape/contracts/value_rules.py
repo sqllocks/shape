@@ -59,6 +59,10 @@ def check_value_rules(
                 if source is not None:
                     expression, rate = regex_options(rules["regex"])
                     texts = _texts(source, name)
+                    if reveal:
+                        reveal = _exact_samples_allowed(
+                            texts, safe_tables[tname]["columns"][name], profile
+                        )
                     observed = observed_matches(texts, [1] * len(texts), expression, reveal)
                     found = (
                         _violation(
@@ -116,3 +120,15 @@ def _parseable(value: Any, zone: Any) -> bool:
         return True
     except (ValueError, TypeError, OverflowError):
         return False
+
+
+def _exact_samples_allowed(texts: Any, safe_column: dict[str, Any], profile: Any) -> bool:
+    """New or newly rare data values must not bypass the profile's release policy."""
+    from collections import Counter
+
+    from shape.privacy.safe_profile import K_DEFAULT
+
+    released = safe_column.get("value_counts_ext") or {}
+    counts = Counter(texts.to_pylist())
+    k = profile.capture.get("k") or K_DEFAULT
+    return all(value in released and count >= k for value, count in counts.items())
