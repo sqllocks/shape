@@ -246,3 +246,8 @@ def test_zoned_timestamp_conversion_refused() -> None:
 
     with pytest.raises(ContractError, match="regex.*code"):
         check([datetime.datetime(2026, 1, 1, tzinfo=datetime.UTC)], ".*")
+
+
+def test_import_allof_boolean_schema_does_not_crash() -> None:
+    text = json.dumps({"properties": {"code": {"pattern": "a", "allOf": [True]}}})
+    assert contract_from("jsonschema", text)["columns"]["code"]["regex"]["expression"] == "a"

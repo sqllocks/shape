@@ -203,5 +203,6 @@ def _read_property(prop: Mapping[str, Any]) -> dict[str, Any]:
             else expression
         )
     for part in prop.get("allOf", []):
-        rules.update(_read_property(part))
+        if isinstance(part, Mapping):
+            rules.update(_read_property(part))
     return rules
