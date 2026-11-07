@@ -27,6 +27,8 @@ import math
 from collections.abc import Mapping
 from typing import Any
 
+from shape.contracts.regex import anchored, regex_options
+
 from ._common import (
     FORMAT,
     JOINT_RULES,
@@ -49,6 +51,8 @@ _DTYPES = {
 
 
 def _why(rule: str, value: Any) -> str | None:
+    if rule == "regex" and regex_options(value)[1] < 1:
+        return "a match rate below 1 needs a table-wide aggregate"
     if rule == "max_null_rate":
         return "a pandera Column has no tolerated share of nulls"
     return why_common(rule, value)
@@ -93,6 +97,8 @@ def _column(name: str, rules: Mapping[str, Any], required: bool, notes: Notes, t
         checks.append(f"Check.isin({py([v for v in ok['allowed_values'] if v is not None])})")
     if "pattern" in ok:
         checks.append(f"Check.str_matches({py(PATTERNS[ok['pattern']])})")
+    if "regex" in ok:
+        checks.append(f"Check.str_matches({py(anchored(regex_options(ok['regex'])[0]))})")
     if checks:
         args.append("checks=[" + ", ".join(checks) + "]")
     if not required:

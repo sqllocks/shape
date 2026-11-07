@@ -59,6 +59,7 @@ _COLUMN_RULES = {
     "unique",
     "max_null_rate",
     "pattern",
+    "regex",
     "allowed_values",
     "min",
     "max",
@@ -223,6 +224,10 @@ def _validate_contract(contract: dict[str, Any], *, top: bool = True) -> None:
 
 def _validate_column_rules(name: str, rules: dict[str, Any]) -> None:
     """The values of one column's rules. Nothing is coerced: ``"false"`` is not ``false``."""
+    if "regex" in rules:
+        from .regex import validate_regex
+
+        validate_regex(name, rules["regex"])
     for key in ("dtype", "pattern", "distribution"):
         if key in rules and not isinstance(rules[key], str):
             # No recognised pattern or fitted distribution is represented by null in profiles.
@@ -677,7 +682,11 @@ def _data_violations(contract: dict[str, Any], data: Any) -> list[dict[str, Any]
     from shape.quality.reconcile import ReconciliationGate
     from shape.quality.timeseries import check_timeseries
 
+    from .regex import regex_violations, uses_regex
+
     present = [k for k in _DATA_RULES if k in contract]
+    if uses_regex(contract):
+        present.append("regex")
     if not present:
         return []
     if data is None:
@@ -687,7 +696,7 @@ def _data_violations(contract: dict[str, Any], data: Any) -> list[dict[str, Any]
             "CONTRACT --data DATA`)"
         )
     tables = load_tables(data) if isinstance(data, (str, Path)) else dict(data)
-    violations: list[dict[str, Any]] = []
+    violations = regex_violations(contract, tables)
     if "timeseries" in contract:
         for f in check_timeseries(tables, contract["timeseries"]):
             if f["severity"] == "error":

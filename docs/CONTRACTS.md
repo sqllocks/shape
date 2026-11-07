@@ -11,7 +11,7 @@ object that maps each table name to a contract of its own.
 | Key | Meaning |
 |---|---|
 | `row_count` | `{"min": N, "max": N}` |
-| `columns` | per column: `dtype`, `nullable`, `unique`, `max_null_rate`, `pattern`, `allowed_values`, `min`, `max`, `distribution`, `min_true_rate`, `max_true_rate`, `no_placeholder`, `valid_as`, `strength` |
+| `columns` | per column: `dtype`, `nullable`, `unique`, `max_null_rate`, `pattern`, `regex`, `allowed_values`, `min`, `max`, `distribution`, `min_true_rate`, `max_true_rate`, `no_placeholder`, `valid_as`, `strength` |
 | `required_columns`, `allow_extra_columns` | which columns must be there, and whether others may be |
 | `fd`, `implies`, `reference_pair`, `max_implausible_rate` | rules on the joint analysis (`docs/JOINT.md`) |
 | `tables` | maps each table name in a dataset profile to its own contract |
@@ -96,3 +96,42 @@ From Python: `shape.check(profile, contract, strict=False, enforce_learned=False
 
 Writing `strength: learned` from `shape proposals` is not done yet: `learned` is for contracts
 produced by tools or edited by hand.
+
+## User-defined regular expressions
+
+The column rule `regex` tests every non-null value against a whole-value expression.
+It is independent of the detected-label rule `pattern`; a column can declare both.
+The short form `"regex": "[A-Z]{3}"` requires every tested value to match.
+The object form sets a tolerated match rate:
+
+```json
+{
+  "columns": {
+    "product_code": {"regex": {"expression": "[A-Z]{3}-[0-9]{4}", "min_match_rate": 0.9}}
+  }
+}
+```
+
+For example, 90 matching codes out of 100 non-null values pass this contract;
+89 fail. Omit `min_match_rate` to require 1.0. Nulls are ignored (use `nullable`
+or `max_null_rate` to govern them); an empty or all-null column passes this rule.
+Expressions are wrapped as `^(?:expression)$`, so `\d{3}` rejects `"1234"`.
+
+Run `shape check PROFILE.shape CONTRACT.json --data DATA.parquet`, or pass
+`data={"table": arrow_table}` to `shape.check`. The rule needs the original data;
+without it the check raises `ContractError`. Dataset contracts put each rule in
+its table's `columns` object and require data for those tables.
+
+Matching uses PyArrow's RE2 engine, which runs in linear time. RE2 does not support
+backreferences or lookaround. Invalid expressions, empty expressions, unknown object
+keys, and nonnumeric, nonfinite or out-of-range rates are contract errors before
+data is read. Rates must be numbers in [0, 1], without coercion.
+Non-string columns use the profiler's text conversion, including its numeric and
+boolean spelling. Nested values, timezone-aware timestamps and nonfinite numbers are refused with a
+named `ContractError` because the profiler uses special handling rather than the
+shared text conversion. Convert them explicitly before profiling and checking.
+
+Violations contain the expression and minimum rate in `expected`, and only
+`match_rate`, `non_matching_count` and `tested_count` in `observed`.
+Failing values are never sampled. The default strength is `hard`; column strength
+and strict/learned enforcement work as for other column rules.

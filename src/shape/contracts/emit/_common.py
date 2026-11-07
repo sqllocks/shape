@@ -145,6 +145,11 @@ def normalize_table(contract: Mapping[str, Any]) -> dict[str, Any]:
                 value = round(float(value), NULL_RATE_PLACES)
             if key == "allowed_values" and isinstance(value, list):
                 value = [v for v in value if v is not None]
+            if key == "regex":
+                from shape.contracts.regex import regex_options
+
+                expression, rate = regex_options(value)
+                value = {"expression": expression, "min_match_rate": rate}
             kept[key] = copy.deepcopy(value)
         if kept:
             columns[name] = kept

@@ -690,6 +690,9 @@ def _cmd_check(a):
             "shape check needs CONTRACT.json: pass one, or set `contract` on the source in "
             "shape.yml"
         )
+    from shape.contracts.v1 import _load_contract, validate_contract
+
+    validate_contract(_load_contract(contract))
     data = None
     if a.data:
         from shape.quality import load_tables
