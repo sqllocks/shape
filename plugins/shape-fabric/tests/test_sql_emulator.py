@@ -12,6 +12,7 @@ recorded tapes pin meet a real engine (types, truncation, transactions, quoting)
 
 import datetime as dt
 import os
+import struct
 import uuid
 from decimal import Decimal
 
@@ -50,8 +51,17 @@ def schema():
     conn.close()
 
 
+def _datetimeoffset(raw):
+    year, month, day, hour, minute, second, nanos, offset_hour, offset_minute = struct.unpack(
+        "<6hI2h", raw
+    )
+    zone = dt.timezone(dt.timedelta(hours=offset_hour, minutes=offset_minute))
+    return dt.datetime(year, month, day, hour, minute, second, nanos // 1000, tzinfo=zone)
+
+
 def rows_of(schema, table, order="id"):
     conn = _tsql.connect(CS)
+    conn.add_output_converter(-155, _datetimeoffset)
     try:
         cursor = conn.cursor()
         cursor.execute(
@@ -73,6 +83,8 @@ def test_every_write_mode_against_a_real_server(schema):
         assert first[3] == Decimal("0.00") and first[4] is None and first[5] is True
         assert first[6] == dt.date(2000, 1, 1)
         assert first[7] == dt.datetime(2026, 1, 1, 12, 0, 0, 123456)
+        assert first[8] == dt.datetime(2026, 1, 1, 12, 0, 0, 123456, tzinfo=dt.UTC)
+        assert first[8].utcoffset() == dt.timedelta(0)
         with pytest.raises(WriteError):  # the primary key rejects a repeat, and nothing is added
             w.write_table("customer", batches, write_mode="append")
         assert len(rows_of(schema, "customer")) == 7
@@ -82,6 +94,20 @@ def test_every_write_mode_against_a_real_server(schema):
         assert len(rows_of(schema, "customer")) == 7
         with pytest.raises(ShapeError, match="already exists"):
             w.write_table("customer", batches)
+
+
+@pytest.mark.parametrize("offset", [dt.timedelta(hours=5, minutes=30), dt.timedelta(hours=-7)])
+def test_zoned_timestamp_preserves_the_instant_on_a_real_server(schema, offset):
+    value = dt.datetime(2026, 1, 1, 0, 0, 0, 123456, tzinfo=dt.timezone(offset))
+    batch = pa.record_batch(
+        [pa.array([1, 2]), pa.array([value, None], pa.timestamp("ns", str(value.tzinfo)))],
+        names=["id", "at"],
+    )
+    with SqlDatabaseWriter(CS, schema_name=schema) as writer:
+        assert writer.write_table("zoned", [batch]) == 2
+    rows = rows_of(schema, "zoned")
+    assert rows == [(1, value.astimezone(dt.UTC)), (2, None)]
+    assert rows[0][1].utcoffset() == dt.timedelta(0)
 
 
 def test_strings_are_not_cut_when_the_first_row_is_the_shortest(schema):

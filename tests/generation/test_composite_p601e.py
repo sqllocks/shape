@@ -38,6 +38,7 @@ from shape.plugins import kit
 from shape.plugins.host import default_host
 
 from ..benchmarks.historical_imports import historical_imports
+from .decimal_declarations import declare_expected_decimals
 
 ROOT = Path(__file__).resolve().parents[2]
 BENCH = ROOT / "benchmarks" / "vs_refengine"
@@ -174,6 +175,8 @@ def test_the_merged_schema_is_the_baselines_apart_from_the_named_differences(key
     base = _without_unread_keys(
         _normalised(schema_import.import_dump(FIXTURES[key]["schema"]).to_dict())
     )
+    for domain in _children(key):
+        declare_expected_decimals(base, domain, prefix=f"{domain}_")
     assert _differences(mine, base) == _expected_differences(key)
 
 

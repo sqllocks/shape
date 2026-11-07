@@ -219,6 +219,10 @@ def test_requested_existing_primary_key_is_verified_in_order(actual):
 def test_catalog_grouping_does_not_conflate_different_boolean_or_arithmetic_expressions():
     from shape_fabric._constraint_catalog import expression_tokens
 
+    assert expression_tokens("([amount]>=(0) AND [amount]<=(10))") == expression_tokens(
+        "(([amount] >= 0) AND ([amount] <= 10))"
+    )
+
     assert expression_tokens("(([a]=1 OR [b]=2) AND [c]=3)") != expression_tokens(
         "([a]=1 OR ([b]=2 AND [c]=3))"
     )

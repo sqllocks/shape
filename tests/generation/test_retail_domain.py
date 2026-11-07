@@ -22,6 +22,8 @@ from shape.generation.rules import validate_rules
 from shape.plugins import kit
 from shape.plugins.host import default_host
 
+from .decimal_declarations import declare_expected_decimals
+
 ROOT = Path(__file__).resolve().parents[2]
 BENCH = ROOT / "benchmarks" / "vs_refengine"
 sys.path.insert(0, str(BENCH))
@@ -93,10 +95,11 @@ def test_the_definition_carries_reference_data_and_presets(retail):
 
 def test_the_schema_is_the_baselines_with_nanosecond_dates(retail):
     """The shipped schema is the baseline's retail dump, imported (P4-01a), with only the
-    ``unit: ns`` of its uniform temporal columns added."""
+    ``unit: ns`` of its uniform temporal columns and explicit decimal dimensions added."""
     dump = json.loads((BENCH / "fixtures" / "schemas" / "retail_3nf.json").read_text("utf-8"))
     mine = retail.schema.to_dict()
     expected = schema_import.import_dump(dump).to_dict()
+    declare_expected_decimals(expected, "retail")
     for table in mine["tables"].values():
         for col in table["columns"].values():
             gen = col["generator"]

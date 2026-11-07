@@ -44,6 +44,17 @@ _UC_NAME_BAD = frozenset(" ./`")
 # A string column longer than this becomes TEXT / LONGTEXT instead of VARCHAR(n).
 MAX_VARCHAR = 4000
 _TEXT = {"postgres": "TEXT", "mysql": "LONGTEXT"}
+_MYSQL_EXPRESSION_DEFAULT_TYPES = {
+    "TEXT",
+    "LONGTEXT",
+    "MEDIUMTEXT",
+    "TINYTEXT",
+    "BLOB",
+    "LONGBLOB",
+    "MEDIUMBLOB",
+    "TINYBLOB",
+    "JSON",
+}
 
 
 def check_identifier(name: Any, kind: str, dialect: str) -> str:
@@ -165,6 +176,17 @@ def column_definitions(
     return out
 
 
+def _default_expression(value: str, sql_type: str, dialect: str) -> str:
+    if dialect != "mysql" or sql_type not in _MYSQL_EXPRESSION_DEFAULT_TYPES:
+        return value
+    if value.startswith("_utf8mb4 X'"):
+        # MySQL reparses charset-introduced literals in expression defaults and
+        # can misquote them under NO_BACKSLASH_ESCAPES. Keep the same UTF-8 hex
+        # payload behind an explicit conversion, independent of the SQL mode.
+        value = f"CONVERT({value.removeprefix('_utf8mb4 ')} USING utf8mb4)"
+    return f"({value})"
+
+
 def create_table_sql(
     schema_name: str | None,
     table: str,
@@ -185,7 +207,7 @@ def create_table_sql(
     defs = [
         f"  {quote(name, dialect)} {sql_type}"
         + (
-            f" DEFAULT {constraints.defaults[name]}"
+            " DEFAULT " + _default_expression(constraints.defaults[name], sql_type, dialect)
             if constraints and name in constraints.defaults
             else ""
         )

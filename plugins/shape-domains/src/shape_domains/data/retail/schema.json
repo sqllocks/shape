@@ -257,8 +257,8 @@
      "nullable": false,
      "null_rate": 0.0,
      "max_length": null,
-     "precision": null,
-     "scale": null
+     "precision": 9,
+     "scale": 6
     },
     "lng": {
      "name": "lng",
@@ -271,8 +271,8 @@
      "nullable": false,
      "null_rate": 0.0,
      "max_length": null,
-     "precision": null,
-     "scale": null
+     "precision": 9,
+     "scale": 6
     },
     "is_primary": {
      "name": "is_primary",

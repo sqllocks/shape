@@ -157,9 +157,12 @@ def _mysql_catalog(cursor: Any, namespace: str, table: str) -> dict[str, Any]:
     cursor.execute(f"SHOW FULL COLUMNS FROM {target}")
     fields = [str(item[0]).casefold() for item in cursor.description]
     defaults = {}
+    expression_defaults = set()
     for row in cursor.fetchall():
         item = dict(zip(fields, row, strict=True))
         defaults[str(item["field"])] = item["default"]
+        if "DEFAULT_GENERATED" in str(item.get("extra", "")).split():
+            expression_defaults.add(str(item["field"]))
     cursor.execute(
         "SELECT t.CONSTRAINT_NAME, c.CHECK_CLAUSE, t.ENFORCED "
         "FROM information_schema.TABLE_CONSTRAINTS t "
@@ -187,7 +190,13 @@ def _mysql_catalog(cursor: Any, namespace: str, table: str) -> dict[str, Any]:
         name: (tuple(r[0] for r in rows), rows[0][1], rows[0][2], tuple(r[3] for r in rows), True)
         for name, rows in groups.items()
     }
-    return {"keys": keys, "checks": checks, "defaults": defaults, "foreign": foreign}
+    return {
+        "keys": keys,
+        "checks": checks,
+        "defaults": defaults,
+        "expression_defaults": expression_defaults,
+        "foreign": foreign,
+    }
 
 
 def verify_existing_constraints(
@@ -336,7 +345,19 @@ def verify_existing_constraints(
             ):
                 refuse(name)
         for column in options.get("defaults", {}):
-            if actual["defaults"].get(column) != expected["defaults"].get(column):
+            found_default = actual["defaults"].get(column)
+            wanted_default = expected["defaults"].get(column)
+            if (
+                dialect == "mysql"
+                and column in actual.get("expression_defaults", ())
+                and isinstance(found_default, str)
+                and isinstance(wanted_default, str)
+            ):
+                # MySQL's temporary catalog adds outer parentheses to expression
+                # defaults. Literal defaults still require exact value equality.
+                found_default = _expression(found_default, backslashes=backslashes)
+                wanted_default = _expression(wanted_default, backslashes=backslashes)
+            if found_default != wanted_default:
                 refuse("DEFAULT " + column)
     finally:
         try:

@@ -1,5 +1,6 @@
 """Real PostgreSQL/MySQL constraint enforcement and mode-independent defaults."""
 
+import json
 import os
 import uuid
 
@@ -7,6 +8,7 @@ import pyarrow as pa
 import pytest
 from shape_databases import MySqlSink, PostgresSink, WriteError
 
+from shape.errors import ShapeError
 from shape.generation.write_constraints import _PREPARED_CONSTRAINTS
 
 pytestmark = pytest.mark.emulator
@@ -179,6 +181,49 @@ def test_actual_string_defaults_survive_sql_backslash_modes(database, strict_mod
         )
     finally:
         execute(conn, f"DROP TABLE IF EXISTS {quote(table, dialect)}")
+
+
+@pytest.mark.parametrize("strict_mode", [False, True])
+def test_mysql_blob_and_json_expression_defaults_survive_sql_modes(strict_mode):
+    import pymysql
+
+    table = "cd_" + uuid.uuid4().hex[:12]
+    value = "C:\\tmp\\café 'quoted'"
+    options = {
+        "schema": pa.schema(
+            [("blob", pa.binary()), ("document", pa.struct([("value", pa.string())]))]
+        ),
+        "defaults": {"blob": value, "document": json.dumps({"value": value})},
+    }
+    with pymysql.connect(
+        host="127.0.0.1",
+        user="shape",
+        database="shape",
+        password=os.environ["SHAPE_MYSQL_PASSWORD"],
+        autocommit=True,
+    ) as conn:
+        execute(conn, "SET SESSION sql_mode = %s", ("NO_BACKSLASH_ESCAPES" if strict_mode else "",))
+        sink = MySqlSink()
+        uri = "mysql://shape@localhost:3306/shape"
+        try:
+            assert sink.write(uri, table, [], connection=conn, **options) == 0
+            assert sink.write(uri, table, [], connection=conn, write_mode="append", **options) == 0
+            execute(conn, f"INSERT INTO {quote(table, 'mysql')} () VALUES ()")
+            blob, document = execute(conn, f"SELECT * FROM {quote(table, 'mysql')}")[0]
+            assert blob == value.encode("utf-8")
+            assert json.loads(document) == {"value": value}
+            with pytest.raises(ShapeError, match="DEFAULT blob"):
+                sink.write(
+                    uri,
+                    table,
+                    [],
+                    connection=conn,
+                    write_mode="append",
+                    schema=options["schema"],
+                    defaults={**options["defaults"], "blob": "different"},
+                )
+        finally:
+            execute(conn, f"DROP TABLE IF EXISTS {quote(table, 'mysql')}")
 
 
 def test_existing_constraint_refusal_never_truncates_real_rows(database):
