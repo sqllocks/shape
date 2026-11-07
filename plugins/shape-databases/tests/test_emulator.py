@@ -127,7 +127,7 @@ def test_postgres_copy_round_trip_and_modes(pg, name):
             Decimal("0.75"),
             False,
             dt.date(2000, 1, 4),
-            dt.datetime(2024, 1, 1, 15),
+            dt.datetime(2024, 1, 1, 15, tzinfo=dt.UTC),
             b"\x03",
         )
         with pytest.raises(ShapeError, match="already exists"):
@@ -137,6 +137,23 @@ def test_postgres_copy_round_trip_and_modes(pg, name):
         assert _query(pg, f'SELECT count(*) FROM "{name}"') == [(1,)]
         assert sink.write(PG_URI, name, iter([sample_batch(300, 2)]), write_mode="replace") == 2
         assert _query(pg, f'SELECT count(*) FROM "{name}"') == [(2,)]
+    finally:
+        _drop(pg, name)
+
+
+def test_postgres_zoneless_timestamp_round_trips_naive(pg, name):
+    value = dt.datetime(2024, 1, 2, 3, 4, 5, 123456)
+    batch = pa.record_batch([pa.array([value, None], pa.timestamp("us"))], names=["at"])
+    try:
+        assert PostgresSink().write(PG_URI, name, [batch]) == 2
+        rows = _query(pg, f'SELECT "at" FROM "{name}" ORDER BY "at" NULLS LAST')
+        assert rows == [(value,), (None,)]
+        assert rows[0][0].tzinfo is None
+        assert _query(
+            pg,
+            "SELECT data_type FROM information_schema.columns "
+            f"WHERE table_name = '{name}' AND column_name = 'at'",
+        ) == [("timestamp without time zone",)]
     finally:
         _drop(pg, name)
 

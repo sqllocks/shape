@@ -510,6 +510,12 @@ def test_the_sql_server_append_check_reads_the_keys_through_its_connection_helpe
     assert sink.written == []
 
 
-def test_original_retail_script_refuses_missing_decimal_dimensions(tmp_path):
+def test_retail_script_refuses_missing_decimal_dimensions(tmp_path):
+    from shape.generation.domains import load_domain
+
+    document = load_domain("retail").schema.to_dict()
+    document["tables"]["address"]["columns"]["lat"].update(precision=None, scale=None)
+    path = tmp_path / "incomplete.json"
+    path.write_text(json.dumps(document))
     with pytest.raises(ShapeError, match="column 'lat'.*precision.*None"):
-        seed_target("retail", f"sql://{tmp_path / 'out'}", scale="tiny")
+        seed_target(str(path), f"sql://{tmp_path / 'out'}", scale="tiny")

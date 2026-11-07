@@ -67,16 +67,19 @@ def test_wanted5_generate_dry_run_resolves_ddl(
     assert len(list(tmp_path.iterdir())) == 1
 
 
-def test_wanted1_original_retail_without_decimal_dimensions_is_refused(tmp_path, capsys):
+def test_wanted1_retail_without_decimal_dimensions_is_refused(tmp_path, capsys):
     from shape.generation.domains import load_domain
 
-    original = load_domain("retail").schema
-    assert original.tables["address"].columns["lat"].precision is None
-    assert original.tables["address"].columns["lat"].scale is None
-    code = main(["generate", "retail", "--to", "postgresql://shape@localhost/shape", "--dry-run"])
+    original = load_domain("retail").schema.to_dict()
+    original["tables"]["address"]["columns"]["lat"].update(precision=None, scale=None)
+    assert original["tables"]["address"]["columns"]["lat"]["precision"] is None
+    assert original["tables"]["address"]["columns"]["lat"]["scale"] is None
+    path = tmp_path / "incomplete.json"
+    path.write_text(json.dumps(original))
+    code = main(["generate", str(path), "--to", "postgresql://shape@localhost/shape", "--dry-run"])
     assert code == 2
     assert "address.lat" in capsys.readouterr().err
-    assert list(tmp_path.iterdir()) == []
+    assert list(tmp_path.iterdir()) == [path]
 
 
 @pytest.mark.parametrize(

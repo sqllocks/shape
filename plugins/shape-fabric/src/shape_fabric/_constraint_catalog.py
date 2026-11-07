@@ -87,6 +87,24 @@ def expression_tokens(sql: str) -> tuple[str, ...]:
             if _index == len(tokens) - 1:
                 tokens = tokens[1:-1]
                 changed = True
+    # SQL Server removes grouping around comparison operands of AND/OR. Parse
+    # only those Boolean boundaries, retaining precedence and arithmetic groups.
+    for operator in ("OR", "AND"):
+        parts: list[list[str]] = [[]]
+        depth = 0
+        for token in tokens:
+            depth += (token == "(") - (token == ")")
+            if depth == 0 and token == operator:
+                parts.append([])
+            else:
+                parts[-1].append(token)
+        if len(parts) > 1:
+            normalized: list[str] = []
+            for index, part in enumerate(parts):
+                if index:
+                    normalized.append(operator)
+                normalized.extend(("(", *expression_tokens(" ".join(part)), ")"))
+            return tuple(normalized)
     return tuple(tokens)
 
 
