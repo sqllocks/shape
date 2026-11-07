@@ -293,7 +293,7 @@
               "status": "not_run"
             }
           },
-          "shape_version": "0.9.3",
+          "shape_version": "0.9.4",
           "version": 1
         },
         "warnings": []

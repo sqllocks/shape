@@ -72,8 +72,10 @@ git grep -n '0\.9\.3' -- ':!docs/plans' ':!tests' ':!CHANGELOG.md' ':!docs/evide
 | Current Early access banners, docs site banner and limitation status | 0.9.4 |
 | Current ADF image defaults and Fabric library installation guidance | 0.9.4 |
 | Existing runbooks | Unchanged per preparation scope; replace 0.9.3 with 0.9.4 when following their installation examples |
-| Recorded CLI/bridge/manifest examples, Playground session and historical fix claims | Keep 0.9.3: recorded output and history |
-| Third-party notices, evidence, tests, baseline stores/version and performance records | Keep historical values; baseline changes only after step 7.3 |
+| Current executable CLI/bridge/manifest examples and generated notebook installation cells | Refresh exact version strings and version-bearing artifact IDs for 0.9.4 |
+| Playground session and historical fix claims | Keep 0.9.3: recorded session and release history |
+| Generated SQL golden corpus, writer header fixtures, docs fingerprints and Bridge release metadata | Regenerate required release records; test code, assertions and thresholds unchanged |
+| Third-party notices, evidence, baseline stores/version and performance records | Keep historical values; published baseline changes only after step 7.3 |
 
 ## 2. Confirm main contains the release commit
 

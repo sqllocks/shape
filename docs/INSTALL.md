@@ -126,7 +126,7 @@ shape conformance
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    Shape 0.9.3
+    Shape 0.9.4
       python    3.12.14  (Linux-6.18.44-x86_64-with-glibc2.41)
       kernel    python  (pure Python; set SHAPE_KERNEL=rust)
 
@@ -213,7 +213,7 @@ pip install --quiet --no-deps --find-links wheels wheels/sqllocks_shape-*.whl \
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    sqllocks_shape-0.9.3-py3-none-any.whl  …
+    sqllocks_shape-0.9.4-py3-none-any.whl  …
     checks passed: tag py3-none-any, < 28,600,000 bytes, no compiled code, RECORD valid
     ```
 
