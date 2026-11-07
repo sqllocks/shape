@@ -287,6 +287,11 @@ contract_from("jsonschema", text)                  # what the schema states
 contract_from("jsonschema", text, use_meta=True)   # the whole contract, from x-shape
 ```
 
+Relative `min` and `max` objects (`as_of_offset_days`) are gaps in every target:
+DDL, GX, JSON Schema and pandera cannot resolve a runtime batch date statically.
+They are preserved in each target's metadata where available, never frozen to a
+constant. Constant numeric bounds retain their existing mappings.
+
 ## What is out of scope
 
 dbt has its own command (`shape to-dbt-tests`, [DBT.md](DBT.md)). Running the emitted artifacts

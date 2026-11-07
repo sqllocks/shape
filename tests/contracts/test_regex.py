@@ -77,9 +77,8 @@ def test_errors_before_data_read(rule: Any, tmp_path: Path) -> None:
         validate_contract(contract(rule))
 
 
-def test_data_required() -> None:
-    with pytest.raises(ContractError, match="regex.*data rather than a profile"):
-        shape.check(shape.profile(pa.table({"code": ["123"]})), contract(r"\d{3}"))
+def test_complete_profile_does_not_need_data() -> None:
+    assert shape.check(shape.profile(pa.table({"code": ["123"]})), contract(r"\d{3}")).passed
 
 
 def test_safe_aggregates_and_strength() -> None:
@@ -89,6 +88,7 @@ def test_safe_aggregates_and_strength() -> None:
         "match_rate": 0.5,
         "non_matching_count": 1,
         "tested_count": 2,
+        "non_matching_values": [],
     }
     assert result.warnings[0]["expected"] == {"expression": r"\d{3}", "min_match_rate": 1.0}
     assert "PRIVATE" not in json.dumps(result.to_dict())
@@ -101,8 +101,7 @@ def test_tables_and_missing_data() -> None:
     profile = shape.profile(tables)
     result = shape.check(profile, rules, data=tables)
     assert [v["column"] for v in result.violations] == ["b.code"]
-    with pytest.raises(ContractError, match="regex"):
-        shape.check(profile, rules)
+    assert not shape.check(profile, rules).passed
     with pytest.raises(ContractError, match="b.code"):
         shape.check(profile, rules, data={"a": tables["a"]})
 
@@ -241,13 +240,96 @@ def test_nonfinite_values_are_never_silently_ignored(value: float) -> None:
         check([value], ".*")
 
 
-def test_zoned_timestamp_conversion_refused() -> None:
+def test_zoned_timestamp_keeps_offset() -> None:
     import datetime
 
-    with pytest.raises(ContractError, match="regex.*code"):
-        check([datetime.datetime(2026, 1, 1, tzinfo=datetime.UTC)], ".*")
+    assert check(
+        [datetime.datetime(2026, 1, 1, tzinfo=datetime.UTC)], r"2026-01-01 00:00:00\+00:00"
+    ).passed
 
 
 def test_import_allof_boolean_schema_does_not_crash() -> None:
     text = json.dumps({"properties": {"code": {"pattern": "a", "allOf": [True]}}})
     assert contract_from("jsonschema", text)["columns"]["code"]["regex"]["expression"] == "a"
+
+
+@pytest.mark.parametrize("bad,passed", [(0, True), (10, True), (11, False)])
+def test_profile_exact_counts(bad: int, passed: bool) -> None:
+    table = pa.table({"code": ["123"] * (100 - bad) + ["bad"] * bad + [None] * 5})
+    result = shape.check(
+        shape.profile(table), contract({"expression": r"\d{3}", "min_match_rate": 0.9})
+    )
+    assert result.passed is passed
+    assert not result.not_evaluable
+    if bad == 11:
+        assert result.violations[0]["observed"]["tested_count"] == 100
+        assert result.violations[0]["observed"]["non_matching_count"] == 11
+
+
+def test_incomplete_profile_blind_but_known_failure_definite() -> None:
+    from shape.profile.reference.profile import Profile
+
+    table = pa.table({"code": ["123"] * 90 + ["bad"] * 10})
+    document = shape.profile(table).to_dict()
+    document["columns"]["code"]["value_counts_ext"] = {"123": 0.9}
+    profile = Profile(document)
+    result = shape.check(profile, contract(r"\d{3}"))
+    assert not result.passed and result.not_evaluable[0]["rule"] == "regex"
+    assert "--data" in result.not_evaluable[0]["reason"]
+    assert not shape.check(profile, contract(r"\d{3}"), data={"batch": table}).passed
+    document["columns"]["code"]["value_counts_ext"] = {"bad": 0.1}
+    result = shape.check(Profile(document), contract(r"\d{3}"))
+    assert result.violations and not result.not_evaluable
+    result = shape.check(
+        Profile(document), contract({"expression": r"\d{3}", "min_match_rate": 0.9})
+    )
+    assert result.not_evaluable and not result.violations
+
+
+@pytest.mark.parametrize("exact", [False, True])
+def test_sample_cap_and_safe_policy(exact: bool) -> None:
+    from shape.privacy.redact import CaptureConfig, redact_profile
+
+    values = [f"bad{i:02d}" for i in range(30) for _ in range(10)]
+    table = pa.table({"code": values})
+    profile = shape.profile(table)
+    result = shape.check(profile, contract("good"), data={"batch": table} if exact else None)
+    assert len(result.violations[0]["observed"]["non_matching_values"]) == 20
+    sensitive = redact_profile(profile, CaptureConfig(classifications={"code": "CONFIDENTIAL"}))
+    result = shape.check(sensitive, contract("good"), data={"batch": table} if exact else None)
+    if exact:
+        assert result.violations[0]["observed"]["non_matching_values"] == []
+    else:
+        assert result.not_evaluable and not result.violations
+    assert "bad00" not in json.dumps(result.to_dict())
+
+
+def test_folded_profile_stays_blind_and_data_overrides() -> None:
+    from shape.privacy.redact import redact_profile
+
+    table = pa.table({"code": ["123"] * 99 + ["bad"]})
+    profile = redact_profile(shape.profile(table))
+    result = shape.check(profile, contract(r"\d{3}"))
+    assert result.not_evaluable and not result.passed
+    result = shape.check(profile, contract(r"\d{3}"), data={"batch": table})
+    assert not result.passed and not result.not_evaluable
+    assert result.violations[0]["observed"]["non_matching_values"] == []
+
+
+@pytest.mark.parametrize("strength", ["soft", "learned"])
+def test_rule_local_strength_and_enforcement(strength: str) -> None:
+    table = pa.table({"code": ["bad"]})
+    profile = shape.profile(table)
+    rules = contract({"expression": r"\d{3}", "strength": strength})
+    assert shape.check(profile, rules).passed
+    assert shape.check(profile, rules).warnings[0]["strength"] == strength
+    assert not shape.check(profile, rules, strict=True).passed
+    assert shape.check(profile, rules, enforce_learned=True).passed is (strength == "soft")
+
+
+def test_exact_data_replaces_definite_profile_violation() -> None:
+    profile = shape.profile(pa.table({"code": ["bad"]}))
+    assert not shape.check(profile, contract(r"\d{3}")).passed
+    assert shape.check(
+        profile, contract(r"\d{3}"), data={"batch": pa.table({"code": ["123"]})}
+    ).passed

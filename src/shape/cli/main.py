@@ -692,14 +692,23 @@ def _cmd_check(a):
         )
     from shape.contracts.v1 import _load_contract, validate_contract
 
-    validate_contract(_load_contract(contract))
+    document = _load_contract(contract)
+    validate_contract(document)
+    from shape.contracts.relative import parse_as_of
+
+    parse_as_of(a.as_of, document)
     data = None
     if a.data:
         from shape.quality import load_tables
 
         data = load_tables(a.data, a.format)
     result = shape.check(
-        profile, contract, data=data, strict=a.strict, enforce_learned=a.enforce_learned
+        profile,
+        contract,
+        data=data,
+        strict=a.strict,
+        enforce_learned=a.enforce_learned,
+        as_of=a.as_of,
     )
     out = result.to_dict()
     planned = project_cli.planned_for(a, ctx)
@@ -2160,6 +2169,9 @@ def _build_parser(plugin_commands=()):
         metavar="DATA",
         help="a data file or directory of data files: needed by the contract's `timeseries` "
         "and `reconcile` rules, which check data rather than the profile",
+    )
+    ck.add_argument(
+        "--as-of", metavar="YYYY-MM-DD", help="explicit batch date for relative min/max"
     )
     ck.add_argument("--format", choices=("auto", "csv", "parquet", "jsonl"), default="auto")
     ck.add_argument("--json", metavar="RESULT.json")

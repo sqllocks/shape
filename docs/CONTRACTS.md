@@ -16,6 +16,7 @@ object that maps each table name to a contract of its own.
 | `fd`, `implies`, `reference_pair`, `max_implausible_rate` | rules on the joint analysis (`docs/JOINT.md`) |
 | `tables` | maps each table name in a dataset profile to its own contract |
 | `timeseries`, `reconcile` | time-series and reconciliation rules; `shape check --data DATA` supplies the data ([Verification](VERIFY.md)) |
+| `as_of_timezone` | IANA timezone for relative date bounds (UTC by default) |
 | `drift` | the drift policy; `shape check` ignores it (`docs/DRIFT.md`) |
 
 Exit codes of `shape check`: **0** when no rule that counts as failing is broken, **1** when one is,
@@ -99,39 +100,98 @@ produced by tools or edited by hand.
 
 ## User-defined regular expressions
 
-The column rule `regex` tests every non-null value against a whole-value expression.
-It is independent of the detected-label rule `pattern`; a column can declare both.
-The short form `"regex": "[A-Z]{3}"` requires every tested value to match.
-The object form sets a tolerated match rate:
+The column rule `regex` tests whole non-null values. It is independent of `pattern`,
+which still compares a detected label. Both rules can appear on the same column.
+The short form `"regex": "[A-Z]{3}"` requires every tested value to match. The object
+form accepts `expression`, `min_match_rate` (default 1.0), and optional `strength`:
 
 ```json
 {
   "columns": {
-    "product_code": {"regex": {"expression": "[A-Z]{3}-[0-9]{4}", "min_match_rate": 0.9}}
+    "product_code": {"regex": {"expression": "[A-Z]{3}-[0-9]{4}", "min_match_rate": 0.9}},
+    "load_date": {"regex": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}
   }
 }
 ```
 
-For example, 90 matching codes out of 100 non-null values pass this contract;
-89 fail. Omit `min_match_rate` to require 1.0. Nulls are ignored (use `nullable`
-or `max_null_rate` to govern them); an empty or all-null column passes this rule.
-Expressions are wrapped as `^(?:expression)$`, so `\d{3}` rejects `"1234"`.
+For example, 90 matching codes out of 100 non-null values pass a minimum rate of
+0.9; 89 fail. Nulls are ignored; use `nullable` or `max_null_rate` to govern them.
+An empty or all-null column passes this rule. Expressions are wrapped as
+`^(?:expression)$`, so `\d{3}` rejects `"1234"`.
 
-Run `shape check PROFILE.shape CONTRACT.json --data DATA.parquet`, or pass
-`data={"table": arrow_table}` to `shape.check`. The rule needs the original data;
-without it the check raises `ContractError`. Dataset contracts put each rule in
-its table's `columns` object and require data for those tables.
+Matching uses PyArrow's linear-time RE2 engine. RE2 has no backreferences or
+lookaround. Invalid RE2 syntax, empty expressions, unknown object keys, and rates
+that are not finite numbers in [0, 1] are contract errors before evaluation.
+Values use the profiler's text spelling, including ISO dates and timestamps and
+canonical numeric text. Nested values and nonfinite numbers without an unambiguous
+profiler text conversion raise a named `ContractError` on the data path.
 
-Matching uses PyArrow's RE2 engine, which runs in linear time. RE2 does not support
-backreferences or lookaround. Invalid expressions, empty expressions, unknown object
-keys, and nonnumeric, nonfinite or out-of-range rates are contract errors before
-data is read. Rates must be numbers in [0, 1], without coercion.
-Non-string columns use the profiler's text conversion, including its numeric and
-boolean spelling. Nested values, timezone-aware timestamps and nonfinite numbers are refused with a
-named `ContractError` because the profiler uses special handling rather than the
-shared text conversion. Convert them explicitly before profiling and checking.
+Without `--data`, the rule tests `value_counts_ext`. Complete stored values give an
+exact result: every distinct value must be present, with counts covering all
+non-null rows. Profiles store six-place proportions; the checker reconstructs
+counts only when they are uniquely determined and sum to the non-null count.
+Truncated strings and ambiguous rounded counts cannot prove completeness.
+A known nonmatching stored value is a definite violation at the default rate of 1.
+Otherwise an incomplete, folded or redacted profile is blind: `not_evaluable`
+records the rule and `passed` is false. Pass `--data` or re-profile with
+`capture="full"` to supply the missing evidence.
 
-Violations contain the expression and minimum rate in `expected`, and only
-`match_rate`, `non_matching_count` and `tested_count` in `observed`.
-Failing values are never sampled. The default strength is `hard`; column strength
-and strict/learned enforcement work as for other column rules.
+`shape check PROFILE.shape CONTRACT.json --data DATA.parquet` tests every non-null
+value exactly, replacing the profile result for `regex`. From Python, pass
+`data={"table": arrow_table}`. Dataset contracts put rules in each table's `columns`.
+
+Violations record the expression and rate in `expected`. `observed` contains
+`match_rate`, `non_matching_count`, `tested_count`, and up to 20 distinct
+`non_matching_values`. The value list is empty for sensitive or redacted columns,
+or whenever a safe capture would withhold their values, including on the data path.
+Column strength and rule-local regex strength support `hard`, `soft` and `learned`;
+rule-local strength takes precedence. Strict and learned enforcement work as usual.
+
+## Relative date and timestamp bounds
+
+`min` and `max` accept `{"as_of_offset_days": N}` for integer calendar-day offsets.
+Constant bounds keep their existing behavior. A relative bound requires an explicit
+batch date: `shape check PROFILE.shape CONTRACT.json --as-of 2026-10-07`, or
+`shape.check(profile, contract, as_of="2026-10-07")`. Python also accepts a `date`.
+There is no implicit current date; the result records the supplied date as `as_of`.
+
+For a daily order file, this contract accepts only orders dated on the batch day:
+
+```json
+{
+  "as_of_timezone": "UTC",
+  "columns": {
+    "order_date": {
+      "min": {"as_of_offset_days": 0},
+      "max": {"as_of_offset_days": 0}
+    }
+  }
+}
+```
+
+A synthetic October 7 batch with 1,974 October 7 orders and 104 orders dated
+September 27–October 6 fails with the September 27 minimum. The same contract
+accepts a clean October 6 batch when checked with `--as-of 2026-10-06`.
+To allow orders one day before the batch, change the minimum offset to `-1`.
+For an October 7 batch, October 6 at midnight then passes, while October 5 at
+23:59:59 fails.
+
+For dates, bounds compare calendar dates inclusively. For timestamps, `min` is
+midnight at the start of the resolved day, while `max` accepts every instant
+before the following midnight. The expected maximum timestamp records that
+exclusive next-midnight boundary. Days use UTC by default. Set `as_of_timezone`
+to an IANA zone such as `America/New_York` to use local calendar days, including
+DST transitions. A dataset may set the zone at the root and override it per table.
+Aware timestamps are compared as instants; naive timestamps are read in that zone.
+Timezone information is preserved.
+
+The profile path parses the stored minimum or maximum as an ISO date or timestamp.
+Unparseable or non-temporal observations produce the usual not-comparable violation.
+`--data` uses exact column extremes. Redacted extremes remain blind, preserving the
+existing safe-capture rule. Invalid offsets, unknown bound keys, invalid zones and
+missing or malformed as-of dates raise `ContractError`. Strength applies separately
+to `min` and `max`.
+
+A relative-bound violation records the original offset, `as_of`, and resolved ISO
+`bound` in `expected`, with the observed extreme in `observed`. Relative bounds
+remain gaps in every static emitter; emitting never freezes them to a date.

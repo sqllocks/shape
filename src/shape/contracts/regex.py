@@ -1,8 +1,9 @@
-"""Whole-value, linear-time RE2 column rules; results contain aggregates only."""
+"""Whole-value, linear-time RE2 column rules; privacy-controlled failure samples."""
 
 from __future__ import annotations
 
-from typing import Any
+import datetime as dt
+from typing import Any, cast
 
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
@@ -24,7 +25,7 @@ def validate_regex(name: str, value: Any) -> None:
 
     where = f"regex for column {name!r}"
     if not isinstance(value, (str, dict)) or (
-        isinstance(value, dict) and set(value) - {"expression", "min_match_rate"}
+        isinstance(value, dict) and set(value) - {"expression", "min_match_rate", "strength"}
     ):
         raise ContractRuleError(
             f"{where} must be text or an object with expression and min_match_rate"
@@ -35,6 +36,10 @@ def validate_regex(name: str, value: Any) -> None:
     rate = 1.0 if isinstance(value, str) else value.get("min_match_rate", 1.0)
     if not (_is_finite_number(rate) and 0 <= rate <= 1):
         raise ContractRuleError(f"{where}: min_match_rate must be a finite number from 0 to 1")
+    if isinstance(value, dict) and "strength" in value:
+        from .v1 import _check_strength
+
+        _check_strength(value["strength"], where)
     try:
         pc.match_substring_regex(pa.array([""], type=pa.string()), anchored(expression))
     except pa.ArrowInvalid:
@@ -49,18 +54,33 @@ def uses_regex(contract: dict[str, Any]) -> bool:
 
 def _texts(table: Any, name: str) -> Any:
     """Use the profiler's Arrow reader and text spelling; refuse nested values."""
-    from shape.profile.reference.column import _keys_py, _object_text
+    from shape.profile.reference.column import (
+        _aware_datetimes,
+        _keys_py,
+        _nanoseconds,
+        _object_text,
+        _to_timestamp,
+    )
     from shape.profile.reference.readers import _arrow_cols
 
     from .v1 import ContractError
 
     try:
         col = _arrow_cols(table.select([name]))[0]
-        if col.kind in ("nested", "objmix") or col.tz:
+        if col.kind in ("nested", "objmix"):
             raise ValueError("ambiguous text")
         values = pc.drop_null(col.arr).combine_chunks()
         if col.kind == "float" and not pc.all(pc.is_finite(values)).as_py() and len(values):
             raise ValueError("the profiler omits nonfinite values")
+        if col.kind == "dt64" and col.tz:
+            aware = _aware_datetimes(values, col.tz)
+            return pa.array(
+                [
+                    str(_to_timestamp(cast(dt.datetime, v), ns))
+                    for v, ns in zip(aware, _nanoseconds(values), strict=True)
+                ],
+                pa.string(),
+            )
         if col.kind.startswith("obj") or col.kind == "cat":
             return pa.array([_object_text(col.kind, v) for v in values.to_pylist()], pa.string())
         return pa.array(_keys_py(values, col.kind), pa.string())
@@ -70,48 +90,73 @@ def _texts(table: Any, name: str) -> Any:
         ) from None
 
 
-def regex_violations(contract: dict[str, Any], tables: dict[str, Any]) -> list[dict[str, Any]]:
-    from .v1 import ContractError, _column_strength, _strong, _violation
+def observed_matches(
+    texts: Any, counts: list[int], expression: str, reveal: bool
+) -> dict[str, Any]:
+    matched = pc.match_substring_regex(texts, anchored(expression)).to_pylist()
+    tested = sum(counts)
+    failing = sum(n for n, ok in zip(counts, matched, strict=True) if not ok)
+    samples = (
+        list(dict.fromkeys(v for v, ok in zip(texts.to_pylist(), matched, strict=True) if not ok))[
+            :20
+        ]
+        if reveal
+        else []
+    )
+    return {
+        "match_rate": (tested - failing) / tested if tested else 1.0,
+        "non_matching_count": failing,
+        "tested_count": tested,
+        "non_matching_values": samples,
+    }
 
-    result = []
-    per_table = contract.get("tables")
-    if per_table is None:
-        if not uses_regex(contract):
-            return []
-        if len(tables) != 1:
-            raise ContractError("regex: a single-table contract needs exactly one data table")
-        per_table = {next(iter(tables)): contract}
-    for table_name, sub in per_table.items():
-        for name, rules in sub.get("columns", {}).items():
-            if "regex" not in rules:
-                continue
-            if table_name not in tables or name not in tables[table_name].column_names:
-                raise ContractError(f"regex for column {table_name}.{name}: data column is missing")
-            expression, rate = regex_options(rules["regex"])
-            texts = _texts(tables[table_name], name)
-            tested = len(texts)
-            matching = (
-                pc.sum(
-                    pc.cast(pc.match_substring_regex(texts, anchored(expression)), pa.int64())
-                ).as_py()
-                or 0
-            )
-            match_rate = matching / tested if tested else 1.0
-            if match_rate < rate:
-                column = f"{table_name}.{name}" if "tables" in contract else name
-                result.append(
-                    _strong(
-                        _violation(
-                            column,
-                            "regex",
-                            {"expression": expression, "min_match_rate": rate},
-                            {
-                                "match_rate": match_rate,
-                                "non_matching_count": tested - matching,
-                                "tested_count": tested,
-                            },
-                        ),
-                        _column_strength(rules, "regex"),
-                    )
-                )
-    return result
+
+def profile_regex(
+    name: str, rule: Any, col: dict[str, Any], rows: int, reveal: bool
+) -> tuple[dict[str, Any] | None, bool]:
+    """Return a definite violation, or an exact pass; incomplete evidence stays blind."""
+    import math
+
+    from shape.privacy.redact import has_folded_categories
+
+    from .v1 import _violation
+
+    expression, rate = regex_options(rule)
+    seen = col.get("value_counts_ext") or {}
+    non_null = rows - col.get("null_count", 0)
+    if (
+        has_folded_categories(col)
+        or "__OTHER__" in seen
+        or any(len(k) > 256 and k.endswith("…") for k in seen)
+    ):
+        return None, True
+    values = list(seen)
+    weights = list(seen.values())
+    # Profiles store six-place proportions of non-null values, rather than raw counts.
+    proportions = bool(weights) and all(0 <= w <= 1 for w in weights) and sum(weights) <= 1.00001
+    counts = [round(w * non_null) for w in weights] if proportions else [int(w) for w in weights]
+    unique_counts = (
+        not proportions
+        or len(values) <= 1
+        or all(
+            math.ceil((weight - 0.0000005) * non_null - 1e-9)
+            == math.floor((weight + 0.0000005) * non_null + 1e-9)
+            for weight in weights
+        )
+    )
+    complete = (
+        len(values) == col.get("cardinality")
+        and sum(counts) == non_null
+        and unique_counts
+        and not col.get("nan_count")
+        and not col.get("inf_count")
+    )
+    observed = observed_matches(pa.array(values, pa.string()), counts, expression, reveal)
+    definite = rate == 1 and observed["non_matching_count"] > 0
+    if complete or definite:
+        if observed["match_rate"] < rate:
+            return _violation(
+                name, "regex", {"expression": expression, "min_match_rate": rate}, observed
+            ), False
+        return None, False
+    return None, True

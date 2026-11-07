@@ -6,7 +6,7 @@ Status: available.
 
 ## Unreleased
 
-- Contracts accept a data-backed `regex` column rule with whole-value RE2 matching, a configurable minimum match rate, aggregate-only violations and DDL/GX/JSON Schema/pandera mappings. GX and JSON Schema imports preserve custom expressions.
+- Contracts accept whole-value RE2 `regex` rules over complete profile values or exact `--data`, with match-rate thresholds, strength, blind evidence reporting and privacy-controlled failure samples. Relative date/timestamp `min` and `max` bounds use explicit `--as-of` dates and IANA calendar-day zones. Emitters map regex rules, preserve custom imports and report relative bounds as gaps.
 
 - Bridge API 1.5 adds `rules_apply` (also `shape rules apply`), preserving existing rules and reporting applied/rejected proposal counts. `suite_run` can execute scenarios on selected local input tables; `report_card` accepts source/generated-data aliases and includes a boolean `passed` verdict for certification consumers. Earlier minor results and frozen schema/vector publications remain unchanged.
 
