@@ -172,7 +172,7 @@ def normalize_table(contract: Mapping[str, Any]) -> dict[str, Any]:
         out["required_columns"] = sorted(set(required))
     if contract.get("allow_extra_columns") is False:
         out["allow_extra_columns"] = False
-    for key in JOINT_RULES:
+    for key in (*JOINT_RULES, "as_of_timezone"):
         if key in contract:
             out[key] = copy.deepcopy(contract[key])
     return out
@@ -201,6 +201,10 @@ def prepare(contract: Any, table: str | None) -> dict[str, dict[str, Any]]:
             raise ContractError("'tables' cannot be nested")
         _validate_contract(sub)
         _check_numbers(sub, name)
+    if "as_of_timezone" in doc:
+        subs = {
+            name: {"as_of_timezone": doc["as_of_timezone"], **sub} for name, sub in subs.items()
+        }
     if table is not None:
         if table not in subs:
             raise EmitError(

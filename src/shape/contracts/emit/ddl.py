@@ -268,6 +268,10 @@ def table_ddl(
     for rule in JOINT_RULES:
         if rule in sub:
             notes.add(table, None, rule, "a database constraint relates columns of one row only")
+    if "as_of_timezone" in sub:
+        notes.add(
+            table, None, "as_of_timezone", "a calendar timezone needs runtime as-of resolution"
+        )
     schema = pa.schema([pa.field(n, pa.string()) for n in names])
     text: str = sink._ddl(
         table, q(table), schema, meta, [], base, fabric, {"drop": False}, base == "tsql"

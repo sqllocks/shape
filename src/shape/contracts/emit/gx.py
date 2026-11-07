@@ -118,6 +118,11 @@ def table_suite(table: str, sub: Mapping[str, Any], notes: Notes) -> dict[str, A
                 "a joint rule relates several columns or rows; no expectation does",
             )
             table_rules[rule] = sub[rule]
+    if "as_of_timezone" in sub:
+        notes.add(
+            table, None, "as_of_timezone", "a calendar timezone needs runtime as-of resolution"
+        )
+        table_rules["as_of_timezone"] = sub["as_of_timezone"]
     meta = header_meta(table, table_rules)
     meta["columns"] = column_meta
     return {"name": table, "expectations": expectations, "meta": {"shape": meta}}

@@ -209,3 +209,20 @@ def test_data_extreme_replaces_profile_extreme() -> None:
     current = pa.table({"order_date": [dt.datetime(2026, 10, 7)]})
     assert not shape.check(profile, rules(), as_of="2026-10-07").passed
     assert shape.check(profile, rules(), as_of="2026-10-07", data={"batch": current}).passed
+
+
+@pytest.mark.parametrize("target", ["gx", "jsonschema"])
+def test_relative_metadata_round_trip_preserves_zone(target: str) -> None:
+    from shape.contracts.emit import contract_from
+
+    original = rules(as_of_timezone="America/New_York")
+    assert contract_from(target, emit(original, target).text, use_meta=True) == original
+    dataset = {"as_of_timezone": "America/New_York", "tables": {"batch": rules()}}
+    restored = contract_from(target, emit(dataset, target, table="batch").text, use_meta=True)
+    assert restored["as_of_timezone"] == "America/New_York"
+
+
+@pytest.mark.parametrize("target", ["ddl", "gx", "jsonschema", "pandera"])
+def test_timezone_context_is_an_explicit_gap(target: str) -> None:
+    emitted = emit(rules(as_of_timezone="America/New_York"), target)
+    assert any(n["rule"] == "as_of_timezone" for n in emitted.not_expressed)

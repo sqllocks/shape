@@ -290,7 +290,9 @@ contract_from("jsonschema", text, use_meta=True)   # the whole contract, from x-
 Relative `min` and `max` objects (`as_of_offset_days`) are gaps in every target:
 DDL, GX, JSON Schema and pandera cannot resolve a runtime batch date statically.
 They are preserved in each target's metadata where available, never frozen to a
-constant. Constant numeric bounds retain their existing mappings.
+constant. The timezone context is also a gap and is retained in metadata where
+available, including a dataset timezone inherited by the emitted table. Constant
+numeric bounds retain their existing mappings.
 
 ## What is out of scope
 

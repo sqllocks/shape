@@ -100,6 +100,11 @@ def table_schema(table: str, sub: Mapping[str, Any], notes: Notes) -> dict[str, 
         reason = _JOINT if rule != "row_count" else why_row_count(sub[rule]) or _ROW_COUNT
         notes.add(table, None, rule, reason)
         table_rules[rule] = sub[rule]
+    if "as_of_timezone" in sub:
+        notes.add(
+            table, None, "as_of_timezone", "a calendar timezone needs runtime as-of resolution"
+        )
+        table_rules["as_of_timezone"] = sub["as_of_timezone"]
     doc: dict[str, Any] = {
         "$schema": SCHEMA_URI,
         "title": table,

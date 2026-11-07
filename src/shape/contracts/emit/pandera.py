@@ -161,6 +161,11 @@ def table_schema(table: str, sub: Mapping[str, Any], notes: Notes) -> str:
                 "a joint rule relates several columns or rows; pandera has no such check here",
             )
             meta[rule] = sub[rule]
+    if "as_of_timezone" in sub:
+        notes.add(
+            table, None, "as_of_timezone", "a calendar timezone needs runtime as-of resolution"
+        )
+        meta["as_of_timezone"] = sub["as_of_timezone"]
     if sub.get("allow_extra_columns") is False:
         lines.append("        strict=True,")
     lines.append(f"        name={py(table)},")
