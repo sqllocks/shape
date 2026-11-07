@@ -8,7 +8,7 @@ All timestamps below are UTC. Commands use bash and an authenticated `gh` as `sq
 
 | Name | Value |
 |---|---|
-| Preparation PR | <PREP_PR_URL> |
+| Preparation PR | https://github.com/sqllocks/shape/pull/60 |
 | Approved base | `035cac28491a62eff4b747f0b73f9629266992a2` |
 | Base CI | https://github.com/sqllocks/shape/actions/runs/42395913048 |
 | Base Nightly (28 green jobs) | https://github.com/sqllocks/shape/actions/runs/42395928925 |
@@ -25,7 +25,7 @@ In a clean checkout, set `R=sqllocks/shape` and replace every angle-bracket plac
 
 | Check | Exact action | Expected / result to record |
 |---|---|---|
-| Preparation PR | Open <PREP_PR_URL> → Checks | Merged, every required check green; record merge SHA and CI links |
+| Preparation PR | Open https://github.com/sqllocks/shape/pull/60 → Checks | Merged, every required check green; record merge SHA and CI links |
 | CI | `gh run list -R "$R" --workflow ci.yml --commit <RELEASE_SHA_094> --json conclusion,status,url` | completed / success on release commit |
 | Rehearsal | Actions → Release build → open <REHEARSAL_RUN_URL> | success on release commit, release=true; version 0.9.4, every job and Fabric wheel-size check green |
 | Nightly | `gh run list -R "$R" --workflow nightly.yml --commit <RELEASE_SHA_094> --json conclusion,status,url` | success on exact SHA; if absent, Actions → Nightly → Run workflow → main, then verify head SHA |
@@ -82,7 +82,7 @@ The preparation PR is already merged through the PR merge API. Do not directly r
 ```bash
 git fetch origin main
 test "$(git rev-parse origin/main)" = <RELEASE_SHA_094>
-gh pr view <PREP_PR_NUMBER> -R "$R" --json state,mergeCommit,url
+gh pr view 60 -R "$R" --json state,mergeCommit,url
 ```
 
 Expected: equality succeeds and PR state is MERGED. If main has moved, stop and decide whether
