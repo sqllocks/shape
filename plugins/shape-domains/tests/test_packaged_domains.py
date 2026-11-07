@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from importlib import metadata, resources
 from pathlib import Path
 
@@ -16,20 +15,6 @@ EXPECTED = (
     "capital_markets education financial healthcare hr insurance iot manufacturing marketing "
     "pulse real_estate retail supply_chain telecom"
 ).split()
-
-
-def test_every_shipped_decimal_declares_precision_and_scale():
-    root = resources.files("shape_domains").joinpath("data")
-    for domain in EXPECTED:
-        for filename in ("schema.json", "schema_star.json"):
-            document = json.loads(root.joinpath(f"{domain}/{filename}").read_text("utf-8"))
-            for table, definition in document["tables"].items():
-                for name, column in definition["columns"].items():
-                    if column["type"] == "decimal":
-                        location = f"{domain}/{filename}:{table}.{name}"
-                        precision, scale = column.get("precision"), column.get("scale")
-                        assert type(precision) is int and precision > 0, location
-                        assert type(scale) is int and 0 <= scale <= precision, location
 
 
 def test_the_plugin_ships_the_fourteen_domains():

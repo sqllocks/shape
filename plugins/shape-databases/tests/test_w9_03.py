@@ -1,6 +1,8 @@
 """W9-03 cloud DDL and driver values, entirely offline."""
 
 import datetime as dt
+import json
+from importlib import resources
 
 import pyarrow as pa
 import pytest
@@ -246,3 +248,24 @@ def test_wanted3_snowflake_copy_respects_parquet_logical_types():
 def test_wanted1_uuid_catalog_metadata(metadata_key, resolver):
     field = pa.field("id", pa.string(), metadata={metadata_key: b"uuid"})
     assert resolver(field) == "VARCHAR(36)"
+
+
+def test_every_shipped_decimal_declares_precision_and_scale():
+    root = resources.files("shape_domains").joinpath("data")
+    schemas = [
+        path
+        for domain in root.iterdir()
+        if domain.is_dir()
+        for path in domain.iterdir()
+        if path.name in {"schema.json", "schema_star.json"}
+    ]
+    assert schemas
+    for path in schemas:
+        document = json.loads(path.read_text("utf-8"))
+        for table, definition in document["tables"].items():
+            for name, column in definition["columns"].items():
+                if column["type"] == "decimal":
+                    location = f"{path}:{table}.{name}"
+                    precision, scale = column.get("precision"), column.get("scale")
+                    assert type(precision) is int and precision > 0, location
+                    assert type(scale) is int and 0 <= scale <= precision, location
