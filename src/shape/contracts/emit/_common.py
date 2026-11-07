@@ -95,6 +95,8 @@ def why_common(rule: str, value: Any) -> str | None:
     """The reason a value cannot be stated by any target (``None``: it can)."""
     if rule == "dtype" and value not in DTYPES:
         return f"unknown dtype {value!r}; the dtypes are {', '.join(DTYPES)}"
+    if rule in ("min", "max") and isinstance(value, dict) and "as_of_offset_days" in value:
+        return "a relative as-of bound cannot be frozen into a static value"
     if rule in ("min", "max") and not is_number(value):
         return "a bound that is not a number has no numeric check"
     if rule == "allowed_values" and not value:
@@ -145,6 +147,19 @@ def normalize_table(contract: Mapping[str, Any]) -> dict[str, Any]:
                 value = round(float(value), NULL_RATE_PLACES)
             if key == "allowed_values" and isinstance(value, list):
                 value = [v for v in value if v is not None]
+            if key == "regex":
+                from shape.contracts.regex import regex_options
+
+                expression, rate = regex_options(value)
+                value = {
+                    "expression": expression,
+                    "min_match_rate": rate,
+                    **(
+                        {"strength": value["strength"]}
+                        if isinstance(value, dict) and "strength" in value
+                        else {}
+                    ),
+                }
             kept[key] = copy.deepcopy(value)
         if kept:
             columns[name] = kept
@@ -157,7 +172,7 @@ def normalize_table(contract: Mapping[str, Any]) -> dict[str, Any]:
         out["required_columns"] = sorted(set(required))
     if contract.get("allow_extra_columns") is False:
         out["allow_extra_columns"] = False
-    for key in JOINT_RULES:
+    for key in (*JOINT_RULES, "as_of_timezone"):
         if key in contract:
             out[key] = copy.deepcopy(contract[key])
     return out
@@ -186,6 +201,10 @@ def prepare(contract: Any, table: str | None) -> dict[str, dict[str, Any]]:
             raise ContractError("'tables' cannot be nested")
         _validate_contract(sub)
         _check_numbers(sub, name)
+    if "as_of_timezone" in doc:
+        subs = {
+            name: {"as_of_timezone": doc["as_of_timezone"], **sub} for name, sub in subs.items()
+        }
     if table is not None:
         if table not in subs:
             raise EmitError(

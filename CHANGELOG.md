@@ -6,6 +6,8 @@ Status: available.
 
 ## Unreleased
 
+- Contracts accept whole-value RE2 `regex` rules over complete profile values or exact `--data`, with match-rate thresholds, strength, blind evidence reporting and privacy-controlled failure samples. Relative date/timestamp `min` and `max` bounds use explicit `--as-of` dates and IANA calendar-day zones. Emitters map regex rules, preserve custom imports and report relative bounds as gaps.
+
 - Bridge API 1.5 adds `rules_apply` (also `shape rules apply`), preserving existing rules and reporting applied/rejected proposal counts. `suite_run` can execute scenarios on selected local input tables; `report_card` accepts source/generated-data aliases and includes a boolean `passed` verdict for certification consumers. Earlier minor results and frozen schema/vector publications remain unchanged.
 
 - Bridge API 1.4 adds metadata-only vault status, verification, key rotation and column-policy lookup, a read-only chaos-kind catalogue and optional report-card input format selection. The catalogue is also available through `shape chaos --list-kinds`; report-card accepts `--format` and Python `data_format`. Timelapse frame ordering, window counts and its emitted schema are documented and tested. Existing minor requests and their frozen outputs remain supported.

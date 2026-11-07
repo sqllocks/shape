@@ -26,6 +26,8 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
+from shape.contracts.regex import anchored, regex_options
+
 from . import EmitError
 from ._common import (
     JOINT_RULES,
@@ -59,6 +61,8 @@ _ROW_COUNT = "a row count is a property of the whole table, not of one row"
 def _why(rule: str, value: Any) -> str | None:
     if rule == "unique":
         return "uniqueness is a property of the whole table, not of one row"
+    if rule == "regex" and regex_options(value)[1] < 1:
+        return "a match rate below 1 needs a table-wide aggregate"
     if rule == "max_null_rate":
         return "the share of nulls is a property of many rows, not of one row"
     return why_common(rule, value)
@@ -96,6 +100,11 @@ def table_schema(table: str, sub: Mapping[str, Any], notes: Notes) -> dict[str, 
         reason = _JOINT if rule != "row_count" else why_row_count(sub[rule]) or _ROW_COUNT
         notes.add(table, None, rule, reason)
         table_rules[rule] = sub[rule]
+    if "as_of_timezone" in sub:
+        notes.add(
+            table, None, "as_of_timezone", "a calendar timezone needs runtime as-of resolution"
+        )
+        table_rules["as_of_timezone"] = sub["as_of_timezone"]
     doc: dict[str, Any] = {
         "$schema": SCHEMA_URI,
         "title": table,
@@ -128,6 +137,12 @@ def _property(ok: Mapping[str, Any]) -> dict[str, Any]:
         prop["enum"] = [*ok["allowed_values"], *([None] if nullable else [])]
     if "pattern" in ok:
         prop["pattern"] = PATTERNS[ok["pattern"]]
+    if "regex" in ok:
+        regex = {"pattern": anchored(regex_options(ok["regex"])[0])}
+        if "pattern" in prop:
+            prop["allOf"] = [regex]
+        else:
+            prop.update(regex)
     return prop
 
 
@@ -185,4 +200,14 @@ def _read_property(prop: Mapping[str, Any]) -> dict[str, Any]:
         rules["allowed_values"] = [v for v in prop["enum"] if v is not None]
     if prop.get("pattern") in LABELS:
         rules["pattern"] = LABELS[prop["pattern"]]
+    elif isinstance(prop.get("pattern"), str):
+        expression = prop["pattern"]
+        rules["regex"] = (
+            expression[4:-2]
+            if expression.startswith("^(?:") and expression.endswith(")$")
+            else expression
+        )
+    for part in prop.get("allOf", []):
+        if isinstance(part, Mapping):
+            rules.update(_read_property(part))
     return rules

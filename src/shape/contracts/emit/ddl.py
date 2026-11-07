@@ -30,6 +30,7 @@ import math
 from collections.abc import Callable, Mapping
 from typing import Any
 
+from shape.contracts.regex import anchored, regex_options
 from shape.security.sqltext import check_identifier, postgres_text, tsql_text
 
 from . import EmitError
@@ -66,14 +67,16 @@ def why_for(dialect: str) -> Callable[[str, Any], str | None]:
     fabric = dialect == "tsql-fabric-warehouse"
 
     def why(rule: str, value: Any) -> str | None:
+        if rule == "regex" and regex_options(value)[1] < 1:
+            return "a match rate below 1 needs a table-wide aggregate"
         if rule == "max_null_rate":
             return "the share of nulls is a property of many rows; NULL / NOT NULL is per column"
         common = why_common(rule, value)
-        if common or rule not in ("min", "max", "allowed_values", "pattern"):
+        if common or rule not in ("min", "max", "allowed_values", "pattern", "regex"):
             return common
         if fabric:
             return _NO_CHECK
-        if rule == "pattern" and dialect == "tsql":
+        if rule in ("pattern", "regex") and dialect == "tsql":
             return _NO_REGEX
         return None
 
@@ -250,6 +253,11 @@ def table_ddl(
             constraints.append(
                 f"CONSTRAINT {cname} CHECK ({q(name)} {op} {lit(PATTERNS[ok['pattern']])})"
             )
+        if "regex" in ok:
+            op = "~" if dialect == "postgres" else "REGEXP"
+            cname = q(_constraint_name("CK", table, name + "_regex", dialect, used))
+            expression = anchored(regex_options(ok["regex"])[0])
+            constraints.append(f"CONSTRAINT {cname} CHECK ({q(name)} {op} {lit(expression)})")
     if "row_count" in sub:
         notes.add(
             table,
@@ -260,6 +268,10 @@ def table_ddl(
     for rule in JOINT_RULES:
         if rule in sub:
             notes.add(table, None, rule, "a database constraint relates columns of one row only")
+    if "as_of_timezone" in sub:
+        notes.add(
+            table, None, "as_of_timezone", "a calendar timezone needs runtime as-of resolution"
+        )
     schema = pa.schema([pa.field(n, pa.string()) for n in names])
     text: str = sink._ddl(
         table, q(table), schema, meta, [], base, fabric, {"drop": False}, base == "tsql"

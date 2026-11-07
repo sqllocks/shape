@@ -27,6 +27,8 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
+from shape.contracts.regex import anchored, regex_options
+
 from . import EmitError
 from ._common import (
     JOINT_RULES,
@@ -116,6 +118,11 @@ def table_suite(table: str, sub: Mapping[str, Any], notes: Notes) -> dict[str, A
                 "a joint rule relates several columns or rows; no expectation does",
             )
             table_rules[rule] = sub[rule]
+    if "as_of_timezone" in sub:
+        notes.add(
+            table, None, "as_of_timezone", "a calendar timezone needs runtime as-of resolution"
+        )
+        table_rules["as_of_timezone"] = sub["as_of_timezone"]
     meta = header_meta(table, table_rules)
     meta["columns"] = column_meta
     return {"name": table, "expectations": expectations, "meta": {"shape": meta}}
@@ -154,6 +161,15 @@ def _column_expectations(name: str, ok: Mapping[str, Any]) -> list[dict[str, Any
                 "expect_column_values_to_match_regex",
                 {**col, "regex": PATTERNS[ok["pattern"]], "mostly": REGEX_MOSTLY},
                 "pattern",
+            )
+        )
+    if "regex" in ok:
+        expression, rate = regex_options(ok["regex"])
+        out.append(
+            _expectation(
+                "expect_column_values_to_match_regex",
+                {**col, "regex": anchored(expression), "mostly": rate},
+                "regex",
             )
         )
     return out
@@ -209,6 +225,14 @@ def read(text: str, use_meta: bool) -> dict[str, Any]:
         elif kind == "expect_column_values_to_match_regex":
             if kwargs.get("regex") in LABELS:
                 rules["pattern"] = LABELS[kwargs["regex"]]
+            elif isinstance(kwargs.get("regex"), str):
+                expression = kwargs["regex"]
+                if tag == "regex" and expression.startswith("^(?:") and expression.endswith(")$"):
+                    expression = expression[4:-2]
+                rules["regex"] = {
+                    "expression": expression,
+                    "min_match_rate": kwargs.get("mostly", 1.0),
+                }
         elif kind == "expect_table_row_count_to_be_between":
             contract["row_count"] = {
                 k: kwargs[f"{k}_value"]

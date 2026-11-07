@@ -117,6 +117,7 @@ CREATE TABLE through the SQL sink's table emitter (the same quoting and type spe
 | `min`, `max` (numbers) | `CHECK (col BETWEEN min AND max)`, or `>= min` / `<= max` for one bound |
 | `allowed_values` | `CHECK (col IN (...))` |
 | `pattern` | `CHECK (col ~ 'regex')` on PostgreSQL, `REGEXP` on MySQL |
+| `regex` | whole-value `CHECK` on PostgreSQL/MySQL when `min_match_rate` is 1; gap on T-SQL, Fabric Warehouse or a lower rate |
 | `required_columns`, `allow_extra_columns: false` | the table has exactly its columns |
 
 Constraint names longer than the dialect allows are cut and get a short hash, so they stay unique
@@ -141,6 +142,7 @@ A draft 2020-12 schema for one row. Check it with `shape.schemacheck` (which now
 | `min`, `max` | `minimum`, `maximum` |
 | `allowed_values` | `enum` |
 | `pattern` | `pattern` |
+| `regex` | whole-value `pattern` at rate 1; lower rates remain in `x-shape`; combined with a label through `allOf` |
 | `required_columns` | `required` (a column named only there is a property with no keywords) |
 | `allow_extra_columns: false` | `additionalProperties: false` |
 
@@ -163,6 +165,7 @@ emitting imports neither pandera nor pandas. It imports `pandera.pandas`, or `pa
 | `min`, `max` | `Check.in_range(min, max)`; `Check.ge(min)` or `Check.le(max)` for one bound |
 | `allowed_values` | `Check.isin([...])` |
 | `pattern` | `Check.str_matches(regex)` |
+| `regex` | whole-value `Check.str_matches` at rate 1; lower rates are a gap kept in metadata |
 | `row_count` | a table `Check` on `len(df)` |
 | `required_columns` | `required=True` (listed but not required: `required=False`) |
 | `allow_extra_columns: false` | `strict=True` |
@@ -186,6 +189,7 @@ timestamp. Each expectation names its contract rule in `meta.shape_rule`.
 | `min`, `max` | `expect_column_values_to_be_between` |
 | `allowed_values` | `expect_column_values_to_be_in_set` |
 | `pattern` | `expect_column_values_to_match_regex` with `mostly` 0.9 |
+| `regex` | `expect_column_values_to_match_regex` with whole-value expression and `mostly` = `min_match_rate` |
 | `row_count` | `expect_table_row_count_to_be_between` |
 | `allow_extra_columns: false` | `expect_table_columns_to_match_set` (`exact_match`) |
 
@@ -283,6 +287,13 @@ contract_from("jsonschema", text)                  # what the schema states
 contract_from("jsonschema", text, use_meta=True)   # the whole contract, from x-shape
 ```
 
+Relative `min` and `max` objects (`as_of_offset_days`) are gaps in every target:
+DDL, GX, JSON Schema and pandera cannot resolve a runtime batch date statically.
+They are preserved in each target's metadata where available, never frozen to a
+constant. The timezone context is also a gap and is retained in metadata where
+available, including a dataset timezone inherited by the emitted table. Constant
+numeric bounds retain their existing mappings.
+
 ## What is out of scope
 
 dbt has its own command (`shape to-dbt-tests`, [DBT.md](DBT.md)). Running the emitted artifacts
@@ -317,3 +328,7 @@ shape contract emit orders.contract.json --to jsonschema --strict    # exit 1 if
     ```
 
 This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.
+
+Imported GX and JSON Schema expressions matching a known label still become `pattern`.
+Other expressions become `regex`; GX preserves `mostly` as `min_match_rate`.
+Target regex engines may differ from RE2; check expression compatibility before execution.

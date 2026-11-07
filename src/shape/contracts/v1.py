@@ -6,6 +6,7 @@ Both operate on :class:`shape.profile.reference.Profile` objects. The rule vocab
 
 from __future__ import annotations
 
+import datetime as dt
 import difflib
 import json
 import math
@@ -34,6 +35,7 @@ from .joint import check_joint_rules, check_no_placeholder, check_valid_as
 
 _CONTRACT_KEYS = {
     "row_count",
+    "as_of_timezone",
     "columns",
     "required_columns",
     "allow_extra_columns",
@@ -59,6 +61,7 @@ _COLUMN_RULES = {
     "unique",
     "max_null_rate",
     "pattern",
+    "regex",
     "allowed_values",
     "min",
     "max",
@@ -95,11 +98,16 @@ class CheckResult:
     ``strength`` and ``to_dict`` carry ``warnings``, so a contract without one gives the result it
     always did."""
 
+    as_of: str | None = None
+    """Explicit batch date used to resolve relative bounds, when supplied."""
+
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {
             "passed": self.passed,
             "violations": [dict(v) for v in self.violations],
         }
+        if self.as_of is not None:
+            out["as_of"] = self.as_of
         if self.has_strength:
             out["warnings"] = [dict(v) for v in self.warnings]
         if self.not_evaluable:  # present only when a safe capture left out what a rule needs
@@ -179,6 +187,10 @@ def _validate_contract(contract: dict[str, Any], *, top: bool = True) -> None:
     }
     if unknown:
         raise ContractError(f"unknown contract keys: {sorted(unknown)}")
+    from .relative import validate_timezone
+
+    if "as_of_timezone" in contract:
+        validate_timezone(contract["as_of_timezone"])
     _validate_data_rules(contract, top=top)
     rc = contract.get("row_count", {})
     if not isinstance(rc, dict) or set(rc) - _ROW_COUNT_KEYS:
@@ -223,6 +235,10 @@ def _validate_contract(contract: dict[str, Any], *, top: bool = True) -> None:
 
 def _validate_column_rules(name: str, rules: dict[str, Any]) -> None:
     """The values of one column's rules. Nothing is coerced: ``"false"`` is not ``false``."""
+    if "regex" in rules:
+        from .regex import validate_regex
+
+        validate_regex(name, rules["regex"])
     for key in ("dtype", "pattern", "distribution"):
         if key in rules and not isinstance(rules[key], str):
             # No recognised pattern or fitted distribution is represented by null in profiles.
@@ -241,13 +257,18 @@ def _validate_column_rules(name: str, rules: dict[str, Any]) -> None:
             raise ContractRuleError(
                 f"{key} for column {name!r} must be a number from 0 to 1, not {rules[key]!r}"
             )
+    from .relative import is_relative, validate_bound
+
+    for bound in ("min", "max"):
+        if is_relative(rules.get(bound)):
+            validate_bound(name, bound, rules[bound])
     # A column's ``min`` and ``max`` take any value: one the profile's bound cannot be compared
     # with is a violation in ``check`` (and is "not expressed" by ``shape contract emit``), so it
     # never passes untested.
 
 
 # Keys that may stand beside ``tables``: they are not rules of one table.
-_BESIDE_TABLES = {"tables", "drift", *_DATA_RULES}
+_BESIDE_TABLES = {"tables", "drift", "as_of_timezone", *_DATA_RULES}
 
 
 def _validate_tables(contract: dict[str, Any], *, top: bool) -> None:
@@ -469,6 +490,10 @@ def _column_strength(rules: dict[str, Any], rule: str) -> str:
     """The strength of a column rule's violation: the column's ``strength`` when it is one word,
     else that of the named rule (``hard`` when the object does not name it). A true-rate
     violation takes the harder of the two bounds' strengths."""
+    if rule == "regex" and isinstance(rules.get("regex"), dict):
+        nested = rules["regex"].get("strength")
+        if nested is not None:
+            return str(nested)
     value = rules.get("strength")
     if value is None:
         return "hard"
@@ -558,7 +583,9 @@ def _check_column_rules(
     if "valid_as" in rules:
         out.extend(check_valid_as(name, rules["valid_as"], col))
     for bound in ("min", "max"):
-        if bound not in rules:
+        from .relative import is_relative
+
+        if bound not in rules or is_relative(rules[bound]):
             continue
         if f"{bound}_value" in cut:
             blind(bound)
@@ -708,7 +735,11 @@ def _declares_strength(contract: dict[str, Any]) -> bool:
     """True when ``strength`` appears anywhere a contract may hold it."""
     if "strength" in contract.get("row_count", {}):
         return True
-    if any("strength" in rules for rules in contract.get("columns", {}).values()):
+    if any(
+        "strength" in rules
+        or (isinstance(rules.get("regex"), dict) and "strength" in rules["regex"])
+        for rules in contract.get("columns", {}).values()
+    ):
         return True
     if any(
         "strength" in rule
@@ -755,8 +786,13 @@ def check(
     *,
     strict: bool = False,
     enforce_learned: bool = False,
+    as_of: dt.date | str | None = None,
 ) -> CheckResult:
     """Check ``profile`` against a v1 contract (a dict, or the path to a JSON file).
+
+    ``regex`` checks stored profile values or exact values when ``data`` is supplied.
+    Relative ``min``/``max`` bounds require an explicit ``as_of`` date, recorded in the result;
+    ``as_of_timezone`` defines their calendar days (UTC by default).
 
     The optional ``timeseries`` and ``reconcile`` rules check data, not a profile (see
     ``docs/VERIFY.md``): ``data`` is the tables (``{name: pyarrow.Table}``, or a path that
@@ -785,6 +821,16 @@ def check(
     """
     contract = _load_contract(contract)
     _validate_contract(contract)
+    from .regex import uses_regex
+    from .relative import has_relative, parse_as_of
+    from .value_rules import check_value_rules
+
+    day = parse_as_of(as_of, contract)
+    if isinstance(data, (str, Path)) and (uses_regex(contract) or has_relative(contract)):
+        from shape.quality import load_tables
+
+        data = load_tables(data)
+    extra, extra_gaps = check_value_rules(profile, contract, data, day)
     if profile.is_dataset:
         per_table = contract.get("tables")
         if not isinstance(per_table, dict):
@@ -808,7 +854,9 @@ def check(
                     v["rule"] = f"{tname}:{v['rule']}"
                 violations.append(v)
         violations.extend(_data_violations(contract, data))
-        return _finish(violations, contract, strict, enforce_learned, blind)
+        result = _finish(violations + extra, contract, strict, enforce_learned, blind + extra_gaps)
+        result.as_of = day.isoformat() if day else None
+        return result
     if "tables" in contract:
         # A multi-table contract has nothing to say about one table: checking it would pass
         # without testing a single rule.
@@ -820,7 +868,9 @@ def check(
     gaps = []
     violations = _check_table(next(iter(profile.tables.values())), contract, gaps=gaps)
     violations.extend(_data_violations(contract, data))
-    return _finish(violations, contract, strict, enforce_learned, gaps)
+    result = _finish(violations + extra, contract, strict, enforce_learned, gaps + extra_gaps)
+    result.as_of = day.isoformat() if day else None
+    return result
 
 
 # --- drift ------------------------------------------------------------------------

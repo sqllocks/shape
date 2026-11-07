@@ -613,6 +613,10 @@
   },
   "check": {
    "flags": {
+    "--as-of": {
+     "choices": null,
+     "takes_value": true
+    },
     "--changes": {
      "choices": null,
      "takes_value": true
