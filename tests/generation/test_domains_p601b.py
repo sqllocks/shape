@@ -23,6 +23,7 @@ from shape.plugins import kit
 from shape.plugins.host import default_host
 
 from ..benchmarks.historical_imports import historical_imports
+from .decimal_declarations import declare_expected_decimals
 
 ROOT = Path(__file__).resolve().parents[2]
 BENCH = ROOT / "benchmarks" / "vs_refengine"
@@ -90,19 +91,20 @@ def test_the_shipped_files_equal_what_the_exporter_writes():
             shipped = (
                 ROOT / "plugins/shape-domains/src/shape_domains/data" / name / filename
             ).read_text("utf-8")
-            built = export_domains.export_retail.render_schema(
-                export_domains.schema_document(name, mode)
-            )
+            document = export_domains.schema_document(name, mode)
+            declare_expected_decimals(document, name)
+            built = export_domains.export_retail.render_schema(document)
             assert shipped == built, (name, mode)
 
 
 def test_the_schema_is_the_baselines_dump_with_nanosecond_dates(domain):
-    """The one difference: ``unit: ns`` on every non-seasonal temporal column, for T-21 (a).
+    """Add ``unit: ns`` on non-seasonal temporal columns and explicit decimal dimensions.
     Generator keys that no generator reads (``export_domains.UNREAD_KEYS``) are left out."""
     dump = json.loads((BENCH / "fixtures" / "schemas" / f"{domain.name}_3nf.json").read_text())
     assert not [k for k in export_domains.OVERRIDES if k[0] == domain.name]
     mine = domain.schema.to_dict()
     expected = schema_import.import_dump(dump).to_dict()
+    declare_expected_decimals(expected, domain.name)
     for tname, table in mine["tables"].items():
         for cname, col in table["columns"].items():
             gen = col["generator"]
