@@ -273,7 +273,12 @@ def main() -> None:
     )
     notice_path = ROOT / "THIRD_PARTY_NOTICES.md"
     notice = notice_path.read_text("utf-8").split("\n## Locale name lists (PUB-29)\n")[0]
-    notice_path.write_text(notice.rstrip() + "\n\n" + "\n".join(notices), encoding="utf-8")
+    notice_text = notice.rstrip() + "\n\n" + "\n".join(notices)
+    notice_path.write_text(notice_text, encoding="utf-8")
+    # The domains distribution carries the repository's identical notices text.
+    (ROOT / "plugins/shape-domains/THIRD_PARTY_NOTICES.md").write_text(
+        notice_text, encoding="utf-8"
+    )
 
 
 if __name__ == "__main__":
