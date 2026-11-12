@@ -6,6 +6,9 @@ Status: available.
 
 ## Unreleased
 
+- Add openly licensed GB first and last names, CA/AU/DE first names, and FR last names to the locale strategy, with source provenance and documented gaps. Correct non-US surname and full-name selection.
+
+
 ## 0.9.4
 
 ### Added

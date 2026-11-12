@@ -99,7 +99,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--read-on", default="2026-10-03")
     args = parser.parse_args(argv)
     OUT.mkdir(parents=True, exist_ok=True)
-    files: dict[str, dict[str, object]] = {}
+    manifest_path = OUT / "MANIFEST.json"
+    files: dict[str, dict[str, object]] = (
+        json.loads(manifest_path.read_text("utf-8"))["files"] if manifest_path.exists() else {}
+    )
     for cc in ("GB", "CA", "DE", "FR", "IN", "AU"):
         rows = places(args.src, cc)
         name = f"{cc.lower()}_places.tsv"

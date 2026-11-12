@@ -1,5 +1,12 @@
 {
   "files": {
+    "locales/au_first_names.txt": {
+      "bytes": 1331,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "24b87e11e6c45655a62161adac738bdb0e5640e9643f67019fe956457a612227"
+    },
     "locales/au_places.tsv": {
       "bytes": 147747,
       "drawn_by": {
@@ -7,12 +14,26 @@
       },
       "sha256": "b5bf85f0d74a5ffe2713e43a3c242106870556582e47da303b3420910116d00e"
     },
+    "locales/ca_first_names.txt": {
+      "bytes": 34696,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "64a546e727472a726de4a792a16abd37e9e294fc4921feab38c9a387c74da95d"
+    },
     "locales/ca_places.tsv": {
       "bytes": 91829,
       "drawn_by": {
         "locale": 1
       },
       "sha256": "a108f5d11f5e76f658d82319d5136433ba050ebaf7801d122fb411572ef95049"
+    },
+    "locales/de_first_names.txt": {
+      "bytes": 22216,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "bb903fe545d6078ae3fdf441e164664daeaefbdff216a3fcc37931fa84b92e22"
     },
     "locales/de_places.tsv": {
       "bytes": 364711,
@@ -28,12 +49,33 @@
       },
       "sha256": "87f1855f3fc50bb1e2a0a94e74b528a8c6c8f3bb36aeb31f82a809d8b0ead963"
     },
+    "locales/fr_last_names.txt": {
+      "bytes": 37489,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "bf434300dc712bd1564ae3bc18869bf37c46c02b5f90bc958c955ec63db2d844"
+    },
     "locales/fr_places.tsv": {
       "bytes": 297337,
       "drawn_by": {
         "locale": 1
       },
       "sha256": "1ea07022646b6d445f8337f280d67e1e9079ce41d2971a2e18b29504f2d59c4c"
+    },
+    "locales/gb_first_names.txt": {
+      "bytes": 36256,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "84fcf512ab54b5e94ba24a0277308394aeeb362e1003a68f993b0a28f38e7850"
+    },
+    "locales/gb_last_names.txt": {
+      "bytes": 15757,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "c8f1ab176c05439c40d723a1467791b49412e066c962f999230f6af230ec24a4"
     },
     "locales/gb_places.tsv": {
       "bytes": 112039,
