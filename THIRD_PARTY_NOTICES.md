@@ -324,12 +324,12 @@ Transformation: All Surnames for 2023 worksheet, after header: Surname and Numbe
 Publisher: Government of Ontario. Source page: https://data.ontario.ca/dataset/ontario-top-baby-names-female
 Licence: Open Government Licence – Ontario: https://www.ontario.ca/page/open-government-licence-ontario
 Licence statement: https://data.ontario.ca/dataset/ontario-top-baby-names-female
-Retrieval date: 2026-11-12. Rows: 5000. Shipped SHA-256: `64a546e727472a726de4a792a16abd37e9e294fc4921feab38c9a387c74da95d`.
+Retrieval date: 2026-11-12. Rows: 5000. Shipped SHA-256: `1f7dccc216d9f31643fa58b2ebc19805a53927199dab300fc4cb0e6061b05a97`.
 
 Source: https://data.ontario.ca/dataset/4d339626-98f9-49fe-aede-d64f03fa914f/resource/acc72e92-3100-4a04-8f5f-4fad9cd77cc5/download/baby_names_-_female_.csv (upstream SHA-256 `93831ff6a0ee7e79b91859d5301c78d4d33afd6aea915779fdeadb9c51237226`; local input `ca-female.csv`).
 Source: https://data.ontario.ca/dataset/eb4c585c-6ada-4de7-8ff1-e876fb1a6b0b/resource/5d8b8ece-fa01-43c5-955b-4b642b28c559/download/baby_names_-_male.csv (upstream SHA-256 `61b3bede993a38f6e104b662295017bfc77266b56f46e88372bb5ed8b9282861`; local input `ca-male.csv`).
 
-Transformation: Both Ontario CSVs, UTF-8 BOM, Name/Nom and Frequency/Fréquence; sum numeric frequencies across all supplied years and sexes; ignore suppressed nonnumeric frequencies. Preserve upstream spelling and case. Provincial birth registrations, not all Canada. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+Transformation: Both Ontario CSVs, UTF-8 BOM, Name/Nom and Frequency/Fréquence; sum numeric frequencies across all supplied years and sexes; exclude the registration placeholders BABY, BOY, FEMALE, INFANT, MALE, NOT and UNNAMED; ignore suppressed nonnumeric frequencies. Preserve upstream spelling and case. Provincial birth registrations, not all Canada. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
 
 ### `au_first_names.txt`
 

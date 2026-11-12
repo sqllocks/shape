@@ -343,3 +343,9 @@ def test_docs_name_inventory_matches_files_exactly() -> None:
                 country,
                 kind,
             )
+
+
+def test_canadian_first_names_exclude_registration_placeholders() -> None:
+    names = set(locale_pack.pool("CA", "first_names"))
+    assert not names.intersection({"BABY", "BOY", "FEMALE", "INFANT", "MALE", "NOT", "UNNAMED"})
+    assert len(names) == 5000

@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "src/shape/builtins/strategies/locales"
 MAX_ROWS = 5000  # Same cap as each existing US name pool.
 READ_ON = "2026-11-12"
+CA_NON_NAMES = frozenset({"BABY", "BOY", "FEMALE", "INFANT", "MALE", "NOT", "UNNAMED"})
 OGL = "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
 ONTARIO = "https://data.ontario.ca/dataset/"
 AU_PAGE = (
@@ -83,7 +84,8 @@ RECIPES: dict[str, dict[str, Any]] = {
         },
         "selection": (
             "Both Ontario CSVs, UTF-8 BOM, Name/Nom and Frequency/Fréquence; sum "
-            "numeric frequencies across all supplied years and sexes; ignore "
+            "numeric frequencies across all supplied years and sexes; exclude the registration "
+            "placeholders BABY, BOY, FEMALE, INFANT, MALE, NOT and UNNAMED; ignore "
             "suppressed nonnumeric frequencies. Preserve upstream spelling and case. "
             "Provincial birth registrations, not all Canada."
         ),
@@ -164,7 +166,9 @@ def counts(src: Path, filename: str) -> Counter[str]:
         for source in ("ca-female.csv", "ca-male.csv"):
             with (src / source).open(encoding="utf-8-sig", newline="") as handle:
                 pairs.extend(
-                    (r["Name/Nom"], r["Frequency/Fréquence"]) for r in csv.DictReader(handle)
+                    (r["Name/Nom"], r["Frequency/Fréquence"])
+                    for r in csv.DictReader(handle)
+                    if r["Name/Nom"] not in CA_NON_NAMES
                 )
     elif filename.startswith("au_"):
         result = json.loads((src / "au-api.json").read_text("utf-8"))["result"]

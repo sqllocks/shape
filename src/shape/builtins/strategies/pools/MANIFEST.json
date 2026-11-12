@@ -15,11 +15,11 @@
       "sha256": "b5bf85f0d74a5ffe2713e43a3c242106870556582e47da303b3420910116d00e"
     },
     "locales/ca_first_names.txt": {
-      "bytes": 34696,
+      "bytes": 34706,
       "drawn_by": {
         "locale": 1
       },
-      "sha256": "64a546e727472a726de4a792a16abd37e9e294fc4921feab38c9a387c74da95d"
+      "sha256": "1f7dccc216d9f31643fa58b2ebc19805a53927199dab300fc4cb0e6061b05a97"
     },
     "locales/ca_places.tsv": {
       "bytes": 91829,
