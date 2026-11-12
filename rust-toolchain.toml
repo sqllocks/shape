@@ -1,0 +1,6 @@
+# Keep native Unicode casing aligned with the committed reference table.
+# A floating stable compiler can change Unicode data without a source change.
+[toolchain]
+channel = "1.99.0"
+profile = "minimal"
+components = ["clippy", "rustfmt"]

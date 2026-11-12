@@ -6,7 +6,7 @@ Status: available.
 
 ## Unreleased
 
-- Add openly licensed GB first and last names, CA/AU/DE first names, and FR last names to the locale strategy, with source provenance and documented gaps. Correct non-US surname and full-name selection.
+- Add openly licensed GB first and last names, CA/AU/DE first names, and FR last names to the locale strategy, with source provenance and documented gaps. Correct non-US surname and full-name selection. Pin the development Rust toolchain to preserve the existing Unicode casing contract.
 
 
 ## 0.9.4

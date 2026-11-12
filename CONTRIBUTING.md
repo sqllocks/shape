@@ -40,7 +40,8 @@ and conformance tests for new normative behavior. Document the changed behavior.
 ## Local development
 
 Published packages support Python 3.11 or newer. The complete development and documentation
-environment needs Python 3.12 or newer and Rust stable 1.85 or newer to build the native kernel.
+environment needs Python 3.12 or newer and the Rust toolchain pinned in `rust-toolchain.toml`
+to build the native kernel and match its committed Unicode reference table.
 Install the pinned uv version and bootstrap the locked workspace:
 
 ```bash
