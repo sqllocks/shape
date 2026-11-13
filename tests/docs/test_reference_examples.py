@@ -70,11 +70,12 @@ def test_reference_page(page: str, tmp_path: Path, webhook: str) -> None:
     import sys
 
     sys.path.insert(0, str(ROOT / "scripts"))
+    from docs_reference_environment import reference_environment, validated_doctor_pandas
     from docs_transcripts import comparable
 
     env = {
         **os.environ,
-        "PATH": str(ROOT / ".venv/bin") + ":" + os.environ["PATH"],
+        "PATH": str(Path(sys.executable).parent) + ":" + os.environ["PATH"],
         "PYTHONPATH": str(ROOT / "src") + ":.",
         "SHAPE_KERNEL": "python",
         "SHAPE_DOCS_REPO": str(ROOT),
@@ -106,10 +107,12 @@ def test_reference_page(page: str, tmp_path: Path, webhook: str) -> None:
         expected = "\n".join(line.removeprefix("    ") for line in expected_block.splitlines())
         if expected == "(no output)":
             expected = ""
+        startup = tmp_path / ".reference-registry" / number
+        command_env = reference_environment(env, startup)
         run = subprocess.run(
             ["bash", "--noprofile", "--norc", "-c", command],
             cwd=tmp_path,
-            env=env,
+            env=command_env,
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -122,8 +125,9 @@ def test_reference_page(page: str, tmp_path: Path, webhook: str) -> None:
             + run.stdout[-1000:]
         )
         crypto = page.endswith(("SIGNING.md", "PRIVACY_MODEL.md"))
-        actual = comparable(run.stdout.rstrip("\n"), tmp_path, ROOT, crypto=crypto)
-        recorded = comparable(expected, tmp_path, ROOT, crypto=crypto, recorded=True)
+        actual_text, recorded_text = validated_doctor_pandas(run.stdout, expected, startup)
+        actual = comparable(actual_text.rstrip("\n"), tmp_path, ROOT, crypto=crypto)
+        recorded = comparable(recorded_text, tmp_path, ROOT, crypto=crypto, recorded=True)
         if actual != recorded:
             difference = list(difflib.unified_diff(recorded.splitlines(), actual.splitlines()))
             pytest.fail(f"{page}:{number}; transcript: {transcript}\n" + "\n".join(difference[:80]))
