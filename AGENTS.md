@@ -1,4 +1,5 @@
-Set up development with `make bootstrap` (uv 0.8.17, locked sync; Python 3.12+ for docs and Rust 1.85+).
+Set up development with `make bootstrap` (uv 0.8.17, locked sync; Python 3.12+ for docs
+and the Rust toolchain pinned in `rust-toolchain.toml`).
 Run tools with `uv run --locked` (select `--group docs` for documentation tools).
 Never use `pip install` in the development environment. Change dependencies in
 `pyproject.toml`, run `uv lock`, and commit `uv.lock` in the same commit.

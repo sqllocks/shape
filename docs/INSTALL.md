@@ -236,7 +236,8 @@ pip install --quiet --no-deps --find-links wheels "sqllocks-shape-fabric[sqlserv
 ## Developer checkout
 
 End-user installs above continue to use pip. To work on Shape itself, install Python 3.12+
-(for docs), Rust 1.85+ and uv 0.8.17 (`python3 -m pip install --user "uv==0.8.17"`), then run
+(for docs), rustup (which selects the compiler pinned in `rust-toolchain.toml`) and uv 0.8.17
+(`python3 -m pip install --user "uv==0.8.17"`), then run
 `make bootstrap`. This installs the locked core and 12 plugin workspace with maturin's Rust
 kernel build. Run tools with `uv run --locked`; use `--group docs` for docs tools.
 Python 3.11 core-only development can use `uv sync --locked`.

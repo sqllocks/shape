@@ -2,6 +2,23 @@
   "format": "shape-locale-data",
   "version": 1,
   "files": {
+    "au_first_names.txt": {
+      "publisher": "Department of Justice, Queensland Government",
+      "source_page": "https://www.data.qld.gov.au/dataset/top-100-baby-names/resource/53c648be-8623-4f1b-83c5-9a591a8d6acd",
+      "licence": "Creative Commons Attribution 3.0 Australia (CC BY 3.0 AU)",
+      "licence_text_url": "https://creativecommons.org/licenses/by/3.0/au/",
+      "source": "https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=53c648be-8623-4f1b-83c5-9a591a8d6acd&limit=1000",
+      "inputs": {
+        "au-api.json": {
+          "source": "https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=53c648be-8623-4f1b-83c5-9a591a8d6acd&limit=1000",
+          "sha256": "35ac3b8db255ef6770e6ec6a59b71937b4413b23609de2cebd878c5b62b134e9"
+        }
+      },
+      "read_on": "2026-11-12",
+      "transformation": "Official DataStore API records for Top 100 Baby Names 2024: Girl Names/Count of Girl Names and Boy Names/Count of Boy Names; sum counts across sexes, omit null name/count cells. Require all records (total) in response. Queensland births only, not all Australia. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.",
+      "rows": 203,
+      "sha256": "24b87e11e6c45655a62161adac738bdb0e5640e9643f67019fe956457a612227"
+    },
     "au_places.tsv": {
       "source": "https://download.geonames.org/export/zip/AU.zip",
       "upstream_sha256": "cc8df389cd0107d2acebf9dc2520c275006e098246bf1df4c2d1f733a5478a36",
@@ -11,6 +28,27 @@
       "rows": 3171,
       "sha256": "b5bf85f0d74a5ffe2713e43a3c242106870556582e47da303b3420910116d00e"
     },
+    "ca_first_names.txt": {
+      "publisher": "Government of Ontario",
+      "source_page": "https://data.ontario.ca/dataset/ontario-top-baby-names-female",
+      "licence": "Open Government Licence – Ontario",
+      "licence_text_url": "https://www.ontario.ca/page/open-government-licence-ontario",
+      "source": "https://data.ontario.ca/dataset/4d339626-98f9-49fe-aede-d64f03fa914f/resource/acc72e92-3100-4a04-8f5f-4fad9cd77cc5/download/baby_names_-_female_.csv",
+      "inputs": {
+        "ca-female.csv": {
+          "source": "https://data.ontario.ca/dataset/4d339626-98f9-49fe-aede-d64f03fa914f/resource/acc72e92-3100-4a04-8f5f-4fad9cd77cc5/download/baby_names_-_female_.csv",
+          "sha256": "93831ff6a0ee7e79b91859d5301c78d4d33afd6aea915779fdeadb9c51237226"
+        },
+        "ca-male.csv": {
+          "source": "https://data.ontario.ca/dataset/eb4c585c-6ada-4de7-8ff1-e876fb1a6b0b/resource/5d8b8ece-fa01-43c5-955b-4b642b28c559/download/baby_names_-_male.csv",
+          "sha256": "61b3bede993a38f6e104b662295017bfc77266b56f46e88372bb5ed8b9282861"
+        }
+      },
+      "read_on": "2026-11-12",
+      "transformation": "Both Ontario CSVs, UTF-8 BOM, Name/Nom and Frequency/Fréquence; sum numeric frequencies across all supplied years and sexes; exclude the registration placeholders BABY, BOY, FEMALE, INFANT, MALE, NOT and UNNAMED; ignore suppressed nonnumeric frequencies. Preserve upstream spelling and case. Provincial birth registrations, not all Canada. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.",
+      "rows": 5000,
+      "sha256": "1f7dccc216d9f31643fa58b2ebc19805a53927199dab300fc4cb0e6061b05a97"
+    },
     "ca_places.tsv": {
       "source": "https://download.geonames.org/export/zip/CA.zip",
       "upstream_sha256": "24175b988419ff7ba08905e82edc0827fb4100ed0027b3dd71892a0f57b0eee1",
@@ -19,6 +57,23 @@
       "read_on": "2026-10-03",
       "rows": 1651,
       "sha256": "a108f5d11f5e76f658d82319d5136433ba050ebaf7801d122fb411572ef95049"
+    },
+    "de_first_names.txt": {
+      "publisher": "Stadt Bonn",
+      "source_page": "https://opendata.bonn.de/dataset/vornamen-von-neugeborenen-im-jahr-2024",
+      "licence": "Creative Commons CC0 1.0 Universal (CC0-1.0)",
+      "licence_text_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": "https://opendata.bonn.de/sites/default/files/Vornamenstatistik_2024-01-01_2024-12-31.csv",
+      "inputs": {
+        "de-first.csv": {
+          "source": "https://opendata.bonn.de/sites/default/files/Vornamenstatistik_2024-01-01_2024-12-31.csv",
+          "sha256": "1552e9815d75dbd947adb9aa5fee890922d54060115d41407fbf8e9877121c77"
+        }
+      },
+      "read_on": "2026-11-12",
+      "transformation": "UTF-8 semicolon CSV: vorname and anzahl; sum counts across geschlecht and position. Bonn newborns in 2024 only, not all Germany. Preserve case and accents. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.",
+      "rows": 3242,
+      "sha256": "bb903fe545d6078ae3fdf441e164664daeaefbdff216a3fcc37931fa84b92e22"
     },
     "de_places.tsv": {
       "source": "https://download.geonames.org/export/zip/DE.zip",
@@ -38,6 +93,24 @@
       "rows": 1000,
       "sha256": "87f1855f3fc50bb1e2a0a94e74b528a8c6c8f3bb36aeb31f82a809d8b0ead963"
     },
+    "fr_last_names.txt": {
+      "publisher": "Insee",
+      "source_page": "https://www.insee.fr/fr/statistiques/3536630",
+      "licence": "Licence Ouverte / Open Licence version 2.0 (Etalab)",
+      "licence_text_url": "https://www.etalab.gouv.fr/licence-ouverte-open-licence/",
+      "licence_statement_url": "https://www.insee.fr/fr/information/2008466?page=copyright.htm",
+      "source": "https://www.insee.fr/fr/statistiques/fichier/3536630/noms2008nat_txt.zip",
+      "inputs": {
+        "fr-last.zip": {
+          "source": "https://www.insee.fr/fr/statistiques/fichier/3536630/noms2008nat_txt.zip",
+          "sha256": "c8693ff69bed32621250f1fc06e71b686e72bba1dbd771055e431d305527cfba"
+        }
+      },
+      "read_on": "2026-11-12",
+      "transformation": "ZIP member noms2008nat_txt.txt, UTF-8 tab-separated: NOM; sum all eleven decade columns (1891–2000); exclude AUTRES NOMS aggregate. Preserve upstream uppercase spelling and accents. Source: Insee, Fichier des noms, updated 2018-05-22. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.",
+      "rows": 5000,
+      "sha256": "bf434300dc712bd1564ae3bc18869bf37c46c02b5f90bc958c955ec63db2d844"
+    },
     "fr_places.tsv": {
       "source": "https://download.geonames.org/export/zip/FR.zip",
       "upstream_sha256": "cb5087429a53cd8cc87e5bd8921998faa4721a88642eb1a7642af6a752c6bf3d",
@@ -46,6 +119,40 @@
       "read_on": "2026-10-03",
       "rows": 6064,
       "sha256": "1ea07022646b6d445f8337f280d67e1e9079ce41d2971a2e18b29504f2d59c4c"
+    },
+    "gb_first_names.txt": {
+      "publisher": "National Records of Scotland",
+      "source_page": "https://www.nrscotland.gov.uk/publications/babies-first-names-2023/",
+      "licence": "Open Government Licence v3.0",
+      "licence_text_url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "source": "https://www.nrscotland.gov.uk/media/oaaf0cbz/full-list-2023.xlsx",
+      "inputs": {
+        "gb-first.xlsx": {
+          "source": "https://www.nrscotland.gov.uk/media/oaaf0cbz/full-list-2023.xlsx",
+          "sha256": "b3c8aef8aca94206625138f4bcb195cfc035d204c27990ef705521a7e7af637e"
+        }
+      },
+      "read_on": "2026-11-12",
+      "transformation": "Boys and Girls worksheets, rows after the three header rows: Name and Number; omit NB death annotations in the rank column, not the name; sum counts across sexes. Scotland births, 2023; upstream has already removed accents. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.",
+      "rows": 5000,
+      "sha256": "84fcf512ab54b5e94ba24a0277308394aeeb362e1003a68f993b0a28f38e7850"
+    },
+    "gb_last_names.txt": {
+      "publisher": "National Records of Scotland",
+      "source_page": "https://www.nrscotland.gov.uk/publications/most-common-surnames-2023/",
+      "licence": "Open Government Licence v3.0",
+      "licence_text_url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "source": "https://www.nrscotland.gov.uk/media/44zfo3hz/most-common-surnames-bmd-register-2023.xlsx",
+      "inputs": {
+        "gb-last.xlsx": {
+          "source": "https://www.nrscotland.gov.uk/media/44zfo3hz/most-common-surnames-bmd-register-2023.xlsx",
+          "sha256": "a0f92998090ae25ef5b062ba2320e12eb1af2efc111f4cb4c2e91edc72f37dd9"
+        }
+      },
+      "read_on": "2026-11-12",
+      "transformation": "All Surnames for 2023 worksheet, after header: Surname and Number. Scotland birth, marriage and death registrations, not a population census. Preserve upstream uppercase spelling. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.",
+      "rows": 2113,
+      "sha256": "c8f1ab176c05439c40d723a1467791b49412e066c962f999230f6af230ec24a4"
     },
     "gb_places.tsv": {
       "source": "https://download.geonames.org/export/zip/GB.zip",

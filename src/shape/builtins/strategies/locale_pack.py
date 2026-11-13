@@ -12,8 +12,8 @@ A locale is a country: ``US``, ``CA``, ``GB``, ``DE``, ``FR``, ``IN`` or ``AU`` 
 * phone numbers only in ranges a country reserves for fiction: ``US`` and ``CA`` the 555-0100 to
   555-0199 lines, ``FR`` the audiovisual roots of ARCEP's national numbering plan. A country
   without a shipped range raises a ``StrategyError``;
-* first names where an openly licensed list is shipped (``FR``: INSEE; ``US``: Shape's own pools).
-  Anywhere else the provider says that no openly licensed list is shipped;
+* first and last names where an openly licensed list is shipped (see ``docs/LOCALES.md``).
+  Elsewhere the provider says that no openly licensed list is shipped;
 * no national identifier (social security, insurance, tax or passport number, ...) is generated
   for any country.
 
@@ -243,8 +243,12 @@ def _names(country: str, provider: str, ctx: GenerationContext) -> pa.Array:
                 f"locale {country}: no openly licensed {part} list is shipped ({where(ctx)}); "
                 "see docs/LOCALES.md for the countries and sources"
             )
-    first_pool = _arrow_pool(country, "first_names")
-    return kernel_ops.pool_take(first_pool, _pick(ctx, ctx.column, "first", len(first_pool)))
+    parts = []
+    for part in needed:
+        names = _arrow_pool(country, f"{part}s")
+        label = "first" if part == "first_name" else "last"
+        parts.append(kernel_ops.pool_take(names, _pick(ctx, ctx.column, label, len(names))))
+    return parts[0] if len(parts) == 1 else kernel_ops.join_strings(parts, " ")
 
 
 class Locale:

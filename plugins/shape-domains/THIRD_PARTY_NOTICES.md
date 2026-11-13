@@ -292,3 +292,76 @@ The documentation site bundles these fonts locally. It does not request fonts fr
 |---|---|---|---|
 | Host Grotesk | Copyright 2023 The Host Grotesk Project Authors | SIL Open Font License 1.1 | `docs/assets/fonts/host-grotesk-OFL.txt` |
 | Fragment Mono | Copyright 2022 The Fragment-Mono Project Authors | SIL Open Font License 1.1 | `docs/assets/fonts/fragment-mono-OFL.txt` |
+
+## Locale name lists (PUB-29)
+
+Retrieved and licence statements checked 2026-11-12. Files contain names only; all lists use the existing uniform sampling format. Regional sources are examples of names used in each country, not nationally representative distributions.
+
+### `gb_first_names.txt`
+
+Publisher: National Records of Scotland. Source page: https://www.nrscotland.gov.uk/publications/babies-first-names-2023/
+Licence: Open Government Licence v3.0: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+Licence statement: https://www.nrscotland.gov.uk/publications/babies-first-names-2023/
+Retrieval date: 2026-11-12. Rows: 5000. Shipped SHA-256: `84fcf512ab54b5e94ba24a0277308394aeeb362e1003a68f993b0a28f38e7850`.
+
+Source: https://www.nrscotland.gov.uk/media/oaaf0cbz/full-list-2023.xlsx (upstream SHA-256 `b3c8aef8aca94206625138f4bcb195cfc035d204c27990ef705521a7e7af637e`; local input `gb-first.xlsx`).
+
+Transformation: Boys and Girls worksheets, rows after the three header rows: Name and Number; omit NB death annotations in the rank column, not the name; sum counts across sexes. Scotland births, 2023; upstream has already removed accents. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+
+### `gb_last_names.txt`
+
+Publisher: National Records of Scotland. Source page: https://www.nrscotland.gov.uk/publications/most-common-surnames-2023/
+Licence: Open Government Licence v3.0: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+Licence statement: https://www.nrscotland.gov.uk/publications/most-common-surnames-2023/
+Retrieval date: 2026-11-12. Rows: 2113. Shipped SHA-256: `c8f1ab176c05439c40d723a1467791b49412e066c962f999230f6af230ec24a4`.
+
+Source: https://www.nrscotland.gov.uk/media/44zfo3hz/most-common-surnames-bmd-register-2023.xlsx (upstream SHA-256 `a0f92998090ae25ef5b062ba2320e12eb1af2efc111f4cb4c2e91edc72f37dd9`; local input `gb-last.xlsx`).
+
+Transformation: All Surnames for 2023 worksheet, after header: Surname and Number. Scotland birth, marriage and death registrations, not a population census. Preserve upstream uppercase spelling. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+
+### `ca_first_names.txt`
+
+Publisher: Government of Ontario. Source page: https://data.ontario.ca/dataset/ontario-top-baby-names-female
+Licence: Open Government Licence – Ontario: https://www.ontario.ca/page/open-government-licence-ontario
+Licence statement: https://data.ontario.ca/dataset/ontario-top-baby-names-female
+Retrieval date: 2026-11-12. Rows: 5000. Shipped SHA-256: `1f7dccc216d9f31643fa58b2ebc19805a53927199dab300fc4cb0e6061b05a97`.
+
+Source: https://data.ontario.ca/dataset/4d339626-98f9-49fe-aede-d64f03fa914f/resource/acc72e92-3100-4a04-8f5f-4fad9cd77cc5/download/baby_names_-_female_.csv (upstream SHA-256 `93831ff6a0ee7e79b91859d5301c78d4d33afd6aea915779fdeadb9c51237226`; local input `ca-female.csv`).
+Source: https://data.ontario.ca/dataset/eb4c585c-6ada-4de7-8ff1-e876fb1a6b0b/resource/5d8b8ece-fa01-43c5-955b-4b642b28c559/download/baby_names_-_male.csv (upstream SHA-256 `61b3bede993a38f6e104b662295017bfc77266b56f46e88372bb5ed8b9282861`; local input `ca-male.csv`).
+
+Transformation: Both Ontario CSVs, UTF-8 BOM, Name/Nom and Frequency/Fréquence; sum numeric frequencies across all supplied years and sexes; exclude the registration placeholders BABY, BOY, FEMALE, INFANT, MALE, NOT and UNNAMED; ignore suppressed nonnumeric frequencies. Preserve upstream spelling and case. Provincial birth registrations, not all Canada. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+
+### `au_first_names.txt`
+
+Publisher: Department of Justice, Queensland Government. Source page: https://www.data.qld.gov.au/dataset/top-100-baby-names/resource/53c648be-8623-4f1b-83c5-9a591a8d6acd
+Licence: Creative Commons Attribution 3.0 Australia (CC BY 3.0 AU): https://creativecommons.org/licenses/by/3.0/au/
+Licence statement: https://www.data.qld.gov.au/dataset/top-100-baby-names/resource/53c648be-8623-4f1b-83c5-9a591a8d6acd
+Retrieval date: 2026-11-12. Rows: 203. Shipped SHA-256: `24b87e11e6c45655a62161adac738bdb0e5640e9643f67019fe956457a612227`.
+
+Source: https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=53c648be-8623-4f1b-83c5-9a591a8d6acd&limit=1000 (upstream SHA-256 `35ac3b8db255ef6770e6ec6a59b71937b4413b23609de2cebd878c5b62b134e9`; local input `au-api.json`).
+
+Transformation: Official DataStore API records for Top 100 Baby Names 2024: Girl Names/Count of Girl Names and Boy Names/Count of Boy Names; sum counts across sexes, omit null name/count cells. Require all records (total) in response. Queensland births only, not all Australia. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+
+### `de_first_names.txt`
+
+Publisher: Stadt Bonn. Source page: https://opendata.bonn.de/dataset/vornamen-von-neugeborenen-im-jahr-2024
+Licence: Creative Commons CC0 1.0 Universal (CC0-1.0): https://creativecommons.org/publicdomain/zero/1.0/
+Licence statement: https://opendata.bonn.de/dataset/vornamen-von-neugeborenen-im-jahr-2024
+Retrieval date: 2026-11-12. Rows: 3242. Shipped SHA-256: `bb903fe545d6078ae3fdf441e164664daeaefbdff216a3fcc37931fa84b92e22`.
+
+Source: https://opendata.bonn.de/sites/default/files/Vornamenstatistik_2024-01-01_2024-12-31.csv (upstream SHA-256 `1552e9815d75dbd947adb9aa5fee890922d54060115d41407fbf8e9877121c77`; local input `de-first.csv`).
+
+Transformation: UTF-8 semicolon CSV: vorname and anzahl; sum counts across geschlecht and position. Bonn newborns in 2024 only, not all Germany. Preserve case and accents. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+
+### `fr_last_names.txt`
+
+Publisher: Insee. Source page: https://www.insee.fr/fr/statistiques/3536630
+Licence: Licence Ouverte / Open Licence version 2.0 (Etalab): https://www.etalab.gouv.fr/licence-ouverte-open-licence/
+Licence statement: https://www.insee.fr/fr/information/2008466?page=copyright.htm
+Retrieval date: 2026-11-12. Rows: 5000. Shipped SHA-256: `bf434300dc712bd1564ae3bc18869bf37c46c02b5f90bc958c955ec63db2d844`.
+
+Source: https://www.insee.fr/fr/statistiques/fichier/3536630/noms2008nat_txt.zip (upstream SHA-256 `c8693ff69bed32621250f1fc06e71b686e72bba1dbd771055e431d305527cfba`; local input `fr-last.zip`).
+
+Transformation: ZIP member noms2008nat_txt.txt, UTF-8 tab-separated: NOM; sum all eleven decade columns (1891–2000); exclude AUTRES NOMS aggregate. Preserve upstream uppercase spelling and accents. Source: Insee, Fichier des noms, updated 2018-05-22. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+
+Attribution: Contains information from National Records of Scotland, © Crown copyright, licensed under the Open Government Licence v3.0. Contains information licensed under the Open Government Licence – Ontario. © The State of Queensland (Department of Justice), Top 100 Baby Names 2024, CC BY 3.0 AU; adapted as described above. Stadt Bonn, Vornamen von Neugeborenen im Jahr 2024, CC0. Source : Insee, Fichier des noms, updated 2018-05-22; adapted as described above. No publisher endorses this package.

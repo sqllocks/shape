@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-import _pyio
+import _pyio  # type: ignore[import-not-found]
 import ast
 import codecs
 import datetime as dt
@@ -34,7 +34,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-import pyarrow as pa
+import pyarrow as pa  # type: ignore[import-untyped]
 import pytest
 
 from shape.builtins.sinks import CsvSink, JsonlSink, SqlSink, TsvSink
@@ -440,7 +440,7 @@ def unordered_iterations(source: str) -> list[int]:
 
     found = []
     for node in ast.walk(ast.parse(source)):
-        iters: list[ast.AST] = []
+        iters: list[ast.expr] = []
         if isinstance(node, (ast.For, ast.AsyncFor)):
             iters.append(node.iter)
         elif isinstance(node, (ast.ListComp, ast.GeneratorExp, ast.DictComp, ast.SetComp)):
@@ -585,7 +585,7 @@ def test_a_raised_generator_version_needs_the_manifest_updated() -> None:
     versions = {**pm.strategy_versions(), "native": 2}
     problems = pm.verify(versions=versions)
     assert problems and all("native version 1, but native is at version 2" in p for p in problems)
-    assert len(problems) == len(pm.load()["files"]) - 7  # every pool but the 7 locale files
+    assert len(problems) == len(pm.load()["files"]) - 13  # every pool but the 13 locale files
 
 
 def test_drawn_by_must_name_a_strategy() -> None:
