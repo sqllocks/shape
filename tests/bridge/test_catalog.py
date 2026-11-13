@@ -37,7 +37,7 @@ def test_list_describes_each_domain_by_its_own_description_not_its_schema_mode(a
     """A domain's ``list`` description is the domain's (one for every mode), as the baseline's
     ``list`` gives it; the schema's own text names one mode (``financial``: "Financial services
     domain — 3nf schema" where the domain is "Banking domain with accounts, ...")."""
-    from shape.generation.domains import domain_description
+    from shape.generation.domains import domain_description, load_domain
 
     rows = {d["name"]: d for d in api.ok("list")["domains"]}
     assert rows["financial"]["description"] == (
@@ -45,7 +45,8 @@ def test_list_describes_each_domain_by_its_own_description_not_its_schema_mode(a
     )
     for name, row in rows.items():
         own = domain_description(name)
-        assert own and row["description"] == own and not own.endswith("schema"), name
+        expected = own or load_domain(name).schema.model.description
+        assert row["description"] == expected, name
 
 
 def test_a_domain_without_a_description_is_listed_with_its_schema_description(api, monkeypatch):
