@@ -6831,7 +6831,8 @@ checks passed: tag py3-none-any, &lt; 28,600,000 bytes, no compiled code, RECORD
 </details>
 <h2 id="developer-checkout">Developer checkout<a class="headerlink" href="#developer-checkout" title="Permanent link">&para;</a></h2>
 <p>End-user installs above continue to use pip. To work on Shape itself, install Python 3.12+
-(for docs), Rust 1.85+ and uv 0.8.17 (<code>python3 -m pip install --user "uv==0.8.17"</code>), then run
+(for docs), rustup (which selects the compiler pinned in <code>rust-toolchain.toml</code>) and uv 0.8.17
+(<code>python3 -m pip install --user "uv==0.8.17"</code>), then run
 <code>make bootstrap</code>. This installs the locked core and 12 plugin workspace with maturin's Rust
 kernel build. Run tools with <code>uv run --locked</code>; use <code>--group docs</code> for docs tools.
 Python 3.11 core-only development can use <code>uv sync --locked</code>.</p>

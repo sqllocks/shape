@@ -2227,6 +2227,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Sources and licences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added-name-sources-checked-2026-11-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added name sources (checked 2026-11-12)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2237,6 +2254,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="What is not shipped">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#name-sources-checked-but-not-used-2026-11-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Name sources checked but not used (2026-11-12)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -6333,6 +6367,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Sources and licences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added-name-sources-checked-2026-11-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added name sources (checked 2026-11-12)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -6343,6 +6394,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="What is not shipped">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#name-sources-checked-but-not-used-2026-11-12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Name sources checked but not used (2026-11-12)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -6390,31 +6458,31 @@ group) and <code>r</code>, never on the chunk.</p>
 <td><code>US</code></td>
 <td>40,977 ZIP codes (<code>sqllocks-shape-domains</code>)</td>
 <td><code>+1 (AAA) 555-0100</code> to <code>555-0199</code></td>
-<td>Shape's own pools</td>
+<td>first and last: Shape's own pools</td>
 </tr>
 <tr>
 <td><code>CA</code></td>
 <td>1,651 first-three-character areas, completed with a random local part</td>
 <td>same NANP lines as <code>US</code></td>
-<td>not shipped</td>
+<td>first: Ontario; last: not shipped</td>
 </tr>
 <tr>
 <td><code>GB</code></td>
 <td>2,980 outward codes, completed with a random inward code</td>
 <td>not shipped</td>
-<td>not shipped</td>
+<td>first and last: Scotland</td>
 </tr>
 <tr>
 <td><code>DE</code></td>
 <td>8,172 places</td>
 <td>not shipped</td>
-<td>not shipped</td>
+<td>first: Bonn; last: not shipped</td>
 </tr>
 <tr>
 <td><code>FR</code></td>
 <td>6,064 places</td>
 <td>the six audiovisual roots of the national plan</td>
-<td>1,000 first names</td>
+<td>first and last: INSEE</td>
 </tr>
 <tr>
 <td><code>IN</code></td>
@@ -6426,7 +6494,7 @@ group) and <code>r</code>, never on the chunk.</p>
 <td><code>AU</code></td>
 <td>3,171 postcodes</td>
 <td>not shipped</td>
-<td>not shipped</td>
+<td>first: Queensland; last: not shipped</td>
 </tr>
 </tbody>
 </table>
@@ -6441,25 +6509,44 @@ group) and <code>r</code>, never on the chunk.</p>
   (<code>"format": "international"</code> gives <code>+33 1 99 00 12 34</code>). For a country without a shipped
   range the provider raises a <code>StrategyError</code> that says no range reserved for fiction is shipped:
   it never falls back to numbers that may be real.</li>
-<li><strong>Names.</strong> <code>first_name</code> for <code>FR</code> (INSEE) and <code>US</code>; <code>last_name</code> and <code>name</code> for <code>US</code>. Anywhere
-  else the provider raises a <code>StrategyError</code> that says no openly licensed list is shipped.</li>
+<li><strong>Names.</strong> <code>first_name</code> for <code>US</code>, <code>GB</code>, <code>CA</code>, <code>AU</code>, <code>DE</code> and <code>FR</code>; <code>last_name</code> and <code>name</code>
+  for <code>US</code>, <code>GB</code> and <code>FR</code>. Elsewhere the provider raises a <code>StrategyError</code> that says no openly licensed
+  list is shipped. Names use uniform sampling: the existing one-name-per-line format has no weight
+  field. Source counts rank the capped selections; these are not population frequency models.
+  Each added list has at most 5,000 rows (the existing US pool size), in NFC with accents retained
+  where supplied upstream. Scotland's first-name source has already removed accents.
+  Regional sources demonstrate names used in a country; they do not cover its whole population.</li>
 <li><strong>No national identifier.</strong> Social security, insurance, tax, passport and similar numbers
   (<code>ssn</code>, <code>nino</code>, <code>nir</code>, <code>aadhaar</code>, <code>tfn</code>, ...) are refused for every country with a
   <code>StrategyError</code>; the strategy has no provider for one.</li>
 </ul>
 <h2 id="sources-and-licences">Sources and licences<a class="headerlink" href="#sources-and-licences" title="Permanent link">&para;</a></h2>
-<p>Every file, its source URL, licence, read date and upstream SHA-256 is in
+<p>Every file, its source URL, licence, read date and shipped SHA-256 is in
 <code>src/shape/builtins/strategies/locales/MANIFEST.json</code>, and quoted in <code>THIRD_PARTY_NOTICES.md</code>:
 GeoNames (CC BY 4.0) for places, INSEE (Licence Ouverte 2.0) for French first names, and the
 French regulator's numbering plan for the reserved roots. <code>python scripts/build_locale_data.py</code>
-rebuilds the files from the upstream downloads, byte for byte. A test checks the files against
-the manifest.</p>
+rebuilds the original files from upstream downloads, byte for byte. For the added name lists,
+<code>uv run --locked python scripts/build_locale_names.py SRC_DIR</code> rebuilds from the local input
+filenames and download URLs recorded in the manifest. Its entries and <code>THIRD_PARTY_NOTICES.md</code>
+record publisher, licence statement and text URLs, retrieval date, exact transformation, row count,
+upstream hashes and shipped hashes. A test checks the files against the manifest.</p>
+<h3 id="added-name-sources-checked-2026-11-12">Added name sources (checked 2026-11-12)<a class="headerlink" href="#added-name-sources-checked-2026-11-12" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>GB</code>: National Records of Scotland, babies' first names and surnames, 2023, OGL v3.0.</li>
+<li><code>CA</code> first: Government of Ontario, both baby-name CSVs, Open Government Licence – Ontario.</li>
+<li><code>AU</code> first: Queensland Department of Justice, Top 100 Baby Names 2024, CC BY 3.0 AU.</li>
+<li><code>DE</code> first: Stadt Bonn, newborn first names 2024, CC0 1.0.</li>
+<li><code>FR</code> last: Source : Insee, Fichier des noms, updated 2018-05-22, Licence Ouverte 2.0.</li>
+</ul>
+<p>Full source and licence links, coverage limitations and transformations are in the manifest
+and third-party notices. No names were invented or supplemented from an unlicensed source.</p>
 <h2 id="what-is-not-shipped">What is not shipped<a class="headerlink" href="#what-is-not-shipped" title="Permanent link">&para;</a></h2>
 <p>The first issue asked for names, addresses and phone formats for seven countries. These are not
 shipped, because no source with a licence we could read and quote was reachable when the pack was
-built (2026-10-03):</p>
+built (2026-10-03), with the name-source check updated on 2026-11-12:</p>
 <ul>
-<li>surnames for every country but <code>US</code>, and first names for <code>CA</code>, <code>GB</code>, <code>DE</code>, <code>IN</code> and <code>AU</code>;</li>
+<li><code>CA</code>, <code>AU</code>, <code>DE</code> surnames and <code>IN</code> first and last names: <strong>no licensed source found</strong> in the
+  2026-11-12 check described below;</li>
 <li>streets (the sources list places and postcodes only);</li>
 <li>phone ranges for <code>GB</code>, <code>DE</code>, <code>IN</code> and <code>AU</code>: the regulators' pages for the United Kingdom and
   Australia could not be fetched, the German page did not lead to the range list, and India has
@@ -6467,6 +6554,40 @@ built (2026-10-03):</p>
 </ul>
 <p>Each one is a gap in the data, not in the mechanism: add a <code>&lt;cc&gt;_first_names.txt</code> or
 <code>&lt;cc&gt;_last_names.txt</code> with its manifest entry and notice, and the provider serves it.</p>
+<h3 id="name-sources-checked-but-not-used-2026-11-12">Name sources checked but not used (2026-11-12)<a class="headerlink" href="#name-sources-checked-but-not-used-2026-11-12" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Missing list</th>
+<th>What was checked</th>
+<th>Why no licensed source found</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CA</code> last</td>
+<td><a href="https://data.ontario.ca/dataset/?keywords_en=name">Ontario name catalogue</a>, <a href="https://www.statcan.gc.ca/">Statistics Canada</a></td>
+<td>Verified baby-name sources supply given names, not surnames; no surname download with verified redistribution terms identified.</td>
+</tr>
+<tr>
+<td><code>AU</code> last</td>
+<td><a href="https://www.data.qld.gov.au/dataset/top-100-baby-names">Queensland baby names</a>, <a href="https://data.nsw.gov.au/data/dataset/popular-baby-names-from-1952">NSW baby names</a></td>
+<td>Given-name datasets only; no surname download with verified redistribution terms identified.</td>
+</tr>
+<tr>
+<td><code>DE</code> last</td>
+<td><a href="https://www.namenforschung.net/dfd/woerterbuch/liste/">Digital Dictionary of Surnames in Germany</a></td>
+<td>Source page returned HTTP 403; could not verify redistribution rights. Bonn provides given names only.</td>
+</tr>
+<tr>
+<td><code>IN</code> first and last</td>
+<td><a href="https://data.gov.in/catalogs">India open-data catalogue</a>, Faker's <code>en_IN</code> provider source</td>
+<td>No suitable licensed name-list download identified in the official catalogue. Faker's given names cite commercial baby-name pages; its software licence does not establish those upstream data rights.</td>
+</tr>
+</tbody>
+</table>
+<p>This records the scope of the search, not a claim that licensed sources cannot exist. No data
+was extracted from the unverified sources. The shipped files use only the official sources above.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Locales&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FLOCALES%2F">Report a problem with this page</a></p>
 
 

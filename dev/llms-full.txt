@@ -6926,6 +6926,7 @@ Early access 0.9.4.
 Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 Unreleased
 ¶
+Add openly licensed GB first and last names, CA/AU/DE first names, and FR last names to the locale strategy, with source provenance and documented gaps. Correct non-US surname and full-name selection. Pin the development Rust toolchain to preserve the existing Unicode casing contract.
 0.9.4
 ¶
 Added
@@ -20647,7 +20648,9 @@ and conformance tests for new normative behavior. Document the changed behavior.
 Local development
 ¶
 Published packages support Python 3.11 or newer. The complete development and documentation
-environment needs Python 3.12 or newer and Rust stable 1.85 or newer to build the native kernel.
+environment needs Python 3.12 or newer and the Rust toolchain pinned in
+rust-toolchain.toml
+to build the native kernel and match its committed Unicode reference table.
 Install the pinned uv version and bootstrap the locked workspace:
 python3
 -m
@@ -48987,7 +48990,10 @@ Output (exit 0)
 Developer checkout
 ¶
 End-user installs above continue to use pip. To work on Shape itself, install Python 3.12+
-(for docs), Rust 1.85+ and uv 0.8.17 (
+(for docs), rustup (which selects the compiler pinned in
+rust-toolchain.toml
+) and uv 0.8.17
+(
 python3 -m pip install --user "uv==0.8.17"
 ), then run
 make bootstrap
@@ -50523,6 +50529,101 @@ Fragment Mono
 Copyright 2022 The Fragment-Mono Project Authors
 SIL Open Font License 1.1
 docs/assets/fonts/fragment-mono-OFL.txt
+Locale name lists (PUB-29)
+¶
+Retrieved and licence statements checked 2026-11-12. Files contain names only; all lists use the existing uniform sampling format. Regional sources are examples of names used in each country, not nationally representative distributions.
+gb_first_names.txt
+¶
+Publisher: National Records of Scotland. Source page: https://www.nrscotland.gov.uk/publications/babies-first-names-2023/
+Licence: Open Government Licence v3.0: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+Licence statement: https://www.nrscotland.gov.uk/publications/babies-first-names-2023/
+Retrieval date: 2026-11-12. Rows: 5000. Shipped SHA-256:
+84fcf512ab54b5e94ba24a0277308394aeeb362e1003a68f993b0a28f38e7850
+.
+Source: https://www.nrscotland.gov.uk/media/oaaf0cbz/full-list-2023.xlsx (upstream SHA-256
+b3c8aef8aca94206625138f4bcb195cfc035d204c27990ef705521a7e7af637e
+; local input
+gb-first.xlsx
+).
+Transformation: Boys and Girls worksheets, rows after the three header rows: Name and Number; omit NB death annotations in the rank column, not the name; sum counts across sexes. Scotland births, 2023; upstream has already removed accents. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+gb_last_names.txt
+¶
+Publisher: National Records of Scotland. Source page: https://www.nrscotland.gov.uk/publications/most-common-surnames-2023/
+Licence: Open Government Licence v3.0: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+Licence statement: https://www.nrscotland.gov.uk/publications/most-common-surnames-2023/
+Retrieval date: 2026-11-12. Rows: 2113. Shipped SHA-256:
+c8f1ab176c05439c40d723a1467791b49412e066c962f999230f6af230ec24a4
+.
+Source: https://www.nrscotland.gov.uk/media/44zfo3hz/most-common-surnames-bmd-register-2023.xlsx (upstream SHA-256
+a0f92998090ae25ef5b062ba2320e12eb1af2efc111f4cb4c2e91edc72f37dd9
+; local input
+gb-last.xlsx
+).
+Transformation: All Surnames for 2023 worksheet, after header: Surname and Number. Scotland birth, marriage and death registrations, not a population census. Preserve upstream uppercase spelling. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+ca_first_names.txt
+¶
+Publisher: Government of Ontario. Source page: https://data.ontario.ca/dataset/ontario-top-baby-names-female
+Licence: Open Government Licence – Ontario: https://www.ontario.ca/page/open-government-licence-ontario
+Licence statement: https://data.ontario.ca/dataset/ontario-top-baby-names-female
+Retrieval date: 2026-11-12. Rows: 5000. Shipped SHA-256:
+1f7dccc216d9f31643fa58b2ebc19805a53927199dab300fc4cb0e6061b05a97
+.
+Source: https://data.ontario.ca/dataset/4d339626-98f9-49fe-aede-d64f03fa914f/resource/acc72e92-3100-4a04-8f5f-4fad9cd77cc5/download/baby_names_-
+female
+.csv (upstream SHA-256
+93831ff6a0ee7e79b91859d5301c78d4d33afd6aea915779fdeadb9c51237226
+; local input
+ca-female.csv
+).
+Source: https://data.ontario.ca/dataset/eb4c585c-6ada-4de7-8ff1-e876fb1a6b0b/resource/5d8b8ece-fa01-43c5-955b-4b642b28c559/download/baby_names_-_male.csv (upstream SHA-256
+61b3bede993a38f6e104b662295017bfc77266b56f46e88372bb5ed8b9282861
+; local input
+ca-male.csv
+).
+Transformation: Both Ontario CSVs, UTF-8 BOM, Name/Nom and Frequency/Fréquence; sum numeric frequencies across all supplied years and sexes; exclude the registration placeholders BABY, BOY, FEMALE, INFANT, MALE, NOT and UNNAMED; ignore suppressed nonnumeric frequencies. Preserve upstream spelling and case. Provincial birth registrations, not all Canada. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+au_first_names.txt
+¶
+Publisher: Department of Justice, Queensland Government. Source page: https://www.data.qld.gov.au/dataset/top-100-baby-names/resource/53c648be-8623-4f1b-83c5-9a591a8d6acd
+Licence: Creative Commons Attribution 3.0 Australia (CC BY 3.0 AU): https://creativecommons.org/licenses/by/3.0/au/
+Licence statement: https://www.data.qld.gov.au/dataset/top-100-baby-names/resource/53c648be-8623-4f1b-83c5-9a591a8d6acd
+Retrieval date: 2026-11-12. Rows: 203. Shipped SHA-256:
+24b87e11e6c45655a62161adac738bdb0e5640e9643f67019fe956457a612227
+.
+Source: https://www.data.qld.gov.au/api/3/action/datastore_search?resource_id=53c648be-8623-4f1b-83c5-9a591a8d6acd&limit=1000 (upstream SHA-256
+35ac3b8db255ef6770e6ec6a59b71937b4413b23609de2cebd878c5b62b134e9
+; local input
+au-api.json
+).
+Transformation: Official DataStore API records for Top 100 Baby Names 2024: Girl Names/Count of Girl Names and Boy Names/Count of Boy Names; sum counts across sexes, omit null name/count cells. Require all records (total) in response. Queensland births only, not all Australia. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+de_first_names.txt
+¶
+Publisher: Stadt Bonn. Source page: https://opendata.bonn.de/dataset/vornamen-von-neugeborenen-im-jahr-2024
+Licence: Creative Commons CC0 1.0 Universal (CC0-1.0): https://creativecommons.org/publicdomain/zero/1.0/
+Licence statement: https://opendata.bonn.de/dataset/vornamen-von-neugeborenen-im-jahr-2024
+Retrieval date: 2026-11-12. Rows: 3242. Shipped SHA-256:
+bb903fe545d6078ae3fdf441e164664daeaefbdff216a3fcc37931fa84b92e22
+.
+Source: https://opendata.bonn.de/sites/default/files/Vornamenstatistik_2024-01-01_2024-12-31.csv (upstream SHA-256
+1552e9815d75dbd947adb9aa5fee890922d54060115d41407fbf8e9877121c77
+; local input
+de-first.csv
+).
+Transformation: UTF-8 semicolon CSV: vorname and anzahl; sum counts across geschlecht and position. Bonn newborns in 2024 only, not all Germany. Preserve case and accents. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+fr_last_names.txt
+¶
+Publisher: Insee. Source page: https://www.insee.fr/fr/statistiques/3536630
+Licence: Licence Ouverte / Open Licence version 2.0 (Etalab): https://www.etalab.gouv.fr/licence-ouverte-open-licence/
+Licence statement: https://www.insee.fr/fr/information/2008466?page=copyright.htm
+Retrieval date: 2026-11-12. Rows: 5000. Shipped SHA-256:
+bf434300dc712bd1564ae3bc18869bf37c46c02b5f90bc958c955ec63db2d844
+.
+Source: https://www.insee.fr/fr/statistiques/fichier/3536630/noms2008nat_txt.zip (upstream SHA-256
+c8693ff69bed32621250f1fc06e71b686e72bba1dbd771055e431d305527cfba
+; local input
+fr-last.zip
+).
+Transformation: ZIP member noms2008nat_txt.txt, UTF-8 tab-separated: NOM; sum all eleven decade columns (1891–2000); exclude AUTRES NOMS aggregate. Preserve upstream uppercase spelling and accents. Source: Insee, Fichier des noms, updated 2018-05-22. Strip outer whitespace, normalize Unicode NFC; reject empty values and values containing anything other than Unicode letters/combining marks, spaces, apostrophes or hyphens. Merge identical normalized names by summing counts. Select at most 5000 names by descending total count, breaking ties by Unicode name; emit selected names in Unicode alphabetical order, UTF-8, LF, final newline. The existing one-name-per-line format supports uniform sampling only: counts rank the capped selection but are not sampling weights.
+Attribution: Contains information from National Records of Scotland, © Crown copyright, licensed under the Open Government Licence v3.0. Contains information licensed under the Open Government Licence – Ontario. © The State of Queensland (Department of Justice), Top 100 Baby Names 2024, CC BY 3.0 AU; adapted as described above. Stadt Bonn, Vornamen von Neugeborenen im Jahr 2024, CC0. Source : Insee, Fichier des noms, updated 2018-05-22; adapted as described above. No publisher endorses this package.
 Library dataset credit lines
 ¶
 The library ships profiles, not the source rows. The credit lines below are generated from
@@ -50642,24 +50743,24 @@ sqllocks-shape-domains
 +1 (AAA) 555-0100
 to
 555-0199
-Shape's own pools
+first and last: Shape's own pools
 CA
 1,651 first-three-character areas, completed with a random local part
 same NANP lines as
 US
-not shipped
+first: Ontario; last: not shipped
 GB
 2,980 outward codes, completed with a random inward code
 not shipped
-not shipped
+first and last: Scotland
 DE
 8,172 places
 not shipped
-not shipped
+first: Bonn; last: not shipped
 FR
 6,064 places
 the six audiovisual roots of the national plan
-1,000 first names
+first and last: INSEE
 IN
 19,238 PIN codes
 not shipped
@@ -50667,7 +50768,7 @@ not shipped
 AU
 3,171 postcodes
 not shipped
-not shipped
+first: Queensland; last: not shipped
 Places.
 city
 ,
@@ -50721,19 +50822,35 @@ that says no range reserved for fiction is shipped:
 Names.
 first_name
 for
-FR
-(INSEE) and
 US
+,
+GB
+,
+CA
+,
+AU
+,
+DE
+and
+FR
 ;
 last_name
 and
 name
 for
 US
-. Anywhere
-  else the provider raises a
+,
+GB
+and
+FR
+. Elsewhere the provider raises a
 StrategyError
-that says no openly licensed list is shipped.
+that says no openly licensed
+  list is shipped. Names use uniform sampling: the existing one-name-per-line format has no weight
+  field. Source counts rank the capped selections; these are not population frequency models.
+  Each added list has at most 5,000 rows (the existing US pool size), in NFC with accents retained
+  where supplied upstream. Scotland's first-name source has already removed accents.
+  Regional sources demonstrate names used in a country; they do not cover its whole population.
 No national identifier.
 Social security, insurance, tax, passport and similar numbers
   (
@@ -50751,7 +50868,7 @@ StrategyError
 ; the strategy has no provider for one.
 Sources and licences
 ¶
-Every file, its source URL, licence, read date and upstream SHA-256 is in
+Every file, its source URL, licence, read date and shipped SHA-256 is in
 src/shape/builtins/strategies/locales/MANIFEST.json
 , and quoted in
 THIRD_PARTY_NOTICES.md
@@ -50759,26 +50876,43 @@ THIRD_PARTY_NOTICES.md
 GeoNames (CC BY 4.0) for places, INSEE (Licence Ouverte 2.0) for French first names, and the
 French regulator's numbering plan for the reserved roots.
 python scripts/build_locale_data.py
-rebuilds the files from the upstream downloads, byte for byte. A test checks the files against
-the manifest.
+rebuilds the original files from upstream downloads, byte for byte. For the added name lists,
+uv run --locked python scripts/build_locale_names.py SRC_DIR
+rebuilds from the local input
+filenames and download URLs recorded in the manifest. Its entries and
+THIRD_PARTY_NOTICES.md
+record publisher, licence statement and text URLs, retrieval date, exact transformation, row count,
+upstream hashes and shipped hashes. A test checks the files against the manifest.
+Added name sources (checked 2026-11-12)
+¶
+GB
+: National Records of Scotland, babies' first names and surnames, 2023, OGL v3.0.
+CA
+first: Government of Ontario, both baby-name CSVs, Open Government Licence – Ontario.
+AU
+first: Queensland Department of Justice, Top 100 Baby Names 2024, CC BY 3.0 AU.
+DE
+first: Stadt Bonn, newborn first names 2024, CC0 1.0.
+FR
+last: Source : Insee, Fichier des noms, updated 2018-05-22, Licence Ouverte 2.0.
+Full source and licence links, coverage limitations and transformations are in the manifest
+and third-party notices. No names were invented or supplemented from an unlicensed source.
 What is not shipped
 ¶
 The first issue asked for names, addresses and phone formats for seven countries. These are not
 shipped, because no source with a licence we could read and quote was reachable when the pack was
-built (2026-10-03):
-surnames for every country but
-US
-, and first names for
+built (2026-10-03), with the name-source check updated on 2026-11-12:
 CA
 ,
-GB
+AU
 ,
 DE
-,
+surnames and
 IN
-and
-AU
-;
+first and last names:
+no licensed source found
+in the
+  2026-11-12 check described below;
 streets (the sources list places and postcodes only);
 phone ranges for
 GB
@@ -50796,6 +50930,36 @@ Each one is a gap in the data, not in the mechanism: add a
 or
 <cc>_last_names.txt
 with its manifest entry and notice, and the provider serves it.
+Name sources checked but not used (2026-11-12)
+¶
+Missing list
+What was checked
+Why no licensed source found
+CA
+last
+Ontario name catalogue
+,
+Statistics Canada
+Verified baby-name sources supply given names, not surnames; no surname download with verified redistribution terms identified.
+AU
+last
+Queensland baby names
+,
+NSW baby names
+Given-name datasets only; no surname download with verified redistribution terms identified.
+DE
+last
+Digital Dictionary of Surnames in Germany
+Source page returned HTTP 403; could not verify redistribution rights. Bonn provides given names only.
+IN
+first and last
+India open-data catalogue
+, Faker's
+en_IN
+provider source
+No suitable licensed name-list download identified in the official catalogue. Faker's given names cite commercial baby-name pages; its software licence does not establish those upstream data rights.
+This records the scope of the search, not a claim that licensed sources cannot exist. No data
+was extracted from the unverified sources. The shipped files use only the official sources above.
 Report a problem with this page
 
 ## Location as Code

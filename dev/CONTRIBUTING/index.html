@@ -6501,7 +6501,8 @@ provenance propagation, and fail-closed input handling. Core must not gain a man
 and conformance tests for new normative behavior. Document the changed behavior.</p>
 <h2 id="local-development">Local development<a class="headerlink" href="#local-development" title="Permanent link">&para;</a></h2>
 <p>Published packages support Python 3.11 or newer. The complete development and documentation
-environment needs Python 3.12 or newer and Rust stable 1.85 or newer to build the native kernel.
+environment needs Python 3.12 or newer and the Rust toolchain pinned in <code>rust-toolchain.toml</code>
+to build the native kernel and match its committed Unicode reference table.
 Install the pinned uv version and bootstrap the locked workspace:</p>
 <div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span><span class="s2">"uv==0.8.17"</span>
 make<span class="w"> </span>bootstrap
