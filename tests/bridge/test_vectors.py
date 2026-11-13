@@ -65,7 +65,9 @@ def test_the_vectors_agree_with_the_published_schemas(command):
 
 
 @pytest.mark.parametrize("command", FROZEN_COMMANDS)
-def test_a_live_bridge_gives_the_responses_of_the_vectors(command, tmp_path, monkeypatch):
+def test_a_live_bridge_gives_the_responses_of_the_vectors(
+    command, tmp_path, monkeypatch, builtin_domain_host
+):
     import base64
     import time
 
