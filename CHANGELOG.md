@@ -6,6 +6,8 @@ Status: available.
 
 ## Unreleased
 
+- Bridge compatibility tests isolate the frozen built-in domain baseline from installed extensions, and verify additive domain discovery and optional description fallback with generic plugins. Published vectors and schemas are unchanged.
+
 - Add openly licensed GB first and last names, CA/AU/DE first names, and FR last names to the locale strategy, with source provenance and documented gaps. Correct non-US surname and full-name selection. Pin the development Rust toolchain to preserve the existing Unicode casing contract.
 
 

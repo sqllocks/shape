@@ -65,3 +65,23 @@ def csv_pair(tmp_path) -> tuple[Path, Path]:
 @pytest.fixture
 def api13(bridge) -> Caller13:
     return Caller13(bridge)
+
+
+@pytest.fixture
+def builtin_domain_host(monkeypatch):
+    """Replay the published built-in baseline without discovering extension packages.
+
+    PluginHost's documented ``entry_points`` hook replaces installed discovery. The
+    bundled domain distribution supplies the baseline; core plugins are registered
+    through their usual fallback. Other bridge tests retain normal discovery.
+    """
+    from importlib.metadata import distribution
+
+    from shape.plugins import host
+    from shape.plugins.registry import register_builtins
+
+    entries = tuple(distribution("sqllocks-shape-domains").entry_points)
+    baseline = host.PluginHost(entry_points=lambda: entries)
+    register_builtins(baseline)
+    monkeypatch.setattr(host, "_default", baseline)
+    return baseline
