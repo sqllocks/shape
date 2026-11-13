@@ -6926,6 +6926,7 @@ Early access 0.9.4.
 Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 Unreleased
 ¶
+Complete built-in registry isolation for frozen bridge replays and runnable reference transcripts, with separate generic installed-extension coverage. Validate doctor runtime versions and preserve Arrow-backed Decimal comparisons across supported dataframe versions. Frozen vectors, schemas, recorded outputs and monetary assertions are unchanged.
 Bridge compatibility tests isolate the frozen built-in domain baseline from installed extensions, and verify additive domain discovery and optional description fallback with generic plugins. Published vectors and schemas are unchanged.
 Add openly licensed GB first and last names, CA/AU/DE first names, and FR last names to the locale strategy, with source provenance and documented gaps. Correct non-US surname and full-name selection. Pin the development Rust toolchain to preserve the existing Unicode casing contract.
 0.9.4
