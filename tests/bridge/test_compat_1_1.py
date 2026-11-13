@@ -83,7 +83,7 @@ def test_the_frozen_schemas_name_no_1_2_command():
 
 @pytest.mark.parametrize("path", frozen_vector_files(), ids=lambda p: p.stem)
 def test_every_1_1_vector_gets_the_recorded_response_from_the_1_2_bridge(
-    path, tmp_path, monkeypatch
+    path, tmp_path, monkeypatch, builtin_domain_host
 ):
     doc = json.loads(path.read_text())
     directory = tmp_path / "work"

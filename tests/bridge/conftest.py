@@ -83,5 +83,9 @@ def builtin_domain_host(monkeypatch):
     entries = tuple(distribution("sqllocks-shape-domains").entry_points)
     baseline = host.PluginHost(entry_points=lambda: entries)
     register_builtins(baseline)
+    previous = host._default
     monkeypatch.setattr(host, "_default", baseline)
-    return baseline
+    try:
+        yield baseline
+    finally:
+        host._default = previous

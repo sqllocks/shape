@@ -21,7 +21,7 @@ ROOT = Path(__file__).parents[2] / "docs/bridge"
 @pytest.mark.parametrize(
     "path", sorted((ROOT / "vectors/1.3").glob("*.json")), ids=lambda p: p.stem
 )
-def test_frozen_1_3_replay(path, tmp_path, monkeypatch):
+def test_frozen_1_3_replay(path, tmp_path, monkeypatch, builtin_domain_host):
     doc = json.loads(path.read_text())
     directory = tmp_path / "work"
     jobs = vectors_lib.prepare(directory, doc)
