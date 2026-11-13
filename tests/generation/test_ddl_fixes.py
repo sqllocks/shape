@@ -19,6 +19,7 @@ import re
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pyarrow as pa
 import pytest
 from engine_fixtures import RowFK, Seq
@@ -444,8 +445,8 @@ def test_a_parent_total_is_the_sum_over_its_children() -> None:
 def test_the_generated_parent_total_equals_the_sum_of_its_children() -> None:
     schema, _ = from_ddl(ORDERS, scale="small:customers=10,orders=40,order_lines=160")
     result = generate(schema, 11)
-    lines = result["order_lines"].to_pandas()
-    orders = result["orders"].to_pandas().set_index("order_id")
+    lines = result["order_lines"].to_pandas(types_mapper=pd.ArrowDtype)
+    orders = result["orders"].to_pandas(types_mapper=pd.ArrowDtype).set_index("order_id")
     sums = lines.groupby("order_id")["line_total"].sum().round(2)
     assert len(sums) > 5
     assert orders.loc[sums.index, "total_amount"].round(2).tolist() == sums.tolist()
