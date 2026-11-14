@@ -1,0 +1,11 @@
+LOCAL: caller/environment token precedence; no OAuth fallback; tokens absent from ledger
+LOCAL: token-provider refresh and retained service-principal path verified with mocked HTTP
+LOCAL: notebook beta exit retrieval, availability and filtering: top
+LOCAL: notebook beta exit retrieval, availability and filtering: nested
+LOCAL: notebook beta exit retrieval, availability and filtering: missing
+LOCAL: notebook beta exit retrieval, availability and filtering: empty
+LOCAL: beta origin/ownership guards and unavailable-endpoint Owner receipt verified
+LOCAL: documented-content and separate local wire-budget failure paths checked with reduced mock budgets
+LOCAL: oversized render blocks run before readiness or mutation
+LOCAL: semantic test and summary reuse one mocked profile call; namespace binding restored
+All checks local; no real credentials, Fabric requests or notebook jobs were used.

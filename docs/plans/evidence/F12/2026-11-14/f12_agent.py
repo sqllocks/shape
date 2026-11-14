@@ -21,6 +21,10 @@ API = "https://api.fabric.microsoft.com/v1/"
 WORKSPACE = "e90940bd-3f32-42ce-998e-ef2ddc74355b"
 BASE = f"workspaces/{WORKSPACE}/"
 STATE = ROOT / ".f12-state.json"
+# Learn notebook-limitation: 32 MB notebook content. Decimal bytes are conservative.
+NOTEBOOK_CONTENT_LIMIT_BYTES = 32_000_000
+# Local conservative wire budget, NOT a documented Fabric HTTP-body limit.
+HANDOFF_REQUEST_BUDGET_BYTES = 32_000_000
 
 
 class ObservedFailure(Exception):
@@ -238,6 +242,37 @@ def safe_records(raw):
     return output
 
 
+def notebook_create_body(notebook):
+    return {
+        "displayName": "f12-owner-qualification",
+        "type": "Notebook",
+        "definition": {
+            "format": "ipynb",
+            "parts": [part("notebook-content.ipynb", notebook)],
+        },
+    }
+
+
+def check_notebook_size(notebook):
+    content_bytes = len(json.dumps(notebook).encode())
+    body = notebook_create_body(notebook)
+    payload_bytes = len(body["definition"]["parts"][0]["payload"].encode("ascii"))
+    request_bytes = len(json.dumps(body).encode())
+    receipt(
+        "notebook_size_preflight",
+        notebook_content_bytes=content_bytes,
+        inline_base64_bytes=payload_bytes,
+        create_request_bytes=request_bytes,
+        documented_content_budget_bytes=NOTEBOOK_CONTENT_LIMIT_BYTES,
+        local_request_budget_bytes=HANDOFF_REQUEST_BUDGET_BYTES,
+    )
+    if content_bytes > NOTEBOOK_CONTENT_LIMIT_BYTES:
+        raise ObservedFailure("notebook_content_limit_exceeded")
+    if request_bytes > HANDOFF_REQUEST_BUDGET_BYTES:
+        raise ObservedFailure("notebook_local_request_budget_exceeded")
+    return body
+
+
 def render():
     manifest = json.loads((ROOT / "handoff-build.json").read_text())
     payloads = {}
@@ -254,32 +289,64 @@ def render():
     notebook["cells"][0]["source"] = source.replace(
         needle, "F12_WHEEL_PAYLOADS = " + repr(payloads)
     ).splitlines(True)
+    check_notebook_size(notebook)
     return notebook
 
 
 class Agent:
-    def __init__(self):
+    def __init__(self, *, access_token=None, token_provider=None):
         self.state = json.loads(STATE.read_text()) if STATE.exists() else {"items": []}
-        payload = urllib.parse.urlencode(
-            {
-                "grant_type": "client_credentials",
-                "client_id": os.environ["FABRIC_CLIENT_ID"],
-                "client_secret": os.environ["FABRIC_CLIENT_SECRET"],
-                "scope": "https://api.fabric.microsoft.com/.default",
-            }
-        ).encode()
-        url = (
-            "https://login.microsoftonline.com/"
-            + os.environ["FABRIC_TENANT_ID"]
-            + "/oauth2/v2.0/token"
-        )
+        self._token_provider = None
+        # Explicit caller credentials take precedence; invalid supplied tokens never
+        # silently fall back to a service principal with a different identity.
+        if access_token is not None:
+            self.token = self._validate_token(access_token)
+            self.auth_source = "caller_token"
+            return
+        if token_provider is not None:
+            if not callable(token_provider):
+                raise ObservedFailure("caller_token_provider_invalid")
+            self._token_provider = token_provider
+            self.token = self._provider_token()
+            self.auth_source = "caller_token_provider"
+            return
+        if "FABRIC_ACCESS_TOKEN" in os.environ:
+            self.token = self._validate_token(os.environ["FABRIC_ACCESS_TOKEN"])
+            self.auth_source = "caller_token_environment"
+            return
+        self.auth_source = "service_principal"
         try:
+            payload = urllib.parse.urlencode(
+                {
+                    "grant_type": "client_credentials",
+                    "client_id": os.environ["FABRIC_CLIENT_ID"],
+                    "client_secret": os.environ["FABRIC_CLIENT_SECRET"],
+                    "scope": "https://api.fabric.microsoft.com/.default",
+                }
+            ).encode()
+            url = (
+                "https://login.microsoftonline.com/"
+                + os.environ["FABRIC_TENANT_ID"]
+                + "/oauth2/v2.0/token"
+            )
             with urllib.request.urlopen(
                 urllib.request.Request(url, data=payload), timeout=60
             ) as response:
-                self.token = json.load(response)["access_token"]
+                self.token = self._validate_token(json.load(response)["access_token"])
         except Exception:
             raise ObservedFailure("authentication") from None
+
+    @staticmethod
+    def _validate_token(token):
+        if not isinstance(token, str) or not token.strip() or any(c.isspace() for c in token):
+            raise ObservedFailure("caller_token_invalid")
+        return token
+
+    def _provider_token(self):
+        try:
+            return self._validate_token(self._token_provider())
+        except Exception:
+            raise ObservedFailure("caller_token_provider_failed") from None
 
     def save(self):
         STATE.write_text(json.dumps(self.state, indent=2) + "\n")
@@ -290,11 +357,12 @@ class Agent:
         parsed = urllib.parse.urlsplit(url)
         if parsed.scheme != "https" or parsed.netloc != "api.fabric.microsoft.com":
             raise ObservedFailure("response_origin_guard")
+        token = self._provider_token() if self._token_provider else self.token
         request = urllib.request.Request(
             url,
             method=method,
             data=json.dumps(body).encode() if body is not None else None,
-            headers={"Authorization": "Bearer " + self.token, "Content-Type": "application/json"},
+            headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"},
         )
         try:
             with urllib.request.urlopen(request, timeout=60) as response:
@@ -400,22 +468,13 @@ class Agent:
         raise ObservedFailure("destination_or_source_not_running")
 
     def run(self):
-        self.ready()
         if self.state.get("job_location"):
             raise ObservedFailure("job_already_submitted_use_status")
+        # Fail before readiness requests or notebook creation if the payload is too big.
         notebook = render()
-        item = self.create(
-            "items",
-            {
-                "displayName": "f12-owner-qualification",
-                "type": "Notebook",
-                "definition": {
-                    "format": "ipynb",
-                    "parts": [part("notebook-content.ipynb", notebook)],
-                },
-            },
-            "Notebook",
-        )
+        body = notebook_create_body(notebook)
+        self.ready()
+        item = self.create("items", body, "Notebook")
         parameters = [{"name": "F12_NONINTERACTIVE", "value": True, "type": "Boolean"}]
         for key, value in (
             ("F12_EVENTSTREAM_ID", self.state["eventstream_id"]),
@@ -439,21 +498,87 @@ class Agent:
         self.state["not_before"] = time.time() + int(headers.get("retry-after", "60"))
         self.save()
 
+    def exit_value_url(self):
+        location = urllib.parse.urlsplit(self.state["job_location"])
+        if location.scheme != "https" or location.netloc != "api.fabric.microsoft.com":
+            raise ObservedFailure("response_origin_guard")
+        # Location commonly uses the generic item job endpoint. Exit values use
+        # the notebook-specific execute endpoint, not that path with a query added.
+        prefix = "/v1/" + BASE
+        tail = location.path.removeprefix(prefix)
+        if not location.path.startswith(prefix):
+            raise ObservedFailure("job_location_path_guard")
+        match = re.fullmatch(
+            r"(?:items/([^/]+)/jobs/instances/([^/]+)|"
+            r"notebooks/([^/]+)/jobs/(?:execute/)?instances/([^/]+))",
+            tail,
+        )
+        if not match:
+            raise ObservedFailure("job_location_path_guard")
+        notebook_id = match[1] or match[3]
+        job_id = match[2] or match[4]
+        if not any(
+            item["id"] == notebook_id and item["type"] == "Notebook" for item in self.state["items"]
+        ):
+            raise ObservedFailure("job_location_ownership_guard")
+        return (
+            API
+            + BASE
+            + "notebooks/"
+            + notebook_id
+            + "/jobs/execute/instances/"
+            + job_id
+            + "?beta=true"
+        )
+
     def status(self):
         if time.time() < self.state.get("not_before", 0):
             receipt("job", result="wait_retry_after")
             return
-        _, _, data = self.call("GET", self.state["job_location"])
+        try:
+            _, _, data = self.call("GET", self.exit_value_url())
+        except ObservedFailure as error:
+            if error.stage != "fabric_http":
+                raise
+            receipt(
+                "job_exit_value",
+                available=False,
+                beta_endpoint=True,
+                http_status=error.status,
+                result="owner_safe_output_required",
+            )
+            raise
         status = data.get("status")
         allowed = {"Completed", "Failed", "Cancelled", "InProgress", "NotStarted", "Deduped"}
         receipt("job", status=status if status in allowed else "Other")
         # Exit value can be returned by Fabric, but never relay arbitrary remote text.
         # Agent/Owner reads safe notebook output if exitValue is absent.
-        if data.get("exitValue"):
-            for record in safe_records(data["exitValue"]):
+        properties = data.get("properties")
+        exit_value = data.get("exitValue")
+        if exit_value is None and isinstance(properties, dict):
+            exit_value = properties.get("exitValue")
+        available = exit_value is not None
+        nonempty = isinstance(exit_value, str) and bool(exit_value)
+        receipt(
+            "job_exit_value",
+            available=available,
+            beta_endpoint=True,
+            nonempty=nonempty,
+            result="available" if nonempty else "owner_safe_output_required",
+        )
+        if nonempty:
+            try:
+                records = safe_records(exit_value)
+            except Exception:
+                receipt(
+                    "job_exit_value",
+                    available=True,
+                    parsed=False,
+                    result="owner_safe_output_required",
+                )
+                raise ObservedFailure("job_exit_value_unusable") from None
+            for record in records:
                 print(json.dumps(record), flush=True)
-        elif status in ("Completed", "Failed"):
-            receipt("job_exit_value", available=False, result="owner_safe_output_required")
 
     def cleanup(self):
         if self.state.get("job_location"):

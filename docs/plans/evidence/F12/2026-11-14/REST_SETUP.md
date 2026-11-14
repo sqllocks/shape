@@ -1,7 +1,11 @@
 # Exact F12 API setup (prepared, not yet tenant-qualified)
 
-Use the existing workspace reference in `f12_agent.py`. Acquire a Fabric token from
-the configured service principal in memory; set Authorization internally. Never use
+Use the existing workspace reference in `f12_agent.py`. Supply a delegated Fabric
+access token for the intended human through `Agent(access_token=...)`, a
+`token_provider` callable or the protected `FABRIC_ACCESS_TOKEN` environment variable;
+otherwise the helper retains its service-principal credential path. Never place a
+token in source, CLI arguments, a notebook parameter or the ledger. Authorization
+is set internally. Invalid supplied credentials do not fall back to another identity. Never use
 verbose curl, echo a payload/response, pass tokens on a command line, or save secret
 responses. The helper is the executable form of these calls; it handles 201/202 and
 same-origin operation polling, saves created item IDs in a private ledger, and emits
@@ -173,9 +177,32 @@ and [Eventstream definition](https://learn.microsoft.com/en-us/rest/api/fabric/a
    }
    ```
 
+   Setup/create/resume, this submission, monitoring and cleanup all use the selected
+   caller identity. With a human delegated token, the submitted job runs as that
+   user. Cell 5's sempy reads and cell 7's Fabric/Key Vault/Kusto calls use the
+   notebook's own user identity, without a service-principal override or forwarding
+   the caller token into cells. In service-principal mode the external calls are
+   submitted as that principal and the notebook uses the job identity supplied by
+   Fabric; an interactive run uses the signed-in notebook user. Permissions still
+   apply at every stage, including model reads and vault access.
+
    The definition's kernel is Python 3.12, and no `attachedEnvironment` or
    `defaultLakehouse` is sent. Respect Retry-After and poll the Location only on the
-   Fabric API origin. Failures are retained, without printing remote error text.
+   Fabric API origin. For exit values, `status()` validates and converts that
+   Location to:
+
+   ```text
+   GET /v1/workspaces/{workspaceId}/notebooks/{notebookId}/jobs/execute/instances/{jobInstanceId}?beta=true
+   ```
+
+   Do not poll the plain `/items/{id}/jobs/instances/{id}` path for an exit value.
+   The notebook must belong to the run's ledger. Receipts report `available` and
+   `nonempty` without printing raw response text; returned measurements pass the
+   field allowlist. If missing/unusable or the beta call fails, the Owner copies
+   only the notebook's safe JSON outputs: before/after versions, resource limits,
+   generation/profile/child exits, semantic summary and readiness/sent/landed counts,
+   with runtime/resource text and cleanup confirmation. Failures stay observed;
+   do not copy variable inspectors, credentials or unfiltered diagnostics.
    [Jupyter request schema](https://learn.microsoft.com/en-us/rest/api/fabric/notebook/background-jobs/run-on-demand-notebook),
    [notebook exit values](https://learn.microsoft.com/en-us/fabric/data-engineering/notebook-public-api).
 
@@ -183,3 +210,18 @@ and [Eventstream definition](https://learn.microsoft.com/en-us/rest/api/fabric/a
    `DELETE /v1/workspaces/{workspaceId}/items/{itemId}`, after checking each recorded
    item still has the expected type and f12 prefix. No secret-response bodies are
    written to the ledger. Unknown pre-existing f12 items are never adopted/deleted.
+
+## Payload sizing before submission
+
+The renderer counts three layers using the same JSON encoding as the request:
+serialized notebook UTF-8 bytes, its InlineBase64 bytes, and complete create-item
+JSON bytes. [Learn's notebook sizing limit](https://learn.microsoft.com/en-us/fabric/data-engineering/notebook-limitation)
+is **32 MB for notebook content**, not a stated HTTP-body limit. No numeric general
+body cap is specified in the reviewed Create Item/Create Notebook/notebook-definition
+references. The helper uses 32,000,000 bytes conservatively for content and also as
+a separately labeled **local** encoded-request budget. It fails before creating a
+notebook if either is exceeded; it does not mislabel the local wire budget as a
+Fabric guarantee. If a smaller payload still gets HTTP 413, retain that observation.
+The fallback is the small unrendered notebook with the same wheels published to
+builtin through the Owner UI or VS Code; do not attach an Environment or change the
+runtime/resource setting. Source and wheel hashes remain unchanged.

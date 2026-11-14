@@ -20,43 +20,48 @@
   "files": [
     {
       "name": "f12-owner-qualification.ipynb",
-      "bytes": 25446,
-      "sha256": "3d874d9ab06e574bdf812ea2727cf6bfcdec711fc052ca777a0743ffd72e2b1e"
+      "bytes": 26060,
+      "sha256": "32327c5b9f372a2a8d24a1335e81dfe9ffa5e7b55263b81bb00788afdb63ee9c"
     },
     {
       "name": "OWNER_STEPS.md",
-      "bytes": 10936,
-      "sha256": "817b865de920b42c9e974dc8fb471063577a169e419f3b6c167d3c017910d8b1"
+      "bytes": 13389,
+      "sha256": "ff89d6bc44f94ae8c6433747739328ff53bca8afb963fdc7eab1e7bea6511e0d"
     },
     {
       "name": "f12_agent.py",
-      "bytes": 19592,
-      "sha256": "793d071626b842d076bf4626fb12b4a07d08bed496d5b2a57e0117baba4089e8"
+      "bytes": 24848,
+      "sha256": "7eabc063b416eb431c4192f788f141bcbd5308294e43391220b6b1744c4a39e8"
     },
     {
       "name": "REST_SETUP.md",
-      "bytes": 9634,
-      "sha256": "e9b2d3851c833016867b4e729e2e018f5d8bd6f8e7de8dbe818c20738c8ad485"
+      "bytes": 12453,
+      "sha256": "71b43a522984fb6808fe390eb728f7a43a65c9f8f5df31ba812adefc48d1d2ba"
     },
     {
       "name": "README.md",
-      "bytes": 4657,
-      "sha256": "35d702639c9c30b52f4a32c95f58265b2e0d228230f4a05562a49bf81c8d89bc"
+      "bytes": 9046,
+      "sha256": "2778660ff68cedda543948226df705c0b88b3ef793d184603e2fb558d205eb4d"
     },
     {
       "name": "review.md",
-      "bytes": 6808,
-      "sha256": "b5305502829cb669f57d25970c8b06ab00083629a963a73735ed5cf95558dbec"
+      "bytes": 8689,
+      "sha256": "364311724fc464dfc894e325bf53771271466cc98d71d7588d870674a10e9373"
     },
     {
       "name": "automation-validation.txt",
-      "bytes": 1123,
-      "sha256": "f45c50257064887c50bd1554d687067f3c302ed540750b28fdbfeeb5edac0e9f"
+      "bytes": 1345,
+      "sha256": "ff4f3c78f122e2dbe86eb85cad403108a962cb795679561861ea3bc341d65d0b"
     },
     {
       "name": "automation-lint.txt",
       "bytes": 19,
       "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "name": "caller-auth-validation.txt",
+      "bytes": 893,
+      "sha256": "5500059a51eb4a5629085b8ace341c883df45aca5f94b408b18a803313115064"
     }
   ],
   "manifest_note": "Hashes cover all archive members except handoff-build.json itself. source_commit identifies the unchanged wheel source."

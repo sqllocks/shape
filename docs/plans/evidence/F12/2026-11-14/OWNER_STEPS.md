@@ -8,8 +8,14 @@ workspace items are never reused. Failures and timeouts stay recorded as failure
 
 ## Agent path (no resource upload or UI activation required by the documented APIs)
 
-Use the existing `FABRIC_TENANT_ID`, `FABRIC_CLIENT_ID`, and
-`FABRIC_CLIENT_SECRET` environment variables, without printing them. In the repo,
+For a human-signed-in agent, provide a delegated Fabric access token through a
+protected `FABRIC_ACCESS_TOKEN` environment variable, or call
+`Agent(access_token=...)` / `Agent(token_provider=...)` from trusted caller code.
+Do not put the token in CLI arguments, notebook parameters, chat or shell history.
+A token provider returns a fresh token string in memory before each request.
+Explicit caller tokens take precedence over the original `FABRIC_TENANT_ID`,
+`FABRIC_CLIENT_ID`, `FABRIC_CLIENT_SECRET` service-principal path, which remains
+available when no caller token is supplied. Never print any of these values. In the repo,
 run tools using `uv run --locked`; outside the repo the helper uses only the Python
 standard library:
 
@@ -29,6 +35,12 @@ and did not establish a Python session. Wait for the service's Retry-After befor
 calling `status` again. Check the observed runtime/resources; requested settings and
 the documented default do not replace an observed measurement.
 
+All external stages use the selected caller token/principal. A job submitted with
+the human's delegated token runs as that user; cells 5 and 7 use the notebook's own
+identity, with no service-principal fixture activation or caller-token parameter.
+Use the same human identity throughout the lifecycle. Interactive execution uses
+the signed-in notebook user. See README.md for the retained principal-mode behavior.
+
 The Python session defaults to 2 vCore / 16 GB. The core wheel is specifically
 **sqllocks_shape-0.9.4-py3-none-any.whl**; the other two are
 **sqllocks_shape_fabric-0.9.4-py3-none-any.whl** and
@@ -47,10 +59,25 @@ and the [explicit Jupyter execution request](https://learn.microsoft.com/en-us/r
 No Environment is used. `python f12_agent.py render` optionally creates the same
 self-contained notebook locally for an Owner import; it creates no Fabric item.
 
+Before creation, render/run emit exact notebook, InlineBase64 and request byte
+counts. Learn documents a 32 MB notebook-content limit; no numeric general HTTP-body
+limit was found in the reviewed create/definition references. The helper enforces
+32,000,000 bytes of content and a separately labeled conservative local encoded
+request budget of the same size. See REST_SETUP.md for citations and distinctions.
+If rejected locally or by the service, the Owner fallback is to import the supplied
+small unrendered notebook as a new **f12-owner-qualification**, keep Python 3.12 at
+default 2 vCore/16 GB with no Environment, and upload the three unchanged wheels to
+**Resources > builtin** (or publish that resource folder using VS Code). Verify
+hashes again. This fallback does not embed the wheel bytes and the install cell
+already supports these exact builtin paths. See [Learn resource upload](https://learn.microsoft.com/en-us/fabric/data-engineering/how-to-use-notebook)
+and [VS Code resources](https://learn.microsoft.com/en-us/fabric/data-engineering/author-notebook-resource-with-vs-code).
+Do not bypass budgets or rebuild wheels to hide a rejection.
+
 The notebook retains the before/after package versions, imports, 5M/50M-row memory
 workload, and semantic-model test body. The workload is Shape-generated with ten
 columns, not the D3 fixture; no claim is made that 50M rows fits in memory. The model
-cell uses the job identity or notebook user, and its output labels the current
+cell captures the test's first profile result and reuses it for the summary. It uses
+the job identity or notebook user, and its output labels the current
 notebook identity rather than claiming a separate service-principal pytest run.
 
 ## Noninteractive final cell and secret handling
@@ -123,9 +150,12 @@ This is a source-level observation, not proof from a completed tenant run.
 
 The notebook records only versions, dimensions, timings, counts, booleans and error
 categories. Its final unattended cell returns those structured records through the
-notebook exit value. `status` reports service status and filters an available exit value through a
-field allowlist; it drops endpoint fields, arbitrary strings and table names. It
-never echoes raw response bodies. If exit-value retrieval is unavailable, the remaining manual step is to open
+notebook exit value. `status` uses the notebook-specific
+`/notebooks/{id}/jobs/execute/instances/{runId}?beta=true` endpoint, after checking
+origin, workspace and ledger ownership, and reports exit-value availability and
+whether it is nonempty. See [Learn exit values](https://learn.microsoft.com/en-us/fabric/data-engineering/notebook-public-api).
+It filters an available exit value through a field allowlist; it drops endpoint fields, arbitrary strings and table names. It
+never echoes raw response bodies. If beta exit-value retrieval is unavailable, empty or unusable, the remaining manual step is to open
 only **f12-owner-qualification**, copy its safe JSON outputs, and record the observed
 Python/resource/runtime label as text. Do not copy variable inspectors or debug logs.
 Both installed metadata versions and loaded module versions are returned; a

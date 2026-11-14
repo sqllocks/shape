@@ -105,3 +105,33 @@ resource reference, but no principal ID, token, credential, SAS string, or priva
 counterpart name. No blocker found for the prepared handoff. The duplicate model
 profile call noted above remains a non-blocking efficiency issue; no qualification
 closure is supported.
+
+## Caller identity, status and payload-size follow-up — 2026-11-14
+
+Reviewed the refreshed helper, notebook, guidance and `caller-auth-validation.txt`,
+then rechecked `/workspace/f12-owner-handoff.zip`. Caller-supplied access tokens and
+token providers take precedence over the retained service-principal flow; a bad
+caller token fails without changing identities. Provider tokens are requested for
+each API call. The reviewed code uses them only in memory and in the Authorization
+header; the state ledger contains item/job references, not tokens.
+
+`status()` validates the saved Location's Fabric origin, workspace path and owned
+notebook reference, then forms the notebook-specific beta execute-instance URL. It
+handles top-level and nested `properties.exitValue`, reports missing/empty values,
+and emits only allowlisted result fields. The single-profile wrapper in the notebook
+captures the existing test's result, restores the original binding in `finally`,
+and reuses that result for the summary.
+
+The rendered payload preflight is backed by `automation-validation.txt`: serialized
+content 4,297,696 bytes, InlineBase64 payload 5,730,264 bytes, and full JSON request
+5,730,454 bytes. These are local serialization results, not a Fabric request or
+service acceptance. The documented 32 MB content budget and separately labeled
+32 MB local request budget are distinct. The archive's per-file hashes match its
+manifest, and the three included wheel hashes still match the original source
+manifest. `caller-auth-validation.txt` identifies its credential, exit-value,
+oversize, and profile-capture checks as local mocks; it contains no real token or
+live job result.
+
+No further blocker found. The helper and notebook revisions remain prepared but
+unexecuted against Fabric; no model profile, Python runtime/resource measurement,
+or Eventstream count qualification is closed.
