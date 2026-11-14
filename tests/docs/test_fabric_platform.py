@@ -47,6 +47,34 @@ def test_the_inventory_parses_and_every_row_is_complete():
         assert r.status in fp.STATUSES and r.source.startswith("https://learn.microsoft.com/")
 
 
+def test_every_checked_cell_is_an_iso_date_no_later_than_today():
+    text = (ROOT / "docs/FABRIC_PLATFORM.md").read_text(encoding="utf-8")
+    for row in fp.parse_table(text):
+        checked = text.splitlines()[row.line - 1].split("|")[6].strip()
+        assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", checked), checked
+        assert date.fromisoformat(checked) == row.checked <= date.today()
+
+
+def test_each_runtime_has_a_lifecycle_source_and_support_date():
+    rows = fp.parse_table((ROOT / "docs/FABRIC_PLATFORM.md").read_text(encoding="utf-8"))
+    runtimes = [row for row in rows if row.kind == "runtime"]
+    assert runtimes
+    for row in runtimes:
+        assert row.source == "https://learn.microsoft.com/en-us/fabric/data-engineering/lifecycle"
+        assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", row.end_of_support)
+        assert date.fromisoformat(row.end_of_support).isoformat() == row.end_of_support
+
+
+def test_absent_git_sync_result_stays_explicitly_unqualified():
+    text = (ROOT / "docs/FABRIC_PLATFORM.md").read_text(encoding="utf-8")
+    git_sync = text.split("## Git sync\n", 1)[1].split("### Eventhouse", 1)[0]
+    assert re.findall(r"^Last recorded run:.*$", git_sync, re.MULTILINE) == [
+        "Last recorded run: not run yet"
+    ]
+    assert "Source review does not verify Git sync." in git_sync
+    assert "No current successful live run is claimed." in git_sync
+
+
 def test_parse_accepts_a_minimal_table():
     (row,) = fp.parse_table(table(rest_row()))
     assert (row.kind, row.surface, row.status, row.checked) == (
