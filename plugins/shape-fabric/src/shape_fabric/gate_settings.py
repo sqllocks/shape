@@ -1,7 +1,7 @@
 """Read gate policy from a same-workspace Fabric Variable Library's active value set.
 
 No library name means defaults. A requested but unreadable library fails closed.
-See https://learn.microsoft.com/fabric/data-engineering/notebookutils/notebookutils-variable-library
+See integrations/fabric/RUNBOOK.md for the Microsoft Learn API references.
 """
 
 from __future__ import annotations
