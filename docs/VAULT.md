@@ -2,6 +2,8 @@
 
 Status: experimental.
 
+[Run metadata, verification, rotation and policy writes](NEW_FEATURES.md#manage-a-vault-including-writes) with a disposable synthetic vault.
+
 The default `.shape` is safe to commit: a sensitive column keeps statistics and formats only, and
 a category is kept only where every released category has enough rows (`docs/PRIVACY_MODEL.md`).
 Some users still need the exact values back when they generate: the real list of status codes,

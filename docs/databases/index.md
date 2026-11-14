@@ -4,22 +4,18 @@ Choose a local or server writer and distinguish it from a profiling source.
 
 Status: available.
 
-`shape-databases` writes generated Arrow batches to DuckDB, PostgreSQL, MySQL, Snowflake and
-Databricks. Optional driver imports happen when a connection opens. Shape writes to
-PostgreSQL and MySQL through `shape-databases`; neither has a direct profiling source
-in 0.9.3. Export their data to Parquet or CSV and profile the file.
+`shape-databases` reads and writes PostgreSQL, MySQL, Oracle, Snowflake and Databricks,
+and writes local DuckDB files. DuckDB reads come from `shape-integrations`. Optional drivers
+load only when a connection opens. [New sources](../NEW_SOURCES.md) describes table and
+catalog capture, credentials and sampling. Snowflake and Databricks live read validation
+remains pending; their existing receipts cover writes.
 
-The shipped database and platform sources are `mssql`, `duckdb`, `onelake` and
-`semantic-model`. DuckDB reads come from `shape-integrations`. Snowflake and Databricks
-provide table and schema profiling sources in `shape-databases`.
-
-Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
-
-- [DuckDB](duckdb.md): a local file, covered by the sixth starter tutorial.
-- [PostgreSQL](postgresql.md): COPY writes; profile a CSV or Parquet export.
-- [MySQL](mysql.md): bound batched INSERT writes; profile a CSV or Parquet export.
-- [Snowflake](snowflake.md): staged Parquet and COPY INTO writes; Arrow and catalog profiling.
-- [Databricks](databricks.md): bound INSERT writes and Arrow/catalog profiling in SQL warehouses.
+- [DuckDB](duckdb.md): native local containers and the sixth starter tutorial.
+- [PostgreSQL](postgresql.md): COPY writes and direct table/catalog profiling.
+- [MySQL](mysql.md): batched INSERT writes and direct table/catalog profiling.
+- [Oracle](../NEW_SOURCES.md#database-reads): thin-mode reads and array-DML writes.
+- [Snowflake](snowflake.md): staged COPY writes and Arrow/catalog profiling.
+- [Databricks](databricks.md): bound INSERT writes and Arrow/catalog profiling.
 
 Cloud and server command transcripts need owner execution with an appropriate test account.
 The pages document code behavior without claiming platform validation.

@@ -2,6 +2,8 @@
 
 Status: experimental.
 
+[Generate from every new name list](NEW_FEATURES.md#locale-names) in the docs-test suite.
+
 
 `{"strategy": "locale", "locale": "FR", "provider": "postcode"}` generates values that look right
 for a country: places and postal codes, phone numbers, first names. A locale is a country:
@@ -48,7 +50,8 @@ group) and `r`, never on the chunk.
 ## Sources and licences
 
 Every file, its source URL, licence, read date and shipped SHA-256 is in
-`src/shape/builtins/strategies/locales/MANIFEST.json`, and quoted in `THIRD_PARTY_NOTICES.md`:
+[locale manifest](../src/shape/builtins/strategies/locales/MANIFEST.json), and quoted in
+[third-party notices](../THIRD_PARTY_NOTICES.md):
 GeoNames (CC BY 4.0) for places, INSEE (Licence Ouverte 2.0) for French first names, and the
 French regulator's numbering plan for the reserved roots. `python scripts/build_locale_data.py`
 rebuilds the original files from upstream downloads, byte for byte. For the added name lists,

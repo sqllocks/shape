@@ -2,6 +2,8 @@
 
 Status: experimental.
 
+[Run the SQL and Delta fidelity exercise](TYPE_FIDELITY.md) with real local constraint refusals.
+
 ## Run the local examples
 
 The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.

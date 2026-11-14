@@ -19,14 +19,14 @@ you select a destructive mode. A write error can report committed rows, so a ret
 idempotency decision.
 
 Evidence: `plugins/shape-databases/src/shape_databases/postgres.py` and shared adapter helpers.
-Shape writes to PostgreSQL through `shape-databases`; it does not read PostgreSQL
-tables directly in 0.9.3.
+Shape reads and writes PostgreSQL through `shape-databases`.
+See [direct table and catalog profiling](../NEW_SOURCES.md#database-reads) for current read examples.
 
 ## Profile an export
 
 Export the data to Parquet or CSV, then profile the local file.
 
-Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
+Direct reads are available; the export path below remains an alternative and records an earlier run.
 
 **Needs a PostgreSQL account. Not run in CI.** In `psql`, export a table to a
 client-side CSV with a header:

@@ -1028,5 +1028,85 @@
     "page": "README.md",
     "index": 0,
     "kind": "local"
+  },
+  {
+    "page": "docs/DAILY_ORDERS.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DAILY_ORDERS.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DAILY_ORDERS.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DAILY_ORDERS.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/NEW_FEATURES.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/NEW_FEATURES.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/NEW_FEATURES.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/NEW_FEATURES.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/NEW_FEATURES.md",
+    "index": 4,
+    "kind": "local"
+  },
+  {
+    "page": "docs/NEW_FEATURES.md",
+    "index": 5,
+    "kind": "local"
+  },
+  {
+    "page": "docs/TYPE_FIDELITY.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/TYPE_FIDELITY.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PLAN_MIGRATION.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PLAN_MIGRATION.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PLAN_MIGRATION.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/NEW_SOURCES.md",
+    "index": 0,
+    "kind": "local"
   }
 ]
