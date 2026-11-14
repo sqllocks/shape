@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+import pyarrow.csv as csv
 import pyarrow.parquet as pq
 
 HERE = Path(__file__).resolve().parent
@@ -76,9 +77,9 @@ def verify() -> None:
             check=True,
             timeout=120,
         )
-        for source in (HERE / "data").glob("*.parquet"):
-            assert pq.read_table(source).equals(pq.read_table(regenerated / source.name))
-        assert sum(p.stat().st_size for p in (HERE / "data").glob("*.parquet")) < 2_000_000
+        for source in (HERE / "data").glob("*.csv"):
+            assert csv.read_csv(source).equals(csv.read_csv(regenerated / source.name))
+        assert sum(p.stat().st_size for p in (HERE / "data").glob("*.csv")) < 2_000_000
     print("OFFLINE DEMO VERIFIED: exits, violations, drift, generation, seeded fixtures")
 
 

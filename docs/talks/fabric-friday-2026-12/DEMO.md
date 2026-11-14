@@ -18,11 +18,11 @@ and its populated uv cache on the fallback laptop. The verifier uses `UV_OFFLINE
 Fixture provenance: `data/generate_samples.py` calls Shape with authored evidence,
 seeds 1204 (240 orders) and 1206 (60 customers). Day 2 derives from day 1 with explicit
 fault injection: 12 backdated dates, one invalid code, 24 new status values, and amounts
-multiplied by 1.4. There is no production or third-party input. Regeneration is verified
-against committed Arrow table values, rather than Parquet writer bytes.
+multiplied by 1.4. There is no production or third-party input. Fixtures are committed as text CSV for the talk text scan. Offline setup converts
+them to Parquet; regeneration is verified against committed Arrow table values.
 
 Create workspace `shape_friday`, source Lakehouse `shape_demo` and separate destination
-Lakehouse `shape_dev`. Upload the three Parquet files to source
+Lakehouse `shape_dev`. Upload the three CSV files to source
 `Files/fabric-friday/`; upload the contract created below as
 `Files/contracts/friday_orders.json`.
 
@@ -41,7 +41,9 @@ In a preparation PySpark cell, load each uploaded file into a source Delta table
 ```python
 for name in ("orders_day1", "orders_day2", "customers"):
     (
-        spark.read.parquet(f"Files/fabric-friday/{name}.parquet")
+        spark.read.option("header", True)
+        .option("inferSchema", True)
+        .csv(f"Files/fabric-friday/{name}.csv")
         .write.format("delta")
         .mode("overwrite")
         .saveAsTable(name)
@@ -61,8 +63,15 @@ The expected failure commands are deliberate; do not run all blocks under bare `
 export UV_OFFLINE=1
 export TALK="$PWD/docs/talks/fabric-friday-2026-12"
 export WORK="${WORK:-$(mktemp -d)}"
-cp "$TALK"/data/*.parquet "$WORK/"
+cp "$TALK"/data/*.csv "$WORK/"
 cd "$WORK"
+uv run --locked --no-sync --project "$TALK/../../.." python - <<'PYTHON'
+from pathlib import Path
+import pyarrow.csv as csv
+import pyarrow.parquet as pq
+for path in Path(".").glob("*.csv"):
+    pq.write_table(csv.read_csv(path), path.with_suffix(".parquet"))
+PYTHON
 cat > orders.json <<'JSON'
 {
   "columns": {

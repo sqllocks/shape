@@ -7,7 +7,7 @@ import datetime as dt
 from pathlib import Path
 
 import pyarrow as pa
-import pyarrow.parquet as pq
+import pyarrow.csv as csv
 
 import shape
 
@@ -36,7 +36,7 @@ def generate(out: Path) -> None:
     cols["order_code"] = [x.replace("_", "-") for x in cols["order_code"]]
     cols["order_date"] = [dt.date.fromisoformat(x) for x in cols["order_date"]]
     day1 = pa.table(cols)
-    pq.write_table(day1, out / "orders_day1.parquet")
+    csv.write_csv(day1, out / "orders_day1.csv")
     # Explicit fault injection after generation: dates, invalid code, new status, mean shift.
     day2 = day1.to_pydict()
     day2["order_date"] = [dt.date(2026, 12, 5)] * 240
@@ -44,7 +44,7 @@ def generate(out: Path) -> None:
     day2["order_code"][0] = "BROKEN"
     day2["status"][:24] = ["returned"] * 24
     day2["order_total"] = [x * 1.4 for x in day2["order_total"]]
-    pq.write_table(pa.table(day2), out / "orders_day2.parquet")
+    csv.write_csv(pa.table(day2), out / "orders_day2.csv")
     customers, _ = shape.generate(
         {
             "columns": {
@@ -55,7 +55,7 @@ def generate(out: Path) -> None:
         n=60,
         seed=1206,
     )
-    pq.write_table(pa.table(customers), out / "customers.parquet")
+    csv.write_csv(pa.table(customers), out / "customers.csv")
 
 
 if __name__ == "__main__":

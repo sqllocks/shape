@@ -7,7 +7,7 @@ rehearsal is incomplete, deliver the offline path and label the Fabric walkthrou
       with the host. Regular show slot: Fridays, 8:00–9:30 AM ET.
 - [ ] Workspace shape_friday accessible; source shape_demo and separate shape_dev exist;
       presenter has read/write rights and active capacity.
-- [ ] Three committed synthetic Parquet fixtures uploaded under Files/fabric-friday;
+- [ ] Three committed synthetic CSV fixtures uploaded under Files/fabric-friday;
       orders_day1, orders_day2 and customers source Delta tables populated.
 - [ ] Contract uploaded under Files/contracts/friday_orders.json; fixture batch dates
       are December 4 and 5 regardless of the broadcast date.
