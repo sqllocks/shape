@@ -10,8 +10,9 @@ Status: available.
   document the Environment-backed Spark path and inline-install fallback, and read validated
   gate mode, drift thresholds and baseline paths from a Variable Library's active value set.
   Add an offline check for profile folders beside Fabric Git items. Semantic-model profiling
-  through sempy already ships; live Git-sync verification in Shape Test remains pending because
-  the workspace is not connected to Git.
+  through sempy already ships. A live Git-to-Fabric-to-Git check in Shape Test preserved two
+  artifacts byte-for-byte with no conflicts; the temporary Notebook, connections and branch
+  were cleaned up.
 
 - Complete built-in registry isolation for frozen bridge replays and runnable reference transcripts, with separate generic installed-extension coverage. Validate doctor runtime versions and preserve Arrow-backed Decimal comparisons across supported dataframe versions. Frozen vectors, schemas, recorded outputs and monetary assertions are unchanged.
 

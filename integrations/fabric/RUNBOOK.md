@@ -1,7 +1,8 @@
 # Shape in Microsoft Fabric: runbook
 
-Owner-operated. The builder could not reach a Fabric workspace, so everything below is
-**built and tested locally, and unverified live** unless it says otherwise. Steps that
+Owner-operated. Notebook/UDF deployment steps below are **built and tested locally, and
+unverified live** unless a section says otherwise. The R2-07 Git-sync check below was
+verified live in Shape Test on 2026-11-14. Steps that
 depend on live Fabric behaviour are tagged **[VERIFY]**; the full list is in
 [section 10](#10-verify-in-the-workspace-on-first-run) and the owner's checklist is in
 [section 11](#11-owner-live-dry-run-checklist).
@@ -143,11 +144,28 @@ write-capable repository token. For this lane use only Shape Test
 (`e90940bd-3f32-42ce-998e-ef2ddc74355b`), `p3-` item names, an isolated test repository and
 cleanup in `finally`. Never point the test at unrelated existing item changes.
 
-**Live verification pending.** On 2026-11-14 an authenticated read of Shape Test's
-`GET /v1/workspaces/{workspaceId}/git/connection` returned `NotConnected` with no provider
-configuration. Tenant/client credentials were present, but the Git remote/token variables
-were absent. No items were created and no workspace or repository state was changed.
-A connected test repository is required before the roundtrip can run safely.
+**Live verified on 2026-11-14** in Shape Test. Both `orders.shape` and `customers.shape`
+remained byte-identical after Git → Fabric → Git, with no item-definition conflicts.
+[The recorded evidence](git-sync/verification-2026-11-14.json) includes the artifact hashes,
+item name, roundtrip steps and cleanup results.
+
+The workspace initially reported `NotConnected`. The owner-operated check used the
+[documented Git automation APIs](https://learn.microsoft.com/fabric/cicd/git-integration/git-automation)
+to create a temporary GitHub credential connection scoped to the dedicated test repository,
+connect an isolated branch/directory with no existing item definitions, and initialize with
+`PreferWorkspace`. Only the `p3-c30a4c3cc3` Notebook was created and committed, using the
+[Selective commit mode](https://learn.microsoft.com/rest/api/fabric/core/git/commit-to-git)
+with its `objectId`; existing workspace items were not committed or edited. Two real profiles
+were pushed beside that Notebook's folder together with a definition edit. Update from Git
+reported no conflicts, then a workspace-only Notebook edit was committed back to Git and
+both artifact byte streams were compared.
+
+This scoped variant of the existing live-test flow avoids that test's `mode: All` commits
+in a shared workspace. After verification, the Notebook, temporary credential connection
+and temporary branch were deleted and the workspace was disconnected, restoring its initial
+`NotConnected` state. The earlier partially created p3- Notebook was also removed. Credentials
+were read from environment variables, never written to evidence, files or logs. No tags,
+releases or publishing were involved.
 
 ## 1. Prerequisites
 
