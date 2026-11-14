@@ -3081,6 +3081,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#spark-runtime-lifecycle-and-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spark runtime lifecycle and components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-integration-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other integration features
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6548,6 +6570,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#spark-runtime-lifecycle-and-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spark runtime lifecycle and components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-integration-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other integration features
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6658,9 +6702,10 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <li><code>Surface</code>: for <code>rest</code>, <code>METHOD /v1/path/{param}</code> as the code builds it; the guard compares paths
   with every <code>{param}</code> reduced to <code>{}</code>, so parameter names are free.</li>
 <li><code>Status</code>: <code>GA</code>, <code>preview</code> or <code>retired</code>. For <code>rest</code>, <code>item-type</code> and <code>storage</code> rows a Learn
-  reference page does not print a stage; it marks a preview API with a preview notice. <code>GA</code> here
-  means the page was read on the <code>Checked</code> date and carries no preview notice. Where a page
-  names a preview sub-feature, that is recorded under the table.</li>
+  reference page may omit an explicit stage. Existing <code>GA</code> cells without an explicit GA
+  statement retain the guard's historical acceptance token; their release stage is <strong>unverified</strong>,
+  not established by absence of a preview notice. See the source dispositions below.
+  This refresh does not admit any new API or feature.</li>
 <li><code>End of support</code>: runtimes only; <code>n/a</code> elsewhere.</li>
 </ul>
 <table>
@@ -6682,7 +6727,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/workspaces/list-workspaces</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/src/shape_fabric/fabric_api.py</td>
 </tr>
 <tr>
@@ -6691,7 +6736,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/items/list-items</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/src/shape_fabric/fabric_api.py, plugins/shape-fabric/tests/test_live_git_sync.py</td>
 </tr>
 <tr>
@@ -6700,7 +6745,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/items/create-item</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/src/shape_fabric/fabric_api.py, src/shape/scale/spark.py, plugins/shape-fabric/tests/test_live_git_sync.py</td>
 </tr>
 <tr>
@@ -6709,7 +6754,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/items/delete-item</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/src/shape_fabric/fabric_api.py, plugins/shape-fabric/tests/test_live_git_sync.py</td>
 </tr>
 <tr>
@@ -6718,7 +6763,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/items/update-item-definition</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/tests/test_live_git_sync.py</td>
 </tr>
 <tr>
@@ -6727,7 +6772,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/lakehouse/items/get-lakehouse</td>
-<td>2026-10-12</td>
+<td>2026-11-14</td>
 <td>src/shape/integrations/fabric/lakehouse_kind.py, src/shape/scale/spark.py</td>
 </tr>
 <tr>
@@ -6736,7 +6781,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/notebook/items/list-notebooks</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>src/shape/scale/spark.py</td>
 </tr>
 <tr>
@@ -6745,7 +6790,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/run-on-demand-item-job</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>src/shape/scale/spark.py</td>
 </tr>
 <tr>
@@ -6754,7 +6799,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/get-item-job-instance</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>src/shape/scale/jobs.py</td>
 </tr>
 <tr>
@@ -6763,7 +6808,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/cancel-item-job-instance</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>src/shape/scale/jobs.py</td>
 </tr>
 <tr>
@@ -6772,7 +6817,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-state</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/src/shape_fabric/fabric_api.py, src/shape/scale/spark.py, plugins/shape-fabric/tests/test_live_git_sync.py</td>
 </tr>
 <tr>
@@ -6781,7 +6826,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-result</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/tests/test_live_git_sync.py</td>
 </tr>
 <tr>
@@ -6790,7 +6835,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/git/get-connection</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/tests/test_live_git_sync.py</td>
 </tr>
 <tr>
@@ -6799,7 +6844,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/git/get-status</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/tests/test_live_git_sync.py</td>
 </tr>
 <tr>
@@ -6808,7 +6853,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/git/update-from-git</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/tests/test_live_git_sync.py</td>
 </tr>
 <tr>
@@ -6817,7 +6862,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/core/git/commit-to-git</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/tests/test_live_git_sync.py</td>
 </tr>
 <tr>
@@ -6826,7 +6871,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/kusto/api/rest/request</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/src/shape_fabric/kusto.py</td>
 </tr>
 <tr>
@@ -6835,7 +6880,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/kusto/api/rest/request</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/src/shape_fabric/kusto.py, plugins/shape-fabric/tests/test_live.py</td>
 </tr>
 <tr>
@@ -6844,7 +6889,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/kusto/api/rest/streaming-ingest</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/src/shape_fabric/kusto.py</td>
 </tr>
 <tr>
@@ -6853,7 +6898,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/fabric/onelake/onelake-access-api</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>src/shape/scale/spark.py, src/shape/scale/http.py, plugins/shape-fabric/src/shape_fabric/onelake.py</td>
 </tr>
 <tr>
@@ -6862,7 +6907,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/item-management-overview</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/src/shape_fabric/notebook.py, plugins/shape-fabric/src/shape_fabric/scenarios.py, src/shape/scale/spark.py, plugins/shape-fabric/tests/test_live_git_sync.py</td>
 </tr>
 <tr>
@@ -6871,7 +6916,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/item-management-overview</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/src/shape_fabric/scenarios.py</td>
 </tr>
 <tr>
@@ -6880,7 +6925,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>n/a</td>
 <td>https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/item-management-overview</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>plugins/shape-fabric/src/shape_fabric/scenarios.py</td>
 </tr>
 <tr>
@@ -6889,7 +6934,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>GA</td>
 <td>2028-08-31</td>
 <td>https://learn.microsoft.com/en-us/fabric/data-engineering/lifecycle</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>integrations/fabric</td>
 </tr>
 <tr>
@@ -6898,39 +6943,126 @@ and today's date. If the page says preview, the call does not go in; open an iss
 <td>retired</td>
 <td>2026-09-30</td>
 <td>https://learn.microsoft.com/en-us/fabric/data-engineering/lifecycle</td>
-<td>2026-10-03</td>
+<td>2026-11-14</td>
 <td>integrations/fabric</td>
 </tr>
 </tbody>
 </table>
 <h3 id="notes-on-the-rows">Notes on the rows<a class="headerlink" href="#notes-on-the-rows" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Stage wording.</strong> None of the Learn reference pages above prints a stage (GA or preview); each
-  was read on 2026-10-03 and none carries a preview notice. That is the evidence for <code>GA</code>, and it
-  is weaker than a page that says "generally available". The runtime rows are different: the
-  lifecycle page prints the stage and the end-of-support date.</li>
-<li><strong>Preview sub-features.</strong> The Notebook and Eventstream item types are <code>GA</code>; Learn marks some of
-  their features preview (notebook version history; Eventstream schema-aware streams, the Spark
-  notebook and SQL operators). Shape uses none of them.</li>
+<li><strong>Stage evidence (retrieved 2026-11-14).</strong> The <code>updateFromGit</code> source explicitly says
+  "All other functionality of this API is generally available" outside deployment-plan Beta.
+  Runtime 2.0 has explicit GA evidence. For every other REST, storage and item-type row,
+  the cited page documents the surface but does not explicitly establish GA: release stage
+  <strong>unverified (no explicit GA statement)</strong>. No preview notice was found for the listed use.
+  This is an inference inherited from the earlier inventory, not evidence of GA. The existing
+  guard acceptance and its preview/retired rejection remain unchanged.</li>
+<li><strong>Git deployment plans.</strong> <code>updateFromGit</code> deployment-plan support is Beta and requires
+  <code>beta=true</code>; the shipped live test does not send it. The base API's GA statement does not
+  cover that option.</li>
 <li><strong>Run notebook.</strong> The code starts a run with <code>.../jobs/instances?jobType=RunNotebook</code>. The
-  reference page now documents <code>.../jobs/{jobType}/instances</code> and says the query-parameter form is
-  still supported "for backward compatibility". The row is the path as the code builds it.</li>
+  reference page documents <code>.../jobs/{jobType}/instances</code> and explicitly preserves the
+  query-parameter form "for backward compatibility". The row retains the shipped path.</li>
 <li><strong>Operations.</strong> The code follows the <code>Location</code> header of an accepted request, which is a
-  <code>/v1/operations/{operation_id}</code> URL; the guard cannot see a URL that comes from a header, so
-  these rows are kept by hand.</li>
-<li><strong>OneLake.</strong> Shape writes files with the ADLS Gen2 calls (<code>PUT ?resource=file</code>,
-  <code>PATCH ?action=append</code> and <code>?action=flush</code>). The OneLake page says OneLake "supports the same
-  APIs as Azure Data Lake Storage (ADLS) and Azure Blob Storage"; it does not list the three calls.</li>
-<li><strong>Streaming ingestion.</strong> The Kusto streaming-ingest page applies to Fabric and Azure Data
-  Explorer and prints no stage; the Eventhouse overview does not state one for streaming
-  ingestion either.</li>
-<li><strong>Runtime 1.3</strong> passed its end-of-support date on 2026-09-30; Learn says it enters Long Term
-  Support on 2026-10-01 for six months (through March 2027). It is listed <code>retired</code> so that a doc
-  or plugin README that names it fails the guard. Today only <code>integrations/fabric</code> names it
-  ("Runtime 1.3 also works"), which the guard does not scan; that text needs a decision.</li>
-<li><strong>Runtime 2.0</strong> is the latest GA runtime; Learn says it becomes the default for new workspaces
-  in late September 2026.</li>
+  <code>/v1/operations/{operation_id}</code> URL; these header-derived paths are kept by hand.</li>
+<li><strong>OneLake.</strong> The cited page says OneLake supports the same APIs as ADLS and Azure Blob Storage.
+  Shape uses file creation, append and flush; the page does not individually enumerate these
+  calls. Their individual coverage is <strong>unverified from this source</strong>.</li>
+<li><strong>Streaming ingestion.</strong> The Kusto source applies to Fabric and Azure Data Explorer and
+  documents the ingest path; it does not explicitly establish its release stage.</li>
 </ul>
+<h3 id="spark-runtime-lifecycle-and-components">Spark runtime lifecycle and components<a class="headerlink" href="#spark-runtime-lifecycle-and-components" title="Permanent link">&para;</a></h3>
+<p>All sources in this subsection were retrieved <strong>2026-11-14</strong>. The inventory's lifecycle source
+supplies the support dates; the runtime detail pages supply the components:</p>
+<table>
+<thead>
+<tr>
+<th>Runtime</th>
+<th>Source stage</th>
+<th>Spark</th>
+<th>Python</th>
+<th>Delta Lake</th>
+<th>Java / Scala / R</th>
+<th>Component source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.0</td>
+<td>Explicit GA; default for new workspaces and environment items</td>
+<td>4.1</td>
+<td>3.13</td>
+<td>4.2</td>
+<td>21 / 2.13 / 4.5.2</td>
+<td><a href="https://learn.microsoft.com/en-us/fabric/data-engineering/runtime-2-0">Runtime 2.0</a></td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>Lifecycle table: EOSA; detail page: EOSA</td>
+<td>3.5</td>
+<td>3.11</td>
+<td>3.2</td>
+<td>11 / 2.12.17 / 4.4.1</td>
+<td><a href="https://learn.microsoft.com/en-us/fabric/data-engineering/runtime-1-3">Runtime 1.3</a></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Runtime 2.0:</strong> the lifecycle table explicitly lists GA and end of support <strong>2028-08-31</strong>.
+  The detail page now says it is the default, replacing the earlier future rollout wording.
+  Delta Lake 4.x-specific features remain experimental and Spark-only; custom live pools
+  are preview. The runtime's GA stage does not confer GA on these sub-features.</li>
+<li><strong>Runtime 1.3:</strong> the lifecycle table lists end of support <strong>2026-09-30</strong>, with a footnote
+  granting six months of LTS from <strong>2026-10-01 through March 2027</strong>. Its detail page still
+  calls the runtime EOSA. These statements do not establish a precise final LTS day.
+  The <code>retired</code> token in the main table is the existing conservative guard exclusion after
+  the tabulated support date, <strong>not a claim that Microsoft has removed the runtime</strong>.
+  The LTS footnote is not used to weaken the guard. Integration assets still refer to 1.3;
+  reconciling their migration guidance requires a separate change.</li>
+<li><strong>Bundled library versions:</strong> exact numpy, pandas and PyArrow versions are <strong>unverified</strong>:
+  these Learn runtime pages do not enumerate them and direct readers to runtime release
+  updates. Component versions above do not prove that Shape's pinned libraries resolve or
+  that a workload executed successfully. Validate the installed environment separately.</li>
+</ul>
+<h3 id="other-integration-features">Other integration features<a class="headerlink" href="#other-integration-features" title="Permanent link">&para;</a></h3>
+<p>These source reviews cover integration assets without adding API paths or accepted item types
+to the guard. Sources were retrieved <strong>2026-11-14</strong>; none establishes a successful tenant run.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Source disposition</th>
+<th>Shipped use</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User data functions</td>
+<td>Release stage <strong>unverified</strong>: overview has no explicit GA statement or overall preview notice. It specifies Python <strong>3.11.9</strong>, public PyPI libraries and Fabric data connections; exact bundled library versions are not given.</td>
+<td><code>integrations/fabric/udf/</code> and Functions pipeline activities; local pins do not prove the hosted runtime.</td>
+<td><a href="https://learn.microsoft.com/en-us/fabric/data-engineering/user-data-functions/user-data-functions-overview">Overview</a></td>
+</tr>
+<tr>
+<td>Variable Library</td>
+<td>Release stage <strong>unverified</strong>: overview does not explicitly say GA. It lists notebooks through NotebookUtils and <code>%%configure</code>, pipelines, User data functions and Eventstream among consumers.</td>
+<td>Integration notebook configuration reads variables; no Variable Library REST endpoint is added here.</td>
+<td><a href="https://learn.microsoft.com/en-us/fabric/cicd/variable-library/variable-library-overview">Overview</a></td>
+</tr>
+<tr>
+<td>Eventstream</td>
+<td>Overall release stage <strong>unverified</strong>: overview does not explicitly say GA for Eventstream. Schema-aware streams, SQL operator and Spark Notebook destination are explicitly preview.</td>
+<td><code>shape_fabric.eventstream</code> sends to a custom endpoint through the Event Hubs client; these preview transformations are not used.</td>
+<td><a href="https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/overview">Overview</a></td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Release stage <strong>unverified</strong>: overview has no explicit GA statement. It documents runtime selection, public/custom libraries and publishing Spark compute/library changes.</td>
+<td>Setup creates the item; integration assets supply environment configuration.</td>
+<td><a href="https://learn.microsoft.com/en-us/fabric/data-engineering/create-and-use-environment">Create and use environments</a></td>
+</tr>
+</tbody>
+</table>
 <h2 id="fabric-errors-long-running-operations-and-semantic-models">Fabric errors, long-running operations and semantic models<a class="headerlink" href="#fabric-errors-long-running-operations-and-semantic-models" title="Permanent link">&para;</a></h2>
 <p>A Fabric REST error is shown with its service code and message, <code>errorCode: message</code> (for example
 <code>InvalidInput: The request has invalid input. DisplayName: ...</code>), with credentials redacted, after
@@ -6970,13 +7102,16 @@ the workspace), <code>FABRIC_GIT_WORKSPACE_ID</code> (the Git-connected workspac
 other live tests use), <code>FABRIC_GIT_REMOTE</code> (an HTTPS remote of the repository the workspace is
 connected to) and <code>FABRIC_GIT_TOKEN</code> (write access to it). <code>FABRIC_GIT_USER</code> is the user name sent
 with the token (default <code>x-access-token</code>).</p>
-<p>Fabric's Git APIs use the calling principal's <strong>own</strong> Git credentials, not those of the person who
-connected the workspace. A service principal that has none gets <code>GitCredentialsNotConfigured</code> from
+<p>The earlier GitHub test setup required the calling principal's <strong>own</strong> configured Git credentials.
+In that setup, a service principal without them received <code>GitCredentialsNotConfigured</code> from
 <code>git/status</code>, even though the portal shows the workspace connected, and <code>NotConnected</code> from
 <code>git/connection</code>. Set them once with <code>PATCH /v1/workspaces/{id}/git/myGitCredentials</code> and
 <code>{"source": "ConfiguredConnection", "connectionId": "&lt;id&gt;"}</code> for a GitHub connection the principal
 can use
-(<a href="https://learn.microsoft.com/fabric/cicd/git-integration/automate-git-integration-with-service-principal">Automate Git integration with a service principal</a>).
+(<a href="https://learn.microsoft.com/fabric/cicd/git-integration/automate-git-integration-with-service-principal">Automate Git integration with a service principal</a>,
+retrieved 2026-11-14). That source now focuses on Azure DevOps and distinguishes automatic
+and configured credentials. The GitHub-specific credential behavior above is <strong>unverified
+by this source</strong>; it is retained as historical setup guidance, not a provider-independent rule.
 The <code>fabric-live</code> workflow does this, idempotently, when it is dispatched with
 <code>set_git_credentials=true</code> (see <a href="../plugins/fabric-writers/#the-fabric-live-workflow">the live workflow</a>).
 The test reads <code>git/status</code> with a 180-second read timeout (Fabric asks the Git provider before it
@@ -7020,6 +7155,9 @@ id or workspace id. It follows the <a href="../specs/STATE_AND_COMPATIBILITY/">s
 <code>min_shape_version</code> was declared) and refuses a newer <code>version</code> with an <code>UnsupportedVersionError</code>
 that names the first Shape release that reads it.</p>
 <p>Last recorded run: not run yet</p>
+<p>Source review does not verify Git sync. No current successful live run is claimed.
+The historical transcript and repeat-run failure above are retained as historical evidence;
+they do not qualify this current result or establish that a repeat run now passes.</p>
 <h3 id="eventhouse-source-read-limits">Eventhouse source read limits<a class="headerlink" href="#eventhouse-source-read-limits" title="Permanent link">&para;</a></h3>
 <p><code>eventhouse://&lt;query host&gt;/&lt;database&gt;?table=T</code> reads through the KQL query
 endpoint. Each request is subject to Kusto's result-size limit (normally 64 MB)
