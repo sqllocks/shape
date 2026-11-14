@@ -20,66 +20,100 @@ and today's date. If the page says preview, the call does not go in; open an iss
 - `Surface`: for `rest`, `METHOD /v1/path/{param}` as the code builds it; the guard compares paths
   with every `{param}` reduced to `{}`, so parameter names are free.
 - `Status`: `GA`, `preview` or `retired`. For `rest`, `item-type` and `storage` rows a Learn
-  reference page does not print a stage; it marks a preview API with a preview notice. `GA` here
-  means the page was read on the `Checked` date and carries no preview notice. Where a page
-  names a preview sub-feature, that is recorded under the table.
+  reference page may omit an explicit stage. Existing `GA` cells without an explicit GA
+  statement retain the guard's historical acceptance token; their release stage is **unverified**,
+  not established by absence of a preview notice. See the source dispositions below.
+  This refresh does not admit any new API or feature.
 - `End of support`: runtimes only; `n/a` elsewhere.
 
 | Kind | Surface | Status | End of support | Source | Checked | Used by |
 |---|---|---|---|---|---|---|
-| rest | GET /v1/workspaces | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/workspaces/list-workspaces | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/fabric_api.py |
-| rest | GET /v1/workspaces/{workspace_id}/items | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/list-items | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, plugins/shape-fabric/tests/test_live_git_sync.py |
-| rest | POST /v1/workspaces/{workspace_id}/items | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/create-item | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, src/shape/scale/spark.py, plugins/shape-fabric/tests/test_live_git_sync.py |
-| rest | DELETE /v1/workspaces/{workspace_id}/items/{item_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/delete-item | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, plugins/shape-fabric/tests/test_live_git_sync.py |
-| rest | POST /v1/workspaces/{workspace_id}/items/{item_id}/updateDefinition | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/update-item-definition | 2026-10-03 | plugins/shape-fabric/tests/test_live_git_sync.py |
-| rest | GET /v1/workspaces/{workspace_id}/lakehouses/{lakehouse_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/lakehouse/items/get-lakehouse | 2026-10-12 | src/shape/integrations/fabric/lakehouse_kind.py, src/shape/scale/spark.py |
-| rest | GET /v1/workspaces/{workspace_id}/notebooks | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/notebook/items/list-notebooks | 2026-10-03 | src/shape/scale/spark.py |
-| rest | POST /v1/workspaces/{workspace_id}/items/{item_id}/jobs/instances | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/run-on-demand-item-job | 2026-10-03 | src/shape/scale/spark.py |
-| rest | GET /v1/workspaces/{workspace_id}/items/{item_id}/jobs/instances/{run_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/get-item-job-instance | 2026-10-03 | src/shape/scale/jobs.py |
-| rest | POST /v1/workspaces/{workspace_id}/items/{item_id}/jobs/instances/{run_id}/cancel | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/cancel-item-job-instance | 2026-10-03 | src/shape/scale/jobs.py |
-| rest | GET /v1/operations/{operation_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-state | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, src/shape/scale/spark.py, plugins/shape-fabric/tests/test_live_git_sync.py |
-| rest | GET /v1/operations/{operation_id}/result | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-result | 2026-10-03 | plugins/shape-fabric/tests/test_live_git_sync.py |
-| rest | GET /v1/workspaces/{workspace_id}/git/connection | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/git/get-connection | 2026-10-03 | plugins/shape-fabric/tests/test_live_git_sync.py |
-| rest | GET /v1/workspaces/{workspace_id}/git/status | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/git/get-status | 2026-10-03 | plugins/shape-fabric/tests/test_live_git_sync.py |
-| rest | POST /v1/workspaces/{workspace_id}/git/updateFromGit | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/git/update-from-git | 2026-10-03 | plugins/shape-fabric/tests/test_live_git_sync.py |
-| rest | POST /v1/workspaces/{workspace_id}/git/commitToGit | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/git/commit-to-git | 2026-10-03 | plugins/shape-fabric/tests/test_live_git_sync.py |
-| rest | POST /v1/rest/mgmt | GA | n/a | https://learn.microsoft.com/en-us/kusto/api/rest/request | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/kusto.py |
-| rest | POST /v1/rest/query | GA | n/a | https://learn.microsoft.com/en-us/kusto/api/rest/request | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/kusto.py, plugins/shape-fabric/tests/test_live.py |
-| rest | POST /v1/rest/ingest/{database}/{table} | GA | n/a | https://learn.microsoft.com/en-us/kusto/api/rest/streaming-ingest | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/kusto.py |
-| storage | https://onelake.dfs.fabric.microsoft.com | GA | n/a | https://learn.microsoft.com/en-us/fabric/onelake/onelake-access-api | 2026-10-03 | src/shape/scale/spark.py, src/shape/scale/http.py, plugins/shape-fabric/src/shape_fabric/onelake.py |
-| item-type | Notebook | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/item-management-overview | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/notebook.py, plugins/shape-fabric/src/shape_fabric/scenarios.py, src/shape/scale/spark.py, plugins/shape-fabric/tests/test_live_git_sync.py |
-| item-type | Environment | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/item-management-overview | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/scenarios.py |
-| item-type | Lakehouse | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/item-management-overview | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/scenarios.py |
-| runtime | 2.0 | GA | 2028-08-31 | https://learn.microsoft.com/en-us/fabric/data-engineering/lifecycle | 2026-10-03 | integrations/fabric |
-| runtime | 1.3 | retired | 2026-09-30 | https://learn.microsoft.com/en-us/fabric/data-engineering/lifecycle | 2026-10-03 | integrations/fabric |
+| rest | GET /v1/workspaces | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/workspaces/list-workspaces | 2026-11-14 | plugins/shape-fabric/src/shape_fabric/fabric_api.py |
+| rest | GET /v1/workspaces/{workspace_id}/items | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/list-items | 2026-11-14 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | POST /v1/workspaces/{workspace_id}/items | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/create-item | 2026-11-14 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, src/shape/scale/spark.py, plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | DELETE /v1/workspaces/{workspace_id}/items/{item_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/delete-item | 2026-11-14 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | POST /v1/workspaces/{workspace_id}/items/{item_id}/updateDefinition | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/update-item-definition | 2026-11-14 | plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | GET /v1/workspaces/{workspace_id}/lakehouses/{lakehouse_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/lakehouse/items/get-lakehouse | 2026-11-14 | src/shape/integrations/fabric/lakehouse_kind.py, src/shape/scale/spark.py |
+| rest | GET /v1/workspaces/{workspace_id}/notebooks | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/notebook/items/list-notebooks | 2026-11-14 | src/shape/scale/spark.py |
+| rest | POST /v1/workspaces/{workspace_id}/items/{item_id}/jobs/instances | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/run-on-demand-item-job | 2026-11-14 | src/shape/scale/spark.py |
+| rest | GET /v1/workspaces/{workspace_id}/items/{item_id}/jobs/instances/{run_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/get-item-job-instance | 2026-11-14 | src/shape/scale/jobs.py |
+| rest | POST /v1/workspaces/{workspace_id}/items/{item_id}/jobs/instances/{run_id}/cancel | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/cancel-item-job-instance | 2026-11-14 | src/shape/scale/jobs.py |
+| rest | GET /v1/operations/{operation_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-state | 2026-11-14 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, src/shape/scale/spark.py, plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | GET /v1/operations/{operation_id}/result | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-result | 2026-11-14 | plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | GET /v1/workspaces/{workspace_id}/git/connection | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/git/get-connection | 2026-11-14 | plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | GET /v1/workspaces/{workspace_id}/git/status | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/git/get-status | 2026-11-14 | plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | POST /v1/workspaces/{workspace_id}/git/updateFromGit | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/git/update-from-git | 2026-11-14 | plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | POST /v1/workspaces/{workspace_id}/git/commitToGit | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/git/commit-to-git | 2026-11-14 | plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | POST /v1/rest/mgmt | GA | n/a | https://learn.microsoft.com/en-us/kusto/api/rest/request | 2026-11-14 | plugins/shape-fabric/src/shape_fabric/kusto.py |
+| rest | POST /v1/rest/query | GA | n/a | https://learn.microsoft.com/en-us/kusto/api/rest/request | 2026-11-14 | plugins/shape-fabric/src/shape_fabric/kusto.py, plugins/shape-fabric/tests/test_live.py |
+| rest | POST /v1/rest/ingest/{database}/{table} | GA | n/a | https://learn.microsoft.com/en-us/kusto/api/rest/streaming-ingest | 2026-11-14 | plugins/shape-fabric/src/shape_fabric/kusto.py |
+| storage | https://onelake.dfs.fabric.microsoft.com | GA | n/a | https://learn.microsoft.com/en-us/fabric/onelake/onelake-access-api | 2026-11-14 | src/shape/scale/spark.py, src/shape/scale/http.py, plugins/shape-fabric/src/shape_fabric/onelake.py |
+| item-type | Notebook | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/item-management-overview | 2026-11-14 | plugins/shape-fabric/src/shape_fabric/notebook.py, plugins/shape-fabric/src/shape_fabric/scenarios.py, src/shape/scale/spark.py, plugins/shape-fabric/tests/test_live_git_sync.py |
+| item-type | Environment | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/item-management-overview | 2026-11-14 | plugins/shape-fabric/src/shape_fabric/scenarios.py |
+| item-type | Lakehouse | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/item-management-overview | 2026-11-14 | plugins/shape-fabric/src/shape_fabric/scenarios.py |
+| runtime | 2.0 | GA | 2028-08-31 | https://learn.microsoft.com/en-us/fabric/data-engineering/lifecycle | 2026-11-14 | integrations/fabric |
+| runtime | 1.3 | retired | 2026-09-30 | https://learn.microsoft.com/en-us/fabric/data-engineering/lifecycle | 2026-11-14 | integrations/fabric |
 
 ### Notes on the rows
 
-- **Stage wording.** None of the Learn reference pages above prints a stage (GA or preview); each
-  was read on 2026-10-03 and none carries a preview notice. That is the evidence for `GA`, and it
-  is weaker than a page that says "generally available". The runtime rows are different: the
-  lifecycle page prints the stage and the end-of-support date.
-- **Preview sub-features.** The Notebook and Eventstream item types are `GA`; Learn marks some of
-  their features preview (notebook version history; Eventstream schema-aware streams, the Spark
-  notebook and SQL operators). Shape uses none of them.
+- **Stage evidence (retrieved 2026-11-14).** The `updateFromGit` source explicitly says
+  "All other functionality of this API is generally available" outside deployment-plan Beta.
+  Runtime 2.0 has explicit GA evidence. For every other REST, storage and item-type row,
+  the cited page documents the surface but does not explicitly establish GA: release stage
+  **unverified (no explicit GA statement)**. No preview notice was found for the listed use.
+  This is an inference inherited from the earlier inventory, not evidence of GA. The existing
+  guard acceptance and its preview/retired rejection remain unchanged.
+- **Git deployment plans.** `updateFromGit` deployment-plan support is Beta and requires
+  `beta=true`; the shipped live test does not send it. The base API's GA statement does not
+  cover that option.
 - **Run notebook.** The code starts a run with `.../jobs/instances?jobType=RunNotebook`. The
-  reference page now documents `.../jobs/{jobType}/instances` and says the query-parameter form is
-  still supported "for backward compatibility". The row is the path as the code builds it.
+  reference page documents `.../jobs/{jobType}/instances` and explicitly preserves the
+  query-parameter form "for backward compatibility". The row retains the shipped path.
 - **Operations.** The code follows the `Location` header of an accepted request, which is a
-  `/v1/operations/{operation_id}` URL; the guard cannot see a URL that comes from a header, so
-  these rows are kept by hand.
-- **OneLake.** Shape writes files with the ADLS Gen2 calls (`PUT ?resource=file`,
-  `PATCH ?action=append` and `?action=flush`). The OneLake page says OneLake "supports the same
-  APIs as Azure Data Lake Storage (ADLS) and Azure Blob Storage"; it does not list the three calls.
-- **Streaming ingestion.** The Kusto streaming-ingest page applies to Fabric and Azure Data
-  Explorer and prints no stage; the Eventhouse overview does not state one for streaming
-  ingestion either.
-- **Runtime 1.3** passed its end-of-support date on 2026-09-30; Learn says it enters Long Term
-  Support on 2026-10-01 for six months (through March 2027). It is listed `retired` so that a doc
-  or plugin README that names it fails the guard. Today only `integrations/fabric` names it
-  ("Runtime 1.3 also works"), which the guard does not scan; that text needs a decision.
-- **Runtime 2.0** is the latest GA runtime; Learn says it becomes the default for new workspaces
-  in late September 2026.
+  `/v1/operations/{operation_id}` URL; these header-derived paths are kept by hand.
+- **OneLake.** The cited page says OneLake supports the same APIs as ADLS and Azure Blob Storage.
+  Shape uses file creation, append and flush; the page does not individually enumerate these
+  calls. Their individual coverage is **unverified from this source**.
+- **Streaming ingestion.** The Kusto source applies to Fabric and Azure Data Explorer and
+  documents the ingest path; it does not explicitly establish its release stage.
+
+### Spark runtime lifecycle and components
+
+All sources in this subsection were retrieved **2026-11-14**. The inventory's lifecycle source
+supplies the support dates; the runtime detail pages supply the components:
+
+| Runtime | Source stage | Spark | Python | Delta Lake | Java / Scala / R | Component source |
+|---|---|---|---|---|---|---|
+| 2.0 | Explicit GA; default for new workspaces and environment items | 4.1 | 3.13 | 4.2 | 21 / 2.13 / 4.5.2 | [Runtime 2.0](https://learn.microsoft.com/en-us/fabric/data-engineering/runtime-2-0) |
+| 1.3 | Lifecycle table: EOSA; detail page: EOSA | 3.5 | 3.11 | 3.2 | 11 / 2.12.17 / 4.4.1 | [Runtime 1.3](https://learn.microsoft.com/en-us/fabric/data-engineering/runtime-1-3) |
+
+- **Runtime 2.0:** the lifecycle table explicitly lists GA and end of support **2028-08-31**.
+  The detail page now says it is the default, replacing the earlier future rollout wording.
+  Delta Lake 4.x-specific features remain experimental and Spark-only; custom live pools
+  are preview. The runtime's GA stage does not confer GA on these sub-features.
+- **Runtime 1.3:** the lifecycle table lists end of support **2026-09-30**, with a footnote
+  granting six months of LTS from **2026-10-01 through March 2027**. Its detail page still
+  calls the runtime EOSA. These statements do not establish a precise final LTS day.
+  The `retired` token in the main table is the existing conservative guard exclusion after
+  the tabulated support date, **not a claim that Microsoft has removed the runtime**.
+  The LTS footnote is not used to weaken the guard. Integration assets still refer to 1.3;
+  reconciling their migration guidance requires a separate change.
+- **Bundled library versions:** exact numpy, pandas and PyArrow versions are **unverified**:
+  these Learn runtime pages do not enumerate them and direct readers to runtime release
+  updates. Component versions above do not prove that Shape's pinned libraries resolve or
+  that a workload executed successfully. Validate the installed environment separately.
+
+### Other integration features
+
+These source reviews cover integration assets without adding API paths or accepted item types
+to the guard. Sources were retrieved **2026-11-14**; none establishes a successful tenant run.
+
+| Feature | Source disposition | Shipped use | Source |
+|---|---|---|---|
+| User data functions | Release stage **unverified**: overview has no explicit GA statement or overall preview notice. It specifies Python **3.11.9**, public PyPI libraries and Fabric data connections; exact bundled library versions are not given. | `integrations/fabric/udf/` and Functions pipeline activities; local pins do not prove the hosted runtime. | [Overview](https://learn.microsoft.com/en-us/fabric/data-engineering/user-data-functions/user-data-functions-overview) |
+| Variable Library | Release stage **unverified**: overview does not explicitly say GA. It lists notebooks through NotebookUtils and `%%configure`, pipelines, User data functions and Eventstream among consumers. | Integration notebook configuration reads variables; no Variable Library REST endpoint is added here. | [Overview](https://learn.microsoft.com/en-us/fabric/cicd/variable-library/variable-library-overview) |
+| Eventstream | Overall release stage **unverified**: overview does not explicitly say GA for Eventstream. Schema-aware streams, SQL operator and Spark Notebook destination are explicitly preview. | `shape_fabric.eventstream` sends to a custom endpoint through the Event Hubs client; these preview transformations are not used. | [Overview](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/overview) |
+| Environment | Release stage **unverified**: overview has no explicit GA statement. It documents runtime selection, public/custom libraries and publishing Spark compute/library changes. | Setup creates the item; integration assets supply environment configuration. | [Create and use environments](https://learn.microsoft.com/en-us/fabric/data-engineering/create-and-use-environment) |
 
 ## Fabric errors, long-running operations and semantic models
 
@@ -127,13 +161,16 @@ other live tests use), `FABRIC_GIT_REMOTE` (an HTTPS remote of the repository th
 connected to) and `FABRIC_GIT_TOKEN` (write access to it). `FABRIC_GIT_USER` is the user name sent
 with the token (default `x-access-token`).
 
-Fabric's Git APIs use the calling principal's **own** Git credentials, not those of the person who
-connected the workspace. A service principal that has none gets `GitCredentialsNotConfigured` from
+The earlier GitHub test setup required the calling principal's **own** configured Git credentials.
+In that setup, a service principal without them received `GitCredentialsNotConfigured` from
 `git/status`, even though the portal shows the workspace connected, and `NotConnected` from
 `git/connection`. Set them once with `PATCH /v1/workspaces/{id}/git/myGitCredentials` and
 `{"source": "ConfiguredConnection", "connectionId": "<id>"}` for a GitHub connection the principal
 can use
-([Automate Git integration with a service principal](https://learn.microsoft.com/fabric/cicd/git-integration/automate-git-integration-with-service-principal)).
+([Automate Git integration with a service principal](https://learn.microsoft.com/fabric/cicd/git-integration/automate-git-integration-with-service-principal),
+retrieved 2026-11-14). That source now focuses on Azure DevOps and distinguishes automatic
+and configured credentials. The GitHub-specific credential behavior above is **unverified
+by this source**; it is retained as historical setup guidance, not a provider-independent rule.
 The `fabric-live` workflow does this, idempotently, when it is dispatched with
 `set_git_credentials=true` (see [the live workflow](plugins/fabric-writers.md#the-fabric-live-workflow)).
 The test reads `git/status` with a 180-second read timeout (Fabric asks the Git provider before it
@@ -189,6 +226,10 @@ id or workspace id. It follows the [state and compatibility policy](specs/STATE_
 that names the first Shape release that reads it.
 
 Last recorded run: not run yet
+
+Source review does not verify Git sync. No current successful live run is claimed.
+The historical transcript and repeat-run failure above are retained as historical evidence;
+they do not qualify this current result or establish that a repeat run now passes.
 
 ### Eventhouse source read limits
 
