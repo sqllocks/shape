@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 HERE = Path(__file__).resolve().parent
 VERSION = "0.9.4"
@@ -17,6 +18,7 @@ WHEEL = f"sqllocks_shape-{VERSION}-py3-none-any.whl"
 PLATFORM_WHEEL = f"sqllocks_shape-{VERSION}-cp311-abi3-manylinux_2_28_x86_64.whl"
 DOMAINS_WHEEL = f"sqllocks_shape_domains-{VERSION}-py3-none-any.whl"
 DBT_WHEEL = f"sqllocks_shape_dbt-{VERSION}-py3-none-any.whl"
+FABRIC_WHEEL = f"sqllocks_shape_fabric-{VERSION}-py3-none-any.whl"
 
 
 def install_cell(*plugin_wheels: str) -> tuple[str, str]:
@@ -169,7 +171,9 @@ for f in files:
         schema_mode="overwrite",
         storage_options=STORAGE_OPTIONS,
     )
-    created.append({"table": name, "rows": table.num_rows, "source": f.relative_to(DEMO_DIR).as_posix()})
+    created.append(
+        {"table": name, "rows": table.num_rows, "source": f.relative_to(DEMO_DIR).as_posix()}
+    )
 
 for row in created:
     print(f"{row['table']:<32} {row['rows']:>10,} rows   <- {row['source']}")
@@ -211,13 +215,14 @@ def _with_baseline_loader(helpers: str) -> str:
 
 # --------------------------------------------------------------- shared profile cells
 
-PARAMETERS = """# Parameters cell (toggle "parameter cell" in Fabric). A pipeline overrides these.
+PARAMETERS = """# Parameters cell (enable in Fabric). Pipeline overrides apply.
 # Paths are relative to the lakehouse Files/ folder, or absolute.
 tableName = "orders"      # Delta table in the default lakehouse ("schema.table" also accepted)
 contractPath = ""         # optional contract JSON, for example "contracts/orders.json"
 baselinePath = ""         # optional earlier .shape artifact to diff against
 outputDir = "shape"       # artifacts go to Files/<outputDir>/<table>/<timestamp>/
 failOnDrift = False       # True: drift against the baseline also fails the gate
+variableLibrary = ""     # optional same-workspace Variable Library; active dev/test/prod values
 """
 
 HELPERS = """import json
@@ -252,6 +257,13 @@ out_parent = f"{outputDir.strip('/')}/{safe_name}"  # one new folder per run is 
 MAX_LISTED = 100  # keep the exit value small (well under 1 MB)
 """
 HELPERS = _with_baseline_loader(HELPERS)
+GATE_SETTINGS = """from shape_fabric.gate_settings import load_gate_settings
+
+gate_settings = load_gate_settings(variableLibrary)
+if variableLibrary:
+    baselinePath = gate_settings.baseline_path
+"""
+
 
 CHECK_AND_DIFF = """violations, changes, drifted = [], [], False
 
@@ -276,7 +288,7 @@ if baselinePath:
 passed = not violations
 """
 
-WRITE_ARTIFACTS = """out_dir = claim_run_folder(Path(FILES) / out_parent)  # a folder no other run owns
+WRITE_ARTIFACTS = """out_dir = claim_run_folder(Path(FILES) / out_parent)  # unique run folder
 out_rel = f"{out_parent}/{out_dir.name}"
 shape_file = out_dir / f"{safe_name}.shape"
 shape.save(profile, str(shape_file))
@@ -332,8 +344,10 @@ and is deliberately outside any `try`/`except`.
     ),
     ("code", '%%configure\n{"vCores": 8}\n'),
     install_cell(),
+    ("code", f"%pip install builtin/{FABRIC_WHEEL}\n"),
     ("code", PARAMETERS),
     ("code", HELPERS),
+    ("code", GATE_SETTINGS),
     (
         "code",
         """from deltalake import DeltaTable
@@ -346,7 +360,16 @@ profile = shape.profile(table, name=str(tableName))
 print(f"Profiled {total_rows:,} rows x {table.num_columns} columns from {delta_dir}")
 """,
     ),
-    ("code", CHECK_AND_DIFF),
+    (
+        "code",
+        CHECK_AND_DIFF.replace(
+            "shape.diff(load_baseline(baselinePath), profile)",
+            "shape.diff(load_baseline(baselinePath), profile, thresholds=gate_settings.thresholds)",
+        ).replace(
+            "passed = not violations",
+            "passed = not violations or gate_settings.gate_mode == 'report'",
+        ),
+    ),
     ("code", WRITE_ARTIFACTS),
     ("code", DISPLAY),
     ("code", BUILD_RESULT),
@@ -360,7 +383,7 @@ SPARK_CELLS = [
         "markdown",
         """# Shape: profile, check and diff a lakehouse table (PySpark notebook)
 
-Attach the **Shape Environment** (Runtime 2.0, custom library `sqllocks_shape` wheel;
+Attach the **Shape Environment** (Runtime 2.0, pinned public libraries from `environment.yml`;
 see `integrations/fabric/environment/README.md`) and the default lakehouse. Nothing is
 installed in the notebook itself.
 
@@ -387,6 +410,7 @@ DRIVER_ROW_LIMIT = 5_000_000
 SAMPLE_SEED = 42
 """,
     ),
+    ("code", GATE_SETTINGS),
     (
         "code",
         """df = spark.read.table(str(tableName))  # noqa: F821 (`spark` is predefined in Fabric)
@@ -411,7 +435,16 @@ print(f"Profiled {table.num_rows:,} of {total_rows:,} rows (sampled={sampled})")
 print(f"Spark {spark.version}")  # noqa: F821
 """,
     ),
-    ("code", CHECK_AND_DIFF),
+    (
+        "code",
+        CHECK_AND_DIFF.replace(
+            "shape.diff(load_baseline(baselinePath), profile)",
+            "shape.diff(load_baseline(baselinePath), profile, thresholds=gate_settings.thresholds)",
+        ).replace(
+            "passed = not violations",
+            "passed = not violations or gate_settings.gate_mode == 'report'",
+        ),
+    ),
     ("code", WRITE_ARTIFACTS),
     ("code", DISPLAY),
     ("code", BUILD_RESULT),
@@ -422,7 +455,11 @@ print(f"Spark {spark.version}")  # noqa: F821
 # ------------------------------------------------------------- distributed spark notebook
 
 DISTRIBUTED_PARAMETERS = (
-    PARAMETERS
+    PARAMETERS.replace(
+        'variableLibrary = ""     # optional same-workspace Variable Library; '
+        "active dev/test/prod values\n",
+        "",
+    )
     + """mode = "distributed"  # "distributed": bounded profile per partition, merged on the driver
                          # "exact": driver-only exact profile (table must fit in driver memory)
 partitions = 0            # distributed only: repartition first (0 keeps the table's partitioning)
@@ -516,7 +553,7 @@ passed = not violations
 DISTRIBUTED_ARTIFACTS = """SUMMARY_KEYS = (
     "arrow_type", "kind", "count", "null_count", "distinct", "min", "max", "mean",
 )
-out_dir = claim_run_folder(Path(FILES) / out_parent)  # a folder no other run owns
+out_dir = claim_run_folder(Path(FILES) / out_parent)  # unique run folder
 out_rel = f"{out_parent}/{out_dir.name}"
 if mode == "exact":
     shape.save(profile, str(out_dir / f"{safe_name}.shape"))
@@ -613,7 +650,7 @@ do not use it as a gate; use `mode = "exact"` for gates.
 
 INSTALL_CELL = install_cell(DOMAINS_WHEEL)
 
-GENERATE_PARAMETERS = """# Parameters cell (toggle "parameter cell" in Fabric). A pipeline overrides these.
+GENERATE_PARAMETERS = """# Parameters cell (enable in Fabric). Pipeline overrides apply.
 domain = "retail"         # an installed domain (`shape list`)
 scale = "small"           # a scale preset of the domain (`shape presets`)
 seed = 42                 # the same seed always generates the same rows
@@ -738,7 +775,7 @@ kernel}`. `notebookutils.notebook.exit` is the last statement, outside any `try`
     ("code", GENERATE_EXIT),
 ]
 
-PROFILE_DOMAIN_PARAMETERS = """# Parameters cell (toggle "parameter cell" in Fabric). A pipeline overrides these.
+PROFILE_DOMAIN_PARAMETERS = """# Parameters cell (enable in Fabric). Pipeline overrides apply.
 # Paths are relative to the lakehouse Files/ folder, or absolute.
 domain = "retail"         # labels the artifacts: Files/<outputDir>/<domain>/<timestamp>/
 contractPath = "shape/retail/contract.json"  # the multi-table contract shape_generate wrote
@@ -849,7 +886,7 @@ value outside an enumerated set, a duplicated primary key.
 
 DBT_INSTALL_CELL = install_cell(DBT_WHEEL)  # shape-dbt needs PyYAML, which the runtime has
 
-DBT_PARAMETERS = """# Parameters cell (toggle "parameter cell" in Fabric). A pipeline overrides these.
+DBT_PARAMETERS = """# Parameters cell (enable in Fabric). Pipeline overrides apply.
 # Paths are relative to the lakehouse Files/ folder, or absolute.
 models = "orders,customers"   # the dbt models to profile: Delta tables <tableRoot>/<model>
 tableRoot = "/lakehouse/default/Tables"  # where the model tables are (a OneLake path also works)
@@ -917,7 +954,9 @@ if contractPath:
 if baselinePath:
     drift = shape.diff(load_baseline(baselinePath), profile).to_dict()
 
-run_results = dbt_report.load_json(_resolve(runResultsPath), "run_results") if runResultsPath else None
+run_results = (
+    dbt_report.load_json(_resolve(runResultsPath), "run_results") if runResultsPath else None
+)
 manifest = dbt_report.load_json(_resolve(manifestPath), "manifest") if manifestPath else None
 if run_results is None:
     run_results = {"results": []}  # no dbt run given: the report has Shape's findings only
@@ -929,7 +968,7 @@ violations = (check or {}).get("violations", [])
 changes = (drift or {}).get("changes", [])
 """
 
-DBT_ARTIFACTS = """out_dir = claim_run_folder(Path(FILES) / out_parent)  # a folder no other run owns
+DBT_ARTIFACTS = """out_dir = claim_run_folder(Path(FILES) / out_parent)  # unique run folder
 out_rel = f"{out_parent}/{out_dir.name}"
 shape.save(profile, str(out_dir / "dbt.shape"))
 (out_dir / "dbt.html").write_text(profile.to_html(), encoding="utf-8")
@@ -998,16 +1037,23 @@ on the first live run (`integrations/fabric/RUNBOOK.md`, section 10).
 # --------------------------------------------------------------------------- output
 
 
-def _cell(kind: str, source: str, index: int) -> dict:
+def _cell(kind: str, source: str, index: int) -> dict[str, Any]:
     lines = source.splitlines(keepends=True)
-    cell: dict = {"cell_type": kind, "id": f"cell-{index:02d}", "metadata": {}, "source": lines}
+    cell: dict[str, Any] = {
+        "cell_type": kind,
+        "id": f"cell-{index:02d}",
+        "metadata": {},
+        "source": lines,
+    }
     if kind == "code":
         cell["execution_count"] = None
         cell["outputs"] = []
     return cell
 
 
-def _notebook(cells: list[tuple[str, str]], *, spark: bool, tag_parameters: bool = True) -> dict:
+def _notebook(
+    cells: list[tuple[str, str]], *, spark: bool, tag_parameters: bool = True
+) -> dict[str, Any]:
     out = []
     for i, (kind, source) in enumerate(cells):
         c = _cell(kind, source, i)
@@ -1037,7 +1083,7 @@ def _notebook(cells: list[tuple[str, str]], *, spark: bool, tag_parameters: bool
     }
 
 
-def build() -> dict[str, dict]:
+def build() -> dict[str, dict[str, Any]]:
     return {
         "shape_setup.ipynb": _notebook(SETUP_CELLS, spark=False, tag_parameters=False),
         "shape_profile.ipynb": _notebook(PYTHON_CELLS, spark=False),

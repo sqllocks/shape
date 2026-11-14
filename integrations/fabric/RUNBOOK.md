@@ -1,7 +1,8 @@
 # Shape in Microsoft Fabric: runbook
 
-Owner-operated. The builder could not reach a Fabric workspace, so everything below is
-**built and tested locally, and unverified live** unless it says otherwise. Steps that
+Owner-operated. Notebook/UDF deployment steps below are **built and tested locally, and
+unverified live** unless a section says otherwise. The R2-07 Git-sync check below was
+verified live in Shape Test on 2026-11-14. Steps that
 depend on live Fabric behaviour are tagged **[VERIFY]**; the full list is in
 [section 10](#10-verify-in-the-workspace-on-first-run) and the owner's checklist is in
 [section 11](#11-owner-live-dry-run-checklist).
@@ -24,6 +25,147 @@ What you are building:
 | `generateSample` | a function of `shape_udf`: rows of one table of a domain (PF-06) | `udf/function_app.py` |
 | `shape_profile_dbt` | Python notebook: profile the dbt models' tables, check the contract and drift, one report with the dbt run results (ISS2-dbt) | `notebooks/shape_profile_dbt.ipynb` |
 | `shape_dbt_gate` | Data pipeline: dbt job, then `shape_profile_dbt`, then the gate (ISS2-dbt) | `pipelines/shape_dbt_gate.DataPipeline` |
+
+## Fabric-native defaults (R7-09, R7-08, R7-07, R2-07)
+
+### Install with an Environment (R7-09)
+
+The default gate is **`shape_gate_spark` → `shape_profile_spark`**, with the published
+`shape-env` Environment attached. Import [`environment/environment.yml`](environment/environment.yml)
+for pinned `sqllocks-shape==0.9.4` and `sqllocks-shape-fabric==0.9.4`, publish in Full mode,
+and attach it before starting a session. The distributed Spark notebook also uses this
+Environment. Neither Spark notebook installs packages inline. Follow
+[the Environment steps](environment/README.md) to verify both installed versions.
+
+The Python notebooks and their pipelines in sections 4 and 7 are the **inline `%pip`
+fallback** for workspaces using the Python experience, which cannot attach Environments.
+Use matching 0.9.4 release wheels by path in Resources > builtin; their committed install
+cells are authoritative. The older 0.9.3 wheel examples below describe the earlier demo.
+Do not mix release versions. Custom Environment libraries are also supported when the
+pinned release is unavailable from the configured public index.
+
+Regression: `plugins/shape-fabric/tests/test_native_integration.py` checks both version
+sources, Environment-only Spark notebooks and the Spark pipeline's install settings.
+
+### Gate settings from a Variable Library (R7-08)
+
+Create a same-workspace Variable Library named `shape_gate` with these **String** variables:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `gateMode` | `enforce` | `enforce` fails the gate; `report` retains findings but lets the pipeline continue |
+| `thresholds` | `{}` | JSON object of Shape drift thresholds, e.g. `{"mean_shift_std": 0.25}` |
+| `baselinePath` | empty string | Earlier artifact path, relative to lakehouse Files or absolute |
+
+Create dev, test and prod alternative value sets in the Fabric UI. Set the active value set
+in each workspace (or use deployment pipelines to activate it). For example, dev can use
+`report`, while test/prod use `enforce` and their own baseline paths. There is no notebook
+API call to choose a value set. Set the `variableLibrary` notebook/pipeline parameter to
+`shape_gate` on `shape_profile_spark` / `shape_gate_spark` (also supported by the Python
+`shape_profile` / `shape_gate_notebook` fallback). The notebook reads all three values once
+with `notebookutils.variableLibrary.getLibrary(name).getVariable(variable)` and the
+pipeline consumes its `passed` exit value. `failOnDrift` still controls whether detected
+drift fails the gate; set it true for a drift gate. Contract failures always fail in enforce
+mode. Report mode keeps violations in the output and artifacts.
+
+With `variableLibrary = ""` (the shipped default), no library is requested: enforce mode,
+Shape's default drift thresholds and the explicit `baselinePath` parameter apply.
+With a library requested, its baseline replaces the parameter, including an empty baseline.
+Missing libraries/variables, unsupported identities, malformed JSON, unknown thresholds,
+nonfinite/negative numbers and invalid modes fail clearly instead of silently using defaults.
+
+For direct pipeline binding, use Fabric's **Library variables** picker and **Add dynamic
+content** to bind the three String variables to activity settings. Do not handwrite an
+undocumented pipeline expression. Number variables are not supported by pipelines, hence
+JSON thresholds use String. The shipped pipelines instead pass the library name to the
+notebook, avoiding generated workspace-specific references.
+
+Microsoft sources: [NotebookUtils Variable Library API](https://learn.microsoft.com/fabric/data-engineering/notebookutils/notebookutils-variable-library),
+[Variable Library pipeline integration](https://learn.microsoft.com/fabric/data-factory/variable-library-integration-with-data-pipelines).
+The API is same-workspace only and does not currently support service principals; use a
+supported notebook user identity for this path. Tests use the documented fake library
+surface in `test_gate_settings.py` and execute the notebook gate in `test_native_integration.py`.
+
+### Semantic models through sempy (R7-07: already shipped)
+
+No implementation change is needed. W9-12 is recorded in CHANGELOG's 0.9.4 section and
+[`docs/SEMANTIC_MODEL.md`](../../docs/SEMANTIC_MODEL.md). Attach the Environment with the
+semantic-link dependency, then run in a Fabric notebook:
+
+```python
+from shape_fabric.semantic_profile import profile_model
+import shape
+
+profile = profile_model("Workspace", "Model")
+shape.save(profile, "/lakehouse/default/Files/shape/model.shape")
+```
+
+For one table the CLI also accepts `shape profile semantic-model://Workspace/Model/Sales`.
+`semantic_source.py` imports `sempy.fabric` lazily and `semantic_profile.py` profiles all
+selected model tables. Existing fake-sempy tests:
+`test_profile_model.py::test_every_table_is_profiled_and_the_relationship_is_declared`,
+`test_profile_model.py::test_the_statistics_equal_profiling_the_same_rows_from_parquet`,
+`test_semantic_source.py`, and `test_w9_12.py`. Model reads use the notebook user's identity;
+see the semantic-model documentation for permissions and read-only metadata limitations.
+
+### Profiles beside Fabric Git items (R2-07)
+
+Store artifacts in an ordinary sibling folder, never inside an item definition:
+
+```text
+repo/
+  p3-check.Notebook/
+    .platform
+    notebook-content.py
+  shape/
+    orders.shape
+    customers.shape
+```
+
+Run the offline layout preflight before sync:
+
+```python
+from pathlib import Path
+from shape_fabric.git_layout import check_profile_folder
+
+artifacts = check_profile_folder(Path("/path/to/repo"))
+```
+
+It rejects Fabric metadata under `shape/`, artifacts nested inside an item, paths outside
+the repository and symlinks. `test_native_integration.py` writes a real artifact next to
+an item, verifies separation and unchanged bytes after an item-only edit, and checks
+conflicting layouts. This proves the repository layout only, not Fabric service behavior.
+
+The existing `plugins/shape-fabric/tests/test_live_git_sync.py` implements the full
+roundtrip: commit an item, push two real `.shape` files with an item-definition edit,
+update from Git, assert no conflicts, change the workspace item, commit to Git and compare
+artifact bytes. It requires an already connected and initialized Git workspace and a
+write-capable repository token. For this lane use only Shape Test
+(`e90940bd-3f32-42ce-998e-ef2ddc74355b`), `p3-` item names, an isolated test repository and
+cleanup in `finally`. Never point the test at unrelated existing item changes.
+
+**Live verified on 2026-11-14** in Shape Test. Both `orders.shape` and `customers.shape`
+remained byte-identical after Git → Fabric → Git, with no item-definition conflicts.
+[The recorded evidence](git-sync/verification-2026-11-14.json) includes the artifact hashes,
+item name, roundtrip steps and cleanup results.
+
+The workspace initially reported `NotConnected`. The owner-operated check used the
+[documented Git automation APIs](https://learn.microsoft.com/fabric/cicd/git-integration/git-automation)
+to create a temporary GitHub credential connection scoped to the dedicated test repository,
+connect an isolated branch/directory with no existing item definitions, and initialize with
+`PreferWorkspace`. Only the `p3-c30a4c3cc3` Notebook was created and committed, using the
+[Selective commit mode](https://learn.microsoft.com/rest/api/fabric/core/git/commit-to-git)
+with its `objectId`; existing workspace items were not committed or edited. Two real profiles
+were pushed beside that Notebook's folder together with a definition edit. Update from Git
+reported no conflicts, then a workspace-only Notebook edit was committed back to Git and
+both artifact byte streams were compared.
+
+This scoped variant of the existing live-test flow avoids that test's `mode: All` commits
+in a shared workspace. After verification, the Notebook, temporary credential connection
+and temporary branch were deleted and the workspace was disconnected, restoring its initial
+`NotConnected` state. The earlier partially created p3- Notebook was also removed. Credentials
+were read from environment variables, never written to evidence, files or logs. No tags,
+releases or publishing were involved.
 
 ## 1. Prerequisites
 

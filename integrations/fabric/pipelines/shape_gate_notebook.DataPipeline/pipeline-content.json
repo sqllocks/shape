@@ -21,6 +21,10 @@
       "failOnDrift": {
         "type": "bool",
         "defaultValue": false
+      },
+      "variableLibrary": {
+        "type": "string",
+        "defaultValue": ""
       }
     },
     "activities": [
@@ -73,6 +77,13 @@
                 "type": "Expression"
               },
               "type": "bool"
+            },
+            "variableLibrary": {
+              "value": {
+                "value": "@pipeline().parameters.variableLibrary",
+                "type": "Expression"
+              },
+              "type": "string"
             },
             "_inlineInstallationEnabled": {
               "value": true,

@@ -1,14 +1,7 @@
-# Public-library section of the "shape-env" Fabric Environment (Library Management >
-# "Add from YAML"). The Shape wheel itself is uploaded as a CUSTOM library, not listed here.
-#
-# Runtime 2.0 (Spark 4.1, Python 3.13) ships numpy, pyarrow and pandas. Shape needs
-# numpy>=2.0,<3 and pyarrow>=14. Nothing below is active by default because the
-# built-ins are expected to satisfy that range: VERIFY IN THE WORKSPACE (README step 5).
-# If `import shape` or the version check in the README reports an older version,
-# uncomment only the line that is too old, then re-publish.
+# Default install: import in Fabric Environment > Libraries > Add from YAML,
+# publish in Full mode for pipelines, and attach to the PySpark notebooks.
 dependencies:
   - pip:
-      # - numpy>=2.0,<3
-      # - pyarrow>=14
-      # - pandas>=2.0
-      - deltalake  # only needed by the setup/Python notebooks; a no-op if preinstalled
+      - sqllocks-shape==0.9.4
+      - sqllocks-shape-fabric==0.9.4
+      - deltalake
