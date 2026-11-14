@@ -48,3 +48,25 @@ with the workspace name.
   runtime, and states that no existing Fabric item changed. O-07/O-10 and W2-05 remain
   open. The reviewed files do not claim successful qualification or name a private
   counterpart.
+
+## Follow-up review — 2026-11-14
+
+Reviewed the Owner handoff corrections and `handoff-source-audit.txt` plus
+`handoff-revision-validation.txt`. The four requested corrections are present:
+
+- pytest `Failed` is included in the semantic cell's handled exception tuple, so an
+  assertion failure is emitted as failure JSON rather than escaping without summary;
+- the connection string, Eventhouse host, and database prompts all use `getpass`;
+- the Eventstream destination selects the already-created `f12-events` table, whose
+  schema and JSON paths are specified before activation;
+- the polling loop checks Eventstream unique counts and direct-writer visibility before
+  success, and emits the final observed values plus a timeout/mismatch result.
+
+The static audit supports read-only semantic-model behavior: metadata calls, DAX
+evaluation for row reads, and TOM access with `readonly=True`. It also identifies
+the direct writer's streaming-ingest call and delayed-visibility behavior. The
+revision-validation output explicitly labels its simulated errors, delays, counts,
+and times as local mock data. These are not Fabric execution evidence. No blocker
+found for the prepared handoff or the authorized Owner run; no successful live
+qualification is claimed. The earlier non-blocking duplicate `profile_model` call
+remains and can result in a second read/profile request.

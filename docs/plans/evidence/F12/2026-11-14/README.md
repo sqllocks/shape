@@ -30,3 +30,18 @@ No end-to-end Eventstream count qualification has been performed in this attempt
 All Fabric items created by this attempt were deleted; existing items were only listed.
 There are no successful live qualifications to close. Owner instructions are in
 `OWNER_STEPS.md`. The notebook is prepared for review, not a record of execution.
+
+## Handoff revision after Owner checks
+
+The notebook now captures pytest `Failed` outcomes as JSON and hides all three
+connection-detail prompts. Destination setup selects the already-created table.
+Count polling waits for both the Eventstream batches and direct-writer rows and
+retains a mismatch if visibility does not arrive within the polling limit.
+`handoff-revision-validation.txt` records simulated local failure/visibility checks;
+its counts and times are mock inputs/outputs, not service observations.
+`handoff-source-audit.txt` records the inspected Shape functions: semantic profiling
+uses metadata reads and DAX queries, with `readonly=True` for TOM roles; the direct
+writer uses the streaming-ingest endpoint, and its count helper documents delayed
+visibility. This code audit does not establish successful live execution. The
+notebook install and both requested dataset sizes remain unverified in Fabric.
+The wheel artifacts have not been rebuilt or modified by this handoff revision.

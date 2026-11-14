@@ -1,0 +1,6 @@
+{"local_check": "semantic_failure_capture", "raised": "ValueError", "result": {"stage": "semantic_model", "test_body": "failed", "error_type": "ValueError"}}
+{"local_check": "semantic_failure_capture", "raised": "Failed", "result": {"stage": "semantic_model", "test_body": "failed", "error_type": "Failed"}}
+LOCAL check: all three connection-detail prompts use getpass.getpass
+{"local_check": "count_visibility_poll", "simulated_direct_delays": 2, "result": {"stage": "events_landed", "raw_rows_by_table": [["f12-emitter", 101], ["f12-writer", 100]], "unique_rows_by_table": [["f12-emitter", 100], ["f12-writer", 100]], "direct_writer_count": [[100]], "counts_match": true, "poll_attempts": 3, "poll_seconds": 1}}
+{"local_check": "count_visibility_poll", "simulated_direct_delays": 100, "result": {"stage": "events_landed", "raw_rows_by_table": [["f12-emitter", 101], ["f12-writer", 100]], "unique_rows_by_table": [["f12-emitter", 100], ["f12-writer", 100]], "direct_writer_count": [[0]], "counts_match": false, "poll_attempts": 30, "poll_seconds": 1}}
+LOCAL checks only; no Fabric calls or measurements in this validation.

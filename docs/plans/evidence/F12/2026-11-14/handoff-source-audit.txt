@@ -1,0 +1,258 @@
+Static source audit; no Fabric calls were executed.
+Checkout commit: d40fef0e1897bddea54440c700131400c30287b9
+
+FILE: plugins/shape-fabric/src/shape_fabric/semantic_profile.py sha256: e90149b069889f7ef31a6762fe2a2a76b307347fbea3fc6a778f0c30ca3d988b
+FUNCTION: read_relationships line: 60
+def read_relationships(workspace: str, model: str) -> list[DeclaredRelationship]:
+    """The model's relationships (``sempy.fabric.list_relationships``), the "many" side as the
+    child. One with a multiplicity this code does not know is reported on stderr and left out."""
+    fab = ss.check_model(workspace, model)
+    frame = ss._frame(
+        fab, "list_relationships", workspace, model, dataset=model, workspace=workspace
+    )
+    out: list[DeclaredRelationship] = []
+    for _, row in frame.iterrows():
+        frm, fcol = str(row["From Table"]), str(row["From Column"])
+        to, tcol = str(row["To Table"]), str(row["To Column"])
+        raw = str(row["Multiplicity"])
+        mult = raw.strip().lower().replace(" ", "").replace("*", "m")
+        active = True
+        for key in ("Active", "Is Active"):
+            if key in frame.columns:
+                active = _truthy(row[key])
+                break
+        if mult not in _KINDS:
+            _warn(
+                f"relationship {frm}[{fcol}] -> {to}[{tcol}] has multiplicity {raw}; not recorded"
+            )
+            continue
+        if mult == "1:m":  # the "from" side is the one side
+            out.append(DeclaredRelationship(to, tcol, frm, fcol, _KINDS[mult], active))
+        else:
+            out.append(DeclaredRelationship(frm, fcol, to, tcol, _KINDS[mult], active))
+    return out
+FUNCTION: profile_model line: 114
+def profile_model(
+    workspace: str,
+    model: str,
+    *,
+    tables: list[str] | None = None,
+    max_rows: int | None = None,
+) -> Any:
+    """The dataset profile of a semantic model (a ``shape.profile.reference.Profile``).
+
+    ``tables`` selects some tables (default: every table, hidden ones too) and ``max_rows`` caps
+    the rows read from each (a DAX ``TOPN``). A relationship is recorded when both its tables
+    are profiled."""
+    _check_cap(max_rows)
+    chosen = _chosen(workspace, model, tables)
+    data: dict[str, pa.Table] = {}
+    hidden: dict[str, set[str]] = {}
+    for table in chosen:
+        infos = ss.column_infos(workspace, model, table)
+        if not infos:
+            raise ShapeError(
+                f"semantic model {model} in workspace {workspace} has no columns in table {table}"
+            )
+        ss.warn_unknown(workspace, model, table, infos)
+        data[table] = ss.read_table(workspace, model, table, infos, max_rows=max_rows)
+        hidden[table] = {c.name for c in infos if c.hidden}
+    relationships = read_relationships(workspace, model)
+
+    import shape
+    from shape.profile.reference import Profile
+
+    doc = shape.profile(data).to_dict()
+    for table, names in hidden.items():
+        for name in names:
+            doc["tables"][table]["columns"][name]["hidden"] = True
+    from .semantic_metadata import read_measures, read_roles
+
+    measures = read_measures(workspace, model)
+    for table in chosen:
+        doc["tables"][table]["measures"] = measures.get(table, [])
+    doc["roles"] = read_roles(workspace, model)
+    _declare(doc, relationships)
+    return Profile(
+        doc,
+        name=model,
+        provenance={
+            "source": "semantic-model",
+            "workspace": workspace,
+            "model": model,
+            "max_rows": max_rows,
+        },
+    )
+
+FILE: plugins/shape-fabric/src/shape_fabric/semantic_source.py sha256: 533b018d47672a103e8281ff1f7668a796741a4b4602af43b3eb1a1563d628a6
+FUNCTION: topn_dax line: 353
+def topn_dax(table: str, columns: list[str], n: int) -> str:
+    """``EVALUATE`` the first ``n`` rows of the columns, each result column named ``c0``,
+    ``c1``, ... by position. Every name is quoted by the rule of :mod:`shape_fabric.
+    semantic_model`: a quote doubled in the table, a closing bracket doubled in a column, so no
+    name can end the expression."""
+    pairs = ", ".join(f'"c{i}", {dax_column(table, c)}' for i, c in enumerate(columns))
+    return f"EVALUATE SELECTCOLUMNS(TOPN({int(n)}, {dax_table(table)}), {pairs})"
+FUNCTION: read_table line: 367
+def read_table(
+    workspace: str,
+    model: str,
+    table: str,
+    infos: list[ColumnInfo],
+    *,
+    max_rows: int | None = None,
+    mode: str | None = None,
+    as_role: str | None = None,
+) -> pa.Table:
+    """The rows of ``infos``' columns as one Arrow table."""
+    schema = to_schema(infos)
+    if as_role is not None:
+        from .semantic_metadata import check_role
+
+        as_role = check_role(workspace, model, as_role)
+        if mode is not None:
+            raise ShapeError("mode does not apply to an as_role DAX read")
+    if max_rows == 0:
+        return schema.empty_table()
+    fab = check_model(workspace, model)
+    if max_rows is not None or as_role is not None:
+        if mode is not None:
+            raise ShapeError("mode applies to reading a whole table, not with max_rows")
+        names = [c.name for c in infos]
+        dax = topn_dax(table, names, max_rows) if max_rows is not None else select_dax(table, names)
+        dax_options: dict[str, Any] = {"dataset": model, "dax_string": dax, "workspace": workspace}
+        if as_role is None:
+            frame = _frame(fab, "evaluate_dax", workspace, model, table_read=table, **dax_options)
+        else:
+            try:
+                frame = fab.evaluate_dax(**dax_options, role=as_role)
+            except Exception:  # noqa: BLE001 - remote exceptions can carry credentials
+                raise ShapeError(
+                    f"semantic model {model} in workspace {workspace}: role DAX read failed"
+                ) from None
+        return _to_table(frame, schema, table, dax=True)
+    kw: dict[str, Any] = {"dataset": model, "table": table, "workspace": workspace}
+    if mode is not None:
+        if "mode" not in inspect.signature(fab.read_table).parameters:
+            raise ShapeError("this sempy has no read mode; leave mode out")
+        kw["mode"] = mode
+    frame = _frame(fab, "read_table", workspace, model, table_read=table, **kw)
+    return _to_table(frame, schema, table)
+
+FILE: plugins/shape-fabric/src/shape_fabric/semantic_metadata.py sha256: 41d241d280d4e021e855133d2e84147924097af0c3fa8fcc00d55b0c57d72b32
+FUNCTION: read_measures line: 20
+def read_measures(workspace: str, model: str) -> dict[str, list[dict[str, Any]]]:
+    """Measures as additive table metadata; never passed as data columns."""
+    fab = ss.check_model(workspace, model)
+    try:
+        frame = fab.list_measures(dataset=model, workspace=workspace)
+    except Exception:  # noqa: BLE001 - remote bodies can carry credentials
+        raise ShapeError(
+            f"semantic model {model} in workspace {workspace}: cannot list measures"
+        ) from None
+    out: dict[str, list[dict[str, Any]]] = {}
+    import pandas as pd  # type: ignore[import-untyped]
+
+    def text(value: Any) -> str:
+        return "" if pd.isna(value) else str(value)
+
+    for _, row in frame.iterrows():
+        hidden = row.get("Measure Hidden", False)
+        measure = {
+            "name": text(row["Measure Name"]),
+            "expression": text(row["Measure Expression"]),
+            "formatString": text(row.get("Format String", "")),
+            "displayFolder": text(row.get("Measure Display Folder", "")),
+            "hidden": False if pd.isna(hidden) else ss._truthy(hidden),
+        }
+        out.setdefault(str(row["Table Name"]), []).append(measure)
+    return out
+FUNCTION: read_roles line: 64
+def read_roles(workspace: str, model: str) -> list[dict[str, Any]]:
+    """sempy 0.14.2: ``connect_semantic_model(..., readonly=True).model.Roles``."""
+    fab = ss.check_model(workspace, model)
+    if not callable(getattr(fab, "connect_semantic_model", None)):
+        raise ShapeError(
+            "this sempy has no connect_semantic_model; upgrade semantic-link-sempy "
+            "(verified with 0.14.2)"
+        )
+    try:
+        with fab.connect_semantic_model(dataset=model, workspace=workspace, readonly=True) as tom:
+            return [
+                {
+                    "name": str(role.Name),
+                    "modelPermission": _permission(role.ModelPermission),
+                    "tablePermissions": [
+                        {
+                            "name": str(permission.Name),
+                            "filterExpression": str(permission.FilterExpression or ""),
+                        }
+                        for permission in role.TablePermissions
+                    ],
+                }
+                for role in tom.model.Roles
+            ]
+    except Exception:  # noqa: BLE001 - sempy and pythonnet expose their own errors
+        raise ShapeError(
+            f"semantic model {model} in workspace {workspace}: cannot read TOM roles"
+        ) from None
+
+FILE: plugins/shape-fabric/src/shape_fabric/eventhouse_writer.py sha256: aa053a050e69c472830af2eac19e3a26879cdd570afdd6c144415652ca77dfb6
+FUNCTION: write_table line: 82
+def write_table(
+        self,
+        table: str,
+        batches: Iterable[pa.RecordBatch],
+        *,
+        write_mode: str = "create",
+        kql_table: str | None = None,
+        max_request_bytes: int = DEFAULT_REQUEST_BYTES,
+        schema: pa.Schema | None = None,
+    ) -> int:
+        """Write one table to ``kql_table`` (default: the URI's table, else ``table``); return
+        the number of rows the service accepted."""
+        mode = check_mode(write_mode)
+        name = kql_table or self.target.table or table
+        stream = iter(batches)
+        first = next(stream, None)
+        use_schema = first.schema if first is not None else schema
+        if use_schema is None:
+            raise ShapeError(
+                f"table {table!r} has no batches and no schema: pass schema= to create it empty"
+            )
+        client = self.client
+        accepted_before = client.accepted
+        try:
+            self._prepare(name, mode, use_schema)
+            rows = 0
+            if first is not None:
+
+                def lines() -> Iterable[bytes]:
+                    nonlocal rows
+                    for batch in [first, *stream]:
+                        rows += batch.num_rows
+                        yield from (_line(r) for r in rows_of(batch))
+
+                client.ingest_lines(name, lines(), max_request_bytes)
+            return rows
+        except (ShapeError, ConnectionError) as exc:
+            done = client.accepted - accepted_before
+            raise WriteError(
+                f"writing KQL table {name!r} failed after {done} accepted request(s): {exc}"
+            ) from exc
+FUNCTION: row_count line: 156
+def row_count(self, kql_table: str) -> int:
+        """The rows currently visible in a KQL table (streaming ingestion is visible within
+        seconds, not instantly)."""
+        rows = self.client.query(f"{q(kql_table)} | count")
+        return int(rows[0][0]) if rows else 0
+
+FILE: plugins/shape-fabric/src/shape_fabric/kusto.py sha256: 9d892d16e9a68d494058071f301814533eb26411ba4958004ea6594e3e25393f
+FUNCTION: _ingest_once line: 415
+def _ingest_once(self, table: str, body: bytes) -> None:
+        url = (
+            f"{self.target.base}/v1/rest/ingest/{quote(self.target.database, safe='')}/"
+            f"{quote(table, safe='')}?streamFormat=JSON&mappingName={mapping_name(table)}"
+        )
+        self._call("POST", url, "application/json; charset=utf-8", body)
+        self.accepted += 1

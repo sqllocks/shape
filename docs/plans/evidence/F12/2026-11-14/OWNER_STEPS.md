@@ -2,7 +2,8 @@
 
 Run these steps yourself in Fabric. Do not send credentials, tokens, connection strings,
 identity IDs, usernames, or full model values back to chat. The prepared notebook prints
-versions, aggregate counts and dimensions; its endpoint connection prompt is hidden.
+versions, aggregate counts and dimensions; the endpoint connection string, Query URI
+host and database name all use hidden prompts.
 
 1. Open the **Shape Test** workspace. Import `f12-owner-qualification.ipynb` as
    **f12-owner-qualification**. Choose the **Python** experience and Python **3.12**.
@@ -19,7 +20,9 @@ versions, aggregate counts and dimensions; its endpoint connection prompt is hid
    workload at the public plan's row counts, not the D3 benchmark fixture.
 4. Run the semantic-model cell. It targets existing `shape_sm` read-only and invokes
    the repository's existing live test body with your notebook identity. Copy its
-   summary JSON, including failure if it fails. It does not change the model.
+   summary JSON, including failure if it fails. Source inspection confirms the Shape
+   call path lists metadata, evaluates read-only DAX, and opens TOM with `readonly=True`;
+   it does not request a model update. This is a code audit, not a live execution proof.
 5. Pause before the final notebook cell. In Shape Test create **f12-eventhouse**;
    retain its automatically created KQL database only if its name starts `f12-`.
    In its KQL explorer, create the stream target table before configuring the destination.
@@ -30,8 +33,8 @@ versions, aggregate counts and dimensions; its endpoint connection prompt is hid
    ```
 
    Create **f12-eventstream**, add a **Custom endpoint** source named **f12-input**,
-   and add an **Eventhouse** destination to the new f12 database and a new table
-   **f12-events**. Select JSON input and map `id`, `marker`, `_shape_table`, and `_shape_seq` to
+   and add an **Eventhouse** destination to the new f12 database; select the **existing f12-events table**
+   you created above. Select JSON input and map `id`, `marker`, `_shape_table`, and `_shape_seq` to
    the matching target columns (JSON paths `$.id`, `$.marker`, `$._shape_table`,
    `$._shape_seq`). Publish the topology, and complete **Activate
    ingestion** for the destination before sending any events. Confirm the destination
@@ -39,10 +42,13 @@ versions, aggregate counts and dimensions; its endpoint connection prompt is hid
    offers different controls, stop and report that text rather than reuse existing items.
 6. Copy the custom endpoint's Event Hubs connection string locally. Run the final
    notebook cell once. Enter the connection string only into its hidden prompt;
-   enter the new Eventhouse Query URI host and the new f12 database name in the
-   other prompts. Do not copy those connection details to chat. The cell sends
+   enter the new Eventhouse Query URI host and the new f12 database name in their
+   hidden prompts. Do not copy those connection details to chat. The cell sends
    separate emitter and stream-writer batches and a direct Eventhouse-writer control.
-   Copy `events_sent` and `events_landed` JSON. Counts must be observed, not assumed.
+   Copy `events_sent` and `events_landed` JSON. The cell polls both the Eventstream
+   and direct-writer counts for visibility; preserve a timeout or mismatch as observed.
+   The direct writer uses streaming ingestion, whose rows may take seconds to appear.
+   Counts must be observed, not assumed.
    If `getToken("kusto")` is unavailable, report the failure; do not supply tokens.
 7. In the Eventhouse KQL explorer, independently run:
 
