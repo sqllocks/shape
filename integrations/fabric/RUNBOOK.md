@@ -214,6 +214,88 @@ The UDF size cap of 50 MB is **not** a platform limit: it is Shape's own default
 (`maxMegabytes` of `profileLakehouseFile`, section 6), there to keep a call inside the 240 s
 timeout.
 
+### 1.2 Eventstream deployment and Eventhouse ingestion
+
+Use this sequence when deploying an Eventstream fed by Shape. These are setup and
+verification instructions, not a record of a live run. Microsoft Learn sources
+(retrieved 2026-11-14):
+
+- [Custom endpoint source and connection details](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/add-source-custom-app).
+- [Eventstream CI/CD: Git integration, component support and deployment limitations](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/eventstream-cicd).
+- [Eventhouse destination: ingestion modes and startup routing warning](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/add-destination-kql-database).
+- [Custom application tutorial: preview, metrics and KQL verification](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/stream-real-time-events-from-custom-app-to-kusto).
+
+1. Select **Use custom endpoint**, or **Add source > Custom endpoint** in edit
+   mode, name the source and add it. Select that source's **Details** pane and
+   the **Event Hub** protocol's **SAS Key Authentication** page. Use its connection
+   string, including `EntityPath`, for Shape's existing Eventstream emitter.
+   Keep the string in `SHAPE_EVENTSTREAM_CONNECTION_STRING` or pass it as the
+   `connection_string` option; do not commit it to Git.
+2. Configure the destination before starting the producer. For an Eventhouse
+   destination using **Event processing before ingestion** (or a Lakehouse
+   destination), follow Learn's startup-race mitigation: clear the automatic
+   **Activate ingestion** option, publish the Eventstream, then manually activate
+   ingestion after publishing. Complete activation before sending events. If
+   earlier events are already present, use **Custom time** with an earlier
+   timestamp as Learn describes. For Eventhouse **Direct Ingestion** deployed
+   to a new workspace, manually reconfigure the connection after importing or
+   deploying it. Check destination configuration in the target workspace before
+   starting the producer; a successful Git sync alone does not verify ingestion.
+3. Send events only after the activation and destination checks above. The existing
+   `shape_fabric.eventstream.EventstreamEmitter` accepts `eventstream://<label>`
+   and Arrow record batches through `emit(uri, batches, connection_string=...)`.
+   It uses the Event Hubs emitter from `shape-eventhubs`; the label is for your
+   use, while the connection string's `EntityPath` identifies the endpoint entity
+   (or the URI path supplies the entity when absent from the string).
+4. Verify both receipt and destination delivery. Select the Eventstream node's
+   **Data preview** tab to inspect incoming events and **Data insights** for
+   metrics. Then open the destination KQL database and use **Query table > Show
+   any 100 records** on the configured table, as in the tutorial. Check for the
+   expected events there; producer completion and an Eventstream preview alone
+   do not demonstrate that the destination received them.
+
+**Early-event loss warning:** events sent before activation or before destination
+routing is ready can be missing from the destination. Learn describes ingestion
+starting faster than routing at publish time, leaving some ingested events unrouted.
+This is a destination-delivery risk, not evidence that the endpoint permanently
+discarded the events. Use the delayed activation and **Custom time** recovery
+procedure above, then verify the destination again before relying on the data.
+
+**Git deployment and Spark destinations.** The CI/CD component matrix lists
+**Spark Notebook** destinations as not supported by Git integration or deployment pipelines.
+After syncing or deploying the Eventstream, manually add and configure any required
+Spark Notebook destination in the target workspace, then verify its configuration
+and delivery separately. Do not assume the Eventstream definition carries that
+destination. Learn also states that target Eventstream resources become active
+after CI/CD unless connection or configuration problems prevent it; pause/resume
+state is not carried. Recheck activation and connections after each deployment.
+
+**Python path into Eventhouse.** If the application needs to write directly to a
+KQL database, the existing
+[`EventhouseEmitter`](../../plugins/shape-fabric/src/shape_fabric/eventhouse.py)
+accepts `eventhouse://<query-uri host>/<database>[/<table>]` with Arrow batches and
+adds the event columns `_shape_table` and `_shape_seq`. This path uses Kusto
+streaming ingestion directly. For a table's own columns without the event envelope,
+use the existing
+[`EventhouseWriter`](../../plugins/shape-fabric/src/shape_fabric/eventhouse_writer.py)
+from a Python application or notebook:
+
+```python
+from shape_fabric.eventhouse_writer import EventhouseWriter
+
+# Supply your credential and Arrow record batches from the application.
+writer = EventhouseWriter("eventhouse://<query-uri host>/<database>", credential=cred)
+writer.write_table("customer", batches, write_mode="create")
+visible_rows = writer.row_count("customer")
+```
+
+`create` rejects an existing table; `append` creates a missing table and merges
+new columns. `row_count` queries the rows currently visible, so allow for streaming
+ingestion visibility rather than treating an immediate count as final. The writer
+does not deduplicate and streaming ingestion has no transactions: accepted requests
+remain if a later request fails. These interfaces are described by their source
+code; this guide and its offline tests do not prove tenant execution.
+
 ## 2. Dry-run every local step first (no Fabric needed)
 
 From the repo root, with uv 0.8.17, Python 3.11 and the system packages the
