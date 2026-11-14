@@ -1,0 +1,20 @@
+{
+  "source_commit": "12bdfd5daf6f00f541a1dea049ac5526842b514b",
+  "artifacts": [
+    {
+      "name": "sqllocks_shape-0.9.4-py3-none-any.whl",
+      "bytes": 2991160,
+      "sha256": "5a327f8c1de7e94e8dfd6c18b479bd8cdfee0889499c6dd409d4bff2500a586c"
+    },
+    {
+      "name": "sqllocks_shape_eventhubs-0.9.4-py3-none-any.whl",
+      "bytes": 22908,
+      "sha256": "99c204d5296f1a9dd541533098b174edaf2c5001718d1bb7bd84d267aaba095b"
+    },
+    {
+      "name": "sqllocks_shape_fabric-0.9.4-py3-none-any.whl",
+      "bytes": 190690,
+      "sha256": "5d35d582c6063c6d3df895776efeb79b9e02f671eb8257cc20251705107394b0"
+    }
+  ]
+}

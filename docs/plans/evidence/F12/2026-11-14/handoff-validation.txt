@@ -1,0 +1,4 @@
+Notebook non-magic Python cells parsed: 5
+Configured credential/prohibited values absent from handoff and evidence: passed
+KQL table-name validation: passed
+No Fabric qualification was executed by this validation.

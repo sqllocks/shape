@@ -1,0 +1,71 @@
+semantic-link-sempy: 0.13.0
+F
+--- live failure: plugins/shape-fabric/tests/test_live_semantic_model.py::test_a_real_model_profiles_with_its_relationships_and_every_table_reads (call) ---
+plugins/shape-fabric/tests/test_live_semantic_model.py:49: in test_a_real_model_profiles_with_its_relationships_and_every_table_reads
+    names = ss.table_names(workspace, model)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/shape-fabric/src/shape_fabric/semantic_source.py:187: in table_names
+    fab = check_model(workspace, model)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/shape-fabric/src/shape_fabric/semantic_source.py:158: in check_model
+    datasets = _frame(fab, "list_datasets", workspace, model, workspace=workspace)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/shape-fabric/src/shape_fabric/semantic_source.py:142: in _frame
+    raise _sempy_failed(ws, model, exc) from None
+E   shape.errors.ShapeError: semantic model shape_sm in workspace [redacted-id]: sempy failed: Can not determine dotnet root
+                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_a_real_model_profiles_with_its_relationships_and_every_table_reads ____
+plugins/shape-fabric/tests/test_live_semantic_model.py:49: in test_a_real_model_profiles_with_its_relationships_and_every_table_reads
+    names = ss.table_names(workspace, model)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/shape-fabric/src/shape_fabric/semantic_source.py:187: in table_names
+    fab = check_model(workspace, model)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/shape-fabric/src/shape_fabric/semantic_source.py:158: in check_model
+    datasets = _frame(fab, "list_datasets", workspace, model, workspace=workspace)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+plugins/shape-fabric/src/shape_fabric/semantic_source.py:142: in _frame
+    raise _sempy_failed(ws, model, exc) from None
+E   shape.errors.ShapeError: semantic model shape_sm in workspace [redacted-id]: sempy failed: Can not determine dotnet root
+---------------------------- Captured stdout setup -----------------------------
+log_telemetry: sempy.relationships
+log_telemetry: sempy.dependencies
+log_telemetry: sempy.fabric
+log_telemetry: sempy
+------------------------------ Captured log setup ------------------------------
+INFO     SemPy:_log.py:383 {'func': 'sempy.fabric._credentials.set_service_principal', 'tenant_id': "'[redacted]'", 'client_id': "'[redacted]'", 'client_secret': "'[redacted]'", 'total_seconds': 1.88e-05}
+------------------------------ Captured log call -------------------------------
+INFO     SemPy:_log.py:383 {'func': 'sempy.fabric._flat.list_workspaces', 'result.shape': (7, 7), 'total_seconds': 0.807}
+ERROR    SemPy:_log.py:393 {'func': 'sempy.fabric.semantic_model._flat.list_datasets', 'workspace': "'[redacted-id]'", 'total_seconds': 0.0827}
+Traceback (most recent call last):
+  File "/workspace/.onboarding/uv-cache/archive-v0/Lk3FphfkEbqv1Ca-_YjZA/lib/python3.12/site-packages/sempy/_utils/_log.py", line 370, in log_decorator_wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.onboarding/uv-cache/archive-v0/Lk3FphfkEbqv1Ca-_YjZA/lib/python3.12/site-packages/sempy/fabric/_credentials.py", line 239, in wrapped
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.onboarding/uv-cache/archive-v0/Lk3FphfkEbqv1Ca-_YjZA/lib/python3.12/site-packages/sempy/fabric/semantic_model/_flat.py", line 403, in list_datasets
+    return _get_or_create_workspace_client(workspace).get_datasets(mode, additional_xmla_properties, endpoint=endpoint)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.onboarding/uv-cache/archive-v0/Lk3FphfkEbqv1Ca-_YjZA/lib/python3.12/site-packages/sempy/fabric/_cache.py", line 31, in _get_or_create_workspace_client
+    client = WorkspaceClient(workspace)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.onboarding/uv-cache/archive-v0/Lk3FphfkEbqv1Ca-_YjZA/lib/python3.12/site-packages/sempy/fabric/_client/_workspace_client.py", line 64, in __init__
+    _init_analysis_services()
+  File "/workspace/.onboarding/uv-cache/archive-v0/Lk3FphfkEbqv1Ca-_YjZA/lib/python3.12/site-packages/sempy/fabric/_client/_utils.py", line 45, in _init_analysis_services
+    _init_dotnet_runtime(runtime_config, assemblies=assemblies)
+  File "/workspace/.onboarding/uv-cache/archive-v0/Lk3FphfkEbqv1Ca-_YjZA/lib/python3.12/site-packages/sempy/_utils/_dotnet.py", line 16, in _init_dotnet_runtime
+    set_runtime(get_coreclr(runtime_config=os.fspath(config)))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/.onboarding/uv-cache/archive-v0/Lk3FphfkEbqv1Ca-_YjZA/lib/python3.12/site-packages/clr_loader/__init__.py", line 135, in get_coreclr
+    dotnet_root = find_dotnet_root()
+                  ^^^^^^^^^^^^^^^^^^
+  File "/workspace/.onboarding/uv-cache/archive-v0/Lk3FphfkEbqv1Ca-_YjZA/lib/python3.12/site-packages/clr_loader/util/find.py", line 61, in find_dotnet_root
+    raise RuntimeError("Can not determine dotnet root")
+RuntimeError: Can not determine dotnet root
+=========================== short test summary info ============================
+FAILED plugins/shape-fabric/tests/test_live_semantic_model.py::test_a_real_model_profiles_with_its_relationships_and_every_table_reads
+1 failed in 2.43s
+
+exit_code: 1

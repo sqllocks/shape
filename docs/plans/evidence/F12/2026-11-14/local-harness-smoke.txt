@@ -1,0 +1,4 @@
+LOCAL harness check only; not a Fabric measurement
+{"stage": "generation", "rows": 100, "columns": 10, "seconds": 0.07966274700004305, "parquet_bytes": 9852}
+{"stage": "profile", "mode": "bounded", "kernel": "rust", "rows": 100, "columns": 10, "seconds": 0.026118230999998104, "peak_rss_raw": 100532, "peak_rss_unit": "KiB"}
+{"stage": "child_exit", "rows": 100, "exit_code": 0}

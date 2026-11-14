@@ -1,0 +1,6 @@
+{"operation": "POST", "status": 400, "errorCode": "InvalidInput"}
+{"operation": "create_Lakehouse", "status": 400}
+{"operation": "create_Notebook", "status": 202}
+{"operation": "run_capture", "status": 202}
+{"operation": "capture_job", "status": "Failed", "failureCode": "System_Cancelled_Session_Statements_Failed", "message": "System cancelled the Spark session due to statement execution failures"}
+{"operation": "delete_capture", "status": 200}
