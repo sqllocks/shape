@@ -642,9 +642,9 @@
   },
   "files": {
     "docs/EXIT_CODES.md": "fa1b527c0ae91af2c65dbd335377e00d2bd515d19a5c8eb2f0d0fe5d51deb769",
-    "docs/specs/ONE_ZERO_CONTRACT.md": "87ce1a7c3adb3e9e344d485cdd2d21cc7f520f3f92d30d91766b304401092fd5",
-    "docs/specs/SHAPE_ARTIFACT_SPEC.md": "4c5092e5c8c3bbe2b6378b069ae2ba717e51978f9244aecf0123572c7ed34f19",
-    "docs/specs/STATE_AND_COMPATIBILITY.md": "083c8063101e30f1771f9e416145966c722b2b248e8e1ead480bafec4f360f30",
+    "docs/specs/ONE_ZERO_CONTRACT.md": "42a4685de53b9b878e9ab06637d600540a7e04ef3d2cf5703df74af49c627958",
+    "docs/specs/SHAPE_ARTIFACT_SPEC.md": "0eb5760212e4bb64a4f759262bf982da227cfa417eaaca9a659e4a179009cbd9",
+    "docs/specs/STATE_AND_COMPATIBILITY.md": "cb6c7b1304854975bde3a091c3228a2171ef191ec2785b399c54c6fd7f41fdb2",
     "docs/specs/vectors/state_vectors.json": "f6a0d9f2c1c58b20003465335efdfaff48ce03d0b1bcb055d40a6c3baaced0bc",
     "tests/cli/ci_flags_exemptions.json": "e74cc199a2c5477f1a6d1d01f8b93049b0e212171b61c42d6f79dbbf7e944dd6",
     "tests/cli/cli_surface_v1.json": "caf1d9298017e36914ff447aae38f4c87a074297b41de6741aa591b0b75bccf3",

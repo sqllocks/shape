@@ -2,8 +2,8 @@
 
 Status: frozen at 1.0 (Owner approved 2026-11-14).
 
-The format and CLI compatibility baseline is frozen by
-[the 1.0 freeze decision](../plans/1.0-FREEZE.md). This marks the 1.0 contract;
+The Owner-approved format and CLI compatibility baseline is recorded in
+[freeze-1.0.json](freeze-1.0.json). This marks the 1.0 contract;
 it does not announce a release or change current early-access behavior.
 
 
@@ -254,7 +254,7 @@ reader remains `0.9.0`; an optional addition cannot raise that floor. A future
 incompatible format version declares its actual first reader and retains the
 older readers. This is file compatibility, not support or backports for old
 binaries. Removal requires a new major, a notice at least one release ahead and
-an offline migrator. See [the approved freeze](../plans/1.0-FREEZE.md).
+an offline migrator. See [the frozen baseline](freeze-1.0.json).
 
 **Support window.** Every format version below is supported by every release until a major
 release removes it by the process above; none is scheduled for removal. This table is generated

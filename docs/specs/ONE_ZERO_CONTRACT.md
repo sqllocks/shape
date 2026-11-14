@@ -2,8 +2,8 @@
 
 Status: frozen at 1.0 (Owner approved 2026-11-14).
 
-The format and CLI compatibility baseline is frozen by
-[the 1.0 freeze decision](../plans/1.0-FREEZE.md). This marks the 1.0 contract;
+The Owner-approved format and CLI compatibility baseline is recorded in
+[freeze-1.0.json](freeze-1.0.json). This marks the 1.0 contract;
 it does not announce a release or change current early-access behavior.
 
 
