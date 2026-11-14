@@ -32,23 +32,30 @@ A safe capture is data minimisation, not anonymisation. You review it before sha
 ```mermaid
 flowchart TB
     F[Local files / DuckDB / SQL Server] --> P[Profile]
-    E[PostgreSQL / MySQL exports] --> F
+    E[PostgreSQL / MySQL / Oracle] --> P
     L[OneLake / ADLS / Delta files] --> P
     P --> C[Contract and drift checks]
     P --> G[Generation]
     G --> DB[DuckDB / PostgreSQL / MySQL]
-    G --> W[Snowflake / Databricks write targets]
+    W[Snowflake / Databricks] --> P
+    G --> W
     G --> M[Fabric writers / local files]
     C --> CI[GitHub Actions / pipeline exit codes]
     M --> BI[Semantic model exports for Power BI]
 ```
 
-[Database pages](databases/index.md) describe shipped adapters. PostgreSQL and MySQL
-are write targets; export their data to CSV or Parquet before profiling. Snowflake and Databricks
-are write targets; Shape does not profile from them yet. Account-dependent examples identify the platform you need.
+[Database pages](databases/index.md) describe shipped readers and writers. PostgreSQL, MySQL,
+Oracle, Snowflake and Databricks have direct profiling sources. Snowflake and Databricks live
+read validation remains pending. Account-dependent examples identify the platform you need.
 
 ## Choose your next page
 
 [Install](INSTALL.md) · [Concepts](CONCEPTS.md) · [Read the report](READ_REPORT.md) ·
 [Troubleshooting](TROUBLESHOOTING.md) · [Known limitations](KNOWN_LIMITATIONS.md) ·
 [Python API](API.md) · [Changelog](../CHANGELOG.md)
+
+## Learn the newest features
+
+[Daily order contracts](DAILY_ORDERS.md) · [Locale names and bridge workflows](NEW_FEATURES.md) ·
+[SQL and Delta fidelity](TYPE_FIDELITY.md) · [New sources](NEW_SOURCES.md) ·
+[Plan output migration](PLAN_MIGRATION.md)
