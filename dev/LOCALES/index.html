@@ -261,6 +261,8 @@
       
         
       
+        
+      
     
     
     
@@ -461,6 +463,34 @@
     
   
     Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NEW_FEATURES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New feature workflows
   
 
     
@@ -954,6 +984,8 @@
       
         
       
+        
+      
     
     
     
@@ -1014,6 +1046,34 @@
     
   
     File sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NEW_SOURCES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New database and stream sources
   
 
     
@@ -1459,6 +1519,8 @@
       
         
       
+        
+      
     
     
     
@@ -1547,6 +1609,34 @@
     
   
     Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DAILY_ORDERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Daily order tutorial
   
 
     
@@ -2689,6 +2779,8 @@
       
         
       
+        
+      
     
     
     
@@ -2749,6 +2841,34 @@
     
   
     Sinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TYPE_FIDELITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL and Delta fidelity
   
 
     
@@ -4159,6 +4279,8 @@
       
         
       
+        
+      
     
     
     
@@ -4275,6 +4397,34 @@
     
   
     CLI stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PLAN_MIGRATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plan output migration
   
 
     
@@ -4457,10 +4607,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_10" >
         
           
-          <label class="md-nav__link" for="__nav_12_9" id="__nav_12_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_12_10" id="__nav_12_10_label" tabindex="0">
             
   
   
@@ -4478,8 +4628,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_12_9">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6436,6 +6586,7 @@
 
 <h1 id="basic-locale-packs">Basic locale packs<a class="headerlink" href="#basic-locale-packs" title="Permanent link">&para;</a></h1>
 <p>Status: experimental.</p>
+<p><a href="../NEW_FEATURES/#locale-names">Generate from every new name list</a> in the docs-test suite.</p>
 <p><code>{"strategy": "locale", "locale": "FR", "provider": "postcode"}</code> generates values that look right
 for a country: places and postal codes, phone numbers, first names. A locale is a country:
 <code>US</code>, <code>CA</code>, <code>GB</code>, <code>DE</code>, <code>FR</code>, <code>IN</code> or <code>AU</code>, written <code>FR</code>, <code>fr</code>, <code>fr_FR</code> or <code>fr-FR</code>. An unknown
@@ -6522,7 +6673,8 @@ group) and <code>r</code>, never on the chunk.</p>
 </ul>
 <h2 id="sources-and-licences">Sources and licences<a class="headerlink" href="#sources-and-licences" title="Permanent link">&para;</a></h2>
 <p>Every file, its source URL, licence, read date and shipped SHA-256 is in
-<code>src/shape/builtins/strategies/locales/MANIFEST.json</code>, and quoted in <code>THIRD_PARTY_NOTICES.md</code>:
+<a href="https://github.com/sqllocks/shape/blob/main/src/shape/builtins/strategies/locales/MANIFEST.json">locale manifest</a>, and quoted in
+<a href="https://github.com/sqllocks/shape/blob/main/THIRD_PARTY_NOTICES.md">third-party notices</a>:
 GeoNames (CC BY 4.0) for places, INSEE (Licence Ouverte 2.0) for French first names, and the
 French regulator's numbering plan for the reserved roots. <code>python scripts/build_locale_data.py</code>
 rebuilds the original files from upstream downloads, byte for byte. For the added name lists,

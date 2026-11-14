@@ -261,6 +261,8 @@
       
         
       
+        
+      
     
     
     
@@ -461,6 +463,34 @@
     
   
     Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NEW_FEATURES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New feature workflows
   
 
     
@@ -954,6 +984,8 @@
       
         
       
+        
+      
     
     
     
@@ -1014,6 +1046,34 @@
     
   
     File sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NEW_SOURCES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New database and stream sources
   
 
     
@@ -1459,6 +1519,8 @@
       
         
       
+        
+      
     
     
     
@@ -1547,6 +1609,34 @@
     
   
     Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DAILY_ORDERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Daily order tutorial
   
 
     
@@ -2573,6 +2663,8 @@
       
         
       
+        
+      
     
     
     
@@ -2633,6 +2725,34 @@
     
   
     Sinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TYPE_FIDELITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL and Delta fidelity
   
 
     
@@ -4043,6 +4163,8 @@
       
         
       
+        
+      
     
     
     
@@ -4159,6 +4281,34 @@
     
   
     CLI stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PLAN_MIGRATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plan output migration
   
 
     
@@ -4341,10 +4491,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_10" >
         
           
-          <label class="md-nav__link" for="__nav_12_9" id="__nav_12_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_12_10" id="__nav_12_10_label" tabindex="0">
             
   
   
@@ -4362,8 +4512,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_12_9">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6497,12 +6647,10 @@ The Python API returns tables; you write those tables yourself, as the tutorial 
 generation parameters and reference data. Do not assume a seed recreates source rows or that
 all measured properties survive profile fitting.</p>
 <h2 id="does-shape-read-snowflake-and-databricks">Does Shape read Snowflake and Databricks?<a class="headerlink" href="#does-shape-read-snowflake-and-databricks" title="Permanent link">&para;</a></h2>
-<p>Not directly in 0.9.3. The databases plugin writes to Snowflake, Databricks,
-PostgreSQL and MySQL. Export their data to Parquet or CSV and profile the file.
-DuckDB reads come from the integrations plugin. The other database and platform
-sources are <code>mssql</code>, <code>onelake</code> and <code>semantic-model</code>.</p>
-<p>Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
-See <a href="../databases/">Databases</a>.</p>
+<p>Yes. The databases plugin has direct Snowflake and Databricks SQL warehouse table and
+catalog sources, as well as PostgreSQL, MySQL and Oracle reads. Snowflake and Databricks
+live read validation remains pending Owner accounts. DuckDB reads come from the integrations
+plugin. See <a href="../NEW_SOURCES/">new sources</a> and <a href="../databases/">Databases</a>.</p>
 <h2 id="how-do-i-ask-for-a-platform-or-domain">How do I ask for a platform or domain?<a class="headerlink" href="#how-do-i-ask-for-a-platform-or-domain" title="Permanent link">&para;</a></h2>
 <p>Use the repository's request templates. Include read/write direction, expected behavior and
 small fixtures or schemas. Do not include credentials or production rows.</p>

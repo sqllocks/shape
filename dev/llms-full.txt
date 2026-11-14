@@ -1458,6 +1458,8 @@ shape bridge
 : Shape as a JSON protocol
 ¶
 Status: experimental.
+Run the new local workflows
+for rule application, selected-input suites and authenticated vault writes.
 Run the local examples
 ¶
 The examples below use disposable local files from this checkout. The
@@ -15743,6 +15745,12 @@ shape
 command line
 ¶
 Status: experimental.
+Plan output migration
+: scripts parsing
+shape plan
+must add
+--json
+.
 Run the local examples
 ¶
 The examples below use disposable local files from this checkout. The
@@ -18811,6 +18819,8 @@ Contracts:
 shape check
 ¶
 Status: available.
+Check a daily order file
+for a runnable regex and relative-date tutorial.
 A contract is a JSON object (format
 shape.contracts.v1
 ) that
@@ -21040,6 +21050,162 @@ INFO    -  The following pages exist in the docs directory, but are not included
 INFO    -  Documentation built in 16.75 seconds
 check_doc_links: 0 broken link(s) in the sources and built site
 check_user_facing: clean
+Report a problem with this page
+
+## Check a daily order file
+https://docs.shapedata.ai/dev/DAILY_ORDERS/
+
+Check a daily order file
+¶
+Status: available.
+What you'll learn
+¶
+Check the spelling of a load timestamp with a whole-value regex, enforce a batch-relative
+order date, and distinguish missing evidence from a passing check.
+Prerequisites
+¶
+Use the
+locked example environment
+from a repository checkout.
+It supplies
+SHAPE_DOCS_REPO
+, Shape and PyArrow. Start in an empty directory.
+No account is needed. All 2,078 orders below are synthetic.
+Time
+¶
+About 10 minutes.
+1. Create the batch and contract
+¶
+The load timestamp is text; the order date is an Arrow timestamp. The contract requires an
+ISO-shaped timestamp and an order date on or after the explicit batch date. This regex
+checks spelling, not calendar validity. The relative minimum checks a calendar boundary.
+We save a
+full
+profile only because these rows are synthetic. Safe capture can redact
+the date extremes, and exact data does not override that privacy refusal for relative bounds.
+A full profile can still have incomplete category evidence when cardinality is high.
+python
+-
+<<'PYDATA'
+import datetime as dt
+import json
+from pathlib import Path
+import pyarrow as pa
+import pyarrow.parquet as pq
+import shape
+start = dt.datetime(2026, 10, 7)
+count = 2078
+loads = [(start + dt.timedelta(seconds=i)).isoformat() for i in range(count)]
+dates = [start + dt.timedelta(hours=12)] * count
+orders = pa.table({"order_id": range(1, count + 1), "load_date": loads, "order_date": dates})
+pq.write_table(orders, "orders.parquet")
+shape.save(shape.profile(orders, name="orders"), "orders.shape", capture="full")
+loads[-1] = "not-a-timestamp"
+dates[-104:] = [start - dt.timedelta(days=1)] * 104
+bad = pa.table({"order_id": range(1, count + 1), "load_date": loads, "order_date": dates})
+pq.write_table(bad, "bad-orders.parquet")
+contract = {"columns": {
+"load_date": {"regex": r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"},
+"order_date": {"min": {"as_of_offset_days": 0}}
+}}
+Path("daily.contract.json").write_text(json.dumps(contract, indent=2))
+print("Wrote 2078 synthetic orders, a damaged batch and daily.contract.json")
+PYDATA
+Output (exit 0)
+Wrote 2078 synthetic orders, a damaged batch and daily.contract.json
+2. Check the complete file
+¶
+--data
+tests every non-null load timestamp and supplies the exact order-date extreme.
+--as-of
+is explicit: rerunning this example tomorrow does not silently move its boundary.
+The default timezone is UTC; set contract
+as_of_timezone
+to an IANA name when the batch
+uses a different calendar.
+min
+includes local midnight;
+max
+includes the entire final day.
+shape
+check
+orders.shape
+daily.contract.json
+--data
+orders.parquet
+--as-of
+2026
+-10-07
+Output (exit 0)
+shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+{"as_of": "2026-10-07", "passed": true, "violations": []}
+3. Read both violations
+¶
+One damaged timestamp fails the default match rate of 1.0. The 104 backdated orders fail
+min
+. The violation reports the earliest date, not a count of every backdated row.
+The profile is the same in both checks: these value checks use the supplied file.
+Privacy rules still control failure samples; an empty
+non_matching_values
+list does not
+mean zero failures. Use the aggregate count and match rate to read the verdict.
+shape
+check
+orders.shape
+daily.contract.json
+--data
+bad-orders.parquet
+--as-of
+2026
+-10-07
+Output (exit 1)
+shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+{"as_of": "2026-10-07", "passed": false, "violations": [{"column": "load_date", "expected": {"expression": "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}", "min_match_rate": 1.0}, "observed": {"match_rate": 0.9995187680461982, "non_matching_count": 1, "non_matching_values": [], "tested_count": 2078}, "rule": "regex"}, {"column": "order_date", "expected": {"as_of": "2026-10-07", "as_of_offset_days": 0, "bound": "2026-10-07T00:00:00+00:00"}, "observed": "2026-10-06T00:00:00", "rule": "min"}]}
+4. Observe a blind check
+¶
+Without
+--data
+, the high-cardinality load timestamps are not all present in the stored
+value counts. A full capture does not guarantee a complete list. Shape reports
+not_evaluable
+,
+passed: false
+and exit 2, rather than claiming that unobserved values matched. The date
+minimum can still use the retained extreme. Supply the exact batch to resolve this blind rule.
+A complete stored value list could evaluate regex without
+--data
+; this example deliberately
+exceeds that evidence. A known stored nonmatch at rate 1.0 can also prove a failure.
+shape
+check
+orders.shape
+daily.contract.json
+--as-of
+2026
+-10-07
+Output (exit 2)
+shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+shape: error: not evaluable: regex for load_date has incomplete or withheld stored values; pass --data or re-profile with capture="full"
+{"as_of": "2026-10-07", "not_evaluable": [{"column": "load_date", "reason": "regex for load_date has incomplete or withheld stored values; pass --data or re-profile with capture=\"full\"", "rule": "regex"}], "passed": false, "violations": []}
+What's next
+¶
+Use
+nullable: false
+if nulls are forbidden: regex ignores nulls and an all-null column
+passes regex alone. Use
+{"expression": "...", "min_match_rate": 0.99}
+only when the
+business requirement permits mismatches. RE2 refuses lookaround and backreferences;
+invalid rules are input errors before data evaluation. Missing
+--as-of
+is also an input error.
+Related
+¶
+Contracts
+·
+Starter contract tutorial
+·
+New feature workflows
 Report a problem with this page
 
 ## The public dataset library
@@ -34406,18 +34572,12 @@ generation parameters and reference data. Do not assume a seed recreates source 
 all measured properties survive profile fitting.
 Does Shape read Snowflake and Databricks?
 ¶
-Not directly in 0.9.3. The databases plugin writes to Snowflake, Databricks,
-PostgreSQL and MySQL. Export their data to Parquet or CSV and profile the file.
-DuckDB reads come from the integrations plugin. The other database and platform
-sources are
-mssql
-,
-onelake
+Yes. The databases plugin has direct Snowflake and Databricks SQL warehouse table and
+catalog sources, as well as PostgreSQL, MySQL and Oracle reads. Snowflake and Databricks
+live read validation remains pending Owner accounts. DuckDB reads come from the integrations
+plugin. See
+new sources
 and
-semantic-model
-.
-Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
-See
 Databases
 .
 How do I ask for a platform or domain?
@@ -49817,7 +49977,7 @@ fails them. Those lists hold column names, not values. Re-profile with 0.9.3, wh
   columns by position (
 column_indexes
 ). 0.9.3 still reads the old profiles.
-Snowflake and Databricks are write targets. Shape does not profile from them yet.
+Snowflake and Databricks have Arrow/catalog profiling sources; live read validation remains pending Owner accounts.
 Model queries read model payloads, not saved profile payloads. A profile passed to a query
   is rejected. See
 Models
@@ -50690,6 +50850,8 @@ https://docs.shapedata.ai/dev/LOCALES/
 Basic locale packs
 ¶
 Status: experimental.
+Generate from every new name list
+in the docs-test suite.
 {"strategy": "locale", "locale": "FR", "provider": "postcode"}
 generates values that look right
 for a country: places and postal codes, phone numbers, first names. A locale is a country:
@@ -50878,9 +51040,9 @@ StrategyError
 Sources and licences
 ¶
 Every file, its source URL, licence, read date and shipped SHA-256 is in
-src/shape/builtins/strategies/locales/MANIFEST.json
+locale manifest
 , and quoted in
-THIRD_PARTY_NOTICES.md
+third-party notices
 :
 GeoNames (CC BY 4.0) for places, INSEE (Licence Ouverte 2.0) for French first names, and the
 French regulator's numbering plan for the reserved roots.
@@ -51625,6 +51787,525 @@ Concepts
 CLI reference
 ·
 Known limitations
+Report a problem with this page
+
+## New feature workflows since 0.9.3
+https://docs.shapedata.ai/dev/NEW_FEATURES/
+
+New feature workflows since 0.9.3
+¶
+Status: experimental, except contract checks (available).
+Start with
+daily order checks
+for regex and relative date bounds.
+This page runs the other local workflows from a checkout with the
+locked example environment
+. Start in an empty directory;
+SHAPE_DOCS_REPO
+points to your checkout. No cloud account is used.
+The
+example source
+contains the complete requests and
+assertions, including the filesystem checks behind each printed summary.
+Locale names
+¶
+The
+locale
+generator accepts
+locale
+and
+provider
+in each column's
+generator
+.
+This exercise writes
+names.gen.json
+and generates three rows with seed 7 using every
+new name list. Read
+Locales
+for licences, coverage and providers.
+GB full names now use both Scottish lists, rather than falling back to US surnames.
+CA/AU/DE have first names only; FR adds surnames to its existing first names.
+Lists are sampled uniformly, not by population frequency. Regional sources do not represent
+an entire country's population. Accents are retained where the upstream source supplies them.
+python
+"
+$SHAPE_DOCS_REPO
+/examples/docs_new_features.py"
+locales
+Output (exit 0)
+[{"au_first_name": "Lyla", "ca_first_name": "ADRIAN", "de_first_name": "August", "fr_last_name": "JALLET", "gb_first_name": "Dexter", "gb_last_name": "BEVERIDGE", "gb_name": "Maelie BARRIE"}, {"au_first_name": "Nevaeh", "ca_first_name": "MINHA", "de_first_name": "Annery", "fr_last_name": "DOUAY", "gb_first_name": "Davyd", "gb_last_name": "MCLAY", "gb_name": "Mayla CROMBIE"}, {"au_first_name": "Parker", "ca_first_name": "LOCHLAN", "de_first_name": "Alea", "fr_last_name": "TURC", "gb_first_name": "Angel-Rose", "gb_last_name": "JOHNSTON", "gb_name": "Hermes ROBB"}]
+Apply accepted rules (bridge 1.5)
+¶
+Prepare a decision file with one accepted and one rejected rule. Existing contracts are
+merged, not replaced. Pending, deferred and stale proposals do not become rules.
+python
+"
+$SHAPE_DOCS_REPO
+/examples/docs_new_features.py"
+rules
+Output (exit 0)
+Prepared one accepted and one rejected rule; existing row_count.min=1
+shape
+rules
+apply
+rules.contract.json
+--decisions
+decisions.json
+--json
+Output (exit 0)
+{"applied": 1, "contract": "rules.contract.json", "rejected": 1, "format": "shape-result", "version": 1, "command": "rules apply", "exit_code": 0}
+Repeating the application is idempotent: no new rule is applied and the contract bytes stay
+unchanged. A conflicting rule is refused before writing. Bridge clients send
+{"api_version": "1.5", "command": "rules_apply", "args": {"decisions": "decisions.json", "contract": "rules.contract.json"}}
+.
+The result counts newly applied proposals and rejected rule decisions.
+shape
+rules
+apply
+rules.contract.json
+--decisions
+decisions.json
+--json
+Output (exit 0)
+{"applied": 0, "contract": "rules.contract.json", "rejected": 1, "format": "shape-result", "version": 1, "command": "rules apply", "exit_code": 0}
+Run suites on selected tables and read the verdict
+¶
+Bridge 1.5
+suite_run
+accepts
+input
+(local table folder) and
+name
+(result label).
+The exercise generates small retail fixtures once, selects those files, runs clean and
+null-injected scenarios and asserts that the input bytes are unchanged. Defects and
+validation gates still execute; answer-key
+met
+means the scenario behaved as expected,
+so a scenario designed to fail a gate can still have
+met: true
+.
+All domain tables must be present. Drift scenarios refuse selected inputs before starting
+a job because they need generated day-by-day data.
+Bridge 1.5
+report_card
+accepts
+source
+/
+path
+as aliases for
+real
+/
+synthetic
+.
+The example uses the same synthetic fixture on both sides solely to exercise the API.
+passed
+is a boolean equal to
+overall == "pass"
+; it is not the bridge envelope's
+ok
+.
+A successfully computed failing report still has envelope
+ok: true
+.
+Do not treat this fixture comparison as privacy certification of a real dataset.
+python
+"
+$SHAPE_DOCS_REPO
+/examples/docs_new_features.py"
+suite
+Output (exit 0)
+{"inputs_unchanged": true, "scenarios": [{"met": true, "scenario": "clean_baseline"}, {"met": true, "scenario": "nulls_injected"}], "suite": "daily"}
+{"overall": "pass", "passed": true}
+Manage a vault, including writes
+¶
+The script creates a disposable vault containing synthetic categories and random keys.
+vault_status
+,
+vault_verify
+,
+vault_rewrap
+and policy-file lookup arrived in bridge 1.4
+and remain available in 1.5/1.6. Status reads metadata without authenticating values.
+Verify checks the profile reference; supplying
+kek
+also authenticates the encrypted payload.
+An optional
+verify
+public-key file checks the profile signature.
+vault_rewrap
+rotates both the data key and wrapping key and writes a new profile/vault
+pair. Its dry run validates and lists writes without creating files. Existing output paths
+are refused. A Git worktree must ignore vault output; the example writes
+.gitignore
+.
+Rotation drops an existing profile signature unless you supply a signing
+key
+and any
+required environment passphrase. The original pair stays intact.
+Policy-file lookup resolves explicit column, then classification, then default policy.
+Bridge 1.6 adds authenticated mutation:
+vault_policy
+takes
+vault
+,
+kek=env://NAME
+,
+column=TABLE.COLUMN
+and
+new_policy
+(
+none
+,
+categories
+,
+extremes
+or
+all
+).
+Do not send
+policy
+or
+classification
+in mutation mode. Mutation authenticates the entire
+vault and atomically replaces it; failures before replacement keep the original bytes.
+Changing a policy does not recapture or erase the retained encrypted payload. A profile
+referencing the old vault hash fails verification until its reference is refreshed.
+The script checks that failure explicitly. Responses contain metadata, never keys or values.
+python
+"
+$SHAPE_DOCS_REPO
+/examples/docs_new_features.py"
+vault
+Output (exit 0)
+{"status": true, "columns": ["orders.status"]}
+Original profile/vault reference and authenticated payload: verified
+Rotation: dry run writes nothing; actual write creates a verified new pair
+Policy-file lookup: categories
+Authenticated policy write: categories -> none; retained payload is unchanged
+Old profile reference after policy write: fails verification
+Earlier bridge minors retain their result contracts: requests served as 1.0–1.4 refuse
+the new 1.5 arguments, and pre-1.6 requests refuse policy mutation arguments. Always send
+api_version
+. See
+Bridge
+and
+Value vault
+for the full protocol.
+Storage and script migration
+¶
+Continue with
+SQL and Delta fidelity
+for local DDL and constraint checks,
+new sources
+for account-dependent reads, and the
+shape plan
+migration
+before upgrading a script that parses its output.
+Report a problem with this page
+
+## New database and stream sources
+https://docs.shapedata.ai/dev/NEW_SOURCES/
+
+New database and stream sources
+¶
+Status: experimental.
+These sources complement
+file sources
+. Database table URIs work with
+shape profile
+; omit
+table
+for catalog profiling where supported. Streaming URIs use
+shape stream-profile
+. Source options and writer options are different: source URIs refuse
+writer-only nested options before connecting. Install the matching optional driver extra;
+core does not import database or broker clients until they are needed.
+Database reads
+¶
+Source
+Driver extra
+Read behavior
+PostgreSQL
+sqllocks-shape-databases[postgres]
+Bounded cursor batches; native scalar array element types; declared catalog keys and row-count provenance
+MySQL
+sqllocks-shape-databases[mysql]
+Server-side cursor batches; declared types and keys; bounded catalog sampling
+Oracle 19c+
+sqllocks-shape-databases[oracle]
+Thin mode; exact decimal/temporal reads; bounded cursor fallback for LOB/RAW/INTERVAL columns
+Snowflake
+sqllocks-shape-databases[snowflake]
+Arrow reads; bounded samples; declared catalog keys and explicit population counts; warehouse provenance
+Databricks SQL warehouse
+sqllocks-shape-databases[databricks]
+Arrow reads; recursive declared ARRAY/STRUCT/MAP types; bounded samples and declared catalog keys
+Snowflake and Databricks live read validation remains pending Owner accounts
+, as recorded
+in the
+changelog
+. Existing write receipts validate writes only.
+Offline and emulator coverage is not a substitute for live read validation.
+PostgreSQL/MySQL table reads require
+table=T
+. Schema capture uses
+--sample-rows
+(default 1000) for bounded distributions,
+0
+for catalogs only, and
+--tables
+to select
+which tables to profile. Catalog population counts remain separate from sample distributions.
+Credentials follow the sinks' TLS defaults and password/credential/environment precedence;
+use
+SHAPE_POSTGRES_PASSWORD
+/
+PGPASSWORD
+or
+SHAPE_MYSQL_PASSWORD
+/
+MYSQL_PWD
+.
+Never put passwords in URIs. See
+database adapter details
+.
+Needs a PostgreSQL account. Not run in CI.
+Configure the password in the environment.
+shape
+profile
+'postgresql://reader@host/db?schema=public&table=orders'
+-o
+orders.shape
+shape
+profile
+'postgresql://reader@host/db?schema=public'
+--tables
+orders
+--sample-rows
+1000
+-o
+catalog.shape
+Needs a MySQL account. Not run in CI.
+Configure the password in the environment.
+shape
+profile
+'mysql://reader@host/db?table=orders'
+-o
+orders.shape
+Needs an Oracle account. Not run in CI.
+Configure
+ORACLE_PASSWORD
+separately.
+shape
+profile
+'oracle://reader@host:1521/service?schema=SALES&table=Orders'
+-o
+orders.shape
+shape
+profile
+'oracle://reader@host:1521/service?schema=SALES'
+--tables
+Orders
+--sample-rows
+1000
+-o
+catalog.shape
+Oracle identifiers preserve case and must fit 128 UTF-8 bytes. Unconstrained NUMBER maps to
+decimal128(38,10)
+with a warning; values that cannot fit fail instead of rounding. DATE
+becomes a zone-less microsecond timestamp; zoned timestamps normalize to UTC. Catalog
+population counts use statistics; missing statistics fail unless
+exact_counts=true
+is
+explicitly selected. The
+Oracle adapter guide
+also describes array-DML writes and empty-string refusal: nullable conversion must be explicit.
+Needs a Snowflake account. Not run in CI. Live read validation pending.
+Use the password or key-pair environment/reference settings from the adapter guide.
+shape
+profile
+'snowflake://READER@ACCOUNT/DATABASE/SCHEMA?table=ORDERS&warehouse=WH'
+-o
+orders.shape
+Needs a Databricks account. Not run in CI. Live read validation pending.
+Configure the token or OAuth credentials outside the URI.
+shape
+profile
+'databricks://host/sql/1.0/warehouses/ID?catalog=main&schema=default&table=orders'
+-o
+orders.shape
+See
+Snowflake
+and
+Databricks
+for
+catalog counting, sampling and authentication limits. The experimental
+BigQuery source
+also ships Parquet
+load and Storage Read paths, reference-only credentials, bounded catalog sampling and a
+dry-run query cost guard; real account validation is still required.
+Fabric Eventhouse
+¶
+The Fabric plugin adds
+eventhouse://HOST/DATABASE?table=T
+through the KQL query endpoint.
+Omit
+table
+to profile its database tables. Schema discovery preserves declared KQL types;
+dynamic
+is JSON text, decimal uses
+decimal256(57,28)
+, datetime is UTC microseconds and
+timespan is nanosecond duration. Reads page through results and refuse truncated/partial
+query responses rather than silently accepting incomplete data. Authentication uses an
+explicit token/credential,
+SHAPE_EVENTHOUSE_TOKEN
+, or Microsoft Entra credentials.
+Needs a Fabric Eventhouse account. Not run in CI.
+Configure sign-in separately.
+shape
+profile
+'eventhouse://cluster.kusto.fabric.microsoft.com/Database?table=Orders'
+-o
+orders.shape
+See
+Fabric platform inventory
+for supported platform surfaces.
+Kafka and Event Hubs: Avro and Protobuf
+¶
+Both plugins read and write plain Avro/Protobuf with local schemas and preserve nested Arrow
+fields. Binary reads use
+format
+,
+schema_file
+and Protobuf
+message
+options. For Protobuf,
+schema_file
+is UTF-8
+.proto
+source; the local parser builds descriptors without a compiler
+or network access.
+message
+selects the message. For Avro it is the JSON writer schema.
+Needs a Kafka broker with matching Avro messages. Not run in CI.
+Install the Kafka
+plugin's
+avro
+extra and provide your local writer schema.
+shape
+stream-profile
+kafka://broker:9092/orders
+-o
+orders.json
+\
+--option
+format
+=
+avro
+--option
+schema_file
+=
+orders.avsc
+Needs an Event Hubs account with matching Protobuf messages. Not run in CI.
+Install the
+Event Hubs plugin's
+protobuf
+extra. Supply a connection string through
+SHAPE_EVENTHUBS_CONNECTION_STRING
+or configure Microsoft Entra credentials.
+shape
+stream-profile
+eventhubs://namespace.servicebus.windows.net/orders
+-o
+orders.json
+\
+--option
+format
+=
+protobuf
+--option
+schema_file
+=
+orders.proto
+--option
+message
+=
+demo.Order
+Emitters use
+event_format
+with
+schema_file
+and Protobuf
+message
+. Kafka Avro can resolve
+registry-framed writer schema IDs with a per-read cache using
+schema_registry_url
+.
+Event Hubs supports Azure Schema Registry Avro through its optional
+schema-registry
+extra.
+Malformed payloads increment
+undecodable
+; incompatible rows increment
+rejected
+. The default
+skip behavior counts failures; use source
+on_error=raise
+when decoding must stop immediately.
+These counters describe data actually read, not a promise that every broker event was valid.
+Streaming
+covers checkpoints, reader schemas and bounded/follow modes;
+emitting events
+covers writer configuration.
+Try the shared binary codecs locally
+¶
+The broker plugins use the same local-schema codec. This no-account exercise writes an
+Avro schema and a self-contained
+.proto
+file, then encodes and decodes a synthetic row
+with a nested list. Use the
+locked example environment
+, with
+fastavro
+and
+protobuf
+installed, in an empty directory. This validates the payload
+format locally; it does not test a broker connection. Protobuf imports and
+oneof
+fields
+are refused by this codec; declare message types together in one file.
+python
+-
+<<'PYDATA'
+import json
+from pathlib import Path
+from shape.streaming.binary import BinaryCodec
+avro = {"type": "record", "name": "Order", "fields": [
+{"name": "id", "type": "long"},
+{"name": "items", "type": {"type": "array", "items": "string"}}
+]}
+Path("orders.avsc").write_text(json.dumps(avro))
+Path("orders.proto").write_text('syntax = "proto3"; package demo; message Order { int64 id = 1; repeated string items = 2; }')
+row = {"id": 1, "items": ["synthetic-a", "synthetic-b"]}
+for fmt, path, message in [("avro", "orders.avsc", None), ("protobuf", "orders.proto", "demo.Order")]:
+codec = BinaryCodec.from_file(fmt, path, message=message)
+decoded = codec.decode(codec.encode(row))
+assert decoded == row
+print(fmt + ": " + json.dumps(decoded, sort_keys=True))
+PYDATA
+Output (exit 0)
+avro: {"id": 1, "items": ["synthetic-a", "synthetic-b"]}
+protobuf: {"id": 1, "items": ["synthetic-a", "synthetic-b"]}
+Related
+¶
+New feature workflows
+·
+Database adapters
+·
+SQL and Delta fidelity
 Report a problem with this page
 
 ## Webhook notifications
@@ -53207,6 +53888,94 @@ shape: note: today.shape is not signed: its origin is not verified (check it wit
 shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
 bump: none (0 breaking, 0 additive, 0 cosmetic)
 {"changes": [], "drifted": false, "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0}}
+Report a problem with this page
+
+## Migrate scripts that parse shape plan
+https://docs.shapedata.ai/dev/PLAN_MIGRATION/
+
+Migrate scripts that parse shape plan
+¶
+Status: available.
+Since 0.9.4,
+shape plan
+prints
+text by default
+. Scripts that parsed its former JSON
+output must add
+--json
+. The JSON keys are unchanged. Keep standard error separate:
+origin-verification notes and other diagnostics belong there.
+These local commands run in an empty directory in the
+example environment
+. They use synthetic values only.
+python
+-
+<<'PYDATA'
+import pyarrow as pa
+import shape
+shape.save(shape.profile(pa.table({"amount": [1, 2, 3]}), name="orders"), "plan.shape", capture="full")
+print("Wrote synthetic plan.shape")
+PYDATA
+Output (exit 0)
+Wrote synthetic plan.shape
+Human-readable default
+¶
+shape
+plan
+plan.shape
+Output (exit 0)
+shape: note: plan.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+Executable: yes
+Summary: preserved: 15, approximate: 3, not_modelled: 5
+Status           Evidence                                         Reason
+preserved        orders.amount.name                               kept as it is
+preserved        orders.amount.dtype                              kept as it is
+preserved        orders.amount.is_primary_key                     kept as it is
+preserved        orders.amount.is_foreign_key                     kept as it is
+preserved        orders.amount.null_rate                          each row is null with the column's null rate, independently of the other columns
+preserved        orders.amount.null_count                         each row is null with the column's null rate, independently of the other columns
+preserved        orders.amount.is_unique                          a sequence is unique and not an enum
+preserved        orders.amount.is_enum                            a sequence is unique and not an enum
+preserved        orders.amount.value_counts_ext                   a sequence is unique and not an enum
+preserved        orders.amount.value_counts_ext_order             a sequence is unique and not an enum
+preserved        orders.amount.cardinality                        a sequence with the profile's first value
+preserved        orders.amount.cardinality_ratio                  a sequence with the profile's first value
+preserved        orders.amount.min_value                          the sequence starts at the profile's minimum
+approximate      orders.amount.max_value                          a gap-free sequence: the profile's keys may have gaps
+approximate      orders.amount.mean                               a gap-free sequence: the profile's keys may have gaps
+approximate      orders.amount.std                                a gap-free sequence: the profile's keys may have gaps
+not_modelled     orders.amount.adequacy                           how much of the data the profile saw (values seen, the error of the null rate): a property of the profile, not of the data, so nothing is generated from it
+not_modelled     orders.amount.type_inference                     how the column's type was found and how well the values fit it: the generated column takes the profile's type, and nothing is inferred
+preserved        orders.row_count                                 the `profile` scale preset has the profile's row count
+preserved        orders.primary_key                               generated as a unique key
+not_modelled     dataset.missingness_joint                        which values are missing together: every column's nulls are independent
+not_modelled     dataset.dependencies                             functional dependencies and conditional distributions between columns: columns are independent except for the correlations above
+not_modelled     dataset.row_order                                the order of the rows is not reproduced
+Machine-readable migration
+¶
+Replace a parsed invocation with the following form; do not parse the text display.
+shape
+plan
+plan.shape
+--json
+>
+plan.json
+python
+-
+<<'PYDATA'
+import json
+from pathlib import Path
+plan = json.loads(Path("plan.json").read_text())
+print("Parsed JSON format:", plan["format"])
+print("Command:", plan["command"])
+PYDATA
+Output (exit 0)
+shape: note: plan.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+Parsed JSON format: shape-result
+Command: plan
+CLI
+·
+New feature workflows
 Report a problem with this page
 
 ## Posts and videos
@@ -68314,6 +69083,8 @@ https://docs.shapedata.ai/dev/SINKS/
 Sinks: where generated data goes
 ¶
 Status: experimental.
+Run the SQL and Delta fidelity exercise
+with real local constraint refusals.
 Run the local examples
 ¶
 The examples below use disposable local files from this checkout. The
@@ -70294,6 +71065,8 @@ https://docs.shapedata.ai/dev/SOURCES/
 File sources
 ¶
 Status: available.
+Database and binary-stream sources
+cover the newer adapters and account prerequisites.
 A source turns a file or URI into Arrow record batches. Every command that reads data (
 profile
 ,
@@ -72304,6 +73077,173 @@ Concepts
 Troubleshooting
 Report a problem with this page
 
+## SQL and Delta type fidelity
+https://docs.shapedata.ai/dev/TYPE_FIDELITY/
+
+SQL and Delta type fidelity
+¶
+Status: experimental.
+Preserve declarations rather than guessing from rows
+¶
+SQL writes use Arrow integer widths, decimal precision/scale, float32 and temporal units.
+Unsigned integers widen to a suitable signed type; uint64 needs 20 decimal digits.
+Undeclared strings are unbounded, not VARCHAR(255) or the first batch's longest value.
+Zoned timestamps preserve the instant to microsecond precision and normalize to UTC;
+the original zone name is not retained. Zone-less values remain zone-less in SQL.
+See the
+dialect table
+for exact declarations and limits.
+This local exercise needs the
+locked example environment
+,
+including the databases plugin and Delta extra. Start in an empty directory with
+SHAPE_DOCS_REPO
+pointing to the checkout. The
+complete source
+prints a PostgreSQL script without a connection,
+then writes a real local Delta table, reads its decimal type back and rejects a negative append.
+Assertions verify that the rejected append keeps the existing Delta version.
+python
+"
+$SHAPE_DOCS_REPO
+/examples/docs_type_fidelity.py"
+--delta
+Output (exit 0)
+-- Generated by Shape v0.9.4
+
+-- ============================================================
+-- Table: orders
+-- ============================================================
+
+DROP TABLE IF EXISTS "orders" CASCADE;
+
+CREATE TABLE "orders" (
+    "id"                           INTEGER              NULL,
+    "amount"                       NUMERIC(10,2)        NULL,
+    "note"                         TEXT                 NULL,
+    "ts"                           TIMESTAMP(6)         NULL,
+    "day"                          DATE                 NULL
+);
+
+INSERT INTO "orders" ("id", "amount", "note", "ts", "day")
+VALUES
+  (1, 12.30, 'synthetic', '2026-10-07 00:00:00', '2026-10-07');
+
+Delta read-back: decimal128(10, 2), owner=docs, generated day=2026-10-07
+constraint nonnegative, not_null_id: batch rejected
+Rejected append: existing Delta version unchanged
+Generate SQL constraints
+¶
+--sql-constraints keys
+is the generation default: primary, foreign and declared unique keys.
+all
+adds supported structured CHECK and literal DEFAULT clauses from generation schemas
+and JSON/YAML contracts.
+none
+omits derived declarations;
+keep
+is its compatibility alias.
+These defaults apply to generation, not every emit, seed or scale workflow.
+The example's amount minimum becomes a CHECK. A remote-looking URI in a dry run does not
+connect, authenticate, generate values or write rows. The emitted DDL is the resolved plan.
+shape
+generate
+orders.gen.json
+--to
+postgresql://user@unreachable/db
+--dry-run
+--sql-constraints
+all
+--contract
+amount.contract.json
+Output (exit 0)
+orders  domain=-  mode=3nf  seed=7  scale=small
+table                                 rows  columns   est. MB
+orders                                   2        2       0.0
+total                                    2                0.0
+ok: nothing was generated
+CREATE TABLE "orders" (
+  "id" BIGINT NOT NULL,
+  "amount" BIGINT DEFAULT 12 NOT NULL,
+  PRIMARY KEY ("id"),
+  CONSTRAINT "ck_orders_amount_min" CHECK ("amount" >= 0)
+)
+
+Constraint DDL (preview):
+ALTER TABLE "orders" ADD CONSTRAINT "ck_orders_amount_min" CHECK ("amount" >= 0);
+ALTER TABLE "orders" ALTER COLUMN "amount" SET DEFAULT 12;
+PostgreSQL, MySQL, DuckDB, SQL Server and Fabric SQL database enforce foreign keys,
+UNIQUE and CHECK, with literal defaults. Warehouse foreign/unique keys are informational
+and CHECK/DEFAULT are unsupported. Snowflake keys are informational and CHECK is unsupported.
+Databricks Unity Catalog primary/foreign keys are informational; CHECK uses ALTER TABLE,
+while UNIQUE/DEFAULT are unsupported. Unsupported declarations are reported explicitly.
+DuckDB creates parent-first inline foreign keys.
+Existing database writes verify requested catalog declarations before mutation. Supported
+PostgreSQL/MySQL dataset truncation reruns coordinate enforced references. Unsafe replacement,
+external incoming references or incompatible chunk commits fail with a named constraint when
+integrity cannot be preserved. MySQL replacement DDL cannot offer transactional rollback.
+Raw SQL checks, arbitrary expressions, triggers, sequences and deferred constraints are outside
+this feature.
+Sinks
+describes the supported vocabulary.
+Nested values and refusals
+¶
+Native nested storage is the default: PostgreSQL scalar arrays/JSONB, MySQL JSON,
+DuckDB recursive containers and Databricks ARRAY/STRUCT/MAP. Snowflake uses VARIANT;
+nested=typed
+selects ARRAY/OBJECT. Use
+nested=json
+explicitly for JSON text storage,
+including in Delta. JSON is a representation choice, not automatic recovery of Arrow types.
+Strict restoration requires a caller-supplied original Arrow field and refuses duplicate object
+keys, non-finite numbers, malformed values and temporal precision loss.
+Unsupported native shapes fail before connecting and name the column and JSON alternative.
+T-SQL and Warehouse string keys require an explicit indexable
+max_length
+; Shape refuses
+missing widths rather than guessing. Invalid or incomplete decimal dimensions are refused.
+PostgreSQL supports decimal256 and some scales that other dialects refuse; unusual scales
+require PostgreSQL 15+. Details are in
+Sinks
+.
+Delta features
+¶
+Delta supports
+table_properties
+, not-null/structured check
+constraints
+,
+column_mapping="name"
+,
+deletion_vectors=true
+,
+generated_columns
+and
+timestamp_ntz=true
+through verified delta-rs APIs. Opt-ins raise the reader/writer protocol union; dry-run reports
+that union and doctor reports the actual protocol and feature lists. Capability refusals name
+the installed and verified versions. Deletion vectors enable protocol metadata, not row-delete
+actions; renaming and upsert are outside this package.
+Native nested timestamps normalize to UTC and microsecond precision; submicrosecond data
+is not retained.
+timestamp_ntz=true
+preserves zone-less timestamps. Native timestamp-NTZ
+maps combined with name column mapping are refused before storage because the combination
+is not verified; use UTC rewriting or JSON text. Validation names the failed rule or generated
+column. Adding checks validates existing rows; opt-in validation can materialize pending
+batches in a temporary local table. Budget memory accordingly for large batches.
+See
+Delta feature options
+for the supported settings.
+Related
+¶
+New feature workflows
+·
+Sinks
+·
+Database adapters
+Report a problem with this page
+
 ## Shape 1.0: definition of done
 https://docs.shapedata.ai/dev/V1_DONE/
 
@@ -72536,6 +73476,8 @@ https://docs.shapedata.ai/dev/VAULT/
 The value vault
 ¶
 Status: experimental.
+Run metadata, verification, rotation and policy writes
+with a disposable synthetic vault.
 The default
 .shape
 is safe to commit: a sensitive column keeps statistics and formats only, and
@@ -74879,7 +75821,7 @@ Each tutorial starts in an empty directory. Commands run in order. The pytest ha
 Evidence and links
 ¶
 Run commands exactly as published. Keep account-dependent examples and label them "Needs a
-account. Not run in CI." Record unresolved work in HTML owner comments, which are inventoried in the PR description and block tag deployment. Do not invent sources, dates, calibration, prices or roadmap. Use only committed benchmark numbers with the machine named. Do not compare products. Safe capture is data minimisation, not anonymisation. Describe vendor code as reads, writes or exports. Snowflake and Databricks are write targets.
+account. Not run in CI." Record unresolved work in HTML owner comments, which are inventoried in the PR description and block tag deployment. Do not invent sources, dates, calibration, prices or roadmap. Use only committed benchmark numbers with the machine named. Do not compare products. Safe capture is data minimisation, not anonymisation. Describe vendor code as reads, writes or exports. Snowflake and Databricks have readers and writers; distinguish shipped code from pending live read validation.
 Use support@shapedata.ai for public contact. The only Premium item is Industry Profile Packs, coming, healthcare first, linked to https://shapedata.ai/. Optional
 post:
 and
@@ -75076,7 +76018,7 @@ and shared adapter helpers.
 The integrations source definitions are in
 plugins/shape-integrations/src/shape_integrations/
 .
-Snowflake and Databricks are write targets; Shape does not profile from them yet.
+Snowflake and Databricks support reads and writes; live read validation remains pending Owner accounts.
 Next step
 ¶
 Use
@@ -75102,37 +76044,27 @@ Databases
 Choose a local or server writer and distinguish it from a profiling source.
 Status: available.
 shape-databases
-writes generated Arrow batches to DuckDB, PostgreSQL, MySQL, Snowflake and
-Databricks. Optional driver imports happen when a connection opens. Shape writes to
-PostgreSQL and MySQL through
-shape-databases
-; neither has a direct profiling source
-in 0.9.3. Export their data to Parquet or CSV and profile the file.
-The shipped database and platform sources are
-mssql
-,
-duckdb
-,
-onelake
-and
-semantic-model
-. DuckDB reads come from
+reads and writes PostgreSQL, MySQL, Oracle, Snowflake and Databricks,
+and writes local DuckDB files. DuckDB reads come from
 shape-integrations
-. Snowflake and Databricks
-provide table and schema profiling sources in
-shape-databases
-.
-Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
+. Optional drivers
+load only when a connection opens.
+New sources
+describes table and
+catalog capture, credentials and sampling. Snowflake and Databricks live read validation
+remains pending; their existing receipts cover writes.
 DuckDB
-: a local file, covered by the sixth starter tutorial.
+: native local containers and the sixth starter tutorial.
 PostgreSQL
-: COPY writes; profile a CSV or Parquet export.
+: COPY writes and direct table/catalog profiling.
 MySQL
-: bound batched INSERT writes; profile a CSV or Parquet export.
+: batched INSERT writes and direct table/catalog profiling.
+Oracle
+: thin-mode reads and array-DML writes.
 Snowflake
-: staged Parquet and COPY INTO writes; Arrow and catalog profiling.
+: staged COPY writes and Arrow/catalog profiling.
 Databricks
-: bound INSERT writes and Arrow/catalog profiling in SQL warehouses.
+: bound INSERT writes and Arrow/catalog profiling.
 Cloud and server command transcripts need owner execution with an appropriate test account.
 The pages document code behavior without claiming platform validation.
 Related
@@ -75174,14 +76106,16 @@ idempotency decision.
 Evidence:
 plugins/shape-databases/src/shape_databases/mysql.py
 and shared adapter helpers.
-Shape writes to MySQL through
+Shape reads and writes MySQL through
 shape-databases
-; it does not read MySQL
-tables directly in 0.9.3.
+.
+See
+direct table and catalog profiling
+for current read examples.
 Profile an export
 ¶
 Export the data to Parquet or CSV, then profile the local file.
-Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
+Direct reads are available; the export path below remains an alternative and records an earlier run.
 Needs a MySQL account. Not run in CI.
 For numeric
 order_id
@@ -75312,14 +76246,16 @@ idempotency decision.
 Evidence:
 plugins/shape-databases/src/shape_databases/postgres.py
 and shared adapter helpers.
-Shape writes to PostgreSQL through
+Shape reads and writes PostgreSQL through
 shape-databases
-; it does not read PostgreSQL
-tables directly in 0.9.3.
+.
+See
+direct table and catalog profiling
+for current read examples.
 Profile an export
 ¶
 Export the data to Parquet or CSV, then profile the local file.
-Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
+Direct reads are available; the export path below remains an alternative and records an earlier run.
 Needs a PostgreSQL account. Not run in CI.
 In
 psql
@@ -77977,19 +78913,20 @@ Where platforms plug in
 ¶
 flowchart TB
     F[Local files / DuckDB / SQL Server] --> P[Profile]
-    E[PostgreSQL / MySQL exports] --> F
+    E[PostgreSQL / MySQL / Oracle] --> P
     L[OneLake / ADLS / Delta files] --> P
     P --> C[Contract and drift checks]
     P --> G[Generation]
     G --> DB[DuckDB / PostgreSQL / MySQL]
-    G --> W[Snowflake / Databricks write targets]
+    W[Snowflake / Databricks] --> P
+    G --> W
     G --> M[Fabric writers / local files]
     C --> CI[GitHub Actions / pipeline exit codes]
     M --> BI[Semantic model exports for Power BI]
 Database pages
-describe shipped adapters. PostgreSQL and MySQL
-are write targets; export their data to CSV or Parquet before profiling. Snowflake and Databricks
-are write targets; Shape does not profile from them yet. Account-dependent examples identify the platform you need.
+describe shipped readers and writers. PostgreSQL, MySQL,
+Oracle, Snowflake and Databricks have direct profiling sources. Snowflake and Databricks live
+read validation remains pending. Account-dependent examples identify the platform you need.
 Choose your next page
 ¶
 Install
@@ -78005,6 +78942,17 @@ Known limitations
 Python API
 ·
 Changelog
+Learn the newest features
+¶
+Daily order contracts
+·
+Locale names and bridge workflows
+·
+SQL and Delta fidelity
+·
+New sources
+·
+Plan output migration
 Report a problem with this page
 
 ## Plugin API v1

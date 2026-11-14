@@ -299,6 +299,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#learn-the-newest-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learn the newest features
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -315,6 +326,8 @@
   
     
     
+      
+        
       
         
       
@@ -528,6 +541,34 @@
     
   
     Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="NEW_FEATURES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New feature workflows
   
 
     
@@ -1021,6 +1062,8 @@
       
         
       
+        
+      
     
     
     
@@ -1081,6 +1124,34 @@
     
   
     File sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="NEW_SOURCES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New database and stream sources
   
 
     
@@ -1526,6 +1597,8 @@
       
         
       
+        
+      
     
     
     
@@ -1614,6 +1687,34 @@
     
   
     Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="DAILY_ORDERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Daily order tutorial
   
 
     
@@ -2640,6 +2741,8 @@
       
         
       
+        
+      
     
     
     
@@ -2700,6 +2803,34 @@
     
   
     Sinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="TYPE_FIDELITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL and Delta fidelity
   
 
     
@@ -4110,6 +4241,8 @@
       
         
       
+        
+      
     
     
     
@@ -4226,6 +4359,34 @@
     
   
     CLI stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="PLAN_MIGRATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plan output migration
   
 
     
@@ -4408,10 +4569,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_10" >
         
           
-          <label class="md-nav__link" for="__nav_12_9" id="__nav_12_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_12_10" id="__nav_12_10_label" tabindex="0">
             
   
   
@@ -4429,8 +4590,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_12_9">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6320,6 +6481,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#learn-the-newest-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learn the newest features
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -6362,22 +6534,27 @@ A safe capture is data minimisation, not anonymisation. You review it before sha
 <h2 id="where-platforms-plug-in">Where platforms plug in<a class="headerlink" href="#where-platforms-plug-in" title="Permanent link">&para;</a></h2>
 <pre class="shape-mermaid"><code>flowchart TB
     F[Local files / DuckDB / SQL Server] --&gt; P[Profile]
-    E[PostgreSQL / MySQL exports] --&gt; F
+    E[PostgreSQL / MySQL / Oracle] --&gt; P
     L[OneLake / ADLS / Delta files] --&gt; P
     P --&gt; C[Contract and drift checks]
     P --&gt; G[Generation]
     G --&gt; DB[DuckDB / PostgreSQL / MySQL]
-    G --&gt; W[Snowflake / Databricks write targets]
+    W[Snowflake / Databricks] --&gt; P
+    G --&gt; W
     G --&gt; M[Fabric writers / local files]
     C --&gt; CI[GitHub Actions / pipeline exit codes]
     M --&gt; BI[Semantic model exports for Power BI]</code></pre>
-<p><a href="databases/">Database pages</a> describe shipped adapters. PostgreSQL and MySQL
-are write targets; export their data to CSV or Parquet before profiling. Snowflake and Databricks
-are write targets; Shape does not profile from them yet. Account-dependent examples identify the platform you need.</p>
+<p><a href="databases/">Database pages</a> describe shipped readers and writers. PostgreSQL, MySQL,
+Oracle, Snowflake and Databricks have direct profiling sources. Snowflake and Databricks live
+read validation remains pending. Account-dependent examples identify the platform you need.</p>
 <h2 id="choose-your-next-page">Choose your next page<a class="headerlink" href="#choose-your-next-page" title="Permanent link">&para;</a></h2>
 <p><a href="INSTALL/">Install</a> · <a href="CONCEPTS/">Concepts</a> · <a href="READ_REPORT/">Read the report</a> ·
 <a href="TROUBLESHOOTING/">Troubleshooting</a> · <a href="KNOWN_LIMITATIONS/">Known limitations</a> ·
 <a href="API/">Python API</a> · <a href="https://github.com/sqllocks/shape/blob/main/CHANGELOG.md">Changelog</a></p>
+<h2 id="learn-the-newest-features">Learn the newest features<a class="headerlink" href="#learn-the-newest-features" title="Permanent link">&para;</a></h2>
+<p><a href="DAILY_ORDERS/">Daily order contracts</a> · <a href="NEW_FEATURES/">Locale names and bridge workflows</a> ·
+<a href="TYPE_FIDELITY/">SQL and Delta fidelity</a> · <a href="NEW_SOURCES/">New sources</a> ·
+<a href="PLAN_MIGRATION/">Plan output migration</a></p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Home&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2F">Report a problem with this page</a></p>
 
 

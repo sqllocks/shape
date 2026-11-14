@@ -261,6 +261,8 @@
       
         
       
+        
+      
     
     
     
@@ -461,6 +463,34 @@
     
   
     Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../NEW_FEATURES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New feature workflows
   
 
     
@@ -954,6 +984,8 @@
       
         
       
+        
+      
     
     
     
@@ -1014,6 +1046,34 @@
     
   
     File sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../NEW_SOURCES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    New database and stream sources
   
 
     
@@ -1459,6 +1519,8 @@
       
         
       
+        
+      
     
     
     
@@ -1547,6 +1609,34 @@
     
   
     Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DAILY_ORDERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Daily order tutorial
   
 
     
@@ -2573,6 +2663,8 @@
       
         
       
+        
+      
     
     
     
@@ -2633,6 +2725,34 @@
     
   
     Sinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TYPE_FIDELITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL and Delta fidelity
   
 
     
@@ -4043,6 +4163,8 @@
       
         
       
+        
+      
     
     
     
@@ -4159,6 +4281,34 @@
     
   
     CLI stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PLAN_MIGRATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plan output migration
   
 
     
@@ -4341,10 +4491,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_10" >
         
           
-          <label class="md-nav__link" for="__nav_12_9" id="__nav_12_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_12_10" id="__nav_12_10_label" tabindex="0">
             
   
   
@@ -4362,8 +4512,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_12_9">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6445,11 +6595,11 @@ existing table. Append, truncate and replace have different effects; review the 
 you select a destructive mode. A write error can report committed rows, so a retry needs an
 idempotency decision.</p>
 <p>Evidence: <code>plugins/shape-databases/src/shape_databases/postgres.py</code> and shared adapter helpers.
-Shape writes to PostgreSQL through <code>shape-databases</code>; it does not read PostgreSQL
-tables directly in 0.9.3.</p>
+Shape reads and writes PostgreSQL through <code>shape-databases</code>.
+See <a href="../../NEW_SOURCES/#database-reads">direct table and catalog profiling</a> for current read examples.</p>
 <h2 id="profile-an-export">Profile an export<a class="headerlink" href="#profile-an-export" title="Permanent link">&para;</a></h2>
 <p>Export the data to Parquet or CSV, then profile the local file.</p>
-<p>Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).</p>
+<p>Direct reads are available; the export path below remains an alternative and records an earlier run.</p>
 <p><strong>Needs a PostgreSQL account. Not run in CI.</strong> In <code>psql</code>, export a table to a
 client-side CSV with a header:</p>
 <div class="highlight"><pre><span></span><code><span class="err">\</span><span class="k">copy</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">orders</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="s1">'orders.csv'</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="p">(</span><span class="n">FORMAT</span><span class="w"> </span><span class="n">csv</span><span class="p">,</span><span class="w"> </span><span class="n">HEADER</span><span class="w"> </span><span class="k">true</span><span class="p">)</span>
