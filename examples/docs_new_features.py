@@ -220,4 +220,6 @@ def vault() -> None:
 
 
 if __name__ == "__main__":
-    {"locales": locales, "rules": rules, "suite": suite, "vault": vault}[sys.argv[1]]()
+    {"locales": locales, "rules": rules, "suite": suite, "vault": vault}[
+        sys.argv[1] if len(sys.argv) > 1 else "locales"
+    ]()

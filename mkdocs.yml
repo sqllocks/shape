@@ -86,7 +86,6 @@ nav:
 - Profiling:
   - File sources: SOURCES.md
   - New database and stream sources: NEW_SOURCES.md
-  - Database adapters: databases/index.md
   - Profiling notes: PROFILING_NOTES.md
   - Semantic model profiles: SEMANTIC_MODEL.md
   - Mergeable profiles: PROFILE_MERGE.md

@@ -1,17 +1,16 @@
-"""Exercise offline SQL DDL and actual local Delta constraints with synthetic rows."""
+"""Write synthetic SQL; add --delta in the docs environment to test local Delta constraints."""
 
 from __future__ import annotations
 
 import datetime as dt
 import json
+import sys
 from decimal import Decimal
 from pathlib import Path
 
 import pyarrow as pa
-from deltalake import DeltaTable
-from shape_databases.postgres import PostgresSink
 
-from shape.builtins.sinks.delta import DeltaSink
+from shape.builtins.sinks.sql import SqlSink
 
 
 def main() -> None:
@@ -24,8 +23,6 @@ def main() -> None:
             pa.field("day", pa.date32()),
         ]
     )
-    ddl = PostgresSink().ddl("postgresql://user@unreachable/db", "orders", schema)
-    print(ddl)
     rows = pa.Table.from_pylist(
         [
             {
@@ -38,6 +35,45 @@ def main() -> None:
         ],
         schema=schema,
     )
+    SqlSink().write("orders.sql", "orders", rows.to_batches(), sql_dialect="postgres")
+    print(Path("orders.sql").read_text(), end="")
+    if "--delta" in sys.argv:
+        delta_constraints(rows)
+    # A small schema also exercises generated SQL declarations through the CLI.
+    generation = {
+        "schema_version": 1,
+        "model": {"name": "orders", "seed": 7},
+        "tables": {
+            "orders": {
+                "name": "orders",
+                "primary_key": ["id"],
+                "columns": {
+                    "id": {
+                        "name": "id",
+                        "type": "integer",
+                        "nullable": False,
+                        "generator": {"strategy": "sequence"},
+                    },
+                    "amount": {
+                        "name": "amount",
+                        "type": "integer",
+                        "generator": {"strategy": "constant", "value": 12},
+                    },
+                },
+            }
+        },
+        "generation": {"scale": "small", "scales": {"small": {"orders": 2}}},
+    }
+    Path("orders.gen.json").write_text(json.dumps(generation))
+    Path("amount.contract.json").write_text(json.dumps({"columns": {"amount": {"min": 0}}}))
+
+
+def delta_constraints(rows: pa.Table) -> None:
+    """Exercise optional Delta features under the locked documentation environment."""
+    from deltalake import DeltaTable
+
+    from shape.builtins.sinks.delta import DeltaSink
+
     positive = {"op": ">=", "left": {"column": "amount"}, "right": {"literal": 0}}
     sink = DeltaSink()
     sink.write(
@@ -68,33 +104,6 @@ def main() -> None:
         raise AssertionError("The negative amount must be refused")
     assert DeltaTable("lake/orders").version() == before
     print("Rejected append: existing Delta version unchanged")
-    # A small schema also exercises generated SQL declarations through the CLI.
-    generation = {
-        "schema_version": 1,
-        "model": {"name": "orders", "seed": 7},
-        "tables": {
-            "orders": {
-                "name": "orders",
-                "primary_key": ["id"],
-                "columns": {
-                    "id": {
-                        "name": "id",
-                        "type": "integer",
-                        "nullable": False,
-                        "generator": {"strategy": "sequence"},
-                    },
-                    "amount": {
-                        "name": "amount",
-                        "type": "integer",
-                        "generator": {"strategy": "constant", "value": 12},
-                    },
-                },
-            }
-        },
-        "generation": {"scale": "small", "scales": {"small": {"orders": 2}}},
-    }
-    Path("orders.gen.json").write_text(json.dumps(generation))
-    Path("amount.contract.json").write_text(json.dumps({"columns": {"amount": {"min": 0}}}))
 
 
 if __name__ == "__main__":
