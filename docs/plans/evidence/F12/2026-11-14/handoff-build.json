@@ -16,5 +16,48 @@
       "bytes": 190690,
       "sha256": "5d35d582c6063c6d3df895776efeb79b9e02f671eb8257cc20251705107394b0"
     }
-  ]
+  ],
+  "files": [
+    {
+      "name": "f12-owner-qualification.ipynb",
+      "bytes": 25446,
+      "sha256": "3d874d9ab06e574bdf812ea2727cf6bfcdec711fc052ca777a0743ffd72e2b1e"
+    },
+    {
+      "name": "OWNER_STEPS.md",
+      "bytes": 10936,
+      "sha256": "817b865de920b42c9e974dc8fb471063577a169e419f3b6c167d3c017910d8b1"
+    },
+    {
+      "name": "f12_agent.py",
+      "bytes": 19592,
+      "sha256": "793d071626b842d076bf4626fb12b4a07d08bed496d5b2a57e0117baba4089e8"
+    },
+    {
+      "name": "REST_SETUP.md",
+      "bytes": 9634,
+      "sha256": "e9b2d3851c833016867b4e729e2e018f5d8bd6f8e7de8dbe818c20738c8ad485"
+    },
+    {
+      "name": "README.md",
+      "bytes": 4657,
+      "sha256": "35d702639c9c30b52f4a32c95f58265b2e0d228230f4a05562a49bf81c8d89bc"
+    },
+    {
+      "name": "review.md",
+      "bytes": 6808,
+      "sha256": "b5305502829cb669f57d25970c8b06ab00083629a963a73735ed5cf95558dbec"
+    },
+    {
+      "name": "automation-validation.txt",
+      "bytes": 1123,
+      "sha256": "f45c50257064887c50bd1554d687067f3c302ed540750b28fdbfeeb5edac0e9f"
+    },
+    {
+      "name": "automation-lint.txt",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    }
+  ],
+  "manifest_note": "Hashes cover all archive members except handoff-build.json itself. source_commit identifies the unchanged wheel source."
 }

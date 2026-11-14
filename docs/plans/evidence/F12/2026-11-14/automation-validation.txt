@@ -1,0 +1,12 @@
+LOCAL: mode-specific destination payload and four JSON paths verified
+LOCAL: all wheel hashes retained; rendered notebook Python cells parse
+LOCAL: install uses three verified local wheel paths; pip execution mocked
+LOCAL: pre-send guard Running ProcessedIngestion sent=True protected values absent from output endpoint_mismatch=False
+LOCAL: pre-send guard Warning ProcessedIngestion sent=False protected values absent from output endpoint_mismatch=False
+LOCAL: pre-send guard Stopped ProcessedIngestion sent=False protected values absent from output endpoint_mismatch=False
+LOCAL: pre-send guard Running DirectIngestion sent=False protected values absent from output endpoint_mismatch=False
+LOCAL: pre-send guard Running ProcessedIngestion sent=False protected values absent from output endpoint_mismatch=True
+LOCAL: exit-value allowlist drops protected/unknown fields and table names
+LOCAL: safe exit-value path retains numeric CPU/memory resource observations (mock values only)
+LOCAL: setup Warning and cleanup foreign-item guards fail closed
+All checks are local mocks/static validation; no Fabric requests were made.

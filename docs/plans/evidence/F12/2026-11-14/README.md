@@ -45,3 +45,22 @@ writer uses the streaming-ingest endpoint, and its count helper documents delaye
 visibility. This code audit does not establish successful live execution. The
 notebook install and both requested dataset sizes remain unverified in Fabric.
 The wheel artifacts have not been rebuilt or modified by this handoff revision.
+
+## Agent-first revision
+
+The current handoff replaces mandatory resource uploads with agent-side rendering of
+the three unchanged wheels into notebook-definition code and hash-verified local
+installation. `f12_agent.py` supplies guarded setup, explicit Jupyter submission,
+filtered job status/exit records and ledger-based cleanup. `REST_SETUP.md` contains
+the exact payloads, mode choice and Learn references. Current Learn documents
+source-connection retrieval (including the SAS connection string) and destination
+resume; these are no longer presumed portal-only. Only an actual service result can
+establish that those APIs work for this tenant/identity. The earlier receipts remain
+historical attempts, not tests of the revised automation.
+
+`automation-validation.txt` records local mocks/static checks only. They validate
+mode-specific payloads, four JSON paths, wheel hashes/rendering, a mocked pip launch,
+no-send guards, private-output filtering and foreign-item cleanup refusal. They do
+not establish Fabric installation, runtime configuration or event delivery. The
+archive manifest keeps the original wheel `source_commit` and wheel digests and
+adds digests for every other archive member, excluding the manifest itself.

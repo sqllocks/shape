@@ -70,3 +70,38 @@ and times as local mock data. These are not Fabric execution evidence. No blocke
 found for the prepared handoff or the authorized Owner run; no successful live
 qualification is claimed. The earlier non-blocking duplicate `profile_model` call
 remains and can result in a second read/profile request.
+
+## Agent-first archive review — 2026-11-14
+
+Reviewed `/workspace/f12-owner-handoff.zip`, including the extracted notebook,
+helper, setup guide, Owner steps, README, manifest and local validation receipt.
+The archive passed ZIP integrity checking. Its member sizes and SHA-256 values match
+`handoff-build.json`, and all three included release wheels match their original
+manifest hashes. The archive is now self-contained for the documented setup path;
+the earlier missing-wheel concern is resolved.
+
+The helper's inspected path has the expected safety gates: it refuses existing f12
+items, persists only created item references in a mode-restricted ledger, validates
+current item type/name before deletion, and refuses cleanup while the job is active.
+Credential acquisition and Fabric calls keep tokens and raw responses in memory;
+API bodies, SAS connection strings, host/database values and raw remote errors are
+not printed or passed as job parameters. The notebook binds the SAS Endpoint and
+EntityPath to source metadata from the new `f12-input`, or to explicit Owner-attested
+metadata in the vault/hidden-input fallback. Unsupported hidden input becomes a
+failure rather than echoed input.
+
+Before any emit/write call, setup and the final cell require a Running source and
+destination with no error, the expected ProcessedIngestion mode, new database/table,
+and JSON serialization. Warning, Stopped, wrong mode, item mismatch, or endpoint
+mismatch fails closed. Stream and direct counts are both polled; the safe exit-value
+filter allows expected aggregate fields, dimensions, bounded error categories, and
+numeric cgroup limits while dropping arbitrary strings and model table names.
+
+`automation-validation.txt` reports only local mocks/static checks, including a
+zero-send endpoint-mismatch case. These checks do not establish tenant API behavior,
+Python installation/runtime, model access, activation, or event delivery. No live
+Fabric request or mutation was made in this review. The archive contains a workspace
+resource reference, but no principal ID, token, credential, SAS string, or private
+counterpart name. No blocker found for the prepared handoff. The duplicate model
+profile call noted above remains a non-blocking efficiency issue; no qualification
+closure is supported.
