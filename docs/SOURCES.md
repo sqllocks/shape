@@ -2,6 +2,8 @@
 
 Status: available.
 
+[Database and binary-stream sources](NEW_SOURCES.md) cover the newer adapters and account prerequisites.
+
 
 A source turns a file or URI into Arrow record batches. Every command that reads data (`profile`,
 `check`, `diff`, `generate --from`) goes through them. This page lists the file sources and gives

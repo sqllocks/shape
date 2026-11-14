@@ -71,6 +71,7 @@ nav:
   - Learning paths: LEARNING_PATHS.md
   - Quickstart: QUICKSTART.md
   - Starter tutorials: TUTORIAL.md
+  - New feature workflows: NEW_FEATURES.md
 - Starter tutorials:
   - 1 Your first profile: tutorials/01-first-profile.md
   - 2 Read the report: tutorials/02-read-report.md
@@ -84,6 +85,7 @@ nav:
   - When drift goes red: DRIFT_RED.md
 - Profiling:
   - File sources: SOURCES.md
+  - New database and stream sources: NEW_SOURCES.md
   - Profiling notes: PROFILING_NOTES.md
   - Semantic model profiles: SEMANTIC_MODEL.md
   - Mergeable profiles: PROFILE_MERGE.md
@@ -101,6 +103,7 @@ nav:
 - Contracts, checks and drift:
   - Drift: DRIFT.md
   - Contracts: CONTRACTS.md
+  - Daily order tutorial: DAILY_ORDERS.md
   - Consumer contracts: CONSUMER_CONTRACTS.md
   - Canaries: CANARIES.md
   - Environment parity: PARITY.md
@@ -135,6 +138,7 @@ nav:
   - Report card: REPORT_CARD.md
 - Outputs and integration:
   - Sinks: SINKS.md
+  - SQL and Delta fidelity: TYPE_FIDELITY.md
   - Landing layout: LANDING.md
   - Emitting events: EMIT.md
   - Fabric mirroring: FABRIC_MIRROR.md
@@ -182,6 +186,7 @@ nav:
   - Command line: CLI.md
   - CLI reference (generated): reference/cli.md
   - CLI stability: CLI_STABILITY.md
+  - Plan output migration: PLAN_MIGRATION.md
   - Exit codes: EXIT_CODES.md
   - Python API: API.md
   - API stability: API_STABILITY.md

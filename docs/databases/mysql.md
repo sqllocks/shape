@@ -25,14 +25,14 @@ you select a destructive mode. A write error can report committed rows, so a ret
 idempotency decision.
 
 Evidence: `plugins/shape-databases/src/shape_databases/mysql.py` and shared adapter helpers.
-Shape writes to MySQL through `shape-databases`; it does not read MySQL
-tables directly in 0.9.3.
+Shape reads and writes MySQL through `shape-databases`.
+See [direct table and catalog profiling](../NEW_SOURCES.md#database-reads) for current read examples.
 
 ## Profile an export
 
 Export the data to Parquet or CSV, then profile the local file.
 
-Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
+Direct reads are available; the export path below remains an alternative and records an earlier run.
 
 **Needs a MySQL account. Not run in CI.** For numeric `order_id` and `amount`
 columns, export from the MySQL client. The `NULL` token preserves missing amounts

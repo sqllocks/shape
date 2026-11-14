@@ -139,7 +139,7 @@ def test_restored_example_inventory() -> None:
     """Every inventoried example remains on its page with the appropriate evidence."""
     assert MANIFEST.exists()
     items = json.loads(MANIFEST.read_text())
-    assert len(items) == 206
+    assert len(items) == 222
     for item in items:
         text = (ROOT / item["page"]).read_text()
         assert f"<!-- example: {item['index']} -->" in text, item

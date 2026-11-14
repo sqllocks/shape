@@ -2,6 +2,8 @@
 
 Status: available.
 
+[Check a daily order file](DAILY_ORDERS.md) for a runnable regex and relative-date tutorial.
+
 
 A contract is a JSON object (format `shape.contracts.v1`) that `shape check PROFILE.shape
 CONTRACT.json` and `shape.check(profile, contract)` test a profile against. Every key is optional;

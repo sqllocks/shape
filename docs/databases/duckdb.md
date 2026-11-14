@@ -20,7 +20,7 @@ idempotency decision.
 
 Evidence: `plugins/shape-databases/src/shape_databases/duckdb_sink.py` and shared adapter helpers.
 The integrations source definitions are in `plugins/shape-integrations/src/shape_integrations/`.
-Snowflake and Databricks are write targets; Shape does not profile from them yet.
+Snowflake and Databricks support reads and writes; live read validation remains pending Owner accounts.
 
 ## Next step
 

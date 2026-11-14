@@ -24,7 +24,7 @@ Each tutorial starts in an empty directory. Commands run in order. The pytest ha
 
 ## Evidence and links
 
-Run commands exactly as published. Keep account-dependent examples and label them "Needs a <platform> account. Not run in CI." Record unresolved work in HTML owner comments, which are inventoried in the PR description and block tag deployment. Do not invent sources, dates, calibration, prices or roadmap. Use only committed benchmark numbers with the machine named. Do not compare products. Safe capture is data minimisation, not anonymisation. Describe vendor code as reads, writes or exports. Snowflake and Databricks are write targets.
+Run commands exactly as published. Keep account-dependent examples and label them "Needs a <platform> account. Not run in CI." Record unresolved work in HTML owner comments, which are inventoried in the PR description and block tag deployment. Do not invent sources, dates, calibration, prices or roadmap. Use only committed benchmark numbers with the machine named. Do not compare products. Safe capture is data minimisation, not anonymisation. Describe vendor code as reads, writes or exports. Snowflake and Databricks have readers and writers; distinguish shipped code from pending live read validation.
 
 Use support@shapedata.ai for public contact. The only Premium item is Industry Profile Packs, coming, healthcare first, linked to https://shapedata.ai/. Optional `post:` and `video:` tutorial front matter contains only published URLs; empty values render no links.
 

@@ -15,7 +15,7 @@ The 1.x compatibility promises describe future policy.
   `sampling.internal[].columns` on tables wide enough to sample, so `shape profile validate --safe`
   fails them. Those lists hold column names, not values. Re-profile with 0.9.3, which records the
   columns by position (`column_indexes`). 0.9.3 still reads the old profiles.
-- Snowflake and Databricks are write targets. Shape does not profile from them yet.
+- Snowflake and Databricks have Arrow/catalog profiling sources; live read validation remains pending Owner accounts.
 - Model queries read model payloads, not saved profile payloads. A profile passed to a query
   is rejected. See [Models](MODELS.md).
 - A safe capture omits values. A contract needing omitted evidence can be unavailable rather
