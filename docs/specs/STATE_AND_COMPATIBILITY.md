@@ -1,6 +1,10 @@
 # State and compatibility policy
 
-Status: experimental.
+Status: frozen at 1.0 (Owner approved 2026-11-14).
+
+The format and CLI compatibility baseline is frozen by
+[the 1.0 freeze decision](../plans/1.0-FREEZE.md). This marks the 1.0 contract;
+it does not announce a release or change current early-access behavior.
 
 
 Shape writes files that outlive the release that wrote them: `.shape` artifacts, safe profiles,
@@ -243,6 +247,14 @@ No format version is deprecated today. When one is, the process is:
    unknown field. CI jobs that want to find every file that needs attention use it.
 4. **Removal.** Only in the next major release (2.0 for the 1.x series), and only if an offline `shape-migrate` path still
    reads the version: the reader moves to the migrator, which stays.
+
+**Frozen minimum-reader window (1.0).** Every format version in the frozen
+baseline remains readable throughout the entire 1.x series. Its recorded first
+reader remains `0.9.0`; an optional addition cannot raise that floor. A future
+incompatible format version declares its actual first reader and retains the
+older readers. This is file compatibility, not support or backports for old
+binaries. Removal requires a new major, a notice at least one release ahead and
+an offline migrator. See [the approved freeze](../plans/1.0-FREEZE.md).
 
 **Support window.** Every format version below is supported by every release until a major
 release removes it by the process above; none is scheduled for removal. This table is generated

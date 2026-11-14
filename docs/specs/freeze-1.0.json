@@ -1,0 +1,949 @@
+{
+  "cli": {
+    "emitted": [
+      {
+        "argv": [
+          "capture",
+          "input.csv",
+          "-o",
+          "output.shape",
+          "--json"
+        ],
+        "code": 0,
+        "id": "capture",
+        "shape": {
+          "command": "str",
+          "exit_code": "int",
+          "format": "str",
+          "shape_content_id": "str",
+          "version": "int",
+          "written": "str"
+        }
+      },
+      {
+        "argv": [
+          "capture",
+          "input.csv",
+          "-o",
+          "output.shape",
+          "--dry-run",
+          "--json"
+        ],
+        "code": 0,
+        "id": "capture-plan",
+        "shape": {
+          "actions": [
+            {
+              "action": "str",
+              "target": "str"
+            }
+          ],
+          "command": "str",
+          "format": "str",
+          "version": "int"
+        }
+      },
+      {
+        "argv": [
+          "capture",
+          "missing.csv",
+          "-o",
+          "output.shape",
+          "--dry-run",
+          "--json"
+        ],
+        "code": 2,
+        "id": "bad-plan",
+        "shape": {
+          "actions": [],
+          "command": "str",
+          "error": "str",
+          "format": "str",
+          "version": "int"
+        }
+      },
+      {
+        "argv": [
+          "diff",
+          "missing.shape",
+          "other.shape",
+          "--json",
+          "-"
+        ],
+        "code": 2,
+        "id": "bad-result",
+        "shape": {
+          "command": "str",
+          "error": "str",
+          "exit_code": "int",
+          "format": "str",
+          "version": "int"
+        }
+      },
+      {
+        "argv": [
+          "generate",
+          "retail",
+          "--scale",
+          "small",
+          "--dry-run",
+          "--json"
+        ],
+        "code": 0,
+        "id": "generate-plan",
+        "shape": {
+          "command": "str",
+          "domain": "str",
+          "estimated_bytes": "int",
+          "exit_code": "int",
+          "format": "str",
+          "issues": [],
+          "levels": [
+            [
+              "str"
+            ]
+          ],
+          "missing_strategies": [],
+          "mode": "str",
+          "name": "str",
+          "ok": "bool",
+          "order": [
+            "str"
+          ],
+          "scale": "str",
+          "seed": "int",
+          "tables": {
+            "address": {
+              "columns": [
+                {
+                  "name": "str",
+                  "strategy": "str",
+                  "type": "str"
+                }
+              ],
+              "estimated_bytes": "int",
+              "rows": "int"
+            },
+            "customer": {
+              "columns": [
+                {
+                  "name": "str",
+                  "strategy": "str",
+                  "type": "str"
+                }
+              ],
+              "estimated_bytes": "int",
+              "rows": "int"
+            },
+            "order": {
+              "columns": [
+                {
+                  "name": "str",
+                  "strategy": "str",
+                  "type": "str"
+                }
+              ],
+              "estimated_bytes": "int",
+              "rows": "int"
+            },
+            "order_line": {
+              "columns": [
+                {
+                  "name": "str",
+                  "strategy": "str",
+                  "type": "str"
+                }
+              ],
+              "estimated_bytes": "int",
+              "rows": "int"
+            },
+            "product": {
+              "columns": [
+                {
+                  "name": "str",
+                  "strategy": "str",
+                  "type": "str"
+                }
+              ],
+              "estimated_bytes": "int",
+              "rows": "int"
+            },
+            "product_category": {
+              "columns": [
+                {
+                  "name": "str",
+                  "strategy": "str",
+                  "type": "str"
+                }
+              ],
+              "estimated_bytes": "int",
+              "rows": "int"
+            },
+            "promotion": {
+              "columns": [
+                {
+                  "name": "str",
+                  "strategy": "str",
+                  "type": "str"
+                }
+              ],
+              "estimated_bytes": "int",
+              "rows": "int"
+            },
+            "return": {
+              "columns": [
+                {
+                  "name": "str",
+                  "strategy": "str",
+                  "type": "str"
+                }
+              ],
+              "estimated_bytes": "int",
+              "rows": "int"
+            },
+            "store": {
+              "columns": [
+                {
+                  "name": "str",
+                  "strategy": "str",
+                  "type": "str"
+                }
+              ],
+              "estimated_bytes": "int",
+              "rows": "int"
+            }
+          },
+          "total_rows": "int",
+          "version": "int"
+        }
+      },
+      {
+        "argv": [
+          "emit",
+          "retail",
+          "--dry-run",
+          "--json"
+        ],
+        "code": 0,
+        "id": "emit-plan",
+        "shape": {
+          "actions": [],
+          "command": "str",
+          "format": "str",
+          "plan": {
+            "answer_key": "NoneType",
+            "checkpoint": {
+              "offset": "int",
+              "path": "NoneType",
+              "state": "str"
+            },
+            "command": "str",
+            "credentials": [],
+            "destinations": [
+              {
+                "event_format": "str",
+                "kind": "str",
+                "plugin": "NoneType",
+                "role": "str",
+                "scheme": "str",
+                "uri": "str"
+              }
+            ],
+            "drift_plan": "NoneType",
+            "envelope": "str",
+            "event_format": "str",
+            "event_order": "str",
+            "faults": {
+              "anomaly_fraction": "float",
+              "duplicate_fraction": "float",
+              "out_of_order": "float",
+              "poison_fraction": "float"
+            },
+            "format": "str",
+            "limits": {
+              "duration": "NoneType",
+              "events": "int",
+              "max_events": "NoneType"
+            },
+            "pacing": {
+              "arrivals": "str",
+              "bursts": "int",
+              "curve": "NoneType",
+              "day_seconds": "NoneType",
+              "expected_seconds": "NoneType",
+              "max_rate": "NoneType",
+              "mode": "str",
+              "peak_events_per_minute": "NoneType",
+              "ramps": "int",
+              "rate": "NoneType",
+              "speed": "NoneType"
+            },
+            "target": {
+              "mode": "NoneType",
+              "name": "str",
+              "scale": "NoneType",
+              "seed": "int",
+              "tables": [
+                {
+                  "name": "str",
+                  "rows": "int"
+                }
+              ],
+              "total_events": "int"
+            },
+            "version": "int"
+          },
+          "version": "int"
+        }
+      },
+      {
+        "argv": [
+          "stream",
+          "retail",
+          "--table",
+          "customer",
+          "--dry-run",
+          "--json"
+        ],
+        "code": 0,
+        "id": "stream-plan",
+        "shape": {
+          "actions": [],
+          "command": "str",
+          "format": "str",
+          "plan": {
+            "answer_key": "NoneType",
+            "checkpoint": {
+              "offset": "int",
+              "path": "NoneType",
+              "state": "str"
+            },
+            "command": "str",
+            "credentials": [],
+            "destinations": [
+              {
+                "event_format": "str",
+                "kind": "str",
+                "plugin": "NoneType",
+                "role": "str",
+                "scheme": "str",
+                "uri": "str"
+              }
+            ],
+            "drift_plan": "NoneType",
+            "envelope": "str",
+            "event_format": "str",
+            "event_order": "str",
+            "faults": {
+              "anomaly_fraction": "float",
+              "duplicate_fraction": "float",
+              "out_of_order": "float",
+              "poison_fraction": "float"
+            },
+            "format": "str",
+            "limits": {
+              "duration": "NoneType",
+              "events": "int",
+              "max_events": "NoneType"
+            },
+            "pacing": {
+              "arrivals": "str",
+              "bursts": "int",
+              "curve": "NoneType",
+              "day_seconds": "NoneType",
+              "expected_seconds": "NoneType",
+              "max_rate": "NoneType",
+              "mode": "str",
+              "peak_events_per_minute": "NoneType",
+              "ramps": "int",
+              "rate": "NoneType",
+              "speed": "NoneType"
+            },
+            "target": {
+              "mode": "NoneType",
+              "name": "str",
+              "scale": "NoneType",
+              "seed": "int",
+              "tables": [
+                {
+                  "name": "str",
+                  "rows": "int"
+                }
+              ],
+              "total_events": "int"
+            },
+            "version": "int"
+          },
+          "version": "int"
+        }
+      },
+      {
+        "argv": [
+          "version"
+        ],
+        "code": 0,
+        "id": "version",
+        "shape": {
+          "artifact_format": "int",
+          "shape": "str",
+          "specification": "str"
+        }
+      }
+    ],
+    "envelopes": [
+      {
+        "code": 0,
+        "error": null,
+        "expected": {
+          "command": "freeze",
+          "exit_code": 0,
+          "format": "shape-result",
+          "passed": true,
+          "version": 1
+        },
+        "id": "object",
+        "kind": "result",
+        "payload": {
+          "passed": true
+        }
+      },
+      {
+        "code": 0,
+        "error": null,
+        "expected": {
+          "command": "freeze",
+          "exit_code": 0,
+          "format": "shape-result",
+          "payload": [
+            1,
+            "a"
+          ],
+          "version": 1
+        },
+        "id": "list",
+        "kind": "result",
+        "payload": [
+          1,
+          "a"
+        ]
+      },
+      {
+        "code": 0,
+        "error": null,
+        "expected": {
+          "command": "freeze",
+          "exit_code": 0,
+          "format": "shape-result",
+          "payload": {
+            "format": "own",
+            "version": 7,
+            "x": 1
+          },
+          "version": 1,
+          "x": 1
+        },
+        "id": "collision",
+        "kind": "result",
+        "payload": {
+          "format": "own",
+          "version": 7,
+          "x": 1
+        }
+      },
+      {
+        "code": 2,
+        "error": "bad input",
+        "expected": {
+          "command": "freeze",
+          "error": "bad input",
+          "exit_code": 2,
+          "format": "shape-result",
+          "version": 1
+        },
+        "id": "error",
+        "kind": "result",
+        "payload": {}
+      },
+      {
+        "code": 0,
+        "error": null,
+        "expected": {
+          "command": "freeze",
+          "exit_code": 0,
+          "format": "shape-result",
+          "output": "hello\n",
+          "version": 1
+        },
+        "id": "text",
+        "kind": "result",
+        "payload": {
+          "output": "hello\n"
+        }
+      },
+      {
+        "actions": [
+          {
+            "action": "write",
+            "target": "file"
+          },
+          {
+            "action": "create",
+            "target": "file"
+          },
+          {
+            "action": "delete",
+            "target": "file"
+          },
+          {
+            "action": "send",
+            "target": "file"
+          }
+        ],
+        "error": null,
+        "expected": {
+          "actions": [
+            {
+              "action": "write",
+              "target": "file"
+            },
+            {
+              "action": "create",
+              "target": "file"
+            },
+            {
+              "action": "delete",
+              "target": "file"
+            },
+            {
+              "action": "send",
+              "target": "file"
+            }
+          ],
+          "command": "freeze",
+          "format": "shape-dry-run",
+          "version": 1
+        },
+        "id": "plan",
+        "kind": "dry-run"
+      },
+      {
+        "actions": [],
+        "error": "bad input",
+        "expected": {
+          "actions": [],
+          "command": "freeze",
+          "error": "bad input",
+          "format": "shape-dry-run",
+          "version": 1
+        },
+        "id": "bad-plan",
+        "kind": "dry-run"
+      }
+    ],
+    "exit_aliases": {
+      "compare": "fidelity",
+      "show": "inspect"
+    },
+    "exit_codes_sha256": "534e3089ec3dc6d855f245c891dae34fb32950bcfdda392a84a093bac52dc475",
+    "flags_sha256": "f7f0f3cf9d625d2459b4c6007ed323f2b5aa81a0cecf8d96a78cb809cadcb16e",
+    "native": {
+      "dry_run": [
+        "canary make",
+        "composite",
+        "demo cleanup",
+        "demo run",
+        "gameday run",
+        "generate",
+        "registry prune",
+        "seed"
+      ],
+      "dry_run_document": [
+        "emit",
+        "stream"
+      ],
+      "not_applicable": [
+        "bridge",
+        "version"
+      ],
+      "writers": [
+        "badge",
+        "bridge schema",
+        "capture",
+        "chaos",
+        "check",
+        "ci comment",
+        "ci post-comment",
+        "continue",
+        "contract emit",
+        "contracts check-consumers",
+        "demo init",
+        "demo notebook",
+        "demo report",
+        "design",
+        "detective start",
+        "dictionary",
+        "diff",
+        "drift",
+        "emit",
+        "fidelity",
+        "from-ddl",
+        "generate-drift",
+        "git-setup",
+        "import-schema",
+        "init",
+        "jobs cancel",
+        "jobs resume",
+        "keygen",
+        "learn",
+        "library get",
+        "mask",
+        "pack run",
+        "parity",
+        "pin",
+        "plugins allowlist init",
+        "plugins new",
+        "plugins sign",
+        "profile",
+        "profile export",
+        "profile import",
+        "profile merge",
+        "profile registry delete",
+        "profile registry reindex",
+        "profile registry save",
+        "profile registry tag",
+        "profile safe",
+        "profile validate",
+        "proposals contract",
+        "proposals decide",
+        "proposals propose",
+        "registry checkout",
+        "registry commit",
+        "registry promote",
+        "registry tag",
+        "report-card",
+        "resolve synth",
+        "rules backtest",
+        "rules mutate",
+        "scorecard",
+        "share-bundle create",
+        "sign",
+        "skew",
+        "skew-rehearsal",
+        "stream",
+        "stream-profile",
+        "suite run",
+        "time-travel",
+        "timelapse",
+        "transform cdm",
+        "transform star",
+        "verify"
+      ]
+    }
+  },
+  "files": {
+    "docs/EXIT_CODES.md": "fa1b527c0ae91af2c65dbd335377e00d2bd515d19a5c8eb2f0d0fe5d51deb769",
+    "docs/specs/ONE_ZERO_CONTRACT.md": "87ce1a7c3adb3e9e344d485cdd2d21cc7f520f3f92d30d91766b304401092fd5",
+    "docs/specs/SHAPE_ARTIFACT_SPEC.md": "4c5092e5c8c3bbe2b6378b069ae2ba717e51978f9244aecf0123572c7ed34f19",
+    "docs/specs/STATE_AND_COMPATIBILITY.md": "083c8063101e30f1771f9e416145966c722b2b248e8e1ead480bafec4f360f30",
+    "docs/specs/vectors/state_vectors.json": "f6a0d9f2c1c58b20003465335efdfaff48ce03d0b1bcb055d40a6c3baaced0bc",
+    "tests/cli/ci_flags_exemptions.json": "e74cc199a2c5477f1a6d1d01f8b93049b0e212171b61c42d6f79dbbf7e944dd6",
+    "tests/cli/cli_surface_v1.json": "caf1d9298017e36914ff447aae38f4c87a074297b41de6741aa591b0b75bccf3",
+    "tests/cli/test_ci_flags_coverage.py": "51f1b766283bcb9913e4296d2236ce03c69112d02c54bf79cb79a03f76ac1d3d",
+    "tests/cli/test_dry_run.py": "b29fc16e2327de5b2ced5afdd938365529ef9ab35498af33519273b65ae17efb",
+    "tests/cli/test_exit_code_classes.py": "f6276162805d84bd4473245c33bf813579c6adb86068661478bf51bc259a71e0",
+    "tests/cli/test_json_envelope.py": "c6941817960e33ecbfc058e433dfcb236c3f3e25fc0f1c74e595199cbabbb561"
+  },
+  "format": "shape-one-zero-freeze",
+  "reader_window": {
+    "earliest_removal": "2.0.0",
+    "notice_releases": 1,
+    "offline_migrator_required": true,
+    "through": "1.x"
+  },
+  "readers": {
+    "artifact": {
+      "current": 2,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0",
+        "2": "0.9.0"
+      },
+      "format": "shape",
+      "implicit_version": null,
+      "label": "Shape artifact",
+      "legacy_formats": [],
+      "legacy_version_keys": [
+        "format_version"
+      ],
+      "name": "artifact",
+      "unified_in_body": true
+    },
+    "contract": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-contract",
+      "implicit_version": 1,
+      "label": "contract",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "contract",
+      "unified_in_body": true
+    },
+    "contract-model": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-contract-model",
+      "implicit_version": 1,
+      "label": "contract model",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "contract-model",
+      "unified_in_body": true
+    },
+    "gate-schema": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-gates",
+      "implicit_version": null,
+      "label": "gate schema",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "gate-schema",
+      "unified_in_body": true
+    },
+    "generation-schema": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-generation-schema",
+      "implicit_version": null,
+      "label": "generation schema",
+      "legacy_formats": [],
+      "legacy_version_keys": [
+        "schema_version"
+      ],
+      "name": "generation-schema",
+      "unified_in_body": true
+    },
+    "generation-spec": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-generation-spec",
+      "implicit_version": 1,
+      "label": "generation spec",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "generation-spec",
+      "unified_in_body": true
+    },
+    "migration-receipt": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-migration-receipt",
+      "implicit_version": null,
+      "label": "migration receipt",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "migration-receipt",
+      "unified_in_body": true
+    },
+    "model": {
+      "current": 2,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0",
+        "2": "0.9.0"
+      },
+      "format": "shape-model",
+      "implicit_version": null,
+      "label": "Shape model",
+      "legacy_formats": [],
+      "legacy_version_keys": [
+        "schema_version"
+      ],
+      "name": "model",
+      "unified_in_body": false
+    },
+    "profile-artifact": {
+      "current": 2,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0",
+        "2": "0.9.0"
+      },
+      "format": "shape",
+      "implicit_version": null,
+      "label": "Shape profile artifact",
+      "legacy_formats": [],
+      "legacy_version_keys": [
+        "format_version"
+      ],
+      "name": "profile-artifact",
+      "unified_in_body": true
+    },
+    "profile-export": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-profile",
+      "implicit_version": null,
+      "label": "profile export",
+      "legacy_formats": [],
+      "legacy_version_keys": [
+        "format_version"
+      ],
+      "name": "profile-export",
+      "unified_in_body": true
+    },
+    "profile-registry-layout": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-profile-registry",
+      "implicit_version": 1,
+      "label": "profile registry layout",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "profile-registry-layout",
+      "unified_in_body": true
+    },
+    "registry-layout": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-registry",
+      "implicit_version": 1,
+      "label": "registry layout",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "registry-layout",
+      "unified_in_body": true
+    },
+    "run-manifest": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-run-manifest",
+      "implicit_version": 1,
+      "label": "run manifest",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "run-manifest",
+      "unified_in_body": true
+    },
+    "safe-profile": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-safe-profile",
+      "implicit_version": 1,
+      "label": "safe profile",
+      "legacy_formats": [],
+      "legacy_version_keys": [
+        "schema_version"
+      ],
+      "name": "safe-profile",
+      "unified_in_body": true
+    },
+    "scenario-pack": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-scenario-pack",
+      "implicit_version": 1,
+      "label": "scenario pack",
+      "legacy_formats": [],
+      "legacy_version_keys": [
+        "pack_version"
+      ],
+      "name": "scenario-pack",
+      "unified_in_body": true
+    },
+    "signature": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-signature",
+      "implicit_version": 1,
+      "label": "signature",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "signature",
+      "unified_in_body": true
+    },
+    "vault": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-vault",
+      "implicit_version": null,
+      "label": "value vault",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "vault",
+      "unified_in_body": true
+    },
+    "vault-policy": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-vault-policy",
+      "implicit_version": null,
+      "label": "vault policy",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "vault-policy",
+      "unified_in_body": true
+    },
+    "verify-config": {
+      "current": 1,
+      "deprecated": {},
+      "first_release": {
+        "1": "0.9.0"
+      },
+      "format": "shape-verify-config",
+      "implicit_version": null,
+      "label": "verify configuration",
+      "legacy_formats": [],
+      "legacy_version_keys": [],
+      "name": "verify-config",
+      "unified_in_body": true
+    }
+  },
+  "version": 1
+}

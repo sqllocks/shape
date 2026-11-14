@@ -213,3 +213,22 @@ Date: **2026-10-11**. Note: `docs/GITHUB_ACTION.md:84` in OWNER_NOTES_TRIAGE.md.
 > Required status check: the `shape` job; demonstrated in sqllocks/shape-action-demo ruleset 24896836; 2026-10-11
 
 Evidence relied on: `docs/plans/evidence/owner-notes/github-action-pass.md`, `docs/plans/evidence/owner-notes/github-action-drift.md` and `docs/plans/evidence/owner-notes/github-action-ruleset.md`; read-only GitHub job logs, PR comments, active ruleset and blocked PR state. The required check is the job name `shape`; the documentation does not configure a reader’s branch protection.
+
+## one-zero-freeze
+
+Date: **2026-11-14**. Decision: **APPROVE**.
+
+The Owner approved the five-line recommendation in
+[1.0-FREEZE.md](1.0-FREEZE.md#recommendation-presented-to-the-owner).
+The first answer was verbatim:
+
+> 1
+
+The Owner then confirmed verbatim:
+
+> 1 — Approve. Note in the PR body that the live Azure connectivity test needs a live account and is outside this change.
+
+This approves the 1.0 format/CLI freeze, the entire-1.x reader window, the exact
+three machine-flag exemptions and documentation/test enforcement. It authorizes
+the requested reviewed PR and merge after required checks pass; it does not
+authorize a version bump, tag or release.
