@@ -7,7 +7,7 @@ vary; this is a workflow distinction, not a claim about every capability of Toni
 A profile can still retain values: inspect and govern it before sharing.
 
 **Is it open source?**
-The core is open source; see the repository [LICENSE](../../../../LICENSE).
+The core is open source; see the repository [LICENSE](../../../LICENSE).
 A commercial edition exists. This demo does not require it.
 
 **What works in Fabric today versus what's planned?**
