@@ -1,0 +1,35 @@
+{
+  "check": "fabric-git-sync",
+  "date": "2026-11-14",
+  "shape_version": "0.9.4",
+  "workspace_id": "e90940bd-3f32-42ce-998e-ef2ddc74355b",
+  "item_name": "p3-c30a4c3cc3",
+  "method": "Owner-operated scoped API roundtrip; selective commits include only the p3- Notebook.",
+  "steps": [
+    "Create an isolated branch with no existing item definitions",
+    "Create a temporary repo-scoped GitHub credential connection",
+    "Create one p3- Notebook in Shape Test",
+    "Connect and initialize with PreferWorkspace",
+    "Selectively commit only the p3- Notebook",
+    "Push two real .shape files in a sibling shape/ folder and edit the Notebook definition",
+    "Update from Git and assert no conflicts",
+    "Edit the p3- Notebook in the workspace and selectively commit it",
+    "Read both artifacts from Git and compare exact bytes"
+  ],
+  "verified": true,
+  "item_definition_conflicts": 0,
+  "artifacts_byte_identical": true,
+  "artifact_sha256": {
+    "orders.shape": "35fac1c683c109a583ea0f2826563550b9a65202d0a18aa4bdbb61d79292d0c2",
+    "customers.shape": "3193007a88bd2deb9a5def85323a525bea73eaf53e36cf58847b0809135f51de"
+  },
+  "workspace_to_git_commit": "1384d2e09a78bef496904bc76367b8b5dbbdbb59",
+  "cleanup": {
+    "notebook": "deleted",
+    "credential_connection": "deleted",
+    "temporary_branch": "deleted"
+  },
+  "initial_workspace_git_state": "NotConnected",
+  "final_workspace_git_state": "NotConnected",
+  "cleanup_errors": []
+}

@@ -1,57 +1,42 @@
-# Shape Fabric Environment
+# Shape Fabric Environment: default installation
 
-A Fabric **Environment** installs Shape once, so every **Spark** notebook or pipeline
-run attached to it gets `import shape` with no `%pip` cell. Environments attach to
-Spark notebooks and Spark job definitions only (Microsoft: "Environment integration isn't
-available on Python notebooks"). The Python notebooks (`shape_profile`, `shape_generate`,
-`shape_profile_domain`) install the wheel themselves with `%pip`; in a pipeline run that needs the
-Boolean notebook-activity parameter `_inlineInstallationEnabled = true`, which the shipped
-pipelines set (see `../RUNBOOK.md` section 4). A pipeline that must not install at run time
-uses the PySpark notebook with this Environment published in Full mode. **[VERIFY]**
+Use `environment.yml` as the default install path for the PySpark notebooks
+`shape_profile_spark` and `shape_profile_distributed`, and the `shape_gate_spark` pipeline.
+These notebooks have no inline installation cells. The Environment installs libraries on
+the driver and executors. Python notebooks cannot attach an Environment; their inline
+installation remains an explicit fallback (RUNBOOK section 4).
 
-The distributed notebook (`shape_profile_distributed.ipynb`) runs Shape **on the executors**, so
-the Environment, which installs Shape on every node, is required for it.
-
-## Build steps
-
-1. In the workspace: **New item > Environment**, name it `shape-env`.
-2. **Runtime:** Home ribbon > **Runtime** > **2.0** (Spark 4.1, Python 3.13).
-   Runtime 1.3 also works; the notebook detects the Spark version and uses
-   `toPandas()` there (`toArrow()` on 2.0).
-3. **Libraries > Custom libraries > Upload**, and choose
-   `sqllocks_shape-0.9.4-py3-none-any.whl` (built by DM-03, or downloaded from
-   the GitHub release / PyPI). A custom `.whl` has no platform-independence rule in
-   Environments. To run on the Rust kernel, also upload the Linux x86_64 platform wheel
-   (an `abi3` `manylinux` x86_64 `.whl`); the pure wheel is the
-   fallback. Both wheels have one version, so keep exactly one of each. Which kernel ran is
-   reported by the notebooks (`kernel` in the exit value). **[VERIFY]** that an Environment
-   accepts two wheels with the same name and version and that pip prefers the platform one.
-4. Optional: **Libraries > External repositories / Add from YAML** with
-   `environment.yml` from this folder (it is inactive by default; see its header).
-   If outbound access protection is on, PyPI is blocked: upload every dependency as a
-   custom wheel instead.
-5. **Publish.** Two modes:
-
-   | Mode | Time | Use for |
-   |---|---|---|
-   | **Quick** | about 5 seconds; the install happens at session start | the live demo, in notebooks only |
-   | **Full** | 3 to 6 minutes to publish, plus 1 to 3 minutes at session start | pipelines and Spark job definitions |
-
-   Use **Quick** for the talk. Use **Full** before running `shape_gate_spark`
-   from a pipeline, because pipelines do not honour Quick-mode installs.
-6. Attach `shape-env` to `shape_profile_spark` and `shape_profile_distributed` (notebook toolbar > **Environment**),
-   or set it as the workspace default (Workspace settings > Data Engineering > Environment).
-7. **Verify (in the workspace, on first run).** In a Spark notebook attached to the
-   Environment run:
+1. Create an Environment named `shape-env` in the workspace.
+2. Select Runtime 2.0 (Spark 4.1, Python 3.13), or the supported Runtime 1.3.
+3. In Libraries, import this folder's `environment.yml` using **Add from YAML**.
+   It pins both `sqllocks-shape` and `sqllocks-shape-fabric` to the repository's release
+   version, currently 0.9.4. `test_environment_pins_match_both_version_sources` in
+   `plugins/shape-fabric/tests/test_native_integration.py` prevents version drift.
+4. Publish in **Full** mode for pipeline use. Attach the published Environment to both
+   PySpark notebooks using their Environment selector; attach the default lakehouse too.
+5. Start a fresh session and verify:
 
    ```python
-   import numpy, pyarrow, pandas, shape
+   import importlib.metadata
+   import shape
+   import shape_fabric
 
-   print(numpy.__version__, pyarrow.__version__, pandas.__version__, shape.__file__)
+   assert shape.__version__ == "0.9.4"
+   assert importlib.metadata.version("sqllocks-shape-fabric") == shape.__version__
    ```
 
-   Required: numpy 2.x and pyarrow 14 or newer. If a version is older, uncomment
-   that line in `environment.yml`, re-add the YAML and re-publish.
+If the release is not yet available on your package index, or outbound access protection
+blocks it, upload the matching release wheels and their dependencies as custom libraries
+instead, then publish and attach the Environment. Do not substitute an older release.
+For semantic-model profiling also add `semantic-link-sempy>=0.8` to the Environment's
+public libraries (the plugin's `semantic-link` extra).
 
-Nothing above was verified against a live workspace by the builder. Every step is on the
-owner's dry-run checklist in `../RUNBOOK.md`.
+For the Python notebook fallback, upload the matching wheels to Resources > builtin and
+use the existing `%pip` cells, which install the uploaded wheels by path. The fallback
+pipelines enable `_inlineInstallationEnabled = true`; inline installation is not supported
+in High Concurrency or notebook reference runs. See RUNBOOK section 4 for details.
+
+Sources: [Fabric Environment libraries](https://learn.microsoft.com/fabric/data-engineering/environment-manage-library),
+[Python notebooks](https://learn.microsoft.com/fabric/data-engineering/using-python-experience-on-notebook).
+Workspace installation verification is still pending; local tests validate the pins and
+that the default Spark path contains no inline installation.

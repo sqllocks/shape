@@ -20,6 +20,7 @@ import argparse
 import json
 import uuid
 from pathlib import Path
+from typing import Any
 
 HERE = Path(__file__).resolve().parent
 
@@ -45,10 +46,11 @@ NOTEBOOK_PARAMETERS = {
     "baselinePath": "string",
     "outputDir": "string",
     "failOnDrift": "bool",
+    "variableLibrary": "string",
 }
 
 
-def _expr(text: str) -> dict:
+def _expr(text: str) -> dict[str, Any]:
     return {"value": text, "type": "Expression"}
 
 
@@ -58,7 +60,7 @@ def _expr(text: str) -> dict:
 INLINE_INSTALL = "_inlineInstallationEnabled"
 
 
-def _notebook_parameters(args: dict, *, inline_install: bool) -> dict:
+def _notebook_parameters(args: dict[str, Any], *, inline_install: bool) -> dict[str, Any]:
     """The notebook activity's parameters; ``inline_install`` adds the flag that lets ``%pip``
     run in the pipeline (only for a notebook that has a ``%pip`` cell)."""
     out = dict(args)
@@ -67,7 +69,9 @@ def _notebook_parameters(args: dict, *, inline_install: bool) -> dict:
     return out
 
 
-def _notebook_gate(notebook: str, description: str, *, inline_install: bool = False) -> dict:
+def _notebook_gate(
+    notebook: str, description: str, *, inline_install: bool = False
+) -> dict[str, Any]:
     return {
         "properties": {
             "description": description,
@@ -77,6 +81,7 @@ def _notebook_gate(notebook: str, description: str, *, inline_install: bool = Fa
                 "baselinePath": {"type": "string", "defaultValue": ""},
                 "outputDir": {"type": "string", "defaultValue": "shape"},
                 "failOnDrift": {"type": "bool", "defaultValue": False},
+                "variableLibrary": {"type": "string", "defaultValue": ""},
             },
             "activities": [
                 {
@@ -126,8 +131,10 @@ def _notebook_gate(notebook: str, description: str, *, inline_install: bool = Fa
     }
 
 
-def _udf_gate() -> dict:
-    def call(name: str, function: str, parameters: dict, depends: list) -> dict:
+def _udf_gate() -> dict[str, Any]:
+    def call(
+        name: str, function: str, parameters: dict[str, Any], depends: list[Any]
+    ) -> dict[str, Any]:
         return {
             "name": name,
             "type": "UserDataFunctions",
@@ -209,7 +216,7 @@ DOMAIN_NOTEBOOK_PARAMETERS = {
 }
 
 
-def _generate_gate() -> dict:
+def _generate_gate() -> dict[str, Any]:
     parameters = {
         "domain": {"type": "string", "defaultValue": "retail"},
         "scale": {"type": "string", "defaultValue": "small"},
@@ -298,7 +305,7 @@ def _generate_gate() -> dict:
     }
 
 
-# ISS2-dbt: a dbt job, then the Shape notebook on the model outputs, then the contract and drift gate.
+# ISS2-dbt: dbt job, Shape notebook on model outputs, then contract and drift gate.
 DBT_EXIT_VALUE = "json(activity('ProfileDbtOutputs').output.result.exitValue)"
 DBT_NOTEBOOK_PARAMETERS = {
     "models": "string",
@@ -312,7 +319,7 @@ DBT_NOTEBOOK_PARAMETERS = {
 }
 
 
-def _dbt_gate() -> dict:
+def _dbt_gate() -> dict[str, Any]:
     """dbt job, Shape profile of its outputs and one report, gate.
 
     **[VERIFY]** The dbt job activity (its type name ``DbtJob`` and the property names of its
@@ -402,7 +409,7 @@ def _dbt_gate() -> dict:
     }
 
 
-def build() -> dict[str, dict]:
+def build() -> dict[str, dict[str, Any]]:
     return {
         "shape_gate_notebook": _notebook_gate(
             "shape_profile",
@@ -418,7 +425,7 @@ def build() -> dict[str, dict]:
     }
 
 
-def platform(name: str) -> dict:
+def platform(name: str) -> dict[str, Any]:
     return {
         "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
         "metadata": {"type": "DataPipeline", "displayName": name},
