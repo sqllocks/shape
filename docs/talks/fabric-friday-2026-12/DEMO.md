@@ -13,7 +13,7 @@ Do not claim a successful Fabric run until that rehearsal is recorded.
 
 From the repository root run `make bootstrap`. All subsequent development commands use
 `uv run --locked`; do not install packages during the presentation. Keep this checkout
-and its populated uv cache on the fallback laptop. The verifier uses `UV_OFFLINE=1`.
+and its populated uv cache on the fallback laptop. The verifier uses `UV_OFFLINE=1` and `--no-sync` to reuse the prepared environment.
 
 Fixture provenance: `data/generate_samples.py` calls Shape with authored evidence,
 seeds 1204 (240 orders) and 1206 (60 customers). Day 2 derives from day 1 with explicit
@@ -94,9 +94,9 @@ for these synthetic fixtures; raw profiles and reports can expose source values.
 
 <!-- exit: 0 -->
 ```bash offline
-uv run --locked --project "$TALK/../../.." shape profile orders_day1.parquet --name orders --capture full -o day1.shape --html day1.html
-uv run --locked --project "$TALK/../../.." shape profile customers.parquet --name customers --capture full -o customers.shape
-uv run --locked --project "$TALK/../../.." shape profile orders_day2.parquet --name orders --capture full -o day2.shape
+uv run --locked --no-sync --project "$TALK/../../.." shape profile orders_day1.parquet --name orders --capture full -o day1.shape --html day1.html
+uv run --locked --no-sync --project "$TALK/../../.." shape profile customers.parquet --name customers --capture full -o customers.shape
+uv run --locked --no-sync --project "$TALK/../../.." shape profile orders_day2.parquet --name orders --capture full -o day2.shape
 ```
 
 ## 2. Write a contract and gate the pipeline load
@@ -146,17 +146,17 @@ and `status allowed_values`. Missing batch date is a configuration error, exit 2
 
 <!-- exit: 0 -->
 ```bash offline
-uv run --locked --project "$TALK/../../.." shape check day1.shape orders.json --data orders_day1.parquet --as-of 2026-12-04 --json pass.json
+uv run --locked --no-sync --project "$TALK/../../.." shape check day1.shape orders.json --data orders_day1.parquet --as-of 2026-12-04 --json pass.json
 ```
 
 <!-- exit: 1 -->
 ```bash offline
-uv run --locked --project "$TALK/../../.." shape check day2.shape orders.json --data orders_day2.parquet --as-of 2026-12-05 --json fail.json
+uv run --locked --no-sync --project "$TALK/../../.." shape check day2.shape orders.json --data orders_day2.parquet --as-of 2026-12-05 --json fail.json
 ```
 
 <!-- exit: 2 -->
 ```bash offline
-uv run --locked --project "$TALK/../../.." shape check day1.shape orders.json --data orders_day1.parquet
+uv run --locked --no-sync --project "$TALK/../../.." shape check day1.shape orders.json --data orders_day1.parquet
 ```
 
 ## 3. Catch drift before the dashboard
@@ -173,7 +173,7 @@ amount distribution are separate findings from the date and regex contract viola
 
 <!-- exit: 1 -->
 ```bash offline
-uv run --locked --project "$TALK/../../.." shape diff day1.shape day2.shape --threshold mean_shift_std=0.25 --fail-on-drift --json drift.json
+uv run --locked --no-sync --project "$TALK/../../.." shape diff day1.shape day2.shape --threshold mean_shift_std=0.25 --fail-on-drift --json drift.json
 ```
 
 ## 4. Generate a realistic synthetic copy into a dev Lakehouse
@@ -215,9 +215,9 @@ and verify it can be profiled. Expect 240 newly generated rows, not row equality
 
 <!-- exit: 0 -->
 ```bash offline
-uv run --locked --project "$TALK/../../.." shape plan day1.shape --json > plan.json
-uv run --locked --project "$TALK/../../.." shape generate --from day1.shape --rows 240 --seed 1207 --format parquet -o dev
-uv run --locked --project "$TALK/../../.." shape profile dev --capture full -o dev.shape
+uv run --locked --no-sync --project "$TALK/../../.." shape plan day1.shape --json > plan.json
+uv run --locked --no-sync --project "$TALK/../../.." shape generate --from day1.shape --rows 240 --seed 1207 --format parquet -o dev
+uv run --locked --no-sync --project "$TALK/../../.." shape profile dev --capture full -o dev.shape
 ```
 
 If any Fabric action fails, switch immediately to its matching offline block. Use locally

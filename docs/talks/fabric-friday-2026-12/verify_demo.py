@@ -65,6 +65,7 @@ def verify() -> None:
                 "uv",
                 "run",
                 "--locked",
+                "--no-sync",
                 "python",
                 str(HERE / "data/generate_samples.py"),
                 "--out",
