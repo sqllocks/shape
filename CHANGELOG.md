@@ -6,6 +6,13 @@ Status: available.
 
 ## Unreleased
 
+- Fabric-native gate defaults: pin core and Fabric plugin versions in the Environment YAML,
+  document the Environment-backed Spark path and inline-install fallback, and read validated
+  gate mode, drift thresholds and baseline paths from a Variable Library's active value set.
+  Add an offline check for profile folders beside Fabric Git items. Semantic-model profiling
+  through sempy already ships; live Git-sync verification in Shape Test remains pending because
+  the workspace is not connected to Git.
+
 - Complete built-in registry isolation for frozen bridge replays and runnable reference transcripts, with separate generic installed-extension coverage. Validate doctor runtime versions and preserve Arrow-backed Decimal comparisons across supported dataframe versions. Frozen vectors, schemas, recorded outputs and monetary assertions are unchanged.
 
 - Bridge compatibility tests isolate the frozen built-in domain baseline from installed extensions, and verify additive domain discovery and optional description fallback with generic plugins. Published vectors and schemas are unchanged.
