@@ -45,13 +45,69 @@ def part(path, value):
     }
 
 
+# A Location is data, not permission to send credentials to another host.
+LOCATION_REDIRECT_HOSTS = frozenset({"wabi-us-central-b-primary-redirect.analysis.windows.net"})
+_GUID = r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+
+
+def location_url(value, kind):
+    parsed = urllib.parse.urlsplit(value)
+    if (
+        parsed.scheme != "https"
+        or parsed.netloc not in {"api.fabric.microsoft.com", *LOCATION_REDIRECT_HOSTS}
+        or parsed.fragment
+        or "%" in parsed.path
+    ):
+        raise ObservedFailure("response_origin_guard")
+    if kind == "operation":
+        valid = re.fullmatch(r"/v1/operations/" + _GUID + r"(?:/result)?", parsed.path)
+        if parsed.query:
+            raise ObservedFailure("operation_location_path_guard")
+    elif kind == "job":
+        valid = re.fullmatch(
+            r"/v1/"
+            + re.escape(BASE)
+            + r"(?:items/"
+            + _GUID
+            + r"/jobs/instances/"
+            + _GUID
+            + r"|notebooks/"
+            + _GUID
+            + r"/jobs/(?:execute/)?instances/"
+            + _GUID
+            + r")",
+            parsed.path,
+        )
+        query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+        if any(
+            pair not in (("beta", "true"), ("beta", "false"), ("jobType", "RunNotebook"))
+            for pair in query
+        ):
+            raise ObservedFailure("job_location_path_guard")
+    else:
+        raise ObservedFailure("location_kind_guard")
+    if not valid:
+        raise ObservedFailure("location_path_guard")
+    return urllib.parse.urlunsplit(
+        ("https", "api.fabric.microsoft.com", parsed.path, parsed.query, "")
+    )
+
+
+class FabricOriginRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        parsed = urllib.parse.urlsplit(newurl)
+        if parsed.scheme != "https" or parsed.netloc != "api.fabric.microsoft.com":
+            raise ObservedFailure("response_origin_guard")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def database_body(parent):
     mapping = [
         {"column": k, "Properties": {"path": "$." + k}}
         for k in ("id", "marker", "_shape_table", "_shape_seq")
     ]
     schema = (
-        ".create table ['f12-events'] (id:long, marker:string, "
+        ".create-merge table ['f12-events'] (id:long, marker:string, "
         "_shape_table:string, _shape_seq:long)\n"
     )
     schema += ".create-or-alter table ['f12-events'] ingestion json mapping 'f12-json' "
@@ -126,6 +182,7 @@ def safe_records(raw):
         "events_sent",
         "events_landed",
         "events",
+        "worker_runtime",
     }
     numeric = {
         "cpu_count",
@@ -150,8 +207,10 @@ def safe_records(raw):
         "warning",
         "counts_match",
         "versions_match",
+        "fresh_interpreter",
     }
     enums = {
+        "task": {"after_install", "memory", "semantic_model", "events"},
         "result": {"failed", "skipped"},
         "kernel": {"python", "rust"},
         "mode": {"bounded"},
@@ -161,6 +220,7 @@ def safe_records(raw):
         "peak_rss_unit": {"KiB", "bytes"},
         "destination_status": {
             "NotChecked",
+            "Creating",
             "Running",
             "Warning",
             "Stopped",
@@ -365,12 +425,15 @@ class Agent:
             headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"},
         )
         try:
-            with urllib.request.urlopen(request, timeout=60) as response:
+            opener = urllib.request.build_opener(FabricOriginRedirectHandler())
+            with opener.open(request, timeout=60) as response:
                 return (
                     response.status,
                     dict((k.lower(), v) for k, v in response.headers.items()),
                     json.loads(response.read() or "{}"),
                 )
+        except ObservedFailure:
+            raise
         except urllib.error.HTTPError as error:
             # Never print/read remote diagnostic bodies: they can echo protected values.
             raise ObservedFailure("fabric_http", error.code) from None
@@ -383,7 +446,7 @@ class Agent:
         status, headers, data = self.call("POST", BASE + collection, body)
         receipt("create_" + kind.lower(), http_status=status)
         if status == 202:
-            location = headers["location"]
+            location = location_url(headers["location"], "operation")
             for _ in range(120):
                 time.sleep(max(1, int(headers.get("retry-after", "5"))))
                 _, headers, operation = self.call("GET", location)
@@ -428,8 +491,9 @@ class Agent:
         receipt("setup", result="ready")
 
     def ready(self):
+        resume_requested = False
         es, db = self.state["eventstream_id"], self.state["database_id"]
-        for attempt in range(30):
+        for _attempt in range(30):
             _, _, topology = self.call("GET", BASE + "eventstreams/" + es + "/topology")
             destinations = [
                 x for x in topology.get("destinations", []) if x.get("name") == "f12-destination"
@@ -443,6 +507,9 @@ class Agent:
             status = details.get("status")
             if status == "Warning":
                 raise ObservedFailure("destination_warning_no_events_sent")
+            if status == "Creating":
+                time.sleep(5)
+                continue
             properties = details.get("properties", {})
             if (
                 properties.get("dataIngestionMode") != "ProcessedIngestion"
@@ -461,8 +528,9 @@ class Agent:
                         "readiness", source_running=True, destination_running=True, warning=False
                     )
                     return
-            if attempt == 0:
+            if status != "Running" and not resume_requested:
                 self.call("POST", url + "/resume", {"startType": "Now"})
+                resume_requested = True
                 receipt("destination_resume", result="accepted")
             time.sleep(5)
         raise ObservedFailure("destination_or_source_not_running")
@@ -489,7 +557,7 @@ class Agent:
                 "parameters": parameters,
             },
         )
-        self.state["job_location"] = headers["location"]
+        self.state["job_location"] = location_url(headers["location"], "job")
         self.save()
         receipt(
             "submit_python_job", http_status=status, requested_vcores=2, environment_attached=False
@@ -499,7 +567,8 @@ class Agent:
         self.save()
 
     def exit_value_url(self):
-        location = urllib.parse.urlsplit(self.state["job_location"])
+        canonical = location_url(self.state["job_location"], "job")
+        location = urllib.parse.urlsplit(canonical)
         if location.scheme != "https" or location.netloc != "api.fabric.microsoft.com":
             raise ObservedFailure("response_origin_guard")
         # Location commonly uses the generic item job endpoint. Exit values use
@@ -521,6 +590,9 @@ class Agent:
             item["id"] == notebook_id and item["type"] == "Notebook" for item in self.state["items"]
         ):
             raise ObservedFailure("job_location_ownership_guard")
+        if canonical != self.state["job_location"]:
+            self.state["job_location"] = canonical
+            self.save()
         return (
             API
             + BASE
@@ -569,6 +641,8 @@ class Agent:
         if nonempty:
             try:
                 records = safe_records(exit_value)
+                if not records:
+                    raise ValueError("EmptyExitRecords")
             except Exception:
                 receipt(
                     "job_exit_value",
@@ -582,6 +656,7 @@ class Agent:
 
     def cleanup(self):
         if self.state.get("job_location"):
+            self.exit_value_url()  # Normalize old ledgers and verify notebook ownership first.
             _, _, job = self.call("GET", self.state["job_location"])
             if job.get("status") not in ("Completed", "Failed", "Cancelled", "Deduped"):
                 raise ObservedFailure("active_job_stop_before_cleanup")

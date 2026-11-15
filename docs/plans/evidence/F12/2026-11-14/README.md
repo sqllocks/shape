@@ -123,3 +123,37 @@ using the Owner UI or the documented VS Code resource publisher. Retain Python
 3.12, default 2 vCore/16 GB and no Environment. The existing install fallback reads
 those exact builtin files. Do not raise the size budgets or replace/rebuild wheels
 to conceal a service rejection. See OWNER_STEPS.md for the Owner-only steps.
+
+## End-to-end defect corrections
+
+The Owner reported four handoff failures: regional-host Location values rejected by
+the origin guard, an unsupported schema command, premature resume during Creating,
+and cached parent NumPy causing every workload to skip after a successful pip
+upgrade. These descriptions are Owner observations; no raw Fabric run output was
+supplied in this message and no new live qualification is claimed here.
+
+The helper now canonicalizes only allowlisted Location hosts/operation or owned-job
+paths to the Fabric API host, refuses cross-origin HTTP redirects, uses
+`.create-merge table`, waits out Creating and never resumes Running. All prior item,
+ownership, no-reuse, cleanup, Warning, endpoint binding and secret-output guards
+remain. The notebook now runs import verification and every Shape/sempy workload in
+fresh child interpreters after the same-session pip install. The parent is only a
+standard-library/NotebookUtils coordinator, not the cached-package workload process.
+It retains the complete safe result list and returns the final job exit value.
+
+The worker's explicit Fabric SDK credential/context obtains tokens from the current
+notebook through private pipes on demand. Key Vault and hidden prompt values use
+the same in-memory bridge. Tokens/secrets are not written to argv, files, the ledger,
+or added to environment variables. Normal output passes the existing allowlist;
+raw library stdout/stderr does not reach notebook output. Resource limits remain the
+same shared default Python 3.12 2 vCore/16 GB node with no attached Environment.
+The parent may still hold NumPy 1; loaded versions are measured and checked in each
+fresh child, including semantic and events tasks. See OWNER_STEPS.md and REST_SETUP.md
+for the chosen process approach and Learn references; no kernel restart or stateful
+job continuation is assumed.
+
+`live-defect-validation.txt` records local mocked LRO/state transitions, real reduced
+fresh-process profiling with a deliberately stale parent cache, and a fresh sempy
+import/credential-bridge test. Its versions, row counts, RSS and times describe the
+local harness only; the pip installation itself was not rerun in Fabric. Wheel bytes,
+original wheel SHA-256 values and wheel source_commit are unchanged.

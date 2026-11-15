@@ -1,0 +1,22 @@
+LOCAL: allowlisted operation/job Location rewrite; malformed/off-origin/path/query links rejected; HTTP off-origin redirect refused
+LOCAL: complete mocked LRO uses only canonical API GETs; old job ledger rewritten before beta exit polling
+LOCAL: database definition uses supported create-merge table command
+LOCAL: Creating/Running provisioning sequence, resume calls: 1
+LOCAL: Creating/Running provisioning sequence, resume calls: 0
+LOCAL: Creating/Running provisioning sequence, resume calls: 0
+{"stage": "worker_runtime", "task": "after_install", "fresh_interpreter": true, "python": "3.12.14", "shape": "0.9.4", "loaded_versions": {"numpy": "2.5.3", "pandas": "2.3.3", "pyarrow": "25.0.1"}, "versions_match": true}
+{"stage": "after_install", "python": "3.12.14", "shape": "0.9.4", "kernel": "rust", "imports": "passed", "loaded_versions": {"numpy": "2.5.3", "pandas": "2.3.3", "pyarrow": "25.0.1"}, "versions_match": true, "packages": {"numpy": "2.5.3", "pandas": "2.3.3", "pyarrow": "25.0.1", "semantic-link-sempy": "0.13.0"}}
+{"stage": "child_exit", "task": "after_install", "exit_code": 0, "fresh_interpreter": true}
+{"stage": "worker_runtime", "task": "memory", "fresh_interpreter": true, "python": "3.12.14", "shape": "0.9.4", "loaded_versions": {"numpy": "2.5.3", "pandas": "2.3.3", "pyarrow": "25.0.1"}, "versions_match": true}
+{"stage": "generation", "rows": 100, "columns": 10, "seconds": 0.0455018780012324, "parquet_bytes": 9852}
+{"stage": "profile", "mode": "bounded", "kernel": "rust", "rows": 100, "columns": 10, "seconds": 0.01187721399764996, "peak_rss_raw": 120644, "peak_rss_unit": "KiB"}
+{"stage": "child_exit", "rows": 100, "exit_code": 0}
+{"stage": "generation", "rows": 200, "columns": 10, "seconds": 0.001338928999757627, "parquet_bytes": 16794}
+{"stage": "profile", "mode": "bounded", "kernel": "rust", "rows": 200, "columns": 10, "seconds": 0.009642187997087603, "peak_rss_raw": 120772, "peak_rss_unit": "KiB"}
+{"stage": "child_exit", "rows": 200, "exit_code": 0}
+{"stage": "child_exit", "task": "memory", "exit_code": 0, "fresh_interpreter": true}
+LOCAL: deliberately stale parent NumPy cache retained; real fresh interpreters imported NumPy 2 and profiled both reduced workloads
+LOCAL: real child/parent private-pipe token/secret roundtrip; allowlist suppresses protected fields
+LOCAL: real fresh sempy import and SDK credential override requested notebook PBI tokens over the pipe; no SP or network request
+LOCAL: pip-failure path emits explicit after_install skipped receipt without launching a worker
+All measurements above are LOCAL reduced-workload checks; no Fabric API requests or items were created.

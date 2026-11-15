@@ -1,5 +1,5 @@
 LOCAL: mode-specific destination payload and four JSON paths verified
-{"stage": "notebook_size_preflight", "notebook_content_bytes": 4297696, "inline_base64_bytes": 5730264, "create_request_bytes": 5730454, "documented_content_budget_bytes": 32000000, "local_request_budget_bytes": 32000000}
+{"stage": "notebook_size_preflight", "notebook_content_bytes": 4313009, "inline_base64_bytes": 5750680, "create_request_bytes": 5750870, "documented_content_budget_bytes": 32000000, "local_request_budget_bytes": 32000000}
 LOCAL: all wheel hashes retained; rendered notebook Python cells parse
 LOCAL: install uses three verified local wheel paths; pip execution mocked
 LOCAL: pre-send guard Running ProcessedIngestion sent=True protected values absent from output endpoint_mismatch=False

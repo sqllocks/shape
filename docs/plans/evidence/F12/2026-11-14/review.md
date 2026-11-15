@@ -135,3 +135,48 @@ live job result.
 No further blocker found. The helper and notebook revisions remain prepared but
 unexecuted against Fabric; no model profile, Python runtime/resource measurement,
 or Eventstream count qualification is closed.
+
+## Owner-reported live-defect follow-up — 2026-11-15
+
+Reviewed the latest helper, notebook, worker source, docs and validation records, then
+checked `/workspace/f12-owner-handoff.zip`. ZIP integrity passed; all declared member
+sizes/hashes match the manifest, and the three original wheel hashes and source
+commit are unchanged. The standalone `f12_worker.py` source exactly matches the worker
+string embedded in the notebook.
+
+The four reported defects are addressed in the prepared code: operation/job
+Locations are limited to canonical operation or owned-job paths and allowlisted
+hosts, then rewritten to the Fabric API host; cross-origin HTTP redirects are
+rejected; KQL schema uses `.create-merge`; and destination readiness waits through
+Creating, resumes only non-Running states once, rejects Warning and requires both
+source and destination Running before sends. All `Shape`, NumPy, pandas, PyArrow and
+sempy workload imports run in fresh child interpreters after same-session pip
+installation. A stale parent package cache therefore cannot make the measured worker
+reuse old imported modules. The earlier duplicate semantic `profile_model` request
+is also resolved: the wrapper captures the test's one profile result and restores the
+original binding in `finally` before summarizing that result.
+
+Reviewed the child/parent pipe bridge and scope handling. Token, secret and prompt
+values cross the private pipes only; the parent filters worker records before
+display, while child stderr and unrecognized stdout are discarded. SemPy's default
+token scope is Power BI, and the SDK documents that this scope serves Fabric public
+REST APIs; the NotebookUtils `pbi`/`kusto` audiences are used for their respective
+calls. The Kusto token remains an explicit callback to the Eventhouse writer. The
+pipe bridge does not invoke the service-principal fixture or send the caller's
+external token into the notebook. This review found no remaining token-audience
+blocker.
+
+The beta exit-value path now handles the previously noted empty JSON record list by
+requiring a nonempty parsed result and falling back to Owner-safe notebook output.
+The pip-failure path also emits an explicit `after_install: skipped` receipt. The
+safe output allowlist continues to drop arbitrary strings, table names, connection
+details and raw service diagnostics.
+
+`live-defect-validation.txt` records mocked Location/LRO/state transitions and local
+fresh-process checks, including reduced row counts/RSS, a stale parent NumPy cache,
+token/secret pipe roundtrips and sempy credential-context installation. Those values
+are local test results, not Fabric observations. Owner steps and README distinguish
+the four Owner-reported failures from a service transcript and do not claim that the
+revised APIs, package installation, permissions, runtime or delivery have been
+qualified in the tenant. No live request or Fabric mutation was made in this review.
+No blocker remains for the prepared Owner run; no live qualification is closed.

@@ -8,7 +8,7 @@ token in source, CLI arguments, a notebook parameter or the ledger. Authorizatio
 is set internally. Invalid supplied credentials do not fall back to another identity. Never use
 verbose curl, echo a payload/response, pass tokens on a command line, or save secret
 responses. The helper is the executable form of these calls; it handles 201/202 and
-same-origin operation polling, saves created item IDs in a private ledger, and emits
+canonical API-host operation polling, saves created item IDs in a private ledger, and emits
 only safe status receipts. Stop if any f12 item already exists; do not adopt it.
 
 ## Eventhouse, database, schema
@@ -44,7 +44,7 @@ only safe status receipts. Stop if any f12 item already exists; do not adopt it.
    The exact decoded schema is:
 
    ```kusto
-   .create table ['f12-events'] (id:long, marker:string, _shape_table:string, _shape_seq:long)
+   .create-merge table ['f12-events'] (id:long, marker:string, _shape_table:string, _shape_seq:long)
    .create-or-alter table ['f12-events'] ingestion json mapping 'f12-json' "[{\"column\":\"id\",\"Properties\":{\"path\":\"$.id\"}},{\"column\":\"marker\",\"Properties\":{\"path\":\"$.marker\"}},{\"column\":\"_shape_table\",\"Properties\":{\"path\":\"$._shape_table\"}},{\"column\":\"_shape_seq\",\"Properties\":{\"path\":\"$._shape_seq\"}}]"
    ```
 
@@ -114,7 +114,8 @@ and [Eventstream definition](https://learn.microsoft.com/en-us/rest/api/fabric/a
    ```
 
    Reject Warning immediately. Reject mismatched mode, item, table or JSON format.
-   If not Running, the setup helper attempts:
+   While Creating, poll without attempting resume. After Creating ends, if not
+   Running, the setup helper attempts at most one resume:
 
    ```text
    POST /v1/workspaces/{workspaceId}/eventstreams/{eventstreamId}/destinations/{destinationId}/resume
@@ -125,6 +126,7 @@ and [Eventstream definition](https://learn.microsoft.com/en-us/rest/api/fabric/a
    ```
 
    Poll the GET until source and destination are Running with no destination error.
+   Never resume a Running destination, even when its source is still starting.
    Resume's 200 alone is insufficient. Recheck in the final cell immediately before
    emitting. A Warning, non-Running state, error or unsupported API prevents sending.
    Activation is therefore **API-capable**; portal **Activate ingestion** remains
@@ -225,3 +227,43 @@ Fabric guarantee. If a smaller payload still gets HTTP 413, retain that observat
 The fallback is the small unrendered notebook with the same wheels published to
 builtin through the Owner UI or VS Code; do not attach an Environment or change the
 runtime/resource setting. Source and wheel hashes remain unchanged.
+
+## Location handling and fresh workload processes
+
+A response Location is normalized as data before it is used. The only additional
+accepted hostname is the exact Owner-observed Fabric regional redirect host in
+`LOCATION_REDIRECT_HOSTS`; it is never a network destination for the bearer token.
+Only `/v1/operations/{guid}` (and its result) or this workspace's recognized job
+instance path may be rewritten to the canonical API host. All other host/path/query
+combinations are rejected. Stored job URLs use the same canonicalization, then the
+existing notebook-ownership check and beta exit-value conversion. Cross-origin HTTP
+redirects are refused rather than automatically forwarded.
+[Get Operation State](https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-state)
+and [Get Operation Result](https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-result)
+document the canonical endpoints; the regional Location is an Owner observation.
+
+`DatabaseSchema.kql` now uses supported `.create-merge table`, not `.create table`;
+see the [database definition commands](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/kql-database-definition).
+The readiness state machine waits through Creating and never sends resume to Running.
+
+The install cell still uses the same notebook interpreter's pip in the same session.
+Then cells 2/3/5/7 launch fresh child interpreters for imports, generation/profiling,
+semantic-model reads and event delivery. The old NumPy already cached in the parent
+is not reused. The parent retains parameters/results and returns the final exit
+value, without restartPython or a continuation across job restarts. No Environment,
+new Fabric session or larger resource setting is introduced.
+[Learn describes pip's current-environment/no-auto-restart behavior](https://learn.microsoft.com/en-us/fabric/data-engineering/using-python-experience-on-notebook);
+[NotebookUtils session management](https://learn.microsoft.com/en-us/fabric/data-engineering/notebookutils/notebookutils-session-management)
+does not establish stateful unattended continuation for this handoff, so this path
+uses standard Python subprocess instead.
+
+The notebook identity remains the credential source: parent NotebookUtils calls
+supply tokens and the configured secret over private pipes, refreshed on demand.
+The child Fabric SDK uses an explicit credential/context override before sempy is
+imported; no service-principal switch is made. Parent `pbi` credentials serve the
+SDK's Power BI/Fabric scopes, and parent `kusto` credentials serve direct Kusto calls,
+consistent with [NotebookUtils audience guidance](https://learn.microsoft.com/en-us/fabric/data-engineering/notebookutils/notebookutils-credentials).
+Only allowlisted records are displayed; credentials, raw child output and remote
+exception bodies are never forwarded. The model's first profile result is still
+reused. A beta exit-value HTTP failure is not a terminal notebook-job observation;
+Owner safe-output retrieval or the guarded cleanup status check must establish that.

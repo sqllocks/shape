@@ -114,7 +114,7 @@ readiness checks succeed, the Owner-only fallback is: open **f12-eventstream**,
 select **f12-input > Details > Event Hub > SAS Key Authentication**, and copy the
 primary connection string directly to the hidden prompt or vault secret. Copy the
 namespace and Event Hub name from that **same f12-input Details pane** into the
-additional hidden metadata prompts or vault fields. The cell rejects an Endpoint
+additional hidden metadata prompts or vault fields. The fresh events worker rejects an Endpoint
 or EntityPath mismatch before any send. Without the API, this association requires
 the Owner to verify the selected f12 source; do not attest a different endpoint.
 Nothing is handed through chat. See [portal custom-endpoint details](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/add-source-custom-app).
@@ -155,13 +155,15 @@ notebook exit value. `status` uses the notebook-specific
 origin, workspace and ledger ownership, and reports exit-value availability and
 whether it is nonempty. See [Learn exit values](https://learn.microsoft.com/en-us/fabric/data-engineering/notebook-public-api).
 It filters an available exit value through a field allowlist; it drops endpoint fields, arbitrary strings and table names. It
-never echoes raw response bodies. If beta exit-value retrieval is unavailable, empty or unusable, the remaining manual step is to open
+never echoes raw response bodies. If beta exit-value retrieval is unavailable, empty or unusable, first confirm the
+job is terminal (the beta failure alone does not establish job failure). The remaining
+manual step is to open
 only **f12-owner-qualification**, copy its safe JSON outputs, and record the observed
 Python/resource/runtime label as text. Do not copy variable inspectors or debug logs.
-Both installed metadata versions and loaded module versions are returned; a
-cache/version mismatch skips the workloads rather than claiming compatibility.
-Any install/restart requirement or unsupported parameter/job behavior is a failed
-attempt; report the safe receipt and stop for the Owner rather than change runtimes.
+Installed metadata and loaded versions are checked in fresh child interpreters;
+   the parent kernel may still hold NumPy 1 without causing a skip. No kernel restart
+   is requested. A mismatch inside a fresh child or unsupported job behavior remains
+   a failed attempt; report the safe receipt and stop for the Owner rather than change runtimes.
 
 The expected unique counts are 100 each for emitter and stream writer, plus a
 100-row direct-writer control. These are expectations, never substitute observations.
@@ -195,3 +197,63 @@ any pre-existing workspace item.
 If a saved queryset is needed for manual queries, name it **f12-queries** and delete
 it manually afterwards. Return safe outputs, observed runtime/resources, activation
 result and cleanup confirmation. Do not return any connection detail.
+
+## Corrections from the Owner-reported end-to-end run
+
+The four reported defects were in the handoff. The revised helper rewrites only
+recognized Location paths from the API host or the explicitly allowlisted observed
+Fabric redirect host to `https://api.fabric.microsoft.com/v1/...`. Operation paths
+must contain a GUID; job paths must identify this workspace and an owned notebook.
+Other hosts, paths, fragments and unknown query parameters fail closed. No bearer
+token is sent to the redirect host; cross-origin HTTP redirects are refused.
+Canonical job URLs are saved, and old recognized job URLs are normalized on use.
+See [Get Operation State](https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-state)
+and [Get Operation Result](https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-result).
+The regional Location value is Owner-observed; the Learn references document the
+canonical API endpoints, not permission to forward credentials to regional hosts.
+
+The schema now uses `.create-merge table`, one of the commands supported by the
+[KQL database definition schema script](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/kql-database-definition).
+The existing mapping and ProcessedIngestion property set are unchanged. Setup waits
+while the destination is **Creating**, resumes only after it leaves Creating and is
+not Running, and never resumes a Running destination. It still waits for both the
+source and destination to be Running and rejects Warning before any sends.
+
+**Chosen single-job install approach:** keep pip installation in this same Python
+3.12 session, then run **all** Shape/NumPy/pandas/PyArrow/sempy imports and workloads
+in fresh `sys.executable` child interpreters. The parent notebook remains the job
+coordinator and keeps its records/parameters in memory; it never restarts and never
+imports Shape or sempy for the workloads. Its already-loaded NumPy is irrelevant to
+the children, which load the updated site-packages and compare installed vs loaded
+versions. The generation worker still launches a separate fresh profiling process
+per size, preserving the reported RSS scope. Every child shares the same default
+2 vCore/16 GB node budget; no new Fabric compute item, Environment or session is
+created. A child failure is recorded and does not silently fall back to cached
+parent imports.
+
+Learn confirms that [inline pip installs into the current kernel environment without automatically restarting it](https://learn.microsoft.com/en-us/fabric/data-engineering/using-python-experience-on-notebook).
+The [NotebookUtils session guide](https://learn.microsoft.com/en-us/fabric/data-engineering/notebookutils/notebookutils-session-management)
+documents restartPython, but this handoff makes no claim that restarting preserves
+job state or resumes subsequent cells. It uses the standard Python
+[subprocess interpreter launch](https://docs.python.org/3/library/subprocess.html)
+with [sys.executable](https://docs.python.org/3/library/sys.html#sys.executable) instead.
+This is the handoff's implementation choice, not a claim that Learn publishes this
+complete worker recipe.
+
+The sempy and events workers obtain this notebook's credentials through a private
+parent/child pipe. The parent alone calls NotebookUtils for token refresh, the
+configured vault secret, or permitted hidden interactive prompts. No credential is
+added to argv, environment variables, notebook parameters, files or the ledger.
+The worker explicitly sets the Fabric SDK credential/context before importing sempy;
+it does not activate a service-principal fixture or ambient alternate identity.
+The `pbi` token is used for Power BI/Fabric SDK scopes and `kusto` for Kusto, as
+[documented by NotebookUtils](https://learn.microsoft.com/en-us/fabric/data-engineering/notebookutils/notebookutils-credentials).
+Service-principal pbi scopes can be narrower; permission/auth failures are retained
+rather than switching identities. Child stdout is a private protocol; only the
+existing measurement allowlist reaches notebook output, and raw stderr is discarded.
+The final parent cell returns all collected safe records as the job exit value.
+
+`live-defect-validation.txt` contains local mocked provisioning and real reduced
+child-process tests, including a deliberately stale parent NumPy cache. It is not
+Fabric output and does not close the live measurements. The Owner's described
+failures are reported observations, not newly fabricated raw service receipts.

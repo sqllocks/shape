@@ -20,38 +20,38 @@
   "files": [
     {
       "name": "f12-owner-qualification.ipynb",
-      "bytes": 26060,
-      "sha256": "32327c5b9f372a2a8d24a1335e81dfe9ffa5e7b55263b81bb00788afdb63ee9c"
+      "bytes": 41389,
+      "sha256": "8ec7875725bdc2b769ccb10f1f233a216dfef1bdb04291fe9dcc3a46bea2da86"
     },
     {
       "name": "OWNER_STEPS.md",
-      "bytes": 13389,
-      "sha256": "ff89d6bc44f94ae8c6433747739328ff53bca8afb963fdc7eab1e7bea6511e0d"
+      "bytes": 18095,
+      "sha256": "982769357239befca2091fe1e7d8dc2601bf03c46681cdc73dd227e771dc31e2"
     },
     {
       "name": "f12_agent.py",
-      "bytes": 24848,
-      "sha256": "7eabc063b416eb431c4192f788f141bcbd5308294e43391220b6b1744c4a39e8"
+      "bytes": 27848,
+      "sha256": "d1ffcbbbbfca2b6f21b600f105fcae24ba83330607d89f495d0ca859ab2f67dc"
     },
     {
       "name": "REST_SETUP.md",
-      "bytes": 12453,
-      "sha256": "71b43a522984fb6808fe390eb728f7a43a65c9f8f5df31ba812adefc48d1d2ba"
+      "bytes": 15779,
+      "sha256": "be97bad32ba7d08844298fe8895187ecab4eb94b5949354ca76979b15a356ba8"
     },
     {
       "name": "README.md",
-      "bytes": 9046,
-      "sha256": "2778660ff68cedda543948226df705c0b88b3ef793d184603e2fb558d205eb4d"
+      "bytes": 11322,
+      "sha256": "b2a95c1be4b15730b3524cdbb60dcc75b3af7dc0b6362d44bcf74a5b74751d88"
     },
     {
       "name": "review.md",
-      "bytes": 8689,
-      "sha256": "364311724fc464dfc894e325bf53771271466cc98d71d7588d870674a10e9373"
+      "bytes": 11698,
+      "sha256": "1cc343935e98a45d41806a146f58808e3ab05dc78058e518b00dfc1edd5567ba"
     },
     {
       "name": "automation-validation.txt",
       "bytes": 1345,
-      "sha256": "ff4f3c78f122e2dbe86eb85cad403108a962cb795679561861ea3bc341d65d0b"
+      "sha256": "d7b3f7e3a1acf7b30126ca3043703c11707e0893e256148fda0165d47662d8d9"
     },
     {
       "name": "automation-lint.txt",
@@ -60,8 +60,18 @@
     },
     {
       "name": "caller-auth-validation.txt",
-      "bytes": 893,
-      "sha256": "5500059a51eb4a5629085b8ace341c883df45aca5f94b408b18a803313115064"
+      "bytes": 961,
+      "sha256": "d9ce23761a37f1066bd23fe609f1d3bdfcf5ecb666c86dbc25f1c03161a43e9e"
+    },
+    {
+      "name": "f12_worker.py",
+      "bytes": 5023,
+      "sha256": "352d5d342e1fee976ee8cfba56cc582edad7c6a384f975fee708f33e83692a13"
+    },
+    {
+      "name": "live-defect-validation.txt",
+      "bytes": 2639,
+      "sha256": "235ecd2ba040f9257b684fac478269ee7cb46f4ef65a7eeac4a3df1a5b73c20d"
     }
   ],
   "manifest_note": "Hashes cover all archive members except handoff-build.json itself. source_commit identifies the unchanged wheel source."
