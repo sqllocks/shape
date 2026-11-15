@@ -1,6 +1,10 @@
 # Shape Artifact Specification — Draft 1
 
-Status: experimental.
+Status: frozen at 1.0 (Owner approved 2026-11-14).
+
+The Owner-approved format and CLI compatibility baseline is recorded in
+[freeze-1.0.json](freeze-1.0.json). This marks the 1.0 contract;
+it does not announce a release or change current early-access behavior.
 
 
 A `.shape` artifact is a safe, bounded container for executable evidence about data behavior.

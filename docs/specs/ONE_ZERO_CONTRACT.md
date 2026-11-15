@@ -1,6 +1,10 @@
-# Shape 1.0 Compatibility Contract — Proposal
+# Shape 1.0 Compatibility Contract
 
-Status: experimental.
+Status: frozen at 1.0 (Owner approved 2026-11-14).
+
+The Owner-approved format and CLI compatibility baseline is recorded in
+[freeze-1.0.json](freeze-1.0.json). This marks the 1.0 contract;
+it does not announce a release or change current early-access behavior.
 
 
 The 1.0 compatibility boundary consists of:
