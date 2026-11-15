@@ -6695,7 +6695,10 @@
 
 
 <h1 id="state-and-compatibility-policy">State and compatibility policy<a class="headerlink" href="#state-and-compatibility-policy" title="Permanent link">&para;</a></h1>
-<p>Status: experimental.</p>
+<p>Status: frozen at 1.0 (Owner approved 2026-11-14).</p>
+<p>The Owner-approved format and CLI compatibility baseline is recorded in
+<a href="../freeze-1.0.json">freeze-1.0.json</a>. This marks the 1.0 contract;
+it does not announce a release or change current early-access behavior.</p>
 <p>Shape writes files that outlive the release that wrote them: <code>.shape</code> artifacts, safe profiles,
 models, generation schemas and specs, scenario packs, registries, run manifests, contracts and
 signatures. This is the one policy for all of them. It is enforced by tests (see
@@ -7070,6 +7073,13 @@ still read.</p>
 <li><strong>Removal.</strong> Only in the next major release (2.0 for the 1.x series), and only if an offline <code>shape-migrate</code> path still
    reads the version: the reader moves to the migrator, which stays.</li>
 </ol>
+<p><strong>Frozen minimum-reader window (1.0).</strong> Every format version in the frozen
+baseline remains readable throughout the entire 1.x series. Its recorded first
+reader remains <code>0.9.0</code>; an optional addition cannot raise that floor. A future
+incompatible format version declares its actual first reader and retains the
+older readers. This is file compatibility, not support or backports for old
+binaries. Removal requires a new major, a notice at least one release ahead and
+an offline migrator. See <a href="../freeze-1.0.json">the frozen baseline</a>.</p>
 <p><strong>Support window.</strong> Every format version below is supported by every release until a major
 release removes it by the process above; none is scheduled for removal. This table is generated
 by <code>shape.compat.render_support_table()</code> and a test keeps it equal to the code.</p>

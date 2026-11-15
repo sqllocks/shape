@@ -168,7 +168,7 @@ Early access 0.9.4. Profiling, contracts and drift are available.
 - [CLI reference](https://docs.shapedata.ai/dev/reference/cli/)
 - [Performance](https://docs.shapedata.ai/dev/reference/performance/)
 - [Location as Code Specification — Draft 1](https://docs.shapedata.ai/dev/specs/LOCATION_SPEC/)
-- [Shape 1.0 Compatibility Contract — Proposal](https://docs.shapedata.ai/dev/specs/ONE_ZERO_CONTRACT/)
+- [Shape 1.0 Compatibility Contract](https://docs.shapedata.ai/dev/specs/ONE_ZERO_CONTRACT/)
 - [Shape Pack Specification — Draft 1](https://docs.shapedata.ai/dev/specs/PACK_SPEC/)
 - [Shape 1.0 Normative Contract](https://docs.shapedata.ai/dev/specs/SHAPE_1_0/)
 - [Shape by SQLLocks — Normative Contract, version 2](https://docs.shapedata.ai/dev/specs/SHAPE_2/)

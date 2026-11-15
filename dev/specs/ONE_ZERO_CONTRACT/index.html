@@ -23,7 +23,7 @@
     
     
       
-        <title>Shape 1.0 Compatibility Contract — Proposal - Shape by SQLLocks</title>
+        <title>Shape 1.0 Compatibility Contract - Shape by SQLLocks</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#shape-10-compatibility-contract-proposal" class="md-skip">
+        <a href="#shape-10-compatibility-contract" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
         <div class="md-header__topic"><span class="md-ellipsis">Documentation</span></div>
-        <div class="md-header__topic" data-md-component="header-topic"><span class="md-ellipsis">Shape 1.0 Compatibility Contract — Proposal</span></div>
+        <div class="md-header__topic" data-md-component="header-topic"><span class="md-ellipsis">Shape 1.0 Compatibility Contract</span></div>
       </div>
     </div>
     <a class="shape-website-link" href="https://shapedata.ai/">shapedata.ai</a>
@@ -6389,8 +6389,11 @@
   
 
 
-<h1 id="shape-10-compatibility-contract-proposal">Shape 1.0 Compatibility Contract — Proposal<a class="headerlink" href="#shape-10-compatibility-contract-proposal" title="Permanent link">&para;</a></h1>
-<p>Status: experimental.</p>
+<h1 id="shape-10-compatibility-contract">Shape 1.0 Compatibility Contract<a class="headerlink" href="#shape-10-compatibility-contract" title="Permanent link">&para;</a></h1>
+<p>Status: frozen at 1.0 (Owner approved 2026-11-14).</p>
+<p>The Owner-approved format and CLI compatibility baseline is recorded in
+<a href="../freeze-1.0.json">freeze-1.0.json</a>. This marks the 1.0 contract;
+it does not announce a release or change current early-access behavior.</p>
 <p>The 1.0 compatibility boundary consists of:
 - versioned Shape-as-Code contract documents;
 - <code>.shape</code> artifact safety and integrity semantics;
@@ -6401,7 +6404,7 @@
 - machine-readable conformance outcomes and CLI exit-code classes.</p>
 <p>Incidental Python class layout is not part of the cross-language contract.</p>
 <p>Exit codes of the stable CLI operations are the classes of <code>docs/CLI.md</code>, which is the source of truth and what the CLI uses: 0 ok; 1 a check failed (drift found, a signature or leak scan failed); 2 bad input (a missing or unreadable file, the wrong kind of file, a bad argument, or an expected error); 3 and above a command's own verdict (a certificate below its threshold, a failed contract, an incompatible change), which each command's <code>--help</code> documents. The stability promise for them is <code>docs/CLI_STABILITY.md</code>. An earlier draft proposed 64 for invalid invocation and separate codes for quality and fidelity gates; those are not used. Readers fail closed on unknown mandatory capabilities.</p>
-<p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Shape+1.0+Compatibility+Contract+%E2%80%94+Proposal&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2Fspecs%2FONE_ZERO_CONTRACT%2F">Report a problem with this page</a></p>
+<p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Shape+1.0+Compatibility+Contract&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2Fspecs%2FONE_ZERO_CONTRACT%2F">Report a problem with this page</a></p>
 
 
 
